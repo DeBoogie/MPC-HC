@@ -387,13 +387,13 @@ function onStatus (title, status, pos, posStr, dur, durStr, muted, volume) {
     var el;
 
     if (dur > 0 && posStr && durStr) {
-        timestr = posStr + "&nbsp;/&nbsp;" + durStr;
+        timestr = posStr + "\u00a0/\u00a0" + durStr;
     } else {
-        timestr = "&nbsp;";
+        timestr = "\u00a0";
     }
 
     if (title.length > maxTitle) {
-        title = title.substr(0, maxTitle - 3) + "&hellip;";
+        title = title.substr(0, maxTitle - 1) + "\u2026";
     }
     if (!dur || dur === 0) {
         dur = 1;
@@ -401,7 +401,7 @@ function onStatus (title, status, pos, posStr, dur, durStr, muted, volume) {
 
     el = getById("title");
     if (el) {
-        el.innerHTML = title;
+        el.textContent = title;
     }
 
     var sbpercent = Math.floor(100 * pos / dur);
@@ -421,13 +421,13 @@ function onStatus (title, status, pos, posStr, dur, durStr, muted, volume) {
     }
 
     el = getById("status");
-    if (el && el.innerHTML !== status) {
-        el.innerHTML = status;
+    if (el && el.textContent !== status) {
+        el.textContent = status;
     }
 
     el = getById("timer");
-    if (el && el.innerHTML !== timestr) {
-        el.innerHTML = timestr;
+    if (el && el.textContent !== timestr) {
+        el.textContent = timestr;
     }
 
     el = getById("controlvolumemute");
@@ -450,14 +450,22 @@ function onStatus (title, status, pos, posStr, dur, durStr, muted, volume) {
 
 function onReadyStateChange() {
     "use strict";
-    var statusRegExp = /OnStatus\("(.*)", "(.*)", (\d+), "(.*)", (\d+), "(.*)", (\d+), (\d+), "(.*)"\)/;
 
-    if (httpRequestStatus && httpRequestStatus.readyState === 4 && httpRequestStatus.responseText) {
-        if (httpRequestStatus.responseText.charAt(0) !== "<") {
-            var params = statusRegExp.exec(httpRequestStatus.responseText);
-            onStatus(params[1], params[2], parseInt(params[3], 10), params[4], parseInt(params[5], 10), params[6], parseInt(params[7], 10), parseInt(params[8], 10), params[9]);
-        } else {
-            alert(httpRequestStatus.responseText);
+    if (httpRequestStatus && httpRequestStatus.readyState === 4) {
+        if (httpRequestStatus.status >= 200 && httpRequestStatus.status < 300 && httpRequestStatus.responseText) {
+            try {
+                var status = JSON.parse(httpRequestStatus.responseText);
+                onStatus(
+                    status.title || status.file || "",
+                    status.stateString || "",
+                    Number(status.position) || 0,
+                    status.positionString || "",
+                    Number(status.duration) || 0,
+                    status.durationString || "",
+                    status.muted ? 1 : 0,
+                    Number(status.volume) || 0
+                );
+            } catch (e) {}
         }
         httpRequestStatus = null;
     }
@@ -469,7 +477,7 @@ function statusLoop() {
     if (!httpRequestStatus || httpRequestStatus.readyState === 0) {
         httpRequestStatus = getXMLHTTP();
         try {
-            httpRequestStatus.open("GET", "status.html", true);
+            httpRequestStatus.open("GET", "status.json", true);
             httpRequestStatus.onreadystatechange = onReadyStateChange;
             httpRequestStatus.send(null);
         } catch (e) {}

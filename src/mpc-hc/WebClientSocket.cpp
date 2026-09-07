@@ -1418,6 +1418,9 @@ CStringA CWebClientSocket::GetSubtitleTracksJSON() const
 
 bool CWebClientSocket::OnStatusJSON(CStringA& hdr, CStringA& body, CStringA& mime)
 {
+    CString title;
+    m_pMainFrame->GetWindowText(title);
+
     OAFilterState fs = m_pMainFrame->GetMediaState();
     CString statestring;
     switch (fs) {
@@ -1435,14 +1438,20 @@ bool CWebClientSocket::OnStatusJSON(CStringA& hdr, CStringA& body, CStringA& mim
             break;
     }
 
+    const REFERENCE_TIME position = m_pMainFrame->GetPos();
+    const REFERENCE_TIME duration = m_pMainFrame->GetDur();
+
     body = "{";
-    body += "\"file\":" + JSONString(m_pMainFrame->GetFileName());
+    body += "\"title\":" + JSONString(title);
+    body += ",\"file\":" + JSONString(m_pMainFrame->GetFileName());
     body += ",\"path\":" + JSONString(m_pMainFrame->m_wndPlaylistBar.GetCurFileName());
     body.AppendFormat(",\"state\":%ld", fs);
     body += ",\"stateString\":" + JSONString(statestring);
     body.AppendFormat(",\"position\":%ld,\"duration\":%ld",
-                      std::lround(m_pMainFrame->GetPos() / 10000i64),
-                      std::lround(m_pMainFrame->GetDur() / 10000i64));
+                      std::lround(position / 10000i64),
+                      std::lround(duration / 10000i64));
+    body += ",\"positionString\":" + JSONString(ReftimeToString2(position));
+    body += ",\"durationString\":" + JSONString(ReftimeToString2(duration));
     body.AppendFormat(",\"volume\":%d,\"muted\":%s,\"rate\":%g",
                       m_pMainFrame->GetVolume(), m_pMainFrame->IsMuted() ? "true" : "false",
                       m_pMainFrame->GetPlayingRate());
