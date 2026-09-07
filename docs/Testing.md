@@ -92,6 +92,13 @@ On at least Intel, AMD and NVIDIA hardware where available:
 - A CGI process that exits normally and one that exceeds the 30-second watchdog timeout.
 - Repeated CGI requests while other player operations are active, checking for leaked process, thread, or pipe handles.
 
+### Web server exposure
+
+- A fresh profile with the web server enabled should listen only on `127.0.0.1`.
+- Existing profiles with "Listen on localhost only" disabled should remain reachable from the LAN.
+- Toggling "Listen on localhost only" should restart the listener and change its bind address.
+- Localhost-only mode should reject connections through non-loopback interface addresses.
+
 ## Untrusted-input checks
 
 Parser and process-launch changes should also be exercised with:

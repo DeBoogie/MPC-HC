@@ -100,7 +100,7 @@ CAppSettings::CAppSettings()
     , nWebServerPort(13579)
     , nCmdlnWebServerPort(-1)
     , fWebServerUseCompression(true)
-    , fWebServerLocalhostOnly(false)
+    , fWebServerLocalhostOnly(true)
     , bWebUIEnablePreview(false)
     , fWebServerPrintDebugInfo(false)
     , nVolume(100)
@@ -2140,7 +2140,7 @@ void CAppSettings::LoadSettings()
     fEnableWebServer = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_ENABLEWEBSERVER, FALSE);
     nWebServerPort = pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_WEBSERVERPORT, 13579);
     fWebServerUseCompression = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_WEBSERVERUSECOMPRESSION, TRUE);
-    fWebServerLocalhostOnly = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_WEBSERVERLOCALHOSTONLY, FALSE);
+    fWebServerLocalhostOnly = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_WEBSERVERLOCALHOSTONLY, TRUE);
     bWebUIEnablePreview = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_WEBUI_ENABLE_PREVIEW, FALSE);
     fWebServerPrintDebugInfo = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_WEBSERVERPRINTDEBUGINFO, FALSE);
     strWebRoot = pApp->GetProfileString(IDS_R_SETTINGS, IDS_RS_WEBROOT, _T("*./webroot"));

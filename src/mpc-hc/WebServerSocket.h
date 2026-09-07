@@ -31,6 +31,6 @@ protected:
     void OnAccept(int nErrorCode);
 
 public:
-    CWebServerSocket(CWebServer* pWebServer, int port = 13579);
+    CWebServerSocket(CWebServer* pWebServer, int port = 13579, bool localhostOnly = true);
     virtual ~CWebServerSocket();
 };
