@@ -27,6 +27,36 @@ struct CUtf16JSON {
     rapidjson::GenericDocument<rapidjson::UTF16<>> d;
 };
 
+namespace {
+void CloseHandleSafe(HANDLE& handle)
+{
+    if (handle && handle != INVALID_HANDLE_VALUE) {
+        CloseHandle(handle);
+        handle = nullptr;
+    }
+}
+
+bool NullTerminateBuffer(char*& buffer, DWORD length, DWORD& capacity)
+{
+    if (!buffer || length == MAXDWORD) {
+        return false;
+    }
+
+    if (length >= capacity) {
+        const DWORD newCapacity = length + 1;
+        char* tmp = static_cast<char*>(std::realloc(buffer, newCapacity));
+        if (!tmp) {
+            return false;
+        }
+        buffer = tmp;
+        capacity = newCapacity;
+    }
+
+    buffer[length] = '\0';
+    return true;
+}
+}
+
 CString GetYDLExePath(bool* is_ytdlp) {
     auto& s = AfxGetAppSettings();
     CString ydlpath;
@@ -34,12 +64,13 @@ CString GetYDLExePath(bool* is_ytdlp) {
     if (s.sYDLExePath.IsEmpty()) {
         CString appdir = PathUtils::GetProgramPath(false);
         if (CPath(appdir + _T("\\yt-dlp.exe")).FileExists()) {
-            ydlpath = _T("yt-dlp.exe");
+            ydlpath = appdir + _T("\\yt-dlp.exe");
         } else if (CPath(appdir + _T("\\youtube-dl.exe")).FileExists()) {
-            ydlpath = _T("youtube-dl.exe");
+            ydlpath = appdir + _T("\\youtube-dl.exe");
             *is_ytdlp = false;
         } else {
-            ydlpath = _T("yt-dlp.exe");
+            // Use the installation directory explicitly instead of relying on the process search order.
+            ydlpath = appdir + _T("\\yt-dlp.exe");
         }
     } else {
         ydlpath = s.sYDLExePath;
@@ -51,7 +82,9 @@ CString GetYDLExePath(bool* is_ytdlp) {
                 ydlpath = CString(expanded_buf);
             }
         }
-        if (ydlpath.MakeLower().Find(_T("youtube-dl")) >= 0) {
+        CString lowerPath = ydlpath;
+        lowerPath.MakeLower();
+        if (lowerPath.Find(_T("youtube-dl")) >= 0) {
             *is_ytdlp = false;
         }
     }
@@ -59,15 +92,27 @@ CString GetYDLExePath(bool* is_ytdlp) {
 }
 
 CYoutubeDLInstance::CYoutubeDLInstance()
-    : idx_out(0), idx_err(0),
-      buf_out(nullptr), buf_err(nullptr),
-      capacity_out(0), capacity_err(0),
-      pJSON(new CUtf16JSON)
+    : pJSON(new CUtf16JSON)
+    , bIsPlaylist(false)
+    , hStdout_r(nullptr)
+    , hStdout_w(nullptr)
+    , hStderr_r(nullptr)
+    , hStderr_w(nullptr)
+    , buf_out(nullptr)
+    , buf_err(nullptr)
+    , idx_out(0)
+    , idx_err(0)
+    , capacity_out(0)
+    , capacity_err(0)
 {
 }
 
 CYoutubeDLInstance::~CYoutubeDLInstance()
 {
+    CloseHandleSafe(hStdout_r);
+    CloseHandleSafe(hStdout_w);
+    CloseHandleSafe(hStderr_r);
+    CloseHandleSafe(hStderr_w);
     std::free(buf_out);
     std::free(buf_err);
     delete pJSON;
@@ -97,7 +142,8 @@ bool CYoutubeDLInstance::Run(CString url)
     if (url.Find(_T("list=")) > 0) {
         args.Append(_T(" --ignore-errors --no-playlist"));
     }
-    args.Append(_T(" \"") + url + _T("\""));
+    // Stop option parsing before the URL. This prevents a malformed input from being interpreted as a yt-dlp switch.
+    args.Append(_T(" -- \"") + url + _T("\""));
     if (ytdlp) {
         WCHAR lpszTempPath[MAX_PATH] = { 0 };
         if (GetTempPathW(MAX_PATH, lpszTempPath)) {
@@ -116,7 +162,21 @@ bool CYoutubeDLInstance::Run(CString url)
     if (!CreatePipe(&hStdout_r, &hStdout_w, &sec_attrib, bufsize)) {
         return false;
     }
+    if (!SetHandleInformation(hStdout_r, HANDLE_FLAG_INHERIT, 0)) {
+        CloseHandleSafe(hStdout_r);
+        CloseHandleSafe(hStdout_w);
+        return false;
+    }
     if (!CreatePipe(&hStderr_r, &hStderr_w, &sec_attrib, bufsize)) {
+        CloseHandleSafe(hStdout_r);
+        CloseHandleSafe(hStdout_w);
+        return false;
+    }
+    if (!SetHandleInformation(hStderr_r, HANDLE_FLAG_INHERIT, 0)) {
+        CloseHandleSafe(hStdout_r);
+        CloseHandleSafe(hStdout_w);
+        CloseHandleSafe(hStderr_r);
+        CloseHandleSafe(hStderr_w);
         return false;
     }
 
@@ -126,12 +186,16 @@ bool CYoutubeDLInstance::Run(CString url)
     startup_info.wShowWindow = SW_HIDE;
     startup_info.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
 
-    if (!CreateProcess(NULL, args.GetBuffer(), NULL, NULL, true, 0,
+    if (!CreateProcess(NULL, args.GetBuffer(), NULL, NULL, true, CREATE_NO_WINDOW,
                        NULL, NULL, &startup_info, &proc_info)) {
         DWORD err = GetLastError();
         CString errmsg;
         errmsg.Format(_T("Failed to create process for yt-dlp/youtube-dl, error %lu"), err);
         YDL_LOG(errmsg);
+        CloseHandleSafe(hStdout_r);
+        CloseHandleSafe(hStdout_w);
+        CloseHandleSafe(hStderr_r);
+        CloseHandleSafe(hStderr_w);
         if (!s.sYDLExePath.IsEmpty()) {
             AfxMessageBox(errmsg + L"\n\nYour YDLExepath value in advanced settings might be incorrect.", MB_ICONERROR, 0);
         } else if (url.Find(L"youtube.com") > 0) {
@@ -140,11 +204,10 @@ bool CYoutubeDLInstance::Run(CString url)
         return false;
     }
 
-    //we must close the parent process's write handles before calling ReadFile,
-    // otherwise it will block forever.
-    CloseHandle(hStdout_w);
-    CloseHandle(hStderr_w);
-
+    // The parent must close its write handles before the reader threads start,
+    // otherwise EOF can never be observed once the child exits.
+    CloseHandleSafe(hStdout_w);
+    CloseHandleSafe(hStderr_w);
 
     /////////////////////////////////////////////////////
     // Read in stdout and stderr through the pipe buffer
@@ -154,48 +217,59 @@ bool CYoutubeDLInstance::Run(CString url)
     buf_err = static_cast<char*>(std::malloc(bufsize));
     capacity_out = bufsize;
     capacity_err = bufsize;
+    if (!buf_out || !buf_err) {
+        TerminateProcess(proc_info.hProcess, ERROR_NOT_ENOUGH_MEMORY);
+        WaitForSingleObject(proc_info.hProcess, INFINITE);
+        CloseHandle(proc_info.hProcess);
+        CloseHandle(proc_info.hThread);
+        CloseHandleSafe(hStdout_r);
+        CloseHandleSafe(hStderr_r);
+        throw std::bad_alloc();
+    }
 
-    HANDLE hThreadOut, hThreadErr;
+    HANDLE hThreadOut = nullptr;
+    HANDLE hThreadErr = nullptr;
     idx_out = 0;
     idx_err = 0;
 
     hThreadOut = CreateThread(NULL, 0, BuffOutThread, this, NULL, NULL);
     hThreadErr = CreateThread(NULL, 0, BuffErrThread, this, NULL, NULL);
+    if (!hThreadOut || !hThreadErr) {
+        TerminateProcess(proc_info.hProcess, ERROR_NOT_ENOUGH_MEMORY);
+        WaitForSingleObject(proc_info.hProcess, INFINITE);
+        if (hThreadOut) {
+            WaitForSingleObject(hThreadOut, INFINITE);
+            CloseHandle(hThreadOut);
+        }
+        if (hThreadErr) {
+            WaitForSingleObject(hThreadErr, INFINITE);
+            CloseHandle(hThreadErr);
+        }
+        CloseHandle(proc_info.hProcess);
+        CloseHandle(proc_info.hThread);
+        CloseHandleSafe(hStdout_r);
+        CloseHandleSafe(hStderr_r);
+        return false;
+    }
 
     WaitForSingleObject(hThreadOut, INFINITE);
     WaitForSingleObject(hThreadErr, INFINITE);
 
-    if (!buf_out || !buf_err) {
-        throw std::bad_alloc();
-    }
-
-    //NULL-terminate the data
-    char* tmp;
-    if (idx_out == capacity_out) {
-        tmp = static_cast<char*>(std::realloc(buf_out, capacity_out + 1));
-        if (tmp) {
-            buf_out = tmp;
-        }
-    }
-    buf_out[idx_out] = '\0';
-
-    if (idx_err == capacity_err) {
-        tmp = static_cast<char*>(std::realloc(buf_err, capacity_err + 1));
-        if (tmp) {
-            buf_err = tmp;
-        }
-    }
-    buf_err[idx_err] = '\0';
-
-    DWORD exitcode;
+    DWORD exitcode = ERROR_GEN_FAILURE;
     GetExitCodeProcess(proc_info.hProcess, &exitcode);
 
     CloseHandle(proc_info.hProcess);
     CloseHandle(proc_info.hThread);
     CloseHandle(hThreadOut);
     CloseHandle(hThreadErr);
-    CloseHandle(hStdout_r);
-    CloseHandle(hStderr_r);
+    CloseHandleSafe(hStdout_r);
+    CloseHandleSafe(hStderr_r);
+
+    if (!buf_out || !buf_err ||
+            !NullTerminateBuffer(buf_out, idx_out, capacity_out) ||
+            !NullTerminateBuffer(buf_err, idx_err, capacity_err)) {
+        throw std::bad_alloc();
+    }
 
     // parse output
     if (exitcode == 0 || exitcode == 1) {
@@ -208,7 +282,7 @@ bool CYoutubeDLInstance::Run(CString url)
         CString err = buf_err;
         if (err.IsEmpty()) {
             if (exitcode == 0xC0000135) {
-                err.Format(_T("An error occurred while running yt-dlp/youtube-dl\n\nYou probably forgot to install this required runtime:\nMicrosoft Visual C++ 2010 Service Pack 1 Redistributable Package (x86)"));
+                err.Format(_T("An error occurred while running yt-dlp/youtube-dl\n\nA required DLL or runtime dependency could not be loaded."));
             } else {
                 err.Format(_T("An error occurred while running yt-dlp/youtube-dl\n\nprocess exitcode = 0x%08x"), exitcode);
             }
@@ -239,14 +313,22 @@ DWORD WINAPI CYoutubeDLInstance::BuffOutThread(void* ydl_inst)
     while (ReadFile(ydl->hStdout_r, ydl->buf_out + ydl->idx_out, ydl->capacity_out - ydl->idx_out, &read, NULL)) {
         ydl->idx_out += read;
         if (ydl->idx_out == ydl->capacity_out) {
-            ydl->capacity_out *= 2;
-            char* tmp = static_cast<char*>(std::realloc(ydl->buf_out, ydl->capacity_out));
-            if (tmp) {
-                ydl->buf_out = tmp;
-            } else {
+            if (ydl->capacity_out > MAXDWORD / 2) {
+                CloseHandleSafe(ydl->hStdout_r);
                 std::free(ydl->buf_out);
                 ydl->buf_out = nullptr;
-                return 0;
+                return ERROR_NOT_ENOUGH_MEMORY;
+            }
+            const DWORD newCapacity = ydl->capacity_out * 2;
+            char* tmp = static_cast<char*>(std::realloc(ydl->buf_out, newCapacity));
+            if (tmp) {
+                ydl->buf_out = tmp;
+                ydl->capacity_out = newCapacity;
+            } else {
+                CloseHandleSafe(ydl->hStdout_r);
+                std::free(ydl->buf_out);
+                ydl->buf_out = nullptr;
+                return ERROR_NOT_ENOUGH_MEMORY;
             }
         }
     }
@@ -262,14 +344,22 @@ DWORD WINAPI CYoutubeDLInstance::BuffErrThread(void* ydl_inst)
     while (ReadFile(ydl->hStderr_r, ydl->buf_err + ydl->idx_err, ydl->capacity_err - ydl->idx_err, &read, NULL)) {
         ydl->idx_err += read;
         if (ydl->idx_err == ydl->capacity_err) {
-            ydl->capacity_err *= 2;
-            char* tmp = static_cast<char*>(std::realloc(ydl->buf_err, ydl->capacity_err));
-            if (tmp) {
-                ydl->buf_err = tmp;
-            } else {
+            if (ydl->capacity_err > MAXDWORD / 2) {
+                CloseHandleSafe(ydl->hStderr_r);
                 std::free(ydl->buf_err);
                 ydl->buf_err = nullptr;
-                return 0;
+                return ERROR_NOT_ENOUGH_MEMORY;
+            }
+            const DWORD newCapacity = ydl->capacity_err * 2;
+            char* tmp = static_cast<char*>(std::realloc(ydl->buf_err, newCapacity));
+            if (tmp) {
+                ydl->buf_err = tmp;
+                ydl->capacity_err = newCapacity;
+            } else {
+                CloseHandleSafe(ydl->hStderr_r);
+                std::free(ydl->buf_err);
+                ydl->buf_err = nullptr;
+                return ERROR_NOT_ENOUGH_MEMORY;
             }
         }
     }

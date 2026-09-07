@@ -2,7 +2,7 @@
 
 ## Part A: Preparing the Visual Studio environment
 
-### Visual Studio 2019
+### Visual Studio 2022
 
 1. Install Visual Studio (any edition will work fine). Select at minimum the following components:
     - C++ core features
@@ -12,19 +12,18 @@
     - C++ build tools (x86 & x64)
     - C++ ATL
     - C++ MFC
-    - Windows 10 SDK (10.0.17763.0 or any other version)
-2. Install the Windows 8.1 SDK → <https://go.microsoft.com/fwlink/p/?LinkId=323507>
-    - When choosing which features to install you only need to select "Windows Software Development Kit".
-    - Alternatively you can use Windows 10 SDK, but then resulting binaries will require at least Windows 7 SP1, so you lose compatibility with Windows 7 RTM.
+    - A current Windows 10/11 SDK
+
+The modernized fork targets Windows 10 or newer. The legacy Windows 7/8 compatibility toolchain is intentionally not required.
 
 
 ## Part B: Install Python 3 (optional)
 
 This is required for building the translation DLL files.
 
-1. Install Python version 3.8.7 from <https://www.python.org/downloads/release/python-387/> (You can use Python 3.6 or later version)
-2. Run this command to install a required library:
-    `C:\Program Files\Python38\Scripts\pip install --upgrade polib`
+1. Install a current Python 3 release.
+2. Run this command to install the required library:
+    `python -m pip install --upgrade polib`
 
 
 ## Part C: Preparing the MSYS and GCC environment (optional)
@@ -55,20 +54,14 @@ releases.
    Windows Control Panel > System > Advanced System Settings > Environment variables.  
    On Windows 10 you can access the legacy control panel by clicking on the Windows Start menu and typing `control.exe`.
 
-## Part D: Yasm
-
-1. Download Microsoft Visual C++ 2010 Redistributable Package from <https://www.microsoft.com/en-us/download/details.aspx?id=26999> and install it.
-2. Download YASM from <http://www.tortall.net/projects/yasm/releases/yasm-1.3.0-win64.exe>
-3. Rename it to **yasm.exe** and put it in a folder that is included in %PATH%. For example **`C:\Windows`** or **`C:\MSYS64\usr\bin`** (see part C).
-
-## PART E: NASM
+## Part D: NASM
 
 1. Download NASM from <https://www.nasm.us/pub/nasm/releasebuilds/2.16.03/win64/nasm-2.16.03-win64.zip>
 2. Put nasm.exe in a folder that is included in %PATH%. For example **`C:\Windows`**.
 
-## Part F: Config file with paths
+## Part E: Config file with paths
 
-Create a file named **build.user.bat** in the source code folder of MPC-HC (see part F). It should have the following contents: (with paths adapted for your system!)
+Create a file named **build.user.bat** in the source code folder of MPC-HC. It should have the following contents: (with paths adapted for your system!)
 
 ```bat
 @ECHO OFF
@@ -80,23 +73,23 @@ SET "MSYSTEM=MINGW32"
 SET "MSYS2_PATH_TYPE=inherit"
 REM [Optional] Specify GIT location if it is not already set in %PATH%
 SET "MPCHC_GIT=C:\Program Files\Git"
-REM [Optional] If you plan to modify the translations, install Python 3.8 and set the variable to its path
-SET "MPCHC_PYTHON=C:\Program Files\Python38"
+REM [Optional] If you plan to modify the translations, install a current Python 3 and set the variable to its path
+REM SET "MPCHC_PYTHON=C:\Path\To\Python"
 REM [Optional] If you want to customize the Windows SDK version used, set this variable
-SET "MPCHC_WINSDK_VER=8.1"
+SET "MPCHC_WINSDK_VER=10.0"
 ```
 
 Notes:
 
 * For Visual Studio, we will try to detect the VS installation path automatically. If that fails you need to specify the installation path yourself. For example:
   ```
-  SET "MPCHC_VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\"
+  SET "MPCHC_VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Community\"
   ```
 * If you installed the MSYS package in another directory then make sure that you have set the correct paths in your **build.user.bat** file.
 * If you don't have Git installed then the build version will be inaccurate, the revision number will be a hard-coded as zero.
 
 
-## Part G: Downloading the MPC-HC source
+## Part F: Downloading the MPC-HC source
 
 You need Git for downloading the source code.
 
@@ -110,13 +103,13 @@ Use Git to clone MPC-HC's repository to **C:\mpc-hc** (or anywhere else you like
 2. Run these commands:
 
     ```text
-    git clone --recursive https://github.com/clsid2/mpc-hc.git
+    git clone --recursive https://github.com/DeBoogie/MPC-HC.git
     ```
 
     or
 
     ```text
-    git clone https://github.com/clsid2/mpc-hc.git
+    git clone https://github.com/DeBoogie/MPC-HC.git
     git submodule update --init --recursive
     ```
 
@@ -132,28 +125,27 @@ Use Git to clone MPC-HC's repository to **C:\mpc-hc** (or anywhere else you like
     git submodule update --init --recursive
     ```
 
-Note that you can add `-b master` to the `git clone` command if you want to get the latest
-stable version instead of the latest development version.
+## Part G: Compiling the MPC-HC source
 
-## Part H: Compiling the MPC-HC source
+The recommended local build is the x64 Release target:
 
-1. Open the solution file **C:\mpc-hc\mpc-hc.sln**.
-   Change the solution's configuration to **Release** (in the toolbar).
-2. Press **F7** to build the solution.
-3. You now have **mpc-hc.exe** under **C:\mpc-hc\bin\mpc-hc_x86**
-4. Open the solution file **C:\mpc-hc\mpciconlib.sln**
-5. Press **F7** to build the solution.
-6. You now have **mpciconlib.dll** under **C:\mpc-hc\bin\mpc-hc_x86**
-7. Open the solution file **C:\mpc-hc\mpcresources.sln**
-8. Build **BuildAll** project.
-9. You now have **mpcresources.XX.dll** under **C:\mpc-hc\bin\mpc-hc_x86\Lang**
+```bat
+build.bat Build x64 MPCHC Release
+```
 
-Alternatively, you can use **build.bat** that can build everything for you (run: `build.bat help` for more info).
+For a quick compile that skips the internal LAV Filters build, use:
 
+```bat
+build.bat Build x64 MPCHC Release Lite
+```
 
-## Part I: Building the installer
+The Lite configuration is for development checks only; release packages should include the internal filters. Run `build.bat help` for the complete set of switches.
 
-Download Inno Setup Unicode v5.5.9 or newer from <http://www.jrsoftware.org/isdl.php>.
+You can also open **mpc-hc.sln** in Visual Studio 2022, select **x64** and **Release**, and build the solution normally.
+
+## Part H: Building the installer
+
+Install a current Inno Setup 6 release from <https://jrsoftware.org/isdl.php>.
 Install everything and then go to **C:\mpc-hc\distrib**, open **mpc-hc_setup.iss** with Inno Setup,
 read the first comments in the script and compile it.
 

@@ -167,7 +167,7 @@ AllowNoIcons              = yes
 ShowTasksTreeLines        = yes
 DisableDirPage            = auto
 DisableProgramGroupPage   = auto
-MinVersion                = 6.1
+MinVersion                = 10.0
 CloseApplications         = true
 #ifexist "..\signinfo.txt"
 SignTool                  = MySignTool
