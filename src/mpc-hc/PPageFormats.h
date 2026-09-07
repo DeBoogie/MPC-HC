@@ -22,13 +22,17 @@
 #pragma once
 
 #include <afxwin.h>
-#include "PPageBase.h"
+#include "CMPCThemePPageBase.h"
 #include "PlayerListCtrl.h"
+#include "CMPCThemeButton.h"
+#include "CMPCThemeGroupBox.h"
+#include "CMPCThemeRadioOrCheck.h"
+
 
 
 // CPPageFormats dialog
 
-class CPPageFormats : public CPPageBase
+class CPPageFormats : public CMPCThemePPageBase
 {
     DECLARE_DYNAMIC(CPPageFormats)
 
@@ -36,24 +40,22 @@ private:
 
     CPlayerListCtrl m_list;
     CImageList m_onoff;
-    CButton m_fContextDir;
-    CButton m_fContextFiles;
-    CButton m_fAssociatedWithIcons;
-    CStatic m_autoplay;
-    CButton m_apvideo;
-    CButton m_apmusic;
-    CButton m_apaudiocd;
-    CButton m_apdvd;
+    CMPCThemeRadioOrCheck m_fContextDir;
+    CMPCThemeRadioOrCheck m_fContextFiles;
+    CMPCThemeRadioOrCheck m_fAssociatedWithIcons;
+    CMPCThemeGroupBox m_autoplay;
+    CMPCThemeRadioOrCheck m_apvideo;
+    CMPCThemeRadioOrCheck m_apmusic;
+    CMPCThemeRadioOrCheck m_apaudiocd;
+    CMPCThemeRadioOrCheck m_apdvd;
 
     CString m_exts;
     bool m_bInsufficientPrivileges;
     bool m_bFileExtChanged;
     CMediaFormats m_mf;
-    int m_iRtspHandler;
-    BOOL m_fRtspFileExtFirst;
     bool m_bHaveRegisteredCategory;
 
-    enum { COL_CATEGORY, COL_ENGINE };
+    enum { COL_CATEGORY };
 
     int IsCheckedMediaCategory(int iItem);
     void SetCheckedMediaCategory(int iItem, int fChecked);
@@ -82,9 +84,6 @@ protected:
     afx_msg void OnMediaCategoryClicked(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnMediaCategoryKeyDown(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnMediaCategorySelected(NMHDR* pNMHDR, LRESULT* pResult);
-    afx_msg void OnBeginEditMediaCategoryEngine(NMHDR* pNMHDR, LRESULT* pResult);
-    afx_msg void OnEditMediaCategoryEngine(NMHDR* pNMHDR, LRESULT* pResult);
-    afx_msg void OnEndEditMediaCategoryEngine(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnAssociateAllFormats();
     afx_msg void OnAssociateVideoFormatsOnly();
     afx_msg void OnAssociateAudioFormatsOnly();

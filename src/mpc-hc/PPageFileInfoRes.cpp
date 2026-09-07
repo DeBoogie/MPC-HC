@@ -22,15 +22,17 @@
 #include "stdafx.h"
 #include "mplayerc.h"
 #include "PPageFileInfoRes.h"
+#include "PathUtils.h"
 
 
 // CPPageFileInfoRes dialog
 
-IMPLEMENT_DYNAMIC(CPPageFileInfoRes, CPPageBase)
+IMPLEMENT_DYNAMIC(CPPageFileInfoRes, CMPCThemeResizablePropertyPage)
 CPPageFileInfoRes::CPPageFileInfoRes(CString path, IFilterGraph* pFG, IFileSourceFilter* pFSF)
-    : CPPageBase(CPPageFileInfoRes::IDD, CPPageFileInfoRes::IDD)
+    : CMPCThemeResizablePropertyPage(CPPageFileInfoRes::IDD, CPPageFileInfoRes::IDD)
     , m_hIcon(nullptr)
     , m_fn(path)
+    , m_displayFn(path)
 {
     if (pFSF) {
         CComHeapPtr<OLECHAR> pFN;
@@ -43,6 +45,12 @@ CPPageFileInfoRes::CPPageFileInfoRes(CString path, IFilterGraph* pFG, IFileSourc
     int i = std::max(m_fn.ReverseFind('\\'), m_fn.ReverseFind('/'));
     if (i >= 0 && i < m_fn.GetLength() - 1) {
         m_fn = m_fn.Mid(i + 1);
+    }
+
+    if (PathUtils::IsURL(path)) {
+        m_displayFn = UrlDecodeWithUTF8(ShortenURL(m_fn));
+    } else {
+        m_displayFn = m_fn;
     }
 
     BeginEnumFilters(pFG, pEF, pBF) {
@@ -73,11 +81,11 @@ void CPPageFileInfoRes::DoDataExchange(CDataExchange* pDX)
 {
     __super::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_DEFAULTICON, m_icon);
-    DDX_Text(pDX, IDC_EDIT1, m_fn);
+    DDX_Text(pDX, IDC_EDIT1, m_displayFn);
     DDX_Control(pDX, IDC_LIST1, m_list);
 }
 
-BEGIN_MESSAGE_MAP(CPPageFileInfoRes, CPPageBase)
+BEGIN_MESSAGE_MAP(CPPageFileInfoRes, CMPCThemeResizablePropertyPage)
     ON_BN_CLICKED(IDC_BUTTON1, OnSaveAs)
     ON_UPDATE_COMMAND_UI(IDC_BUTTON1, OnUpdateSaveAs)
     ON_NOTIFY(NM_DBLCLK, IDC_LIST1, OnOpenEmbeddedResInBrowser)
@@ -94,7 +102,8 @@ BOOL CPPageFileInfoRes::OnInitDialog()
         m_icon.SetIcon(m_hIcon);
     }
 
-    m_list.SetExtendedStyle(m_list.GetExtendedStyle() | LVS_EX_FULLROWSELECT);
+    //m_list.SetExtendedStyle(m_list.GetExtendedStyle() | LVS_EX_FULLROWSELECT);
+    m_list.setAdditionalStyles(LVS_EX_FULLROWSELECT);
     m_list.InsertColumn(0, ResStr(IDS_EMB_RESOURCES_VIEWER_NAME), LVCFMT_LEFT, 187);
     m_list.InsertColumn(1, ResStr(IDS_EMB_RESOURCES_VIEWER_TYPE), LVCFMT_LEFT, 127);
     for (size_t i = 0, count = m_res.size(); i < count; i++) {
@@ -103,6 +112,13 @@ BOOL CPPageFileInfoRes::OnInitDialog()
         m_list.SetItemText(nItem, 1, r.mime);
         m_list.SetItemData(nItem, i);
     }
+
+    AddAnchor(IDC_EDIT1, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_STATIC1, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_LIST1, TOP_LEFT, BOTTOM_RIGHT);
+    AddAnchor(IDC_DEFAULTICON, TOP_LEFT);
+    AddAnchor(IDC_BUTTON1, BOTTOM_LEFT);
+
 
     UpdateData(FALSE);
 

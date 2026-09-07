@@ -1,0 +1,73 @@
+/*
+ * (C) 2006-2023 see Authors.txt
+ *
+ * This file is part of MPC-HC.
+ *
+ * MPC-HC is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * MPC-HC is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+#pragma once
+
+#include <deque>
+#include <mutex>
+#include <vector>
+#include <strmif.h>
+#include <mpc_defines.h>
+#include "BaseClasses/streams.h"
+#include "atlbase.h"
+
+#define PACKET_AAC_RAW 0x0001
+
+ // CPacket
+
+class CPacket : public std::vector<BYTE>
+{
+public:
+	DWORD TrackNumber      = 0;
+	BOOL bDiscontinuity    = FALSE;
+	BOOL bSyncPoint        = FALSE;
+	REFERENCE_TIME rtStart = INVALID_TIME;
+	REFERENCE_TIME rtStop  = INVALID_TIME;
+	AM_MEDIA_TYPE* pmt     = nullptr;
+
+	UINT32 Flag            = 0;
+
+	~CPacket();
+
+	bool SetCount(const size_t newsize);
+	void SetData(const CPacket& packet);
+	void SetData(const void* ptr, const size_t size);
+	void AppendData(const CPacket& packet);
+	void AppendData(const void* ptr, const size_t size);
+	void RemoveHead(const size_t size);
+};
+
+// CPacketQueue
+
+class CPacketQueue
+{
+	std::mutex m_mutex;
+	size_t m_size = 0;
+	std::deque<std::unique_ptr<CPacket>> m_deque;
+
+public:
+	void Add(std::unique_ptr<CPacket>& p);
+	std::unique_ptr<CPacket> Remove();
+	void RemoveSafe(std::unique_ptr<CPacket>& p, size_t& count);
+	void RemoveAll();
+	const size_t GetCount();
+	const size_t GetSize();
+	const REFERENCE_TIME GetDuration();
+};

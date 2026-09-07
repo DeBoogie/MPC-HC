@@ -25,15 +25,16 @@
 #include "SettingsDefines.h"
 #include "AppSettings.h"
 
-
 // CFavoriteAddDlg dialog
 
-IMPLEMENT_DYNAMIC(CFavoriteAddDlg, CCmdUIDialog)
-CFavoriteAddDlg::CFavoriteAddDlg(CString shortname, CString fullname, CWnd* pParent /*=nullptr*/)
-    : CCmdUIDialog(CFavoriteAddDlg::IDD, pParent)
+CFavoriteAddDlg::CFavoriteAddDlg(CString shortname, CString fullname,
+    BOOL bEnableABMarks /*=FALSE*/, CWnd* pParent /*=nullptr*/)
+    : CMPCThemeResizableDialog(CFavoriteAddDlg::IDD, pParent)
     , m_shortname(shortname)
     , m_fullname(fullname)
+    , m_bEnableABMarks(bEnableABMarks)
     , m_bRememberPos(TRUE)
+    , m_bRememberABMarks(FALSE)
     , m_bRelativeDrive(FALSE)
 {
 }
@@ -49,6 +50,8 @@ void CFavoriteAddDlg::DoDataExchange(CDataExchange* pDX)
     DDX_CBString(pDX, IDC_COMBO1, m_name);
     DDX_Check(pDX, IDC_CHECK1, m_bRememberPos);
     DDX_Check(pDX, IDC_CHECK2, m_bRelativeDrive);
+    DDX_Check(pDX, IDC_CHECK3, m_bRememberABMarks);
+    fulfillThemeReqs();
 }
 
 BOOL CFavoriteAddDlg::OnInitDialog()
@@ -70,16 +73,27 @@ BOOL CFavoriteAddDlg::OnInitDialog()
     m_bRememberPos = s.bFavRememberPos;
     m_bRelativeDrive = s.bFavRelativeDrive;
 
+    if (m_bEnableABMarks) {
+        m_bRememberABMarks = s.bFavRememberABMarks;
+    }
+    GetDlgItem(IDC_CHECK3)->EnableWindow(m_bEnableABMarks);
+
     UpdateData(FALSE); // Update UI
 
     m_namectrl.SetCurSel(0);
+
+    AddAnchor(IDC_COMBO1, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_STATIC1, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDOK, BOTTOM_RIGHT);
+    AddAnchor(IDCANCEL, BOTTOM_RIGHT);
+
 
     return TRUE;  // return TRUE unless you set the focus to a control
     // EXCEPTION: OCX Property Pages should return FALSE
 }
 
 
-BEGIN_MESSAGE_MAP(CFavoriteAddDlg, CCmdUIDialog)
+BEGIN_MESSAGE_MAP(CFavoriteAddDlg, CMPCThemeResizableDialog)
     ON_UPDATE_COMMAND_UI(IDOK, OnUpdateOk)
 END_MESSAGE_MAP()
 
@@ -103,5 +117,9 @@ void CFavoriteAddDlg::OnOK()
     s.bFavRememberPos = !!m_bRememberPos;
     s.bFavRelativeDrive = !!m_bRelativeDrive;
 
-    CCmdUIDialog::OnOK();
+    if (m_bEnableABMarks) {
+        s.bFavRememberABMarks = !!m_bRememberABMarks;
+    }
+
+    __super::OnOK();
 }

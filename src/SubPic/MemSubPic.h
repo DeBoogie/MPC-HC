@@ -53,10 +53,12 @@ public:
     CMemSubPic(const SubPicDesc& spd, CMemSubPicAllocator* pAllocator);
     virtual ~CMemSubPic();
 
+    HRESULT UnlockARGB();
+
     // ISubPic
     STDMETHODIMP GetDesc(SubPicDesc& spd);
     STDMETHODIMP CopyTo(ISubPic* pSubPic);
-    STDMETHODIMP ClearDirtyRect(DWORD color);
+    STDMETHODIMP ClearDirtyRect();
     STDMETHODIMP Lock(SubPicDesc& spd);
     STDMETHODIMP Unlock(RECT* pDirtyRect);
     STDMETHODIMP AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget);

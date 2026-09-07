@@ -42,11 +42,12 @@ namespace DSObjects
         public IQualProp,
         public IMFRateSupport,
         public IMFVideoDisplayControl,
+        public IMFVideoMixerBitmap,
         public IEVRTrustedVideoPlugin
     /*  public IMFVideoPositionMapper,      // Non mandatory EVR Presenter Interfaces (see later...) */
     {
     public:
-        CEVRAllocatorPresenter(HWND hWnd, bool bFullscreen, HRESULT& hr, CString& _Error);
+        CEVRAllocatorPresenter(HWND hWnd, bool bFullscreen, HRESULT& hr, CString& _Error, bool isPreview=false);
         ~CEVRAllocatorPresenter();
 
         DECLARE_IUNKNOWN;
@@ -129,6 +130,12 @@ namespace DSObjects
         STDMETHODIMP SetFullscreen(BOOL fFullscreen);
         STDMETHODIMP GetFullscreen(BOOL* pfFullscreen);
 
+        // IMFVideoMixerBitmap
+        STDMETHODIMP ClearAlphaBitmap();
+        STDMETHODIMP GetAlphaBitmapParameters(MFVideoAlphaBitmapParams *pBmpParms);
+        STDMETHODIMP SetAlphaBitmap(const MFVideoAlphaBitmap *pBmpParms);
+        STDMETHODIMP UpdateAlphaBitmapParameters(const MFVideoAlphaBitmapParams *pBmpParms);
+
         // IEVRTrustedVideoPlugin
         STDMETHODIMP IsInTrustedVideoMode(BOOL* pYes);
         STDMETHODIMP CanConstrict(BOOL* pYes);
@@ -159,9 +166,9 @@ namespace DSObjects
     private:
 
         enum RENDER_STATE {
-            Started  = State_Running,
             Stopped  = State_Stopped,
             Paused   = State_Paused,
+            Started  = State_Running,
             Shutdown = State_Running + 1
         };
 
@@ -183,7 +190,7 @@ namespace DSObjects
 
         bool                             m_fUseInternalTimer;
         INT32                            m_LastSetOutputRange;
-        bool                             m_bPendingRenegotiate;
+        std::atomic_bool                 m_bPendingRenegotiate;
         bool                             m_bPendingMediaFinished;
 
         HANDLE                           m_hThread;

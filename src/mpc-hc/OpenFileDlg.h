@@ -25,6 +25,18 @@
 #include <atlpath.h>
 
 
+namespace FileDialogUtils
+{
+    // Retrieves the path(s) the user selected, to be called after DoModal() returned IDOK.
+    // Use this instead of CFileDialog::GetStartPosition()/GetNextPathName(), which cannot
+    // return a path longer than _MAX_PATH. Returns false if nothing could be retrieved.
+    bool GetSelectedPaths(CFileDialog& fd, CAtlList<CString>& paths);
+
+    // Single selection variant, returns an empty string on failure.
+    CString GetSelectedPath(CFileDialog& fd);
+}
+
+
 // COpenFileDlg
 
 class COpenFileDlg : public CFileDialog

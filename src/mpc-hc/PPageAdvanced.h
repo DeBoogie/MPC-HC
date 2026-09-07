@@ -1,5 +1,5 @@
 /*
-* (C) 2015-2016 see Authors.txt
+* (C) 2015-2017 see Authors.txt
 *
 * This file is part of MPC-HC.
 *
@@ -20,13 +20,18 @@
 
 #pragma once
 
-#include "PPageBase.h"
+#include "CMPCThemePPageBase.h"
 #include "resource.h"
 #include "EventDispatcher.h"
 #include <utility>
 #include <memory>
 #include <map>
 #include <deque>
+#include <vector>
+#include "CMPCThemeComboBox.h"
+#include "CMPCThemeSpinButtonCtrl.h"
+#include "CMPCThemePlayerListCtrl.h"
+#include "FloatEdit.h"
 
 class SettingsBase
 {
@@ -40,8 +45,12 @@ public:
     }
     virtual ~SettingsBase() = default;
 
-    CString GetToolTipText() const { return toolTipText; }
-    CString GetName() const { return name; }
+    CString GetToolTipText() const {
+        return toolTipText;
+    }
+    CString GetName() const {
+        return name;
+    }
     virtual bool IsDefault() const PURE;
     virtual void ResetDefault() PURE;
     virtual void Apply() PURE;
@@ -61,12 +70,27 @@ public:
         , settingReference(settingReference) {
     }
 
-    bool IsDefault() const { return currentValue == defaultValue; }
-    void ResetDefault() { SetValue(defaultValue); }
-    void SetValue(bool value) { currentValue = value; }
-    bool GetValue() const { return currentValue; }
-    void Apply() { settingReference = currentValue; }
-    void Toggle() { currentValue = !currentValue; }
+    bool IsDefault() const {
+        return currentValue == defaultValue;
+    }
+    void ResetDefault() {
+        SetValue(defaultValue);
+    }
+    void SetValue(bool value) {
+        currentValue = value;
+    }
+    bool GetValue() const {
+        return currentValue;
+    }
+    bool GetDefaultValue() const {
+        return defaultValue;
+    }
+    void Apply() {
+        settingReference = currentValue;
+    }
+    void Toggle() {
+        currentValue = !currentValue;
+    }
 };
 
 class SettingsInt : public SettingsBase
@@ -85,12 +109,27 @@ public:
         , range(std::move(range)) {
     }
 
-    bool IsDefault() const { return currentValue == defaultValue; }
-    void ResetDefault() { SetValue(defaultValue); }
-    void SetValue(int value) { currentValue = value; }
-    int GetValue() const { return currentValue; }
-    void Apply() { settingReference = currentValue; }
-    std::pair<int, int> GetRange() const { return range; }
+    bool IsDefault() const {
+        return currentValue == defaultValue;
+    }
+    void ResetDefault() {
+        SetValue(defaultValue);
+    }
+    void SetValue(int value) {
+        currentValue = value;
+    }
+    int GetValue() const {
+        return currentValue;
+    }
+    int GetDefaultValue() const {
+        return defaultValue;
+    }
+    void Apply() {
+        settingReference = currentValue;
+    }
+    std::pair<int, int> GetRange() const {
+        return range;
+    }
 };
 
 class SettingsCombo : public SettingsInt
@@ -103,7 +142,9 @@ public:
         , list(std::move(list)) {
     }
 
-    std::deque<CString> GetList() const { return list; }
+    std::deque<CString> GetList() const {
+        return list;
+    }
 };
 
 class SettingsCString : public SettingsBase
@@ -120,46 +161,112 @@ public:
         , settingReference(settingReference) {
     }
 
-    bool IsDefault() const { return currentValue == defaultValue; }
-    void ResetDefault() { SetValue(defaultValue); }
-    void SetValue(const CString& value) { currentValue = value; }
-    CString GetValue() const { return currentValue; }
-    void Apply() { settingReference = currentValue; }
+    bool IsDefault() const {
+        return currentValue == defaultValue;
+    }
+    void ResetDefault() {
+        SetValue(defaultValue);
+    }
+    void SetValue(const CString& value) {
+        currentValue = value;
+    }
+    CString GetValue() const {
+        return currentValue;
+    }
+    void Apply() {
+        settingReference = currentValue;
+    }
 };
 
-class CPPageAdvanced : public CPPageBase
+class CPPageAdvanced : public CMPCThemePPageBase
+    , public CMPCThemeListCtrlCustomInterface
 {
+    DECLARE_DYNAMIC(CPPageAdvanced)
 public:
     CPPageAdvanced();
     virtual ~CPPageAdvanced() = default;
+    virtual void DoDPIChanged();
+    virtual void GetCustomTextColors(INT_PTR nItem, int iSubItem, COLORREF& clrText, COLORREF& clrTextBk, bool& overrideSelectedBG);
+    virtual void DoCustomPrePaint() {};
+    virtual void GetCustomGridColors(int nItem, COLORREF& horzGridColor, COLORREF& vertGridColor) {};
+    virtual bool UseCustomGrid() { return false; };
 
 private:
     enum { IDD = IDD_PPAGEADVANCED };
 
     enum ADVANCED_SETTINGS {
-        HIDE_WINDOWED,
-        BLOCK_VSFILTER,
         RECENT_FILES_NB,
         FILE_POS_LONGER,
         FILE_POS_AUDIO,
+        FILE_POS_PLAYLIST,
+        FILE_POS_TRACK_SELECTION,
+        FULLSCREEN_SEPARATE_CONTROLS,
         COVER_SIZE_LIMIT,
+        BLOCK_VSFILTER,
+        BLOCK_RDP,
+        LOOP_FOLDER_NEXT_FILE,
+        NEXT_FILE_SORT_BY_DATE,
+        OSD_TRANSPARENCY,
+        OSD_BORDER,
+        USE_YDL,
+        YDL_MAX_HEIGHT,
+        YDL_VIDEO_FORMAT,
+        YDL_AUDIO_FORMAT,
+        YDL_AUDIO_ONLY,
+        YDL_EXEPATH,
+        YDL_COMMAND_LINE,
+        YDL_SUBS_PREFERENCE,
+        USE_AUTOMATIC_CAPTIONS,
+        SAVEIMAGE_POSITION,
+        SAVEIMAGE_CURRENTTIME,
+        SNAPSHOTSUBTITLES,
+        SNAPSHOTKEEPVIDEOEXTENSION,
+        SUB_SECONDARY_VERT_POS,
+        ADD_LANGCODE_WHEN_SAVE_SUBTITLES,
+        USE_TITLE_IN_RECENT_FILE_LIST,
+        MOUSE_LEFTUP_DELAY,
+        LOCK_NOPAUSE,
+        PREVENT_DISPLAY_SLEEP,
+        RELOAD_AFTER_LONG_PAUSE,
+        INACCURATE_FASTSEEK,
+        STILL_VIDEO_DURATION,
+        STREAMPOSPOLLER_INTERVAL,
+        REDIR_OPEN_TO_APPEND,
+#if !defined(_DEBUG) && USE_DRDUMP_CRASH_REPORTER
+        CRASHREPORTER,
+#endif
         LOGGING,
+        FULLSCREEN_DELAY,
         AUTO_DOWNLOAD_SCORE_MOVIES,
         AUTO_DOWNLOAD_SCORE_SERIES,
-        DEFAULT_TOOLBAR_SIZE,
-        USE_LEGACY_TOOLBAR,
+        OPEN_REC_PANEL_WHEN_OPENING_DEVICE,
+        ALWAYS_USE_SHORT_MENU,
+        USE_FREETYPE,
+        USE_MEDIAINFO_LOAD_FILE_DURATION,
+        CAPTURE_DEINTERLACE,
+        PAUSE_WHILE_DRAGGING_SEEKBAR,
+        CONFIRM_FILE_DELETE,
+        LIBASS_FOR_SRT,
+        SHOW_VOLUME_PERCENTAGE,
+        STARTUP_PRESET,
+        TIME_ON_SEEKBAR_LEFT,
+        HISTORY_IN_APPDATA,
+        HISTORY_EXCLUDE_FILTER,
+        HISTORY_MAX_AGE_DAYS,
     };
+
+    static constexpr DWORD_PTR HEADER_ITEM_DATA = (DWORD_PTR)-1;
 
     enum {
         COL_NAME,
-        COL_VALUE
+        COL_VALUE,
+        COL_DUMMYCOL //use to block value column from oversizing it
     };
 
-    EventClient m_eventc;
-
     CFont m_fontBold;
-    CComboBox m_comboBox;
-    CSpinButtonCtrl m_spinButtonCtrl;
+    CMPCThemeComboBox m_comboBox;
+    CMPCThemeSpinButtonCtrl m_spinButtonCtrl;
+    CMPCThemeDynamicEdit m_dynamicEdit;
 
     std::map<ADVANCED_SETTINGS, std::shared_ptr<SettingsBase>> m_hiddenOptions;
 
@@ -169,7 +276,13 @@ private:
     CString m_strFalse;
 
     void InitSettings();
+    // The widest value the setting can ever display, and whether it would be drawn flagged (bold).
+    std::pair<CString, bool> GetWidestValue(const std::shared_ptr<SettingsBase>& pItem, CDC* pDC);
+    void AutoSizeValueColumn();
     bool IsDefault(ADVANCED_SETTINGS) const;
+    inline bool IsHeaderRow(int iItem) const {
+        return m_list.GetItemData(iItem) == HEADER_ITEM_DATA;
+    };
     inline const int GetListSelectionMark() const {
         const int iItem = m_list.GetSelectionMark();
         if (iItem != m_lastSelectedItem) {
@@ -177,13 +290,16 @@ private:
         }
         return iItem;
     };
+    CRect editRect;
 
 protected:
-    CListCtrl m_list;
+    CMPCThemePlayerListCtrl m_list;
 
     virtual void DoDataExchange(CDataExchange* pDX) override;
     virtual BOOL OnInitDialog() override;
     virtual BOOL OnApply() override;
+    void initBoldFont();
+
 
     afx_msg void OnBnClickedDefaultButton();
     afx_msg void OnUpdateDefaultButton(CCmdUI* pCmdUI);

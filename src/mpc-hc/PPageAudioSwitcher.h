@@ -21,13 +21,21 @@
 
 #pragma once
 
-#include "PPageBase.h"
+#include "CMPCThemePPageBase.h"
 #include "FloatEdit.h"
 #include "../filters/switcher/AudioSwitcher/AudioSwitcher.h"
+#include "CMPCThemeButton.h"
+#include "CMPCThemeSliderCtrl.h"
+#include "CMPCThemeEdit.h"
+#include "CMPCThemeSpinButtonCtrl.h"
+#include "CMPCThemePlayerListCtrl.h"
+
+
+
 
 // CPPageAudioSwitcher dialog
 
-class CPPageAudioSwitcher : public CPPageBase
+class CPPageAudioSwitcher : public CMPCThemePPageBase
 {
     DECLARE_DYNAMIC(CPPageAudioSwitcher)
 
@@ -38,27 +46,24 @@ private:
     BOOL m_fEnableAudioSwitcher;
     BOOL m_fAudioNormalize;
     UINT m_nAudioMaxNormFactor;
-    CSpinButtonCtrl m_AudioMaxNormFactorSpin;
+    CMPCThemeSpinButtonCtrl m_AudioMaxNormFactorSpin;
     BOOL m_fAudioNormalizeRecover;
     int m_AudioBoostPos;
-    CSliderCtrl m_AudioBoostCtrl;
-    BOOL m_fDownSampleTo441;
-    CButton m_fDownSampleTo441Ctrl;
+    CMPCThemeSliderCtrl m_AudioBoostCtrl;
     BOOL m_fCustomChannelMapping;
-    CButton m_fCustomChannelMappingCtrl;
-    CEdit m_nChannelsCtrl;
+    CMPCThemeRadioOrCheck m_fCustomChannelMappingCtrl;
+    CMPCThemeEdit m_nChannelsCtrl;
     int m_nChannels;
-    CSpinButtonCtrl m_nChannelsSpinCtrl;
-    CListCtrl m_list;
+    CMPCThemeSpinButtonCtrl m_nChannelsSpinCtrl;
+    CMPCThemePlayerListCtrl m_list;
     int m_tAudioTimeShift;
-    CButton m_fAudioTimeShiftCtrl;
-    CIntEdit m_tAudioTimeShiftCtrl;
-    CSpinButtonCtrl m_tAudioTimeShiftSpin;
+    CMPCThemeRadioOrCheck m_fAudioTimeShiftCtrl;
+    CMPCThemeIntEdit m_tAudioTimeShiftCtrl;
+    CMPCThemeSpinButtonCtrl m_tAudioTimeShiftSpin;
     BOOL m_fAudioTimeShift;
 
     // tooltip for slidercontrol
     CToolTipCtrl m_tooltip;
-
 public:
     CPPageAudioSwitcher(IFilterGraph* pFG);
     virtual ~CPPageAudioSwitcher();
@@ -71,8 +76,11 @@ protected:
     virtual BOOL OnInitDialog();
     virtual BOOL OnApply();
 
+    void SetChannelMappingSW(int v);
+
     DECLARE_MESSAGE_MAP()
 
+    afx_msg void OnClickCheck1();
     afx_msg void OnNMClickList1(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
     afx_msg void OnEnChangeEdit1();

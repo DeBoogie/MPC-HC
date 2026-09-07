@@ -24,15 +24,16 @@
 #include "MainFrm.h"
 #include "PPageFileInfoSheet.h"
 #include "PPageFileMediaInfo.h"
+#include "CMPCTheme.h"
 
 
 // CPPageFileInfoSheet
 
-IMPLEMENT_DYNAMIC(CPPageFileInfoSheet, CPropertySheet)
-CPPageFileInfoSheet::CPPageFileInfoSheet(CString path, CMainFrame* pMainFrame, CWnd* pParentWnd)
-    : CPropertySheet(IDS_PROPSHEET_PROPERTIES, pParentWnd, 0)
-    , m_clip(path, pMainFrame->m_pGB, pMainFrame->m_pFSF, pMainFrame->m_pDVDI)
-    , m_details(path, pMainFrame->m_pGB, pMainFrame->m_pCAP, pMainFrame->m_pFSF, pMainFrame->m_pDVDI)
+IMPLEMENT_DYNAMIC(CPPageFileInfoSheet, CMPCThemeResizablePropertySheet)
+CPPageFileInfoSheet::CPPageFileInfoSheet(CString path, CString ydlsrc, CMainFrame* pMainFrame, CWnd* pParentWnd)
+    : CMPCThemeResizablePropertySheet(IDS_PROPSHEET_PROPERTIES, pParentWnd, 0)
+    , m_clip(path, ydlsrc, pMainFrame->m_pGB, pMainFrame->m_pFSF, pMainFrame->m_pDVDI)
+    , m_details(path, ydlsrc, pMainFrame->m_pGB, pMainFrame->m_pCAP, pMainFrame->m_pFSF, pMainFrame->m_pDVDI)
     , m_res(path, pMainFrame->m_pGB, pMainFrame->m_pFSF)
     , m_mi(path, pMainFrame->m_pFSF, pMainFrame->m_pDVDI, pMainFrame)
     , m_path(path)
@@ -44,10 +45,9 @@ CPPageFileInfoSheet::CPPageFileInfoSheet(CString path, CMainFrame* pMainFrame, C
         AddPage(&m_res);
     }
 
-#if !USE_STATIC_MEDIAINFO
-    if (CPPageFileMediaInfo::HasMediaInfo())
-#endif
+    if (CPPageFileMediaInfo::HasMediaInfo()) {
         AddPage(&m_mi);
+    }
 }
 
 CPPageFileInfoSheet::~CPPageFileInfoSheet()
@@ -55,7 +55,7 @@ CPPageFileInfoSheet::~CPPageFileInfoSheet()
 }
 
 
-BEGIN_MESSAGE_MAP(CPPageFileInfoSheet, CPropertySheet)
+BEGIN_MESSAGE_MAP(CPPageFileInfoSheet, CMPCThemeResizablePropertySheet)
     ON_BN_CLICKED(IDC_BUTTON_MI, OnSaveAs)
 END_MESSAGE_MAP()
 
@@ -69,18 +69,30 @@ BOOL CPPageFileInfoSheet::OnInitDialog()
     GetDlgItem(ID_APPLY_NOW)->ShowWindow(SW_HIDE);
     GetDlgItem(IDOK)->SetWindowText(ResStr(IDS_AG_CLOSE));
 
+    // align the buttons with the page above: Save As flush left, Close flush right (also keeps Close clear of the size grip)
+    CRect pageRect;
+    GetActivePage()->GetWindowRect(&pageRect);
+    ScreenToClient(&pageRect);
+
     CRect r;
     GetDlgItem(ID_APPLY_NOW)->GetWindowRect(&r);
     ScreenToClient(r);
+    r.MoveToX(pageRect.right - r.Width());
+    RemoveAnchor(IDOK); //otherwise it crashes when we add it later
     GetDlgItem(IDOK)->MoveWindow(r);
+    AddAnchor(IDOK, BOTTOM_RIGHT); // must be added after the move, since AddAnchor bases its margin on the button's current position
 
-    r.MoveToX(5);
-    r.right += 10;
+    r.MoveToX(pageRect.left);
+    r.right += 24;
     m_Button_MI.Create(ResStr(IDS_AG_SAVE_AS), WS_CHILD | BS_PUSHBUTTON | WS_VISIBLE, r, this, IDC_BUTTON_MI);
     m_Button_MI.SetFont(GetFont());
     m_Button_MI.ShowWindow(SW_HIDE);
 
     GetTabControl()->SetFocus();
+
+    CMPCThemeUtil::enableWindows10DarkFrame(this);
+
+    AddAnchor(IDC_BUTTON_MI, BOTTOM_LEFT);
 
     return FALSE;  // return TRUE unless you set the focus to a control
 }
@@ -89,3 +101,4 @@ void CPPageFileInfoSheet::OnSaveAs()
 {
     m_mi.OnSaveAs();
 }
+

@@ -37,9 +37,7 @@ protected:
 
 enum engine_t {
     DirectShow = 0,
-    RealMedia,
-    QuickTime,
-    ShockWave
+    ShockWave  = 3
 };
 
 interface __declspec(uuid("B110CDE5-6331-4118-8AAF-A870D6F7E2E4"))

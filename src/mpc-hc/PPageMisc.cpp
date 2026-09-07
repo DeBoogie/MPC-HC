@@ -20,24 +20,20 @@
 
 #include "stdafx.h"
 #include "mplayerc.h"
-#include "MainFrm.h"
 #include "PPageOutput.h"
 #include "moreuuids.h"
 #include "PPageMisc.h"
 #include <psapi.h>
 #include "PPageSheet.h"
-
+#include "CMPCThemeMsgBox.h"
+#include "MainFrm.h"
 
 // CPPageMisc dialog
 
-IMPLEMENT_DYNAMIC(CPPageMisc, CPPageBase)
+IMPLEMENT_DYNAMIC(CPPageMisc, CMPCThemePPageBase)
 CPPageMisc::CPPageMisc()
-    : CPPageBase(CPPageMisc::IDD, CPPageMisc::IDD)
-    , m_iBrightness(0)
-    , m_iContrast(0)
-    , m_iHue(0)
-    , m_iSaturation(0)
-    , m_nUpdaterAutoCheck(-1)
+    : CMPCThemePPageBase(CPPageMisc::IDD, CPPageMisc::IDD)
+    , m_nUpdaterAutoCheck(0)
     , m_nUpdaterDelay(7)
 {
 }
@@ -49,15 +45,7 @@ CPPageMisc::~CPPageMisc()
 void CPPageMisc::DoDataExchange(CDataExchange* pDX)
 {
     __super::DoDataExchange(pDX);
-    DDX_Control(pDX, IDC_SLI_BRIGHTNESS, m_SliBrightness);
-    DDX_Control(pDX, IDC_SLI_CONTRAST, m_SliContrast);
-    DDX_Control(pDX, IDC_SLI_HUE, m_SliHue);
-    DDX_Control(pDX, IDC_SLI_SATURATION, m_SliSaturation);
     DDX_Control(pDX, IDC_EXPORT_KEYS, m_ExportKeys);
-    DDX_Text(pDX, IDC_STATIC1, m_sBrightness);
-    DDX_Text(pDX, IDC_STATIC2, m_sContrast);
-    DDX_Text(pDX, IDC_STATIC3, m_sHue);
-    DDX_Text(pDX, IDC_STATIC4, m_sSaturation);
     DDX_Check(pDX, IDC_CHECK1, m_nUpdaterAutoCheck);
     DDX_Text(pDX, IDC_EDIT1, m_nUpdaterDelay);
     DDX_Control(pDX, IDC_CHECK1, m_updaterAutoCheckCtrl);
@@ -73,12 +61,11 @@ void CPPageMisc::DoDataExchange(CDataExchange* pDX)
 }
 
 
-BEGIN_MESSAGE_MAP(CPPageMisc, CPPageBase)
-    ON_WM_HSCROLL()
-    ON_BN_CLICKED(IDC_RESET, OnBnClickedReset)
+BEGIN_MESSAGE_MAP(CPPageMisc, CMPCThemePPageBase)
     ON_BN_CLICKED(IDC_RESET_SETTINGS, OnResetSettings)
     ON_BN_CLICKED(IDC_EXPORT_SETTINGS, OnExportSettings)
     ON_BN_CLICKED(IDC_EXPORT_KEYS, OnExportKeys)
+    ON_BN_CLICKED(IDC_COLOR_CONTROLS, OnColorControls)
     ON_UPDATE_COMMAND_UI(IDC_EDIT1, OnUpdateDelayEditBox)
     ON_UPDATE_COMMAND_UI(IDC_SPIN1, OnUpdateDelayEditBox)
     ON_UPDATE_COMMAND_UI(IDC_STATIC5, OnUpdateDelayEditBox)
@@ -96,44 +83,15 @@ BOOL CPPageMisc::OnInitDialog()
 
     CreateToolTip();
 
-    m_iBrightness = s.iBrightness;
-    m_iContrast   = s.iContrast;
-    m_iHue        = s.iHue;
-    m_iSaturation = s.iSaturation;
-
-    m_SliBrightness.EnableWindow(TRUE);
-    m_SliBrightness.SetRange(-100, 100, true);
-    m_SliBrightness.SetTic(0);
-    m_SliBrightness.SetPos(m_iBrightness);
-
-    m_SliContrast.EnableWindow(TRUE);
-    m_SliContrast.SetRange(-100, 100, true);
-    m_SliContrast.SetTic(0);
-    m_SliContrast.SetPos(m_iContrast);
-
-    m_SliHue.EnableWindow(TRUE);
-    m_SliHue.SetRange(-180, 180, true);
-    m_SliHue.SetTic(0);
-    m_SliHue.SetPos(m_iHue);
-
-    m_SliSaturation.EnableWindow(TRUE);
-    m_SliSaturation.SetRange(-100, 100, true);
-    m_SliSaturation.SetTic(0);
-    m_SliSaturation.SetPos(m_iSaturation);
-
     if (AfxGetMyApp()->IsIniValid()) {
         m_ExportKeys.EnableWindow(FALSE);
     }
-
-    m_sBrightness.Format(m_iBrightness ? _T("%+d") : _T("%d"), m_iBrightness);
-    m_sContrast.Format(m_iContrast ? _T("%+d") : _T("%d"), m_iContrast);
-    m_sHue.Format(m_iHue ? _T("%+d") : _T("%d"), m_iHue);
-    m_sSaturation.Format(m_iSaturation ? _T("%+d") : _T("%d"), m_iSaturation);
 
     m_nUpdaterAutoCheck = s.nUpdaterAutoCheck;
     m_nUpdaterDelay = s.nUpdaterDelay;
     m_updaterDelaySpin.SetRange32(1, 365);
 
+    AdjustDynamicWidgets();
     UpdateData(FALSE);
 
     return TRUE;
@@ -145,67 +103,10 @@ BOOL CPPageMisc::OnApply()
 
     CAppSettings& s = AfxGetAppSettings();
 
-    s.iBrightness = m_iBrightness;
-    s.iContrast   = m_iContrast;
-    s.iHue        = m_iHue;
-    s.iSaturation = m_iSaturation;
-
     s.nUpdaterAutoCheck = m_nUpdaterAutoCheck;
     s.nUpdaterDelay = m_nUpdaterDelay;
 
     return __super::OnApply();
-}
-
-void CPPageMisc::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
-{
-    UpdateData();
-    if (*pScrollBar == m_SliBrightness) {
-        m_iBrightness = m_SliBrightness.GetPos();
-        ((CMainFrame*)AfxGetMyApp()->GetMainWnd())->SetColorControl(ProcAmp_Brightness, m_iBrightness, m_iContrast, m_iHue, m_iSaturation);
-        m_sBrightness.Format(m_iBrightness ? _T("%+d") : _T("%d"), m_iBrightness);
-    } else if (*pScrollBar == m_SliContrast) {
-        m_iContrast = m_SliContrast.GetPos();
-        ((CMainFrame*)AfxGetMyApp()->GetMainWnd())->SetColorControl(ProcAmp_Contrast, m_iBrightness, m_iContrast, m_iHue, m_iSaturation);
-        m_sContrast.Format(m_iContrast ? _T("%+d") : _T("%d"), m_iContrast);
-    } else if (*pScrollBar == m_SliHue) {
-        m_iHue = m_SliHue.GetPos();
-        ((CMainFrame*)AfxGetMyApp()->GetMainWnd())->SetColorControl(ProcAmp_Hue, m_iBrightness, m_iContrast, m_iHue, m_iSaturation);
-        m_sHue.Format(m_iHue ? _T("%+d") : _T("%d"), m_iHue);
-    } else if (*pScrollBar == m_SliSaturation) {
-        m_iSaturation = m_SliSaturation.GetPos();
-        ((CMainFrame*)AfxGetMyApp()->GetMainWnd())->SetColorControl(ProcAmp_Saturation, m_iBrightness, m_iContrast, m_iHue, m_iSaturation);
-        m_sSaturation.Format(m_iSaturation ? _T("%+d") : _T("%d"), m_iSaturation);
-    }
-
-    UpdateData(FALSE);
-
-    SetModified();
-
-    __super::OnHScroll(nSBCode, nPos, pScrollBar);
-}
-
-void CPPageMisc::OnBnClickedReset()
-{
-    m_iBrightness = AfxGetMyApp()->GetColorControl(ProcAmp_Brightness)->DefaultValue;
-    m_iContrast   = AfxGetMyApp()->GetColorControl(ProcAmp_Contrast)->DefaultValue;
-    m_iHue        = AfxGetMyApp()->GetColorControl(ProcAmp_Hue)->DefaultValue;
-    m_iSaturation = AfxGetMyApp()->GetColorControl(ProcAmp_Saturation)->DefaultValue;
-
-    m_SliBrightness.SetPos(m_iBrightness);
-    m_SliContrast.SetPos(m_iContrast);
-    m_SliHue.SetPos(m_iHue);
-    m_SliSaturation.SetPos(m_iSaturation);
-
-    m_sBrightness.Format(m_iBrightness ? _T("%+d") : _T("%d"), m_iBrightness);
-    m_sContrast.Format(m_iContrast ? _T("%+d") : _T("%d"), m_iContrast);
-    m_sHue.Format(m_iHue ? _T("%+d") : _T("%d"), m_iHue);
-    m_sSaturation.Format(m_iSaturation ? _T("%+d") : _T("%d"), m_iSaturation);
-
-    ((CMainFrame*)AfxGetMyApp()->GetMainWnd())->SetColorControl(ProcAmp_All, m_iBrightness, m_iContrast, m_iHue, m_iSaturation);
-
-    UpdateData(FALSE);
-
-    SetModified();
 }
 
 void CPPageMisc::OnUpdateDelayEditBox(CCmdUI* pCmdUI)
@@ -215,7 +116,7 @@ void CPPageMisc::OnUpdateDelayEditBox(CCmdUI* pCmdUI)
 
 void CPPageMisc::OnResetSettings()
 {
-    if (MessageBox(ResStr(IDS_RESET_SETTINGS_WARNING), ResStr(IDS_RESET_SETTINGS), MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2) == IDYES) {
+    if (CMPCThemeMsgBox::MessageBox(this, ResStr(IDS_RESET_SETTINGS_WARNING), ResStr(IDS_RESET_SETTINGS), MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2) == IDYES) {
         AfxGetAppSettings().SetAsUninitialized(); // Consider the settings as initialized
 
         // Exit the Options dialog and inform the caller that we want to reset the settings
@@ -226,7 +127,7 @@ void CPPageMisc::OnResetSettings()
 void CPPageMisc::OnExportSettings()
 {
     if (GetParent()->GetDlgItem(ID_APPLY_NOW)->IsWindowEnabled()) {
-        int ret = MessageBox(ResStr(IDS_EXPORT_SETTINGS_WARNING), ResStr(IDS_EXPORT_SETTINGS), MB_ICONEXCLAMATION | MB_YESNOCANCEL);
+        int ret = CMPCThemeMsgBox::MessageBox(this, ResStr(IDS_EXPORT_SETTINGS_WARNING), ResStr(IDS_EXPORT_SETTINGS), MB_ICONEXCLAMATION | MB_YESNOCANCEL);
 
         if (ret == IDCANCEL) {
             return;
@@ -235,14 +136,16 @@ void CPPageMisc::OnExportSettings()
         }
     }
 
-    CString ext = AfxGetMyApp()->IsIniValid() ? _T("ini") : _T("reg");
+    // In INI mode the settings live in two files (settings + MediaHistory), so
+    // they are exported together as a .zip; in registry mode a single .reg.
+    CString ext = AfxGetMyApp()->IsIniValid() ? _T("zip") : _T("reg");
     CFileDialog fileSaveDialog(FALSE, ext, _T("mpc-hc-settings.") + ext);
 
     if (fileSaveDialog.DoModal() == IDOK) {
         if (AfxGetMyApp()->ExportSettings(fileSaveDialog.GetPathName())) {
-            MessageBox(ResStr(IDS_EXPORT_SETTINGS_SUCCESS), ResStr(IDS_EXPORT_SETTINGS), MB_ICONINFORMATION | MB_OK);
+            CMPCThemeMsgBox::MessageBox(this, ResStr(IDS_EXPORT_SETTINGS_SUCCESS), ResStr(IDS_EXPORT_SETTINGS), MB_ICONINFORMATION | MB_OK);
         } else {
-            MessageBox(ResStr(IDS_EXPORT_SETTINGS_FAILED), ResStr(IDS_EXPORT_SETTINGS), MB_ICONERROR | MB_OK);
+            CMPCThemeMsgBox::MessageBox(this, ResStr(IDS_EXPORT_SETTINGS_FAILED), ResStr(IDS_EXPORT_SETTINGS), MB_ICONERROR | MB_OK);
         }
     }
 }
@@ -250,7 +153,7 @@ void CPPageMisc::OnExportSettings()
 void CPPageMisc::OnExportKeys()
 {
     if (GetParent()->GetDlgItem(ID_APPLY_NOW)->IsWindowEnabled()) {
-        int ret = MessageBox(ResStr(IDS_EXPORT_SETTINGS_WARNING), ResStr(IDS_EXPORT_SETTINGS), MB_ICONEXCLAMATION | MB_YESNOCANCEL);
+        int ret = CMPCThemeMsgBox::MessageBox(this, ResStr(IDS_EXPORT_SETTINGS_WARNING), ResStr(IDS_EXPORT_SETTINGS), MB_ICONEXCLAMATION | MB_YESNOCANCEL);
 
         if (ret == IDCANCEL) {
             return;
@@ -259,25 +162,33 @@ void CPPageMisc::OnExportKeys()
         }
     }
 
-    CFileDialog fileSaveDialog(FALSE, _T("reg"), _T("mpc-hc-keys.reg"));
-
-    if (fileSaveDialog.DoModal() == IDOK) {
-        if (AfxGetMyApp()->ExportSettings(fileSaveDialog.GetPathName(), _T("Commands2"))) {
-            MessageBox(ResStr(IDS_EXPORT_SETTINGS_SUCCESS), ResStr(IDS_EXPORT_SETTINGS), MB_ICONINFORMATION | MB_OK);
+    CFileDialog fileDialogKeys(FALSE, _T("reg"), _T("mpc-hc-keys.reg"));
+    if (fileDialogKeys.DoModal() == IDOK) {
+        if (AfxGetMyApp()->ExportSettings(fileDialogKeys.GetPathName(), _T("Commands2"))) {
+            // also export mouse settings from registry
+            if (!AfxGetMyApp()->IsIniValid()) {
+                CFileDialog fileDialogMouse(FALSE, _T("reg"), _T("mpc-hc-mouse.reg"));
+                if (fileDialogMouse.DoModal() == IDOK) {
+                    AfxGetMyApp()->ExportSettings(fileDialogMouse.GetPathName(), _T("Mouse"));
+                }
+            }
+            CMPCThemeMsgBox::MessageBox(this, ResStr(IDS_EXPORT_SETTINGS_SUCCESS), ResStr(IDS_EXPORT_SETTINGS), MB_ICONINFORMATION | MB_OK);
         } else {
             if (GetLastError() == ERROR_FILE_NOT_FOUND) {
-                MessageBox(ResStr(IDS_EXPORT_SETTINGS_NO_KEYS), ResStr(IDS_EXPORT_SETTINGS), MB_ICONINFORMATION | MB_OK);
+                CMPCThemeMsgBox::MessageBox(this, ResStr(IDS_EXPORT_SETTINGS_NO_KEYS), ResStr(IDS_EXPORT_SETTINGS), MB_ICONINFORMATION | MB_OK);
             } else {
-                MessageBox(ResStr(IDS_EXPORT_SETTINGS_FAILED), ResStr(IDS_EXPORT_SETTINGS), MB_ICONERROR | MB_OK);
+                CMPCThemeMsgBox::MessageBox(this, ResStr(IDS_EXPORT_SETTINGS_FAILED), ResStr(IDS_EXPORT_SETTINGS), MB_ICONERROR | MB_OK);
             }
         }
     }
 }
 
-void CPPageMisc::OnCancel()
+void CPPageMisc::OnColorControls()
 {
-    CAppSettings& s = AfxGetAppSettings();
+    GetParent()->PostMessage(PSM_PRESSBUTTON, PSBTN_OK);
+    AfxGetMainFrame()->PostMessage(WM_COMMAND, ID_COLOR_CONTROLS);
+}
 
-    ((CMainFrame*)AfxGetMyApp()->GetMainWnd())->SetColorControl(ProcAmp_All, s.iBrightness, s.iContrast, s.iHue, s.iSaturation);
-    __super::OnCancel();
+void CPPageMisc::AdjustDynamicWidgets() {
+    AdjustDynamicWidgetPair(this, IDC_STATIC5, IDC_EDIT1);
 }

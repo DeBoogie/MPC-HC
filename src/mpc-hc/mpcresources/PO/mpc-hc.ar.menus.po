@@ -2,18 +2,17 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# Ahmad Abd-Elghany <tolpa1@gmail.com>, 2013-2014
-# Abubakr Mohammed <bcs2610@hotmail.com>, 2014
-# Mubarak Qahtani <abu-q76@hotmail.com>, 2016
-# Tariq <tariq-mz@hotmail.com>, 2014
-# manxx55 <w6txz2@gmail.com>, 2014-2015
+# MPC HC <adiposegithub@gmail.com>, 2020
+# Abdullah Almofleh <almofleh.abdullah@gmail.com>, 2024
+# Dr Ahmad, 2025
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2016-01-17 21:31:34+0000\n"
-"PO-Revision-Date: 2017-08-13 20:50+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Arabic (http://www.transifex.com/mpc-hc/mpc-hc/language/ar/)\n"
+"POT-Creation-Date: 2025-04-26 17:38:13+0000\n"
+"PO-Revision-Date: 2020-01-02 07:46+0000\n"
+"Last-Translator: Dr Ahmad, 2025\n"
+"Language-Team: Arabic (https://app.transifex.com/mpchc/teams/106126/ar/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -29,7 +28,7 @@ msgid "&Quick Open File..."
 msgstr "فتح سريع لملف..."
 
 msgctxt "ID_FILE_OPENMEDIA"
-msgid "&Open File..."
+msgid "&Open File/URL..."
 msgstr "فتح ملف..."
 
 msgctxt "ID_FILE_OPENDVDBD"
@@ -38,7 +37,7 @@ msgstr "فتح DVD/BD..."
 
 msgctxt "ID_FILE_OPENDEVICE"
 msgid "Open De&vice..."
-msgstr "فتح الجهاز..."
+msgstr "فتح جهاز..."
 
 msgctxt "ID_FILE_OPENDIRECTORY"
 msgid "Open Dir&ectory..."
@@ -84,13 +83,13 @@ msgctxt "ID_FILE_SUBTITLES_DOWNLOAD"
 msgid "&Download Subtitles..."
 msgstr "تحميل الترجمة"
 
-msgctxt "ID_FILE_SUBTITLES_UPLOAD"
-msgid "&Upload Subtitles..."
-msgstr "رفع الترجمة"
-
 msgctxt "ID_FILE_PROPERTIES"
 msgid "P&roperties"
 msgstr "خصائص"
+
+msgctxt "ID_FILE_OPEN_LOCATION"
+msgid "Open File &Location"
+msgstr "افتح ملف & مكان"
 
 msgctxt "ID_FILE_EXIT"
 msgid "E&xit"
@@ -140,10 +139,6 @@ msgctxt "ID_VIEW_NAVIGATION"
 msgid "Na&vigation"
 msgstr "تصفح"
 
-msgctxt "ID_VIEW_DEBUGSHADERS"
-msgid "&Debug Shaders"
-msgstr "تصحيح المظللات"
-
 msgctxt "POPUP"
 msgid "&Presets..."
 msgstr "الإعدادات المسبقة..."
@@ -160,13 +155,21 @@ msgctxt "ID_VIEW_PRESETS_NORMAL"
 msgid "&Normal"
 msgstr "عادي"
 
+msgctxt "ID_VIEW_PRESETS_CUSTOM"
+msgid "C&ustom"
+msgstr ""
+
 msgctxt "ID_VIEW_FULLSCREEN"
 msgid "F&ull Screen"
 msgstr "ملء الشاشة"
 
 msgctxt "POPUP"
 msgid "&Zoom"
-msgstr "زوم"
+msgstr "تكبير"
+
+msgctxt "ID_VIEW_ZOOM_25"
+msgid "&25%"
+msgstr "&25%"
 
 msgctxt "ID_VIEW_ZOOM_50"
 msgid "&50%"
@@ -184,13 +187,9 @@ msgctxt "ID_VIEW_ZOOM_AUTOFIT"
 msgid "Auto &Fit"
 msgstr "احتواء تلقائي"
 
-msgctxt "ID_VIEW_ZOOM_AUTOFIT_LARGER"
-msgid "Auto Fit (&Larger Only)"
-msgstr "احتواء تلقائي (حجم أكبر فقط)"
-
 msgctxt "POPUP"
 msgid "R&enderer Settings"
-msgstr "إعدادات المصيير (Renderer)"
+msgstr "إعدادات العارض"
 
 msgctxt "ID_VIEW_TEARING_TEST"
 msgid "&Tearing Test"
@@ -360,17 +359,9 @@ msgctxt "ID_VIEW_FLUSHGPU_WAIT"
 msgid "&Wait for flushes"
 msgstr "إنتظار التفريغ"
 
-msgctxt "POPUP"
-msgid "R&eset"
-msgstr "إعادة الضبط"
-
 msgctxt "ID_VIEW_RESET_DEFAULT"
 msgid "Reset to &default renderer settings"
 msgstr "إعادة الضبط الى إعدادات المصيير الإفتراضية"
-
-msgctxt "ID_VIEW_RESET_OPTIMAL"
-msgid "Reset to &optimal renderer settings"
-msgstr "إعادة الضبط الى إعدادات المصيير الأمثل"
 
 msgctxt "POPUP"
 msgid "Video &Frame"
@@ -445,8 +436,8 @@ msgid "&Correct Monitor/Desktop AR Diff"
 msgstr "تصحيح فرق النسبة الباعية للشاشة/سطح المكتب"
 
 msgctxt "POPUP"
-msgid "Pa&n && Scan"
-msgstr "بان اند سكان"
+msgid "P&nS Frame Adjust"
+msgstr "ضبط الإطار"
 
 msgctxt "ID_VIEW_INCSIZE"
 msgid "&Increase Size"
@@ -482,15 +473,31 @@ msgstr "تحريك لليسار"
 
 msgctxt "ID_PANSCAN_MOVEUP"
 msgid "Move &Up"
-msgstr "تحريك للاعلي"
+msgstr "تحريك لأعلى"
 
 msgctxt "ID_PANSCAN_MOVEDOWN"
 msgid "Move &Down"
-msgstr "تحريك للأسفل"
+msgstr "تحريك لأسفل"
 
 msgctxt "ID_PANSCAN_CENTER"
 msgid "Cen&ter"
 msgstr "توسيط"
+
+msgctxt "ID_PANSCAN_ROTATEZM"
+msgid "Rotate Cloc&kwise"
+msgstr "تدوير باتجاه عقارب الساعة"
+
+msgctxt "ID_PANSCAN_ROTATEZ270"
+msgid "Rotate Counter-Clock&wise"
+msgstr "تدوير بعكس عقارب الساعة"
+
+msgctxt "ID_PANSCAN_ROTATEXM"
+msgid "&Flip Vertically"
+msgstr "القلب عموديًا"
+
+msgctxt "ID_PANSCAN_ROTATEYM"
+msgid "&Mirror"
+msgstr "&انعكاس"
 
 msgctxt "ID_VIEW_RESET"
 msgid "Re&set"
@@ -502,7 +509,7 @@ msgstr "في المقدمة"
 
 msgctxt "ID_ONTOP_DEFAULT"
 msgid "&Default"
-msgstr "الإفتراضي"
+msgstr "افتراضي"
 
 msgctxt "ID_ONTOP_ALWAYS"
 msgid "&Always"
@@ -552,6 +559,94 @@ msgctxt "ID_PLAY_REPEAT_WHOLEPLAYLIST"
 msgid "&Playlist"
 msgstr "قائمة التشغيل"
 
+msgctxt "ID_PLAY_REPEAT_AB"
+msgid "A-B (&Reset)"
+msgstr "A-B (&Reset)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_A"
+msgid "A-B (Mark &A)"
+msgstr "A-B (Mark &A)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_B"
+msgid "A-B (Mark &B)"
+msgstr "A-B (Mark &B)"
+
+msgctxt "POPUP"
+msgid "&Playback Rate"
+msgstr "معدل التشغيل"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_025"
+msgid "0.25 x"
+msgstr "0.25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_050"
+msgid "0.50 x"
+msgstr "0.50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_075"
+msgid "0.75 x"
+msgstr "0.75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_090"
+msgid "0.90 x"
+msgstr "0.90 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_100"
+msgid "1.00 x"
+msgstr "1.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_110"
+msgid "1.10 x"
+msgstr "1.10 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_125"
+msgid "1.25 x"
+msgstr "1.25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_150"
+msgid "1.50 x"
+msgstr "1.50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_175"
+msgid "1.75 x"
+msgstr "1.75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_200"
+msgid "2.00 x"
+msgstr "2.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_300"
+msgid "3.00 x"
+msgstr "3.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_400"
+msgid "4.00 x"
+msgstr "4.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_600"
+msgid "6.00 x"
+msgstr "6.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_800"
+msgid "8.00 x"
+msgstr "8.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS23"
+msgid "23.976 fps"
+msgstr "23.976 fps"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS24"
+msgid "24 fps"
+msgstr "24 fps"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS25"
+msgid "25 fps"
+msgstr "25 fps"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS59"
+msgid "59.94 fps"
+msgstr "59.94 fps"
+
 msgctxt "ID_PLAY_DECRATE"
 msgid "&Decrease Rate"
 msgstr "تقليل سرعة العرض"
@@ -568,6 +663,10 @@ msgctxt "ID_FILTERS"
 msgid "&Filters"
 msgstr "الفلاتر"
 
+msgctxt "ID_COLOR_CONTROLS"
+msgid "&Color controls..."
+msgstr ""
+
 msgctxt "ID_SHADERS"
 msgid "S&haders"
 msgstr "المظللات"
@@ -579,6 +678,10 @@ msgstr "&مسار الصوت"
 msgctxt "ID_SUBTITLES"
 msgid "Su&btitle Track"
 msgstr "&مسار الترجمة"
+
+msgctxt "ID_SUBTITLES_SECONDARY"
+msgid "Secondary Subtitle Track"
+msgstr ""
 
 msgctxt "ID_VIDEO_STREAMS"
 msgid "Vide&o Track"
@@ -711,4 +814,3 @@ msgstr "تبرع"
 msgctxt "ID_HELP_ABOUT"
 msgid "&About..."
 msgstr "حول..."
-

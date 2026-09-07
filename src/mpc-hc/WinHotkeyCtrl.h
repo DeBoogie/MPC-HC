@@ -37,10 +37,14 @@ public:
     BOOL GetWinHotkey(UINT* pvkCode, UINT* pfModifiers);
     void SetWinHotkey(DWORD dwHk);
     void SetWinHotkey(UINT vkCode, UINT fModifiers);
+    virtual void DrawButton(CRect rectButton);
+    void SetIsMouseModifier(bool _isMouseModifier) { isMouseModifier = _isMouseModifier; };
 
 private:
     static HHOOK sm_hhookKb;
     static CWinHotkeyCtrl* sm_pwhcFocus;
+    static DWORD sm_fModsDown;
+    bool isMouseModifier;
 
     UINT m_vkCode, m_vkCode_def;
     DWORD m_fModSet, m_fModRel, m_fModSet_def;

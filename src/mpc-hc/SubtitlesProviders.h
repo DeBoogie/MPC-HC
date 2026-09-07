@@ -22,7 +22,7 @@
 
 #include "SubtitlesProvidersUtils.h"
 #include "../Subtitles/SubtitleHelpers.h"
-#include "MediaInfo/library/Source/ThirdParty/base64/base64.h"
+#include "base64/base64.h"
 #include "VersionInfo.h"
 
 class CMainFrame;
@@ -38,7 +38,6 @@ enum SubtitlesProviderFlags {
     SPF_SEARCH = 0x00000000,
     SPF_LOGIN  = 0x00000001,
     SPF_HASH   = 0x00000002,
-    SPF_UPLOAD = 0x00000004,
 };
 
 enum SubtitlesProviderLogin {
@@ -55,15 +54,13 @@ enum SRESULT {
     SR_ABORTED,
     // Specific to search only
     SR_TOOMANY,
-    // Specific to upload only
-    SR_EXISTS,
 };
 
 enum SubtitlesThreadType {
     STT_UNDEFINED = 0x00000000,
     STT_SEARCH    = 0x00000001,
     STT_DOWNLOAD  = 0x00000002,
-    STT_UPLOAD    = 0x00000004
+    STT_MANUALSEARCH = 0x00000008
 };
 
 
@@ -85,7 +82,7 @@ struct SubtitlesInfo {
         , framesNumber(INT_ERROR)
         , lengthMs(ULONGLONG_ERROR) {}
     bool operator<(const SubtitlesInfo& rhs) const { return score > rhs.score; }
-    HRESULT GetFileInfo(const std::wstring& sFileName = std::wstring());
+    HRESULT GetFileInfo(const std::string& sFileName = std::string());
     void Download(bool bActivate);
     void OpenUrl() const;
     std::shared_ptr<SubtitlesProvider> Provider() const { return fileProvider; }
@@ -173,6 +170,8 @@ public:
     double frameRate;
     int framesNumber;
     ULONGLONG lengthMs;
+
+    CString manualSearchString;
 };
 
 
@@ -195,6 +194,7 @@ public:
     }
     void AbortThread() {
         if (IsThreadRunning()) {
+            CAutoLock tlock(&m_csThreadLock);
             m_bAbort = true;
         }
     }
@@ -203,6 +203,9 @@ public:
             ::WaitForSingleObjectEx(*m_pThread, INFINITE, TRUE);
         }
     }
+
+protected:
+    CCritSec m_csThreadLock;
 
 private:
     static UINT _ThreadProc(LPVOID pThreadParams) {
@@ -234,7 +237,6 @@ private:
     void Search();
     void Download(SubtitlesInfo& pFileInfo, BOOL bActivate);
     void Download();
-    void Upload();
 
     void CheckAbortAndThrow() {
         if (IsThreadAborting()) {
@@ -254,10 +256,9 @@ class SubtitlesTask final : public CWinThreadProc
 public:
     // Search
     SubtitlesTask(CMainFrame* pMainFrame, bool bAutoDownload, const std::list<std::string>& sLanguages);
+    SubtitlesTask(CMainFrame* pMainFrame, bool bAutoDownload, const std::list<std::string>& sLanguages, CString manualSearch);
     // Download
     SubtitlesTask(CMainFrame* pMainFrame, SubtitlesInfo& pSubtitlesInfo, bool bActivate);
-    // Upload
-    SubtitlesTask(CMainFrame* pMainFrame, const SubtitlesInfo& pSubtitlesInfo);
 
     SubtitlesThreadType Type() const { return m_nType; };
     BYTE GetLangPriority(const std::string& sLanguage) {
@@ -265,18 +266,18 @@ public:
     }
 
     void InsertThread(SubtitlesThread* pThread) {
-        CAutoLock cAutoLock(&m_csThreads);
+        CAutoLock tlock(&m_csThreadLock);
         m_pThreads.push_back(pThread);
     }
 
     void RemoveThread(SubtitlesThread* pThread) {
-        CAutoLock cAutoLock(&m_csThreads);
+        CAutoLock tlock(&m_csThreadLock);
         m_pThreads.remove(pThread);
         delete pThread;
     }
 
     void Abort() {
-        CAutoLock cAutoLock(&m_csThreads);
+        CAutoLock tlock(&m_csThreadLock);
         for (auto& iter : m_pThreads) {
             iter->AbortThread();
         }
@@ -288,7 +289,6 @@ private:
 
     CMainFrame* m_pMainFrame;
     std::list<SubtitlesThread*> m_pThreads;
-    CCritSec m_csThreads;
     CCritSec m_csDownload;
 
     SubtitlesInfo m_pFileInfo;
@@ -297,6 +297,8 @@ private:
     bool m_bAutoDownload;
     std::unordered_map<std::string, bool> m_AutoDownload;
     std::unordered_map<std::string, BYTE> m_LangPriority;
+
+    CString manualSearch;
 };
 
 class SubtitlesProvider
@@ -307,6 +309,7 @@ public:
 
 public: // implemented
     virtual std::string Name() const PURE;
+    virtual std::string DisplayName() const PURE;
     virtual std::string Url() const PURE;
     virtual const std::set<std::string>& Languages() const PURE;
     virtual bool Flags(DWORD dwFlags) const PURE;
@@ -325,13 +328,13 @@ public: // overridden
         return SR_SUCCEEDED;
     }
     virtual SRESULT Hash(SubtitlesInfo&) { return SR_UNDEFINED; }
-    virtual SRESULT Upload(const SubtitlesInfo&) { return SR_UNDEFINED; };
     virtual std::string UserAgent() const {
         return SubtitlesProvidersUtils::StringFormat("MPC-HC v%u.%u.%u",
                                                      VersionInfo::GetMajorNumber(),
                                                      VersionInfo::GetMinorNumber(),
                                                      VersionInfo::GetPatchNumber());
     }
+    virtual bool UseForAutoDownload() { return true; }
 
     bool LoginInternal();
     void OpenUrl() const;
@@ -341,17 +344,13 @@ public: // overridden
     std::list<std::string> GetLanguagesIntersection() const;
     std::list<std::string> GetLanguagesIntersection(std::list<std::string>&& userSelectedLangauges) const;
     bool SupportsUserSelectedLanguages() const;
-    SRESULT DownloadInternal(std::string url, std::string referer, std::string& data) const;
+    SRESULT DownloadInternal(std::string url, std::string referer, std::string& data);
     static void Set(SubtitlesInfo& pSubtitlesInfo);
     static bool IsAborting();
 
-    BOOL Enabled(SubtitlesProviderFlags nFlag) { return nFlag == SPF_UPLOAD ? m_bUpload : m_bSearch; }
+    BOOL Enabled(SubtitlesProviderFlags nFlag) { return m_bSearch; }
     void Enabled(SubtitlesProviderFlags nFlag, BOOL bEnabled) {
-        if (nFlag == SPF_UPLOAD) {
-            m_bUpload = bEnabled;
-        } else {
-            m_bSearch = bEnabled;
-        }
+        m_bSearch = bEnabled;
     }
     std::string UserName() const { return m_sUserName; };
     void UserName(std::string sUserName) { m_sUserName = sUserName; };
@@ -371,13 +370,14 @@ public: // overridden
 
 private:
     BOOL m_bSearch;
-    BOOL m_bUpload;
     std::string m_sUserName;
     std::string m_sPassword;
     SubtitlesProviders* m_pOwner;
     int m_nIconIndex;
 protected:
     SubtitlesProviderLogin m_nLoggedIn;
+public:
+    DWORD m_dwLastStatusCode;
 };
 
 class SubtitlesProviders final
@@ -409,19 +409,20 @@ public:
     std::string WriteSettings();
 
     void Search(bool bAutoDownload);
-    void Upload(bool bShowConfirm);
+    void ManualSearch(bool bAutoDownload, CString manualSearch);
     void Download(SubtitlesInfo& pSubtitlesInfo, bool bActivate);
     void Abort(SubtitlesThreadType nType);
 
     void InsertTask(SubtitlesTask* pTask) {
-        CAutoLock cAutoLock(&m_csTasks);
+        //CAutoLock tasklock(&m_csTasks);
         m_pTasks.push_back(pTask);
     }
 
     void RemoveTask(SubtitlesTask* pTask) {
-        CAutoLock cAutoLock(&m_csTasks);
-        m_pTasks.remove(pTask);
-        delete pTask;
+        CAutoLock tasklock(&m_csTasks);
+        if(!m_pTasks.empty()) {
+            m_pTasks.remove(pTask);
+        }
     }
 
     void MoveUp(size_t nIndex) {

@@ -26,17 +26,22 @@
 #include "WinAPIUtils.h"
 #include "PPageSubStyle.h"
 #include "../Subtitles/RTS.h"
+#include "CMPCTheme.h"
+#include "CMPCThemePropertySheet.h"
 
 // CPlayerSubresyncBar
 
-IMPLEMENT_DYNAMIC(CPlayerSubresyncBar, CPlayerBar)
+IMPLEMENT_DYNAMIC(CPlayerSubresyncBar, CMPCThemePlayerBar)
 CPlayerSubresyncBar::CPlayerSubresyncBar(CMainFrame* pMainFrame)
-    : m_pSubLock(nullptr)
+    : CMPCThemePlayerBar(pMainFrame)
+    , m_pSubLock(nullptr)
     , m_pMainFrame(pMainFrame)
     , m_fps(0.0)
     , m_lastSegment(-1)
     , m_rt(0)
     , m_mode(NONE)
+    , m_external(false)
+	, createdWindow(false)
 {
     GetEventd().Connect(m_eventc, {
         MpcEvent::DPI_CHANGED,
@@ -57,16 +62,21 @@ BOOL CPlayerSubresyncBar::Create(CWnd* pParentWnd, UINT defDockBarID, CCritSec* 
 
     m_list.CreateEx(
         WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE,
-        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP | LVS_REPORT | LVS_OWNERDATA /*|LVS_SHOWSELALWAYS*/ | LVS_AUTOARRANGE | LVS_NOSORTHEADER,
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_TABSTOP | LVS_REPORT | LVS_OWNERDATA /*|LVS_SHOWSELALWAYS*/ | LVS_AUTOARRANGE | LVS_NOSORTHEADER,
         CRect(0, 0, 100, 100), this, IDC_SUBRESYNCLIST);
 
     ScaleFont();
 
-    m_list.SetExtendedStyle(m_list.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
+    //m_list.SetExtendedStyle(m_list.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
+    m_list.setAdditionalStyles(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
+    m_list.setAdditionalStyles(WS_CLIPCHILDREN, false);
+    m_list.setColorInterface(this);
     m_strYes = m_strYesMenu = ResStr(IDS_SUBRESYNC_YES);
     m_strNo = m_strNoMenu = ResStr(IDS_SUBRESYNC_NO);
     m_strYes.Remove(_T('&'));
     m_strNo.Remove(_T('&'));
+
+	createdWindow = true;
 
     return TRUE;
 }
@@ -87,6 +97,11 @@ BOOL CPlayerSubresyncBar::PreTranslateMessage(MSG* pMsg)
             return TRUE;
         }
     }
+
+    if (pMsg->message == WM_LBUTTONDOWN && pMsg->hwnd == m_list.m_hWnd) {
+        bHadFocusBeforeClick = (GetFocus() == &m_list);
+    } 
+
 
     return __super::PreTranslateMessage(pMsg);
 }
@@ -159,14 +174,54 @@ void CPlayerSubresyncBar::SetFPS(double fps)
     }
 }
 
-void CPlayerSubresyncBar::SetSubtitle(ISubStream* pSubStream, double fps)
+void CPlayerSubresyncBar::SetSubtitle(ISubStream* pSubStream, double fps, bool external)
 {
     // Avoid reloading the same subtitles again
     if (m_pSubStream != pSubStream || m_fps != fps) {
         m_pSubStream = pSubStream;
         m_fps = fps;
+        m_external = external;
 
+        // FIXME: if subresync bar is not visible, then delay this until we enable it
         ReloadSubtitle();
+    }
+}
+
+bool CPlayerSubresyncBar::RefreshEmbeddedTextSubtitleData()
+{
+    if (!m_pSubStream) {
+        return false;
+    }
+    if (m_external || m_mode != TEXTSUB) {
+        return false;
+    }
+
+    CLSID clsid;
+    m_pSubStream->GetClassID(&clsid);
+
+    if (clsid == __uuidof(CRenderedTextSubtitle)) {
+        CRenderedTextSubtitle* pRTS = (CRenderedTextSubtitle*)(ISubStream*)m_pSubStream;
+
+        m_lastSegment = -1;
+
+        pRTS->Lock();
+        m_sts.Copy(*pRTS);
+        pRTS->Unlock();
+        m_sts.ConvertToTimeBased(m_fps);
+        m_sts.Sort(true);
+
+        m_subtimes.resize(m_sts.GetCount());
+
+        for (size_t i = 0, j = m_sts.GetCount(); i < j; i++) {
+            m_subtimes[i].orgStart = m_sts[i].start;
+            m_subtimes[i].orgEnd = m_sts[i].end;
+        }
+
+        ResetSubtitle();
+
+        return true;
+    } else {
+        return false;
     }
 }
 
@@ -179,8 +234,11 @@ void CPlayerSubresyncBar::ReloadSubtitle()
 
     ResetSubtitle();
 
-    for (int i = 0, count = m_list.GetHeaderCtrl()->GetItemCount(); i < count; i++) {
-        m_list.DeleteColumn(0);
+    CHeaderCtrl* hctrl = m_list.GetHeaderCtrl();
+    if (hctrl) {
+        for (int i = 0, count = hctrl->GetItemCount(); i < count; i++) {
+            m_list.DeleteColumn(0);
+        }
     }
 
     if (!m_pSubStream) {
@@ -276,7 +334,6 @@ void CPlayerSubresyncBar::ResetSubtitle()
             m_displayData[i].tEnd = m_displayData[i].tPrevEnd = m_subtimes[i].orgEnd;
 
             m_displayData[i].flags = (prevstart > m_subtimes[i].orgStart) ? TSEP : 0;
-
             prevstart = m_subtimes[i].orgStart;
         }
 
@@ -350,6 +407,7 @@ void CPlayerSubresyncBar::EventCallback(MpcEvent ev)
 {
     switch (ev) {
         case MpcEvent::DPI_CHANGED:
+            InitializeSize();
             ScaleFont();
             m_list.SetWindowPos(nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
             break;
@@ -567,7 +625,7 @@ bool CPlayerSubresyncBar::ModEnd(int iItem, REFERENCE_TIME t, bool bReset)
     return bRet;
 }
 
-BEGIN_MESSAGE_MAP(CPlayerSubresyncBar, CPlayerBar)
+BEGIN_MESSAGE_MAP(CPlayerSubresyncBar, CMPCThemePlayerBar)
     ON_WM_MEASUREITEM()
     ON_WM_SIZE()
     ON_NOTIFY(LVN_GETDISPINFO, IDC_SUBRESYNCLIST, OnGetDisplayInfo)
@@ -759,8 +817,12 @@ void CPlayerSubresyncBar::OnDolabeleditList(NMHDR* pNMHDR, LRESULT* pResult)
 {
     LV_DISPINFO* pDispInfo = (LV_DISPINFO*)pNMHDR;
     LV_ITEM* pItem = &pDispInfo->item;
-
     *pResult = FALSE;
+
+    if (!bHadFocusBeforeClick) {
+        *pResult = TRUE;
+        return;
+    }
 
     if (pItem->iItem >= 0) {
         if ((pItem->iSubItem == COL_START || pItem->iSubItem == COL_END || pItem->iSubItem == COL_TEXT
@@ -895,7 +957,7 @@ void CPlayerSubresyncBar::OnRclickList(NMHDR* pNMHDR, LRESULT* pResult)
         CStringArray actors;
         CStringArray effects;
 
-        CMenu m;
+        CMPCThemeMenu m;
         m.CreatePopupMenu();
 
         if (m_mode == VOBSUB || m_mode == TEXTSUB) {
@@ -935,8 +997,8 @@ void CPlayerSubresyncBar::OnRclickList(NMHDR* pNMHDR, LRESULT* pResult)
                         CString key;
                         STSStyle* val;
                         m_sts.m_styles.GetNextAssoc(pos, key, val);
-                        stylesNames.Add(key);
-                        m.AppendMenu(MF_STRING | MF_ENABLED, id++, key);
+                        stylesNames.Add(key); //the array keeps the real key, only the label is sanitized
+                        m.AppendMenu(MF_STRING | MF_ENABLED, id++, SanitizeMenuLabel(key));
                     }
 
                     if (id > STYLEFIRST && m_list.GetSelectedCount() == 1) {
@@ -980,9 +1042,9 @@ void CPlayerSubresyncBar::OnRclickList(NMHDR* pNMHDR, LRESULT* pResult)
                             void* val;
                             actormap.GetNextAssoc(pos, key, val);
 
-                            actors.Add(key);
+                            actors.Add(key); //the array keeps the real key, only the label is sanitized
 
-                            m.AppendMenu(MF_STRING | MF_ENABLED, id++, key);
+                            m.AppendMenu(MF_STRING | MF_ENABLED, id++, SanitizeMenuLabel(key));
                         }
                     }
                 }
@@ -1008,9 +1070,9 @@ void CPlayerSubresyncBar::OnRclickList(NMHDR* pNMHDR, LRESULT* pResult)
                             void* val;
                             effectmap.GetNextAssoc(pos, key, val);
 
-                            effects.Add(key);
+                            effects.Add(key); //the array keeps the real key, only the label is sanitized
 
-                            m.AppendMenu(MF_STRING | MF_ENABLED, id++, key);
+                            m.AppendMenu(MF_STRING | MF_ENABLED, id++, SanitizeMenuLabel(key));
                         }
                     }
                 }
@@ -1020,7 +1082,14 @@ void CPlayerSubresyncBar::OnRclickList(NMHDR* pNMHDR, LRESULT* pResult)
         CPoint p = lpnmlv->ptAction;
         ::MapWindowPoints(pNMHDR->hwndFrom, HWND_DESKTOP, &p, 1);
 
-        UINT id = m.TrackPopupMenu(TPM_LEFTBUTTON | TPM_RETURNCMD, p.x, p.y, this);
+        if (AppNeedsThemedControls()) {
+            m.fulfillThemeReqs();
+        }
+        SetHasActivePopup(true);
+        //mainframe is the menu owner, so it receives WM_ENTERMENULOOP instead of us,
+        //bypassing CPlayerBar::OnEnterMenuLoop; set the flag directly to avoid autohiding
+        UINT id = m.TrackPopupMenu(TPM_LEFTBUTTON | TPM_RETURNCMD, p.x, p.y, m_pMainFrame);
+        SetHasActivePopup(false);
 
         bool bNeedsUpdate = false;
 
@@ -1150,7 +1219,8 @@ void CPlayerSubresyncBar::OnRclickList(NMHDR* pNMHDR, LRESULT* pResult)
                             }
                         }
 
-                        CPropertySheet dlg(ResStr(IDS_SUBTITLES_STYLES_CAPTION), this, iSelPage);
+                        CMPCThemePropertySheet dlg(ResStr(IDS_SUBTITLES_STYLES_CAPTION), this, iSelPage);
+
                         for (size_t i = 0, l = pages.GetCount(); i < l; i++) {
                             dlg.AddPage(pages[i]);
                         }
@@ -1225,116 +1295,158 @@ void CPlayerSubresyncBar::OnLvnKeydownList(NMHDR* pNMHDR, LRESULT* pResult)
 static CUIntArray m_itemGroups;
 static int m_totalGroups;
 
+void CPlayerSubresyncBar::DoCustomPrePaint()
+{
+    m_itemGroups.SetSize(m_list.GetItemCount());
+    m_totalGroups = 0;
+    for (int i = 0, j = m_list.GetItemCount(); i < j; i++) {
+        if (m_displayData[i].flags & TSEP) {
+            m_totalGroups++;
+        }
+        m_itemGroups[i] = m_totalGroups;
+    }
+}
+
+void CPlayerSubresyncBar::GetCustomTextColors(INT_PTR nItem, int iSubItem, COLORREF& clrText, COLORREF& clrTextBk, bool& overrideSelectedBG)
+{
+    COLORREF fadeText, normalText, activeNormalText, activeFadeText;
+    COLORREF bgNormalOdd, bgNormalEven, bgMod, bgAdjust;
+    bool useFadeText;
+
+    if (AppNeedsThemedControls()) {
+        normalText = CMPCTheme::SubresyncFadeText1;
+        fadeText = CMPCTheme::SubresyncFadeText2;
+        activeNormalText = CMPCTheme::TextFGColor;
+        activeFadeText = CMPCTheme::SubresyncActiveFadeText;
+        bgNormalOdd = CMPCTheme::WindowBGColor;
+        bgNormalEven = CMPCTheme::ContentBGColor;
+        bgMod = CMPCTheme::SubresyncHLColor1;
+        bgAdjust = CMPCTheme::SubresyncHLColor2;
+    } else {
+        normalText = 0;
+        fadeText = 0x606060;
+        activeNormalText = normalText & 0xFF;
+        activeFadeText = fadeText & 0xFF;
+        bgNormalOdd = 0xffffff - 0x100010;
+        bgNormalEven = 0xffffff - 0x200020;
+        bgMod = 0xffddbb;
+        bgAdjust = 0xffeedd;
+    }
+
+    if ((iSubItem == COL_START || iSubItem == COL_END || iSubItem == COL_TEXT || iSubItem == COL_STYLE
+            || iSubItem == COL_LAYER || iSubItem == COL_ACTOR || iSubItem == COL_EFFECT)
+            && m_mode == TEXTSUB) {
+        useFadeText = false;
+    } else if ((iSubItem == COL_START)
+               && m_mode == VOBSUB) {
+        useFadeText = false;
+    } else {
+        useFadeText = true;
+    }
+
+    clrTextBk = (m_itemGroups[nItem] & 1) ? bgNormalOdd : bgNormalEven;
+
+    if (m_sts[nItem].start <= m_rt && m_rt < m_sts[nItem].end) {
+        clrText = useFadeText ? activeFadeText : activeNormalText;
+    } else {
+        clrText = useFadeText ? fadeText : normalText;
+    }
+
+    int nCheck = m_displayData[nItem].flags;
+
+    if ((nCheck & TSMOD) && (iSubItem == COL_START || iSubItem == COL_PREVSTART)) {
+        clrTextBk = bgMod;
+    } else if ((nCheck & TSADJ) && (/*iSubItem == COL_START ||*/ iSubItem == COL_PREVSTART)) {
+        clrTextBk = bgAdjust;
+    }
+
+    if ((nCheck & TEMOD) && (iSubItem == COL_END || iSubItem == COL_PREVEND)) {
+        clrTextBk = bgMod;
+    } else if ((nCheck & TEADJ) && (/*iSubItem == COL_END ||*/ iSubItem == COL_PREVEND)) {
+        clrTextBk = bgAdjust;
+    }
+}
+
+void CPlayerSubresyncBar::GetCustomGridColors(int nItem, COLORREF& horzGridColor, COLORREF& vertGridColor)
+{
+    bool bSeparator = nItem < m_list.GetItemCount() - 1 && (m_displayData[nItem + 1].flags & TSEP);
+    if (AppNeedsThemedControls()) {
+        horzGridColor = bSeparator ? CMPCTheme::SubresyncGridSepColor : CMPCTheme::ListCtrlGridColor;
+        vertGridColor = CMPCTheme::ListCtrlGridColor;
+    } else {
+        horzGridColor = bSeparator ? 0x404040 : 0xe0e0e0;
+        vertGridColor = 0xe0e0e0;
+    }
+}
+
 void CPlayerSubresyncBar::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult)
 {
-    NMLVCUSTOMDRAW* pLVCD = reinterpret_cast<NMLVCUSTOMDRAW*>(pNMHDR);
-
+    //this custom draw is used only in classic mode
     *pResult = CDRF_DODEFAULT;
+    if (!AppNeedsThemedControls()) {
+        NMLVCUSTOMDRAW* pLVCD = reinterpret_cast<NMLVCUSTOMDRAW*>(pNMHDR);
 
-    if (CDDS_PREPAINT == pLVCD->nmcd.dwDrawStage) {
-        m_itemGroups.SetSize(m_list.GetItemCount());
-        m_totalGroups = 0;
-        for (int i = 0, j = m_list.GetItemCount(); i < j; i++) {
-            if (m_displayData[i].flags & TSEP) {
-                m_totalGroups++;
-            }
-            m_itemGroups[i] = m_totalGroups;
-        }
+        if (CDDS_PREPAINT == pLVCD->nmcd.dwDrawStage) {
+            DoCustomPrePaint();
+            *pResult = CDRF_NOTIFYPOSTPAINT | CDRF_NOTIFYITEMDRAW;
+        } else if (CDDS_ITEMPREPAINT == pLVCD->nmcd.dwDrawStage) {
+            pLVCD->nmcd.uItemState &= ~CDIS_FOCUS;
 
-        *pResult = CDRF_NOTIFYPOSTPAINT | CDRF_NOTIFYITEMDRAW;
-    } else if (CDDS_ITEMPREPAINT == pLVCD->nmcd.dwDrawStage) {
-        pLVCD->nmcd.uItemState &= ~CDIS_FOCUS;
+            *pResult = CDRF_NOTIFYPOSTPAINT | CDRF_NOTIFYSUBITEMDRAW;
+        } else if ((CDDS_ITEMPREPAINT | CDDS_SUBITEM) == pLVCD->nmcd.dwDrawStage) {
+            bool ignore;
+            GetCustomTextColors(pLVCD->nmcd.dwItemSpec, pLVCD->iSubItem, pLVCD->clrText, pLVCD->clrTextBk, ignore);
+            *pResult = CDRF_NOTIFYPOSTPAINT;
+        } else if ((CDDS_ITEMPOSTPAINT | CDDS_SUBITEM) == pLVCD->nmcd.dwDrawStage) {
+            //      *pResult = CDRF_DODEFAULT;
+        } else if (CDDS_ITEMPOSTPAINT == pLVCD->nmcd.dwDrawStage) {
+            int nItem = static_cast<int>(pLVCD->nmcd.dwItemSpec);
 
-        *pResult = CDRF_NOTIFYPOSTPAINT | CDRF_NOTIFYSUBITEMDRAW;
-    } else if ((CDDS_ITEMPREPAINT | CDDS_SUBITEM) == pLVCD->nmcd.dwDrawStage) {
-        COLORREF clrText;
-        COLORREF clrTextBk;
-
-        if ((pLVCD->iSubItem == COL_START || pLVCD->iSubItem == COL_END || pLVCD->iSubItem == COL_TEXT || pLVCD->iSubItem == COL_STYLE
-                || pLVCD->iSubItem == COL_LAYER || pLVCD->iSubItem == COL_ACTOR || pLVCD->iSubItem == COL_EFFECT)
-                && m_mode == TEXTSUB) {
-            clrText = 0;
-        } else if ((pLVCD->iSubItem == COL_START)
-                   && m_mode == VOBSUB) {
-            clrText = 0;
-        } else {
-            clrText = 0x606060;
-        }
-
-        clrTextBk = 0xffffff;
-        //      if (m_totalGroups > 0)
-        clrTextBk -= ((m_itemGroups[pLVCD->nmcd.dwItemSpec] & 1) ? 0x100010 : 0x200020);
-
-        if (m_sts[pLVCD->nmcd.dwItemSpec].start <= m_rt && m_rt < m_sts[pLVCD->nmcd.dwItemSpec].end) {
-            clrText |= 0xFF;
-        }
-
-        int nCheck = m_displayData[pLVCD->nmcd.dwItemSpec].flags;
-
-        if ((nCheck & TSMOD) && (pLVCD->iSubItem == COL_START || pLVCD->iSubItem == COL_PREVSTART)) {
-            clrTextBk = 0xffddbb;
-        } else if ((nCheck & TSADJ) && (/*pLVCD->iSubItem == COL_START ||*/ pLVCD->iSubItem == COL_PREVSTART)) {
-            clrTextBk = 0xffeedd;
-        }
-
-        if ((nCheck & TEMOD) && (pLVCD->iSubItem == COL_END || pLVCD->iSubItem == COL_PREVEND)) {
-            clrTextBk = 0xffddbb;
-        } else if ((nCheck & TEADJ) && (/*pLVCD->iSubItem == COL_END ||*/ pLVCD->iSubItem == COL_PREVEND)) {
-            clrTextBk = 0xffeedd;
-        }
-
-        pLVCD->clrText = clrText;
-        pLVCD->clrTextBk = clrTextBk;
-
-        *pResult = CDRF_NOTIFYPOSTPAINT;
-    } else if ((CDDS_ITEMPOSTPAINT | CDDS_SUBITEM) == pLVCD->nmcd.dwDrawStage) {
-        //      *pResult = CDRF_DODEFAULT;
-    } else if (CDDS_ITEMPOSTPAINT == pLVCD->nmcd.dwDrawStage) {
-        int nItem = static_cast<int>(pLVCD->nmcd.dwItemSpec);
-
-        LVITEM rItem;
-        ZeroMemory(&rItem, sizeof(LVITEM));
-        rItem.mask  = LVIF_IMAGE | LVIF_STATE;
-        rItem.iItem = nItem;
-        rItem.stateMask = LVIS_SELECTED;
-        m_list.GetItem(&rItem);
-
-        {
-            CDC* pDC = CDC::FromHandle(pLVCD->nmcd.hdc);
-
-            CRect rcItem;
-            m_list.GetItemRect(nItem, &rcItem, LVIR_BOUNDS);
+            LVITEM rItem;
+            ZeroMemory(&rItem, sizeof(LVITEM));
+            rItem.mask = LVIF_IMAGE | LVIF_STATE;
+            rItem.iItem = nItem;
+            rItem.stateMask = LVIS_SELECTED;
+            m_list.GetItem(&rItem);
 
             {
-                bool bSeparator = nItem < m_list.GetItemCount() - 1 && (m_displayData[nItem + 1].flags & TSEP);
-                CPen p(PS_INSIDEFRAME, 1, bSeparator ? 0x404040 : 0xe0e0e0);
-                CPen* old = pDC->SelectObject(&p);
-                pDC->MoveTo(CPoint(rcItem.left, rcItem.bottom - 1));
-                pDC->LineTo(CPoint(rcItem.right, rcItem.bottom - 1));
-                pDC->SelectObject(old);
-            }
+                CDC* pDC = CDC::FromHandle(pLVCD->nmcd.hdc);
+                COLORREF horzGridColor, vertGridColor;
+                GetCustomGridColors(nItem, horzGridColor, vertGridColor);
 
-            {
-                CPen p(PS_INSIDEFRAME, 1, 0xe0e0e0);
-                CPen* old = pDC->SelectObject(&p);
+                CRect rcItem;
+                m_list.GetItemRect(nItem, &rcItem, LVIR_BOUNDS);
 
-                CHeaderCtrl* pHeader = (CHeaderCtrl*)m_list.GetDlgItem(0);
-                int nColumnCount = pHeader->GetItemCount();
-
-                // Get the column offset
-                int offset = rcItem.left;
-                for (int i = 0; i < nColumnCount; i++) {
-                    offset += m_list.GetColumnWidth(i);
-                    pDC->MoveTo(CPoint(offset, rcItem.top));
-                    pDC->LineTo(CPoint(offset, rcItem.bottom));
+                {
+                    CPen p(PS_INSIDEFRAME, 1, horzGridColor);
+                    CPen* old = pDC->SelectObject(&p);
+                    pDC->MoveTo(CPoint(rcItem.left, rcItem.bottom - 1));
+                    pDC->LineTo(CPoint(rcItem.right, rcItem.bottom - 1));
+                    pDC->SelectObject(old);
                 }
 
-                pDC->SelectObject(old);
-            }
+                {
+                    CPen p(PS_INSIDEFRAME, 1, vertGridColor);
+                    CPen* old = pDC->SelectObject(&p);
 
-            *pResult = CDRF_SKIPDEFAULT;
+                    CHeaderCtrl* pHeader = (CHeaderCtrl*)m_list.GetDlgItem(0);
+                    int nColumnCount = pHeader->GetItemCount();
+
+                    // Get the column offset
+                    int offset = rcItem.left;
+                    for (int i = 0; i < nColumnCount; i++) {
+                        offset += m_list.GetColumnWidth(i);
+                        pDC->MoveTo(CPoint(offset, rcItem.top));
+                        pDC->LineTo(CPoint(offset, rcItem.bottom));
+                    }
+
+                    pDC->SelectObject(old);
+                }
+
+                *pResult = CDRF_SKIPDEFAULT;
+            }
+        } else if (CDDS_POSTPAINT == pLVCD->nmcd.dwDrawStage) {
         }
-    } else if (CDDS_POSTPAINT == pLVCD->nmcd.dwDrawStage) {
     }
 }
 
@@ -1401,11 +1513,19 @@ bool CPlayerSubresyncBar::HandleShortCuts(const MSG* pMsg)
 
 void CPlayerSubresyncBar::OnMeasureItem(int nIDCtl, LPMEASUREITEMSTRUCT lpMeasureItemStruct)
 {
-    __super::OnMeasureItem(nIDCtl, lpMeasureItemStruct);
-    if (m_itemHeight == 0) {
-        m_itemHeight = lpMeasureItemStruct->itemHeight;
-    }
-    lpMeasureItemStruct->itemHeight = m_pMainFrame->m_dpi.ScaleSystemToOverrideY(m_itemHeight);
+	__super::OnMeasureItem(nIDCtl, lpMeasureItemStruct);
+
+	if (createdWindow) {
+		//after creation, measureitem is called once for every window resize.  we will cache the default before DPI scaling
+		if (m_itemHeight == 0) {
+			m_itemHeight = lpMeasureItemStruct->itemHeight;
+		}
+		lpMeasureItemStruct->itemHeight = m_pMainFrame->m_dpi.ScaleSystemToOverrideY(m_itemHeight);
+	} else {
+		//before creation, we must return a valid DPI scaled value, to prevent visual glitches when icon height has been tweaked.
+		//we cannot cache this value as it may be different from that calculated after font has been set
+		lpMeasureItemStruct->itemHeight = m_pMainFrame->m_dpi.ScaleSystemToOverrideY(lpMeasureItemStruct->itemHeight);
+	}
 }
 
 int CPlayerSubresyncBar::FindNearestSub(REFERENCE_TIME& rtPos, bool bForward)
@@ -1457,5 +1577,11 @@ bool CPlayerSubresyncBar::ShiftSubtitle(int nItem, long lValue, REFERENCE_TIME& 
 
 bool CPlayerSubresyncBar::SaveToDisk()
 {
-    return m_sts.SaveAs(m_sts.m_path, m_sts.m_subtitleType);
+    bool ret = false;
+    try {
+        ret = m_sts.SaveAs(m_sts.m_path, m_sts.m_subtitleType);
+    } catch (...) {
+        ASSERT(false);
+    }
+    return ret;
 }

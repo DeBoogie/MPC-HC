@@ -25,8 +25,9 @@
 #include "PPageInternalFilters.h"
 #include "../filters/Filters.h"
 #include "InternalFiltersConfig.h"
+#include "CMPCThemeMenu.h"
 
-IMPLEMENT_DYNAMIC(CPPageInternalFiltersListBox, CListCtrl)
+IMPLEMENT_DYNAMIC(CPPageInternalFiltersListBox, CMPCThemePlayerListCtrl)
 CPPageInternalFiltersListBox::CPPageInternalFiltersListBox(int n, const CArray<filter_t>& filters)
     : m_filters(filters)
     , m_n(n)
@@ -40,7 +41,7 @@ void CPPageInternalFiltersListBox::PreSubclassWindow()
 {
     __super::PreSubclassWindow();
     GetToolTips()->Activate(FALSE);
-    EnableToolTips(TRUE);
+    //EnableToolTips(TRUE);
 }
 
 INT_PTR CPPageInternalFiltersListBox::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
@@ -54,14 +55,14 @@ INT_PTR CPPageInternalFiltersListBox::OnToolHitTest(CPoint point, TOOLINFO* pTI)
     GetItemRect(row, r, LVIR_BOUNDS);
     pTI->rect = r;
     pTI->hwnd = m_hWnd;
-    pTI->uId = (UINT)row;
+    pTI->uId = (UINT)(row + 1); //uId should not be zero for MPCThemeTT
     pTI->lpszText = LPSTR_TEXTCALLBACK;
     pTI->uFlags |= TTF_ALWAYSTIP;
 
     return pTI->uId;
 }
 
-BEGIN_MESSAGE_MAP(CPPageInternalFiltersListBox, CListCtrl)
+BEGIN_MESSAGE_MAP(CPPageInternalFiltersListBox, CMPCThemePlayerListCtrl)
     ON_NOTIFY_EX(TTN_NEEDTEXT, 0, OnToolTipNotify)
     ON_WM_CONTEXTMENU()
 END_MESSAGE_MAP()
@@ -70,12 +71,16 @@ BOOL CPPageInternalFiltersListBox::OnToolTipNotify(UINT id, NMHDR* pNMHDR, LRESU
 {
     TOOLTIPTEXT* pTTT = (TOOLTIPTEXT*)pNMHDR;
 
-    filter_t* f = (filter_t*)GetItemData(static_cast<int>(pNMHDR->idFrom));
-    if (f->nHintID == 0) {
+    if (!pNMHDR->idFrom) {
         return FALSE;
     }
 
-    ::SendMessage(pNMHDR->hwndFrom, TTM_SETMAXTIPWIDTH, 0, 1000);
+    filter_t* f = (filter_t*)GetItemData(static_cast<int>(pNMHDR->idFrom - 1));
+    if (!f || f->nHintID == 0) {
+        return FALSE;
+    }
+
+    ::SendMessage(pNMHDR->hwndFrom, TTM_SETMAXTIPWIDTH, 0, 300);
 
     static CString strTipText; // static string
     strTipText.LoadString(f->nHintID);
@@ -131,7 +136,7 @@ void CPPageInternalFiltersListBox::OnContextMenu(CWnd* pWnd, CPoint point)
         ScreenToClient(&point);
     }
 
-    CMenu m;
+    CMPCThemeMenu m;
     m.CreatePopupMenu();
 
     enum {
@@ -166,6 +171,9 @@ void CPPageInternalFiltersListBox::OnContextMenu(CWnd* pWnd, CPoint point)
         m.AppendMenu(MF_STRING | state, ENABLE_VIDEO, ResStr(IDS_ENABLE_VIDEO_FILTERS));
         state = (m_nbChecked[VIDEO_DECODER] != 0) ? MF_ENABLED : MF_GRAYED;
         m.AppendMenu(MF_STRING | state, DISABLE_VIDEO, ResStr(IDS_DISABLE_VIDEO_FILTERS));
+    }
+    if (AppIsThemeLoaded()) {
+        m.fulfillThemeReqs();
     }
 
     ClientToScreen(&point);
@@ -229,9 +237,9 @@ void CPPageInternalFiltersListBox::OnContextMenu(CWnd* pWnd, CPoint point)
 
 // CPPageInternalFilters dialog
 
-IMPLEMENT_DYNAMIC(CPPageInternalFilters, CPPageBase)
+IMPLEMENT_DYNAMIC(CPPageInternalFilters, CMPCThemePPageBase)
 CPPageInternalFilters::CPPageInternalFilters()
-    : CPPageBase(CPPageInternalFilters::IDD, CPPageInternalFilters::IDD)
+    : CMPCThemePPageBase(CPPageInternalFilters::IDD, CPPageInternalFilters::IDD)
     , m_listSrc(0, m_filters)
     , m_listTra(1, m_filters)
 {
@@ -248,7 +256,7 @@ void CPPageInternalFilters::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_LIST2, m_listTra);
 }
 
-BEGIN_MESSAGE_MAP(CPPageInternalFilters, CPPageBase)
+BEGIN_MESSAGE_MAP(CPPageInternalFilters, CMPCThemePPageBase)
     ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST1, OnItemChanged)
     ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST2, OnItemChanged)
     ON_BN_CLICKED(IDC_SPLITTER_CONF, OnBnClickedSplitterConf)
@@ -267,8 +275,10 @@ BOOL CPPageInternalFilters::OnInitDialog()
     m_listSrc.InsertColumn(0, _T(""));
     m_listTra.InsertColumn(0, _T(""));
 
-    m_listSrc.SetExtendedStyle(m_listSrc.GetExtendedStyle() | LVS_EX_CHECKBOXES | LVS_EX_DOUBLEBUFFER);
-    m_listTra.SetExtendedStyle(m_listTra.GetExtendedStyle() | LVS_EX_CHECKBOXES | LVS_EX_DOUBLEBUFFER);
+    m_listSrc.SetExtendedStyle(m_listSrc.GetExtendedStyle() | LVS_EX_CHECKBOXES /*| LVS_EX_DOUBLEBUFFER*/);
+    m_listSrc.setAdditionalStyles(LVS_EX_DOUBLEBUFFER);
+    m_listTra.SetExtendedStyle(m_listTra.GetExtendedStyle() | LVS_EX_CHECKBOXES /*| LVS_EX_DOUBLEBUFFER*/);
+    m_listTra.setAdditionalStyles(LVS_EX_DOUBLEBUFFER);
 
     InitFiltersList();
 
@@ -413,6 +423,11 @@ void CPPageInternalFilters::InitFiltersList()
         m_filters.Add(filter_t(_T("RealMedia"), SOURCE_FILTER, SRC_REALMEDIA, IDS_INTERNAL_LAVF));
     }
 #endif
+#if INTERNAL_SOURCEFILTER_APE
+    if (bLAVSplitterIsAvailable) {
+        m_filters.Add(filter_t(_T("APE"), SOURCE_FILTER, SRC_APE, IDS_INTERNAL_LAVF));
+    }
+#endif
 #if INTERNAL_SOURCEFILTER_HTTP
     if (bLAVSplitterIsAvailable) {
         m_filters.Add(filter_t(_T("HTTP(S)"), SOURCE_FILTER, SRC_HTTP, IDS_INTERNAL_LAVF));
@@ -445,6 +460,11 @@ void CPPageInternalFilters::InitFiltersList()
 #endif
 #if INTERNAL_SOURCEFILTER_RFS
     m_filters.Add(filter_t(_T("RAR"), SOURCE_FILTER, SRC_RFS, IDS_SRC_RFS));
+#endif
+#if INTERNAL_SOURCEFILTER_MISC
+    if (bLAVSplitterIsAvailable) {
+        m_filters.Add(filter_t(_T("Miscellaneous"), SOURCE_FILTER, SRC_MISC, IDS_INTERNAL_LAVF));
+    }
 #endif
 
 #if INTERNAL_DECODER_AAC
@@ -507,6 +527,21 @@ void CPPageInternalFilters::InitFiltersList()
         m_filters.Add(filter_t(_T("Opus"), AUDIO_DECODER, TRA_OPUS, IDS_INTERNAL_LAVF));
     }
 #endif
+#if INTERNAL_DECODER_WMA
+    if (bLAVAudioIsAvailable) {
+        m_filters.Add(filter_t(_T("WMA 1/2"), AUDIO_DECODER, TRA_WMA, IDS_INTERNAL_LAVF));
+    }
+#endif
+#if INTERNAL_DECODER_WMAPRO
+    if (bLAVAudioIsAvailable) {
+        m_filters.Add(filter_t(_T("WMA Pro"), AUDIO_DECODER, TRA_WMAPRO, IDS_INTERNAL_LAVF));
+    }
+#endif
+#if INTERNAL_DECODER_WMALL
+    if (bLAVAudioIsAvailable) {
+        m_filters.Add(filter_t(_T("WMA Lossless"), AUDIO_DECODER, TRA_WMALL, IDS_INTERNAL_LAVF));
+    }
+#endif
 #if INTERNAL_DECODER_REALAUDIO
     if (bLAVAudioIsAvailable) {
         m_filters.Add(filter_t(_T("RealAudio"), AUDIO_DECODER, TRA_RA, IDS_INTERNAL_LAVF));
@@ -520,6 +555,26 @@ void CPPageInternalFilters::InitFiltersList()
 #if INTERNAL_DECODER_PCM
     if (bLAVAudioIsAvailable) {
         m_filters.Add(filter_t(_T("Other PCM/ADPCM"), AUDIO_DECODER, TRA_PCM, IDS_INTERNAL_LAVF));
+    }
+#endif
+#if INTERNAL_DECODER_G726
+    if (bLAVAudioIsAvailable) {
+        m_filters.Add(filter_t(_T("G726"), AUDIO_DECODER, TRA_G726, IDS_INTERNAL_LAVF));
+    }
+#endif
+#if INTERNAL_DECODER_G729
+    if (bLAVAudioIsAvailable) {
+        m_filters.Add(filter_t(_T("G729"), AUDIO_DECODER, TRA_G729, IDS_INTERNAL_LAVF));
+    }
+#endif
+#if INTERNAL_DECODER_AC4
+    if (bLAVAudioIsAvailable) {
+        m_filters.Add(filter_t(_T("AC4"), AUDIO_DECODER, TRA_AC4, IDS_INTERNAL_LAVF));
+    }
+#endif
+#if INTERNAL_DECODER_OTHERAUDIO
+    if (bLAVAudioIsAvailable) {
+        m_filters.Add(filter_t(_T("Other audio formats"), AUDIO_DECODER, TRA_OTHERAUDIO, IDS_INTERNAL_LAVF));
     }
 #endif
 #if INTERNAL_DECODER_MPEG1
@@ -544,7 +599,17 @@ void CPPageInternalFilters::InitFiltersList()
 #endif
 #if INTERNAL_DECODER_HEVC
     if (bLAVVideoIsAvailable) {
-        m_filters.Add(filter_t(_T("HEVC"), VIDEO_DECODER, TRA_HEVC, IDS_INTERNAL_LAVF));
+        m_filters.Add(filter_t(_T("H265/HEVC"), VIDEO_DECODER, TRA_HEVC, IDS_INTERNAL_LAVF));
+    }
+#endif
+#if INTERNAL_DECODER_VVC
+    if (bLAVVideoIsAvailable) {
+        m_filters.Add(filter_t(_T("H266/VVC"), VIDEO_DECODER, TRA_VVC, IDS_INTERNAL_LAVF));
+    }
+#endif
+#if INTERNAL_DECODER_AV1
+    if (bLAVVideoIsAvailable) {
+        m_filters.Add(filter_t(_T("AV1"), VIDEO_DECODER, TRA_AV1, IDS_INTERNAL_LAVF));
     }
 #endif
 #if INTERNAL_DECODER_VC1
@@ -640,6 +705,26 @@ void CPPageInternalFilters::InitFiltersList()
 #if INTERNAL_DECODER_V210_V410
     if (bLAVVideoIsAvailable) {
         m_filters.Add(filter_t(_T("v210/v410"), VIDEO_DECODER, TRA_V210_V410, IDS_INTERNAL_LAVF));
+    }
+#endif
+#if INTERNAL_DECODER_PRORES
+    if (bLAVVideoIsAvailable) {
+        m_filters.Add(filter_t(_T("ProRes"), VIDEO_DECODER, TRA_PRORES, IDS_INTERNAL_LAVF));
+    }
+#endif
+#if INTERNAL_DECODER_DNXHD
+    if (bLAVVideoIsAvailable) {
+        m_filters.Add(filter_t(_T("DNxHD"), VIDEO_DECODER, TRA_DNXHD, IDS_INTERNAL_LAVF));
+    }
+#endif
+#if INTERNAL_DECODER_CFHD
+    if (bLAVVideoIsAvailable) {
+        m_filters.Add(filter_t(_T("CFHD"), VIDEO_DECODER, TRA_CFHD, IDS_INTERNAL_LAVF));
+    }
+#endif
+#if INTERNAL_DECODER_OTHERVIDEO
+    if (bLAVVideoIsAvailable) {
+        m_filters.Add(filter_t(_T("Other video formats"), VIDEO_DECODER, TRA_OTHERVIDEO, IDS_INTERNAL_LAVF));
     }
 #endif
 }

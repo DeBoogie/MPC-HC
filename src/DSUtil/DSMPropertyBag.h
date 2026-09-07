@@ -128,7 +128,7 @@ public:
 
 // IDSMChapterBag
 
-interface __declspec(uuid("2D0EBE73-BA82-4E90-859B-C7C48ED3650F"))
+interface __declspec(uuid("926df57d-47c3-4e32-a911-5c66b3314d05"))
     IDSMChapterBag :
     public IUnknown
 {
@@ -139,6 +139,8 @@ interface __declspec(uuid("2D0EBE73-BA82-4E90-859B-C7C48ED3650F"))
     STDMETHOD(ChapRemoveAt)(DWORD iIndex) PURE;
     STDMETHOD(ChapRemoveAll)() PURE;
     STDMETHOD_(long, ChapLookup)(REFERENCE_TIME* prt, BSTR* ppName) PURE;
+    STDMETHOD_(long, ChapLookupPrevious)(REFERENCE_TIME* prt, BSTR* ppName) PURE;
+    STDMETHOD_(long, ChapLookupNext)(REFERENCE_TIME* prt, BSTR* ppName) PURE;
     STDMETHOD(ChapSort)() PURE;
 };
 
@@ -180,6 +182,9 @@ public:
     STDMETHODIMP ChapRemoveAll();
     STDMETHODIMP_(long) ChapLookup(REFERENCE_TIME* prt, BSTR* ppName = nullptr);
     STDMETHODIMP ChapSort();
+
+    STDMETHODIMP_(long) ChapLookupPrevious(REFERENCE_TIME* prt, BSTR* ppName = nullptr);
+    STDMETHODIMP_(long) ChapLookupNext(REFERENCE_TIME* prt, BSTR* ppName = nullptr);
 };
 
 class CDSMChapterBag : public CUnknown, public IDSMChapterBagImpl

@@ -25,19 +25,27 @@ EXIT /B
 
 :SubPreBuild
 IF EXIST "build.user.bat" CALL "build.user.bat"
-
-IF NOT DEFINED MPCHC_MINGW32 IF DEFINED MINGW32 (SET "MPCHC_MINGW32=%MINGW32%") ELSE (EXIT /B 1)
-IF NOT DEFINED MPCHC_MINGW64 IF DEFINED MINGW64 (SET "MPCHC_MINGW64=%MINGW64%") ELSE (EXIT /B 1)
-IF NOT DEFINED MPCHC_MSYS    IF DEFINED MSYS    (SET "MPCHC_MSYS=%MSYS%")       ELSE (EXIT /B 1)
-
-IF NOT EXIST "%MPCHC_MINGW32%" EXIT /B 1
-IF NOT EXIST "%MPCHC_MINGW64%" EXIT /B 1
-IF NOT EXIST "%MPCHC_MSYS%"    EXIT /B 1
 EXIT /B
 
 :SubSetPath
-CALL :SubPreBuild
-IF %ERRORLEVEL% NEQ 0 EXIT /B 1
+IF EXIST "build.user.bat" CALL "build.user.bat"
+IF NOT DEFINED MPCHC_MINGW32 IF DEFINED MINGW32 (SET "MPCHC_MINGW32=%MINGW32%") ELSE (SET "MPCHC_MINGW32=C:\msys64\mingw32")
+IF NOT DEFINED MPCHC_MINGW64 IF DEFINED MINGW64 (SET "MPCHC_MINGW64=%MINGW64%") ELSE (SET "MPCHC_MINGW64=C:\msys64\mingw64")
+IF NOT DEFINED MPCHC_MSYS    IF DEFINED MSYS    (SET "MPCHC_MSYS=%MSYS%")       ELSE (SET "MPCHC_MSYS=C:\msys64")
+
+IF NOT EXIST "%MPCHC_MINGW32%" (
+  ECHO ERROR: MINGW32 path invalid. You should set correct value in build.user.bat
+  EXIT /B 1
+)
+IF NOT EXIST "%MPCHC_MINGW64%" (
+  ECHO ERROR: MINGW64 path invalid. You should set correct value in build.user.bat
+  EXIT /B 1
+)
+IF NOT EXIST "%MPCHC_MSYS%" (
+  ECHO ERROR: MSYS path invalid. You should set correct value in build.user.bat
+  EXIT /B 1
+)
+
 SET "PATH=%MPCHC_MSYS%\usr\bin;%MPCHC_MSYS%\bin;%MPCHC_MINGW32%\bin;%PATH%"
 EXIT /B
 
@@ -97,8 +105,8 @@ EXIT /B
 
 :SubDetectInnoSetup
 FOR /F "tokens=5*" %%A IN (
-  'REG QUERY "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 5_is1" /v "Inno Setup: App Path" 2^>NUL ^| FIND "REG_SZ" ^|^|
-   REG QUERY "HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 5_is1" /v "Inno Setup: App Path" 2^>NUL ^| FIND "REG_SZ"') DO SET "InnoSetupPath=%%B\ISCC.exe"
+  'REG QUERY "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 6_is1" /v "Inno Setup: App Path" 2^>NUL ^| FIND "REG_SZ" ^|^|
+   REG QUERY "HKLM\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 6_is1" /v "Inno Setup: App Path" 2^>NUL ^| FIND "REG_SZ"') DO SET "InnoSetupPath=%%B\ISCC.exe"
 EXIT /B
 
 :SubDetectSevenzipPath
@@ -115,6 +123,14 @@ EXIT /B
 
 :SubVSPath
 FOR /f "delims=" %%A IN ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -property installationPath -latest -requires Microsoft.Component.MSBuild Microsoft.VisualStudio.Component.VC.ATLMFC Microsoft.VisualStudio.Component.VC.Tools.x86.x64') DO SET "MPCHC_VS_PATH=%%A"
+EXIT /B
+
+:SubMINGWLIB
+IF NOT EXIST "lib\libmingwex-stripped.a" SET "FORCE_MINGW_UPDATE=True"
+IF NOT EXIST "lib64\libmingwex-stripped.a" SET "FORCE_MINGW_UPDATE=True"
+IF NOT EXIST "lib\libgcc.a" SET "FORCE_MINGW_UPDATE=True"
+IF NOT EXIST "lib64\ligbcc.a" SET "FORCE_MINGW_UPDATE=True"
+IF "FORCE_MINGW_UPDATE" == "True" CALL "update_mingwlib.bat" && SET "FORCE_MINGW_UPDATE=False"
 EXIT /B
 
 :SubMsg

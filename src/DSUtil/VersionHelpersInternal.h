@@ -24,7 +24,6 @@
 
 // Remove once newer SDK is used
 #ifndef _WIN32_WINNT_WINTHRESHOLD
-
 #define _WIN32_WINNT_WINTHRESHOLD 0x0A00
 
 VERSIONHELPERAPI
@@ -34,3 +33,51 @@ IsWindows10OrGreater()
 }
 
 #endif
+
+static VERSIONHELPERAPI
+IsWindowsVersionOrGreaterBuild(WORD wMajorVersion, WORD wMinorVersion, DWORD dwBuildNumber) {
+    OSVERSIONINFOEXW osvi = { sizeof(osvi), 0, 0, 0, 0, {0}, 0, 0 };
+    DWORDLONG        const dwlConditionMask = VerSetConditionMask(
+        VerSetConditionMask(
+            VerSetConditionMask(
+                0, VER_MAJORVERSION, VER_GREATER_EQUAL),
+            VER_MINORVERSION, VER_GREATER_EQUAL),
+        VER_BUILDNUMBER, VER_GREATER_EQUAL);
+
+    osvi.dwMajorVersion = wMajorVersion;
+    osvi.dwMinorVersion = wMinorVersion;
+    osvi.dwBuildNumber = dwBuildNumber;
+
+    return VerifyVersionInfoW(&osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER, dwlConditionMask) != FALSE;
+}
+
+#ifndef IsWindows11OrGreater
+
+VERSIONHELPERAPI
+IsWindows11OrGreater() {
+    return IsWindowsVersionOrGreaterBuild(HIBYTE(_WIN32_WINNT_WINTHRESHOLD), LOBYTE(_WIN32_WINNT_WINTHRESHOLD), 22000);
+}
+
+#endif
+
+typedef LONG NTSTATUS, * PNTSTATUS;
+#define STATUS_SUCCESS (0x00000000)
+
+typedef NTSTATUS(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
+
+inline RTL_OSVERSIONINFOW GetRealOSVersion()
+{
+    HMODULE hMod = ::GetModuleHandleW(L"ntdll.dll");
+    if (hMod) {
+        RtlGetVersionPtr fxPtr = (RtlGetVersionPtr)::GetProcAddress(hMod, "RtlGetVersion");
+        if (fxPtr != nullptr) {
+            RTL_OSVERSIONINFOW rovi = { 0 };
+            rovi.dwOSVersionInfoSize = sizeof(rovi);
+            if (STATUS_SUCCESS == fxPtr(&rovi)) {
+                return rovi;
+            }
+        }
+    }
+    RTL_OSVERSIONINFOW rovi = { 0 };
+    return rovi;
+}

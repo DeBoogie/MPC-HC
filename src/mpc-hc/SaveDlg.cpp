@@ -23,13 +23,14 @@
 #include "mplayerc.h"
 #include "SaveDlg.h"
 #include "../filters/Filters.h"
-
+#include "CMPCTheme.h"
+#include "CMPCThemeUtil.h"
 
 // CSaveDlg dialog
 
-IMPLEMENT_DYNAMIC(CSaveDlg, CCmdUIDialog)
+IMPLEMENT_DYNAMIC(CSaveDlg, CDialog)
 CSaveDlg::CSaveDlg(CString in, CString out, CWnd* pParent /*=nullptr*/)
-    : CCmdUIDialog(CSaveDlg::IDD, pParent)
+    : CMPCThemeResizableDialog(CSaveDlg::IDD, pParent)
     , m_in(in)
     , m_out(out)
     , m_nIDTimerEvent((UINT_PTR) - 1)
@@ -42,15 +43,17 @@ CSaveDlg::~CSaveDlg()
 
 void CSaveDlg::DoDataExchange(CDataExchange* pDX)
 {
-    CCmdUIDialog::DoDataExchange(pDX);
+    CMPCThemeResizableDialog::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_ANIMATE1, m_anim);
     DDX_Control(pDX, IDC_PROGRESS1, m_progress);
     DDX_Control(pDX, IDC_REPORT, m_report);
-    DDX_Control(pDX, IDC_FROMTO, m_fromto);
+    DDX_Control(pDX, IDC_STATIC1, m_from);
+    DDX_Control(pDX, IDC_STATIC2, m_to);
+    fulfillThemeReqs();
 }
 
 
-BEGIN_MESSAGE_MAP(CSaveDlg, CCmdUIDialog)
+BEGIN_MESSAGE_MAP(CSaveDlg, CMPCThemeResizableDialog)
     ON_BN_CLICKED(IDCANCEL, OnBnClickedCancel)
     ON_MESSAGE(WM_GRAPHNOTIFY, OnGraphNotify)
     ON_WM_TIMER()
@@ -61,26 +64,20 @@ END_MESSAGE_MAP()
 
 BOOL CSaveDlg::OnInitDialog()
 {
-    CCmdUIDialog::OnInitDialog();
+    CMPCThemeResizableDialog::OnInitDialog();
 
     // We can't use m_anim.Open(IDR_AVI_FILECOPY) since we want to load the AVI from the main executable
     m_anim.SendMessage(ACM_OPEN, (WPARAM)AfxGetInstanceHandle(), (LPARAM)IDR_AVI_FILECOPY);
     m_anim.Play(0, UINT(-1), UINT(-1));
 
-    CString str, in = m_in, out = m_out;
-    if (in.GetLength() > 60) {
-        in = in.Left(17) + _T("..") + in.Right(43);
-    }
-    if (out.GetLength() > 60) {
-        out = out.Left(17) + _T("..") + out.Right(43);
-    }
-    str.Format(_T("%s\r\n%s"), in.GetString(), out.GetString());
-    m_fromto.SetWindowText(str);
+    m_from.SetWindowText(m_in);
+    m_to.SetWindowText(m_out);
 
     m_progress.SetRange(0, 100);
+    CMPCThemeUtil::fulfillThemeReqs(&m_progress);
 
     if (FAILED(pGB.CoCreateInstance(CLSID_FilterGraph)) || !(pMC = pGB) || !(pME = pGB) || !(pMS = pGB)
-            || FAILED(pME->SetNotifyWindow((OAHWND)m_hWnd, WM_GRAPHNOTIFY, 0))) {
+            || FAILED(pME->SetNotifyWindow((OAHWND)m_hWnd, WM_GRAPHNOTIFY, 0x2B00B1E5))) {
         m_report.SetWindowText(_T("Error"));
         return FALSE;
     }
@@ -118,8 +115,12 @@ BOOL CSaveDlg::OnInitDialog()
             pReader.Release();
         } else {
             CPath pout(m_out);
-            pout.RenameExtension(_T(".ifo"));
-            CopyFile(m_in, pout, FALSE);
+            if (pout.RenameExtension(_T(".ifo"))) {
+                CopyFile(m_in, pout, FALSE);
+            } else {
+                m_report.SetWindowText(_T("Path is too long"));
+                return FALSE;
+            }
         }
     }
 #endif
@@ -155,7 +156,7 @@ BOOL CSaveDlg::OnInitDialog()
     }
 
     CComQIPtr<IBaseFilter> pSrc = pReader;
-    if (FAILED(pGB->AddFilter(pSrc, fnw))) {
+    if (FAILED(pGB->AddFilter(pSrc, _T("Source")))) {
         m_report.SetWindowText(_T("Sorry, can't save this file, press cancel"));
         return FALSE;
     }
@@ -176,20 +177,24 @@ BOOL CSaveDlg::OnInitDialog()
         return FALSE;
     }
 
-    hr = pGB->Connect(
+    hr = pGB->ConnectDirect(
              GetFirstPin((pSrc), PINDIR_OUTPUT),
-             GetFirstPin((pMid), PINDIR_INPUT));
+             GetFirstPin((pMid), PINDIR_INPUT), nullptr);
 
     if (FAILED(hr)) {
-        m_report.SetWindowText(_T("Error Connect pSrc / pMid"));
+        CString err;
+        err.Format(_T("Error Connect pSrc / pMid: 0x%x"), hr);
+        m_report.SetWindowText(err);
         return FALSE;
     }
 
-    hr = pGB->Connect(
+    hr = pGB->ConnectDirect(
              GetFirstPin((pMid), PINDIR_OUTPUT),
-             GetFirstPin((pDst), PINDIR_INPUT));
+             GetFirstPin((pDst), PINDIR_INPUT), nullptr);
     if (FAILED(hr)) {
-        m_report.SetWindowText(_T("Error Connect pMid / pDst"));
+        CString err;
+        err.Format(_T("Error Connect pMid / pDst: 0x%x"), hr);
+        m_report.SetWindowText(err);
         return FALSE;
     }
 
@@ -198,6 +203,11 @@ BOOL CSaveDlg::OnInitDialog()
     pMC->Run();
 
     m_nIDTimerEvent = SetTimer(1, 500, nullptr);
+
+    AddAnchor(IDC_PROGRESS1, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_STATIC1, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_STATIC2, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDCANCEL, BOTTOM_RIGHT);
 
     return TRUE;  // return TRUE unless you set the focus to a control
     // EXCEPTION: OCX Property Pages should return FALSE
@@ -214,8 +224,9 @@ void CSaveDlg::OnBnClickedCancel()
 
 LRESULT CSaveDlg::OnGraphNotify(WPARAM wParam, LPARAM lParam)
 {
-    LONG evCode, evParam1, evParam2;
-    while (pME && SUCCEEDED(pME->GetEvent(&evCode, (LONG_PTR*)&evParam1, (LONG_PTR*)&evParam2, 0))) {
+    LONG evCode = 0;
+    LONG_PTR evParam1 = 0, evParam2 = 0;
+    while (pME && SUCCEEDED(pME->GetEvent(&evCode, &evParam1, &evParam2, 0))) {
         HRESULT hr = pME->FreeEventParams(evCode, evParam1, evParam2);
         UNREFERENCED_PARAMETER(hr);
 
@@ -270,5 +281,5 @@ void CSaveDlg::OnTimer(UINT_PTR nIDEvent)
         m_progress.SetPos(dur > 0 ? (int)(100 * pos / dur) : 0);
     }
 
-    CCmdUIDialog::OnTimer(nIDEvent);
+    CMPCThemeResizableDialog::OnTimer(nIDEvent);
 }

@@ -27,6 +27,7 @@
 class CPlayerBar : public CSizingControlBarG
 {
     friend class CMainFrameControls; // for accessing m_szMinVert, m_szMinHorz, m_cxEdge and SetAutohidden(bool)
+    friend class CPlayerCaptureDialog;
 
     DECLARE_DYNAMIC(CPlayerBar)
 
@@ -63,4 +64,5 @@ public:
 
     bool IsAutohidden() const;
     bool HasActivePopup() const;
+    void SetHasActivePopup(bool bValue);
 };

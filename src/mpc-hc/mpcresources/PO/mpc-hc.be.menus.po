@@ -2,14 +2,16 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# Yauhen Bugamol <haxycgm@gmail.com>, 2015-2016
+# MPC HC <adiposegithub@gmail.com>, 2020
+# Yauhen Bugamol, 2025
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2016-01-17 21:31:34+0000\n"
-"PO-Revision-Date: 2017-08-13 20:50+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Belarusian (http://www.transifex.com/mpc-hc/mpc-hc/language/be/)\n"
+"POT-Creation-Date: 2025-04-26 17:38:13+0000\n"
+"PO-Revision-Date: 2020-01-02 07:46+0000\n"
+"Last-Translator: Yauhen Bugamol, 2025\n"
+"Language-Team: Belarusian (https://app.transifex.com/mpchc/teams/106126/be/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -25,7 +27,7 @@ msgid "&Quick Open File..."
 msgstr "&Хутка адкрыць файл..."
 
 msgctxt "ID_FILE_OPENMEDIA"
-msgid "&Open File..."
+msgid "&Open File/URL..."
 msgstr "&Адкрыць файл..."
 
 msgctxt "ID_FILE_OPENDVDBD"
@@ -80,13 +82,13 @@ msgctxt "ID_FILE_SUBTITLES_DOWNLOAD"
 msgid "&Download Subtitles..."
 msgstr "&Спампаваць субцітры..."
 
-msgctxt "ID_FILE_SUBTITLES_UPLOAD"
-msgid "&Upload Subtitles..."
-msgstr "За&пампаваць субцітры..."
-
 msgctxt "ID_FILE_PROPERTIES"
 msgid "P&roperties"
 msgstr "У&ласцівасці"
+
+msgctxt "ID_FILE_OPEN_LOCATION"
+msgid "Open File &Location"
+msgstr "Адкрыць папку з &файлам"
 
 msgctxt "ID_FILE_EXIT"
 msgid "E&xit"
@@ -136,10 +138,6 @@ msgctxt "ID_VIEW_NAVIGATION"
 msgid "Na&vigation"
 msgstr "&Навігацыя"
 
-msgctxt "ID_VIEW_DEBUGSHADERS"
-msgid "&Debug Shaders"
-msgstr "&Адладка шэйдараў"
-
 msgctxt "POPUP"
 msgid "&Presets..."
 msgstr "Пра&дусталёўкі"
@@ -156,6 +154,10 @@ msgctxt "ID_VIEW_PRESETS_NORMAL"
 msgid "&Normal"
 msgstr "&Нармальная"
 
+msgctxt "ID_VIEW_PRESETS_CUSTOM"
+msgid "C&ustom"
+msgstr ""
+
 msgctxt "ID_VIEW_FULLSCREEN"
 msgid "F&ull Screen"
 msgstr "На ўвесь &экран"
@@ -163,6 +165,10 @@ msgstr "На ўвесь &экран"
 msgctxt "POPUP"
 msgid "&Zoom"
 msgstr "Ма&штаб"
+
+msgctxt "ID_VIEW_ZOOM_25"
+msgid "&25%"
+msgstr "&25%"
 
 msgctxt "ID_VIEW_ZOOM_50"
 msgid "&50%"
@@ -179,10 +185,6 @@ msgstr "&200%"
 msgctxt "ID_VIEW_ZOOM_AUTOFIT"
 msgid "Auto &Fit"
 msgstr "Упісаць аўтаматычна"
-
-msgctxt "ID_VIEW_ZOOM_AUTOFIT_LARGER"
-msgid "Auto Fit (&Larger Only)"
-msgstr "Упісаць аўтаматычна (Толькі вялікія)"
 
 msgctxt "POPUP"
 msgid "R&enderer Settings"
@@ -246,7 +248,7 @@ msgstr "Палавінная апрацоўка лікаў з нефіксава
 
 msgctxt "ID_VIEW_DISABLEDESKTOPCOMPOSITION"
 msgid "Disable desktop composition (&Aero)"
-msgstr "Адкл. эфекты прац. стала"
+msgstr "Адкл. эфекты прац. ст&ала (Aero)"
 
 msgctxt "ID_VIEW_ENABLEFRAMETIMECORRECTION"
 msgid "Enable Frame Time &Correction"
@@ -286,35 +288,35 @@ msgstr "Знешняе &асвятленне"
 
 msgctxt "ID_VIEW_CM_AMBIENTLIGHT_BRIGHT"
 msgid "&Bright (2.2 Gamma)"
-msgstr "Светлае (Гама 2.2)"
+msgstr "&Светлае (Гама 2.2)"
 
 msgctxt "ID_VIEW_CM_AMBIENTLIGHT_DIM"
 msgid "&Dim (2.35 Gamma)"
-msgstr "Прыцемненае (Гама 2.35)"
+msgstr "&Прыцемненае (Гама 2.35)"
 
 msgctxt "ID_VIEW_CM_AMBIENTLIGHT_DARK"
 msgid "D&ark (2.4 Gamma)"
-msgstr "Цёмнае (Гама 2.4)"
+msgstr "&Цёмнае (Гама 2.4)"
 
 msgctxt "POPUP"
 msgid "&Rendering Intent"
-msgstr "&Мэта апрацоўкі"
+msgstr "&Метад апрацоўкі"
 
 msgctxt "ID_VIEW_CM_INTENT_PERCEPTUAL"
 msgid "&Perceptual"
-msgstr "Па ўспрыманню"
+msgstr "&Перцэпцы́йны"
 
 msgctxt "ID_VIEW_CM_INTENT_RELATIVECOLORIMETRIC"
 msgid "&Relative Colorimetric"
-msgstr "Адносны каларыметрычны"
+msgstr "Адносны &каларыметрычны"
 
 msgctxt "ID_VIEW_CM_INTENT_SATURATION"
 msgid "&Saturation"
-msgstr "Насычанасць"
+msgstr "&Насычанасць"
 
 msgctxt "ID_VIEW_CM_INTENT_ABSOLUTECOLORIMETRIC"
 msgid "&Absolute Colorimetric"
-msgstr "Абсалютная каларыметрыя"
+msgstr "&Абсалютны каларыметрычны"
 
 msgctxt "POPUP"
 msgid "&VSync"
@@ -342,31 +344,23 @@ msgstr "Па&вялічыць зрух VSync"
 
 msgctxt "POPUP"
 msgid "&GPU Control"
-msgstr "GPU Кантроль"
+msgstr "&Кіраванне GPU"
 
 msgctxt "ID_VIEW_FLUSHGPU_BEFOREVSYNC"
 msgid "Flush GPU &before VSync"
-msgstr "Ачышчаць буфер GPU перад верт. сінх."
+msgstr "Ачышчаць буфер GPU &перад верт. сінх."
 
 msgctxt "ID_VIEW_FLUSHGPU_AFTERPRESENT"
 msgid "Flush GPU &after Present"
-msgstr "Ачышчаць буфер GPU пасля паказу"
+msgstr "Ачышчаць буфер GPU п&асля паказу"
 
 msgctxt "ID_VIEW_FLUSHGPU_WAIT"
 msgid "&Wait for flushes"
-msgstr "Чакаць ачышчэння буфера"
-
-msgctxt "POPUP"
-msgid "R&eset"
-msgstr "Скінуць"
+msgstr "&Чакаць ачышчэння буфера"
 
 msgctxt "ID_VIEW_RESET_DEFAULT"
 msgid "Reset to &default renderer settings"
-msgstr "Скінуць налады рэндэрэнгу па змаўчанні"
-
-msgctxt "ID_VIEW_RESET_OPTIMAL"
-msgid "Reset to &optimal renderer settings"
-msgstr "Скінуць налады рэндэрэнгу да аптымальных"
+msgstr "Скінуць налады &рэндэрэнгу па змаўчанні"
 
 msgctxt "POPUP"
 msgid "Video &Frame"
@@ -441,8 +435,8 @@ msgid "&Correct Monitor/Desktop AR Diff"
 msgstr "&Выпраўляць розніцу прапорцый экрана і працоўнага стала"
 
 msgctxt "POPUP"
-msgid "Pa&n && Scan"
-msgstr "Становішча і памер кадра"
+msgid "P&nS Frame Adjust"
+msgstr "Пазіцыя і памер &кадра"
 
 msgctxt "ID_VIEW_INCSIZE"
 msgid "&Increase Size"
@@ -487,6 +481,22 @@ msgstr "Зрушыць уніз"
 msgctxt "ID_PANSCAN_CENTER"
 msgid "Cen&ter"
 msgstr "Цэнтраваць"
+
+msgctxt "ID_PANSCAN_ROTATEZM"
+msgid "Rotate Cloc&kwise"
+msgstr "Павярнуць &па гадзіннікавай стрэлцы"
+
+msgctxt "ID_PANSCAN_ROTATEZ270"
+msgid "Rotate Counter-Clock&wise"
+msgstr "Павярнуць &супраць гадзіннікавай стрэлкі"
+
+msgctxt "ID_PANSCAN_ROTATEXM"
+msgid "&Flip Vertically"
+msgstr "Пера&вярнуць"
+
+msgctxt "ID_PANSCAN_ROTATEYM"
+msgid "&Mirror"
+msgstr "Адлюстраваць па &гарызанталі"
 
 msgctxt "ID_VIEW_RESET"
 msgid "Re&set"
@@ -548,6 +558,94 @@ msgctxt "ID_PLAY_REPEAT_WHOLEPLAYLIST"
 msgid "&Playlist"
 msgstr "&Спіс прайгравання"
 
+msgctxt "ID_PLAY_REPEAT_AB"
+msgid "A-B (&Reset)"
+msgstr "A-B (&Скінуць)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_A"
+msgid "A-B (Mark &A)"
+msgstr "A-B (&Адзнака A)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_B"
+msgid "A-B (Mark &B)"
+msgstr "A-B (&Адзна&ка B)"
+
+msgctxt "POPUP"
+msgid "&Playback Rate"
+msgstr "&Хуткасць прайгравання"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_025"
+msgid "0.25 x"
+msgstr "0.25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_050"
+msgid "0.50 x"
+msgstr "0.50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_075"
+msgid "0.75 x"
+msgstr "0.75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_090"
+msgid "0.90 x"
+msgstr "0.90 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_100"
+msgid "1.00 x"
+msgstr "1.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_110"
+msgid "1.10 x"
+msgstr "1.10 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_125"
+msgid "1.25 x"
+msgstr "1.25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_150"
+msgid "1.50 x"
+msgstr "1.50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_175"
+msgid "1.75 x"
+msgstr "1.75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_200"
+msgid "2.00 x"
+msgstr "2.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_300"
+msgid "3.00 x"
+msgstr "3.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_400"
+msgid "4.00 x"
+msgstr "4.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_600"
+msgid "6.00 x"
+msgstr "6.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_800"
+msgid "8.00 x"
+msgstr "8.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS23"
+msgid "23.976 fps"
+msgstr "23.976 к/с"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS24"
+msgid "24 fps"
+msgstr "24 к/с"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS25"
+msgid "25 fps"
+msgstr "25 к/с"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS59"
+msgid "59.94 fps"
+msgstr "59.94 к/с"
+
 msgctxt "ID_PLAY_DECRATE"
 msgid "&Decrease Rate"
 msgstr "Па&меншыць хуткасць"
@@ -564,6 +662,10 @@ msgctxt "ID_FILTERS"
 msgid "&Filters"
 msgstr "&Фільтры"
 
+msgctxt "ID_COLOR_CONTROLS"
+msgid "&Color controls..."
+msgstr ""
+
 msgctxt "ID_SHADERS"
 msgid "S&haders"
 msgstr "&Шэйдары"
@@ -575,6 +677,10 @@ msgstr "Гукавая &дарожка"
 msgctxt "ID_SUBTITLES"
 msgid "Su&btitle Track"
 msgstr "Су&бцітры"
+
+msgctxt "ID_SUBTITLES_SECONDARY"
+msgid "Secondary Subtitle Track"
+msgstr ""
 
 msgctxt "ID_VIDEO_STREAMS"
 msgid "Vide&o Track"
@@ -707,4 +813,3 @@ msgstr "&Ахвяраваць"
 msgctxt "ID_HELP_ABOUT"
 msgid "&About..."
 msgstr "&Пра праграму..."
-

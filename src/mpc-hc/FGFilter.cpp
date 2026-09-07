@@ -25,6 +25,7 @@
 #include "MainFrm.h"
 #include "DSUtil.h"
 #include "IPinHook.h" // For the NVIDIA driver bug work-around
+#include "uuids.h"
 #include "moreuuids.h"
 #include <mvrInterfaces.h>
 
@@ -32,6 +33,12 @@
 #include "AllocatorCommon.h"
 #include "SyncAllocatorPresenter.h"
 
+#define LOG_FILTER_INSERT 0
+
+#if !TRACE_GRAPH_BUILD
+#undef TRACE
+#define TRACE(...)
+#endif
 
 //
 // CFGFilter
@@ -427,18 +434,102 @@ HRESULT CFGFilterFile::Create(IBaseFilter** ppBF, CInterfaceList<IUnknown, &IID_
 // CFGFilterVideoRenderer
 //
 
-CFGFilterVideoRenderer::CFGFilterVideoRenderer(HWND hWnd, const CLSID& clsid, CStringW name, UINT64 merit)
+CFGFilterVideoRenderer::CFGFilterVideoRenderer(HWND hWnd, const CLSID& clsid, CStringW name, UINT64 merit, bool preview)
     : CFGFilter(clsid, name, merit)
     , m_hWnd(hWnd)
-    , m_bHas10BitWorkAround(false)
+    , m_bHasHookReceiveConnection(false)
+    , m_bIsPreview(preview)
 {
-    AddType(MEDIATYPE_Video, MEDIASUBTYPE_NULL);
+    bool mpcvr = (clsid == CLSID_MPCVR || clsid == CLSID_MPCVRAllocatorPresenter);
+    bool madvr = (clsid == CLSID_madVR || clsid == CLSID_madVRAllocatorPresenter);
+    bool evr   = (clsid == CLSID_EnhancedVideoRenderer || clsid == CLSID_EVRAllocatorPresenter || clsid == CLSID_SyncAllocatorPresenter);
+
+    // List is based on filter registration data from madVR.
+    // ToDo: Some subtypes might only work with madVR. Figure out which ones and add them conditionally for extra efficiency.
+
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_NV12);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_nv12);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_YV12);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_yv12);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_YUY2);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_yuy2);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_UYVY);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_uyvy);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_P010);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_P016);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_RGB24);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_RGB32);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_YUV2);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_yuv2);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_IYUV);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_I420);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_YVYU);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_YV24);
+    AddType(MEDIATYPE_Video, MEDIASUBTYPE_AYUV);
+
+    if (mpcvr) {
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_Y8);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_Y16);
+    }
+
+    if (mpcvr || evr) {
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_NV21);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_ICM1);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_ICM2);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_ICM3);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_ICM4);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_cyuv);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_UYNV);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_UYNY);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_HDYC);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_uyv1);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_2Vu1);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_VDTZ);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_2vuy);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_2Vuy);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_yuvu);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_yuvs);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_YV16);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_I422);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_Y422);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_V422);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_Y42B);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_P422);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_YUNV);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_VYUY);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_AVUI);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_I444);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_v308);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_v408);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_24BG);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_BGRA);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_ABGR);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_RGBA);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_RGB0);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_0RGB);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_b48r);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_RBA64);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_64RBA);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_b64a);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_P210);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_Y210);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_v210);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_Y410);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_v410);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_P216);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_Y216);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_v216);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_Y416);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_v416);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_ARGB32);
+        AddType(MEDIATYPE_Video, MEDIASUBTYPE_A2R10G10B10);
+    }
 }
 
 CFGFilterVideoRenderer::~CFGFilterVideoRenderer()
 {
-    if (m_bHas10BitWorkAround) {
-        UnhookWorkAround10BitBug();
+    if (m_bHasHookReceiveConnection) {
+        UnhookReceiveConnection();
     }
 }
 
@@ -457,20 +548,11 @@ HRESULT CFGFilterVideoRenderer::Create(IBaseFilter** ppBF, CInterfaceList<IUnkno
     };
 
     if (m_clsid == CLSID_EVRAllocatorPresenter) {
-        CheckNoLog(CreateEVR(m_clsid, m_hWnd, isD3DFullScreenMode(), &pCAP));
+        CheckNoLog(CreateEVR(m_clsid, m_hWnd, !m_bIsPreview && isD3DFullScreenMode(), &pCAP, m_bIsPreview));
     } else if (m_clsid == CLSID_SyncAllocatorPresenter) {
         CheckNoLog(CreateSyncRenderer(m_clsid, m_hWnd, isD3DFullScreenMode(), &pCAP));
-    } else if (m_clsid == CLSID_madVRAllocatorPresenter) {
-        CheckNoLog(CreateAP9(m_clsid, m_hWnd, isD3DFullScreenMode(), &pCAP));
-
-        if (CComQIPtr<IMadVRSubclassReplacement> pMVRSR = pCAP) {
-            VERIFY(SUCCEEDED(pMVRSR->DisableSubclassing()));
-        }
-        // madVR supports calling IVideoWindow::put_Owner before the pins are connected
-        if (CComQIPtr<IVideoWindow> pVW = pCAP) {
-            VERIFY(SUCCEEDED(pVW->put_Owner((OAHWND)m_hWnd)));
-        }
-    } else if (m_clsid == CLSID_VMR9AllocatorPresenter || m_clsid == CLSID_DXRAllocatorPresenter) {
+    } else if (m_clsid == CLSID_MPCVRAllocatorPresenter || m_clsid == CLSID_madVRAllocatorPresenter ||
+               m_clsid == CLSID_VMR9AllocatorPresenter || m_clsid == CLSID_DXRAllocatorPresenter) {
         CheckNoLog(CreateAP9(m_clsid, m_hWnd, isD3DFullScreenMode(), &pCAP));
     } else {
         CComPtr<IBaseFilter> pBF;
@@ -478,12 +560,29 @@ HRESULT CFGFilterVideoRenderer::Create(IBaseFilter** ppBF, CInterfaceList<IUnkno
 
         if (m_clsid == CLSID_EnhancedVideoRenderer) {
             CComQIPtr<IEVRFilterConfig> pConfig = pBF;
-            pConfig->SetNumberOfStreams(3);
+            if (!m_bIsPreview) {
+                pConfig->SetNumberOfStreams(3);
+            }
 
             if (CComQIPtr<IMFGetService> pMFGS = pBF) {
                 CComPtr<IMFVideoDisplayControl> pMFVDC;
                 if (SUCCEEDED(pMFGS->GetService(MR_VIDEO_RENDER_SERVICE, IID_PPV_ARGS(&pMFVDC)))) {
                     pMFVDC->SetVideoWindow(m_hWnd);
+                    if (m_bIsPreview) {
+                        pMFVDC->SetRenderingPrefs(MFVideoRenderPrefs_DoNotRepaintOnStop);
+                    }
+                }
+            }
+        } else if (m_clsid == CLSID_VideoMixingRenderer9) {
+            if (m_bIsPreview) {
+                CComQIPtr<IVMRFilterConfig9> pConfig = pBF;
+
+                if (pConfig) {
+                    pConfig->SetRenderingMode(VMR9Mode_Windowless);
+                    CComQIPtr<IVMRWindowlessControl9> pControl = pBF;
+                    if (pControl) {
+                        pControl->SetVideoClippingWindow(m_hWnd);
+                    }
                 }
             }
         }
@@ -504,17 +603,41 @@ HRESULT CFGFilterVideoRenderer::Create(IBaseFilter** ppBF, CInterfaceList<IUnkno
         CheckNoLog(pCAP->CreateRenderer(&pRenderer));
 
         *ppBF = CComQIPtr<IBaseFilter>(pRenderer).Detach();
+
+        if (m_clsid == CLSID_MPCVRAllocatorPresenter) {
+            auto pMainFrame = (CMainFrame*)(AfxGetApp()->m_pMainWnd);
+            if (pMainFrame && pMainFrame->HasDedicatedFSVideoWindow()) {
+                if (CComQIPtr<ID3DFullscreenControl> pD3DFSC = *ppBF) {
+                    pD3DFSC->SetD3DFullscreen(true);
+                }
+            }
+            // renderer supports calling IVideoWindow::put_Owner before the pins are connected
+            if (CComQIPtr<IVideoWindow> pVW = *ppBF) {
+                VERIFY(SUCCEEDED(pVW->put_Owner((OAHWND)m_hWnd)));
+            }
+        } else if (m_clsid == CLSID_madVRAllocatorPresenter) {
+            if (CComQIPtr<IMadVRSubclassReplacement> pMVRSR = pCAP) {
+                VERIFY(SUCCEEDED(pMVRSR->DisableSubclassing()));
+            }
+            // renderer supports calling IVideoWindow::put_Owner before the pins are connected
+            if (CComQIPtr<IVideoWindow> pVW = *ppBF) {
+                VERIFY(SUCCEEDED(pVW->put_Owner((OAHWND)m_hWnd)));
+            }
+        }
+
         pUnks.AddTail(pCAP);
         if (CComQIPtr<ISubPicAllocatorPresenter2> pCAP2 = pCAP) {
             pUnks.AddTail(pCAP2);
+        }
+        if (CComQIPtr<ISubPicAllocatorPresenter3> pCAP3 = pCAP) {
+            pUnks.AddTail(pCAP3);
         }
     }
 
     CheckPointer(*ppBF, E_FAIL);
 
-    if (m_clsid != CLSID_madVRAllocatorPresenter) {
-        HookWorkAround10BitBug(*ppBF);
-        m_bHas10BitWorkAround = true;
+    if (!m_bIsPreview && (m_clsid == CLSID_EnhancedVideoRenderer || m_clsid == CLSID_EVRAllocatorPresenter || m_clsid == CLSID_SyncAllocatorPresenter || m_clsid == CLSID_VMR9AllocatorPresenter)) {
+        m_bHasHookReceiveConnection = HookReceiveConnection(*ppBF);
     }
 
     return hr;
@@ -549,44 +672,70 @@ void CFGFilterList::Insert(CFGFilter* pFGF, int group, bool exactmatch, bool aut
 {
     bool bInsert = true;
 
-    TRACE(_T("FGM: Inserting %d %d %016I64x '%s' --> "), group, exactmatch, pFGF->GetMerit(),
-          pFGF->GetName().IsEmpty() ? CStringFromGUID(pFGF->GetCLSID()).GetString() : CString(pFGF->GetName()).GetString());
+#if DEBUG & LOG_FILTER_INSERT
+    bool do_log = pFGF->GetMerit() != MERIT64_DO_NOT_USE;
+    if (do_log) {
+        TRACE(_T("FGM: Inserting %d %d %016I64x %s\n"), group, exactmatch, pFGF->GetMerit(),
+            pFGF->GetName().IsEmpty() ? CStringFromGUID(pFGF->GetCLSID()).GetString() : CString(pFGF->GetName()).GetString());
+    }
+#endif
 
-    CFGFilterRegistry* pFGFR = dynamic_cast<CFGFilterRegistry*>(pFGF);
+    CLSID insert_clsid = pFGF->GetCLSID();
 
     POSITION pos = m_filters.GetHeadPosition();
     while (pos) {
         filter_t& f = m_filters.GetNext(pos);
 
         if (pFGF == f.pFGF) {
-            TRACE(_T("Rejected (exact duplicate)\n"));
             bInsert = false;
+#if DEBUG & LOG_FILTER_INSERT
+            if (do_log) {
+                TRACE(_T("FGM: ^ duplicate (exact)\n"));
+            }
+#endif
             break;
+        }
+
+        // Filters are inserted in this order:
+        // 1) Internal filters
+        // 2) Renderers
+        // 3) Overrides
+        // 4) Registry
+
+        if (insert_clsid != GUID_NULL && insert_clsid == f.pFGF->GetCLSID()) {
+            // Exact same filter if name also identical. Name is different for the internal filters, and those should be handled as different filters.
+            // Blacklisted filters can have empty name.
+            if (f.pFGF->GetMerit() == MERIT64_DO_NOT_USE || pFGF->GetName() == f.pFGF->GetName()) {
+                bInsert = false;
+#if DEBUG & LOG_FILTER_INSERT
+                if (do_log) {
+                    TRACE(_T("FGM: ^ duplicate\n"));
+                }
+#endif
+                break;
+            }
         }
 
         if (group != f.group) {
             continue;
         }
 
-        if (pFGF->GetCLSID() != GUID_NULL && pFGF->GetCLSID() == f.pFGF->GetCLSID()
-                && f.pFGF->GetMerit() == MERIT64_DO_NOT_USE) {
-            TRACE(_T("Rejected (same filter with merit DO_NOT_USE already in the list)\n"));
-            bInsert = false;
-            break;
-        }
-
-        if (CFGFilterRegistry* pFGFR2 = dynamic_cast<CFGFilterRegistry*>(f.pFGF)) {
-            if (pFGFR && pFGFR->GetMoniker() && pFGFR2->GetMoniker() && S_OK == pFGFR->GetMoniker()->IsEqual(pFGFR2->GetMoniker())) {
-                TRACE(_T("Rejected (duplicated moniker)\n"));
+        CFGFilterRegistry* pFGFR = dynamic_cast<CFGFilterRegistry*>(pFGF);
+        if (pFGFR && pFGFR->GetMoniker()) {
+            CFGFilterRegistry* pFGFR2 = dynamic_cast<CFGFilterRegistry*>(f.pFGF);
+            if (pFGFR2 && pFGFR2->GetMoniker() && S_OK == pFGFR->GetMoniker()->IsEqual(pFGFR2->GetMoniker())) {
                 bInsert = false;
+#if DEBUG & LOG_FILTER_INSERT
+                if (do_log) {
+                    TRACE(_T("FGM: ^ duplicate (moniker)\n"));
+                }
+#endif
                 break;
             }
         }
     }
 
     if (bInsert) {
-        TRACE(_T("Success\n"));
-
         filter_t f = {(int)m_filters.GetCount(), pFGF, group, exactmatch, autodelete};
         m_filters.AddTail(f);
 
@@ -611,17 +760,16 @@ POSITION CFGFilterList::GetHeadPosition()
                 m_sortedfilters.AddTail(sort[i].pFGF);
             }
         }
-    }
 
 #ifdef _DEBUG
-    TRACE(_T("FGM: Sorting filters\n"));
-
-    POSITION pos = m_sortedfilters.GetHeadPosition();
-    while (pos) {
-        CFGFilter* pFGF = m_sortedfilters.GetNext(pos);
-        TRACE(_T("FGM: - %016I64x '%s'\n"), pFGF->GetMerit(), pFGF->GetName().IsEmpty() ? CStringFromGUID(pFGF->GetCLSID()).GetString() : CString(pFGF->GetName()).GetString());
-    }
+        TRACE(_T("FGM: Sorting filters\n"));
+        pos = m_sortedfilters.GetHeadPosition();
+        while (pos) {
+            CFGFilter* pFGF = m_sortedfilters.GetNext(pos);
+            TRACE(_T("FGM: - %016I64x '%s'\n"), pFGF->GetMerit(), pFGF->GetName().IsEmpty() ? CStringFromGUID(pFGF->GetCLSID()).GetString() : CString(pFGF->GetName()).GetString());
+        }
 #endif
+    }
 
     return m_sortedfilters.GetHeadPosition();
 }

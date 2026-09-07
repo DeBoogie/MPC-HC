@@ -2,20 +2,23 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# kasper93, 2013
-# khagaroth, 2013-2017
+# MPC HC <adiposegithub@gmail.com>, 2020
+# Jindřich T, 2025
+# Michal Várady <miko.vaji@gmail.com>, 2026
+# Transifex sync (Studio), 2026
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2016-01-17 21:31:34+0000\n"
-"PO-Revision-Date: 2017-08-13 20:49+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Czech (http://www.transifex.com/mpc-hc/mpc-hc/language/cs/)\n"
+"POT-Creation-Date: 2026-07-18 21:00:08+0000\n"
+"PO-Revision-Date: 2026-08-31 14:37+0000\n"
+"Last-Translator: Transifex sync (Studio)\n"
+"Language-Team: Czech (https://app.transifex.com/mpchc/teams/106126/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: cs\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
 
 msgctxt "POPUP"
 msgid "&File"
@@ -26,12 +29,12 @@ msgid "&Quick Open File..."
 msgstr "&Rychle otevřít soubor..."
 
 msgctxt "ID_FILE_OPENMEDIA"
-msgid "&Open File..."
-msgstr "Otevřít &soubor..."
+msgid "&Open File/URL..."
+msgstr "Otevřít &soubor / URL..."
 
 msgctxt "ID_FILE_OPENDVDBD"
 msgid "Open &DVD/BD..."
-msgstr "Otevřít DVD/&BD..."
+msgstr "Otevřít &DVD / BD..."
 
 msgctxt "ID_FILE_OPENDEVICE"
 msgid "Open De&vice..."
@@ -81,13 +84,13 @@ msgctxt "ID_FILE_SUBTITLES_DOWNLOAD"
 msgid "&Download Subtitles..."
 msgstr "&Stáhnout titulky..."
 
-msgctxt "ID_FILE_SUBTITLES_UPLOAD"
-msgid "&Upload Subtitles..."
-msgstr "&Odeslat titulky..."
-
 msgctxt "ID_FILE_PROPERTIES"
 msgid "P&roperties"
-msgstr "&Vlastnosti"
+msgstr "V&lastnosti"
+
+msgctxt "ID_FILE_OPEN_LOCATION"
+msgid "Open File &Location"
+msgstr "Otevřít umístění &souboru"
 
 msgctxt "ID_FILE_EXIT"
 msgid "E&xit"
@@ -123,11 +126,11 @@ msgstr "Sta&vový řádek"
 
 msgctxt "ID_VIEW_SUBRESYNC"
 msgid "Su&bresync"
-msgstr "&Subresync"
+msgstr "&Úprava titulků"
 
 msgctxt "ID_VIEW_PLAYLIST"
 msgid "Pla&ylist"
-msgstr "&Playlist"
+msgstr "&Seznam stop"
 
 msgctxt "ID_VIEW_CAPTURE"
 msgid "Captu&re"
@@ -137,13 +140,9 @@ msgctxt "ID_VIEW_NAVIGATION"
 msgid "Na&vigation"
 msgstr "Navigace"
 
-msgctxt "ID_VIEW_DEBUGSHADERS"
-msgid "&Debug Shaders"
-msgstr "Ladění shaderů"
-
 msgctxt "POPUP"
 msgid "&Presets..."
-msgstr "Pře&dvolby..."
+msgstr "O&kno přehrávače"
 
 msgctxt "ID_VIEW_PRESETS_MINIMAL"
 msgid "&Minimal"
@@ -157,13 +156,21 @@ msgctxt "ID_VIEW_PRESETS_NORMAL"
 msgid "&Normal"
 msgstr "&Standardní"
 
+msgctxt "ID_VIEW_PRESETS_CUSTOM"
+msgid "C&ustom"
+msgstr "&Vlastní"
+
 msgctxt "ID_VIEW_FULLSCREEN"
 msgid "F&ull Screen"
 msgstr "&Na celou obrazovku"
 
 msgctxt "POPUP"
 msgid "&Zoom"
-msgstr "Velikost"
+msgstr "&Přiblížení"
+
+msgctxt "ID_VIEW_ZOOM_25"
+msgid "&25%"
+msgstr "&25%"
 
 msgctxt "ID_VIEW_ZOOM_50"
 msgid "&50%"
@@ -180,10 +187,6 @@ msgstr "&200%"
 msgctxt "ID_VIEW_ZOOM_AUTOFIT"
 msgid "Auto &Fit"
 msgstr "Automaticky přizpůsobit"
-
-msgctxt "ID_VIEW_ZOOM_AUTOFIT_LARGER"
-msgid "Auto Fit (&Larger Only)"
-msgstr "Automaticky přizpůsobit (jen větší)"
 
 msgctxt "POPUP"
 msgid "R&enderer Settings"
@@ -271,15 +274,15 @@ msgstr "Detekovat automaticky"
 
 msgctxt "ID_VIEW_CM_INPUT_HDTV"
 msgid "&HDTV"
-msgstr "HDTV"
+msgstr "&HDTV"
 
 msgctxt "ID_VIEW_CM_INPUT_SDTV_NTSC"
 msgid "SDTV &NTSC"
-msgstr "SDTV NTSC"
+msgstr "SDTV &NTSC"
 
 msgctxt "ID_VIEW_CM_INPUT_SDTV_PAL"
 msgid "SDTV &PAL"
-msgstr "SDTV PAL"
+msgstr "SDTV &PAL"
 
 msgctxt "POPUP"
 msgid "Ambient &Light"
@@ -357,17 +360,9 @@ msgctxt "ID_VIEW_FLUSHGPU_WAIT"
 msgid "&Wait for flushes"
 msgstr "Čekat &na vyprázdnění"
 
-msgctxt "POPUP"
-msgid "R&eset"
-msgstr "&Obnova nastavení"
-
 msgctxt "ID_VIEW_RESET_DEFAULT"
 msgid "Reset to &default renderer settings"
 msgstr "Obnovit &výchozí nastavení rendereru"
-
-msgctxt "ID_VIEW_RESET_OPTIMAL"
-msgid "Reset to &optimal renderer settings"
-msgstr "Obnovit &optimální nastavení rendereru"
 
 msgctxt "POPUP"
 msgid "Video &Frame"
@@ -395,11 +390,11 @@ msgstr "Dotknout se okna zevnitř"
 
 msgctxt "ID_VIEW_VF_ZOOM1"
 msgid "Zoom &1"
-msgstr "Roztáhnout &1"
+msgstr "Přiblížit &1"
 
 msgctxt "ID_VIEW_VF_ZOOM2"
 msgid "Zoom &2"
-msgstr "Roztáhnout &2"
+msgstr "Přiblížit &2"
 
 msgctxt "ID_VIEW_VF_FROMOUTSIDE"
 msgid "Touch Window From &Outside"
@@ -415,15 +410,15 @@ msgstr "Výchozí (DAR)"
 
 msgctxt "ID_ASPECTRATIO_4_3"
 msgid "&4:3"
-msgstr "4:3"
+msgstr "&4:3"
 
 msgctxt "ID_ASPECTRATIO_5_4"
 msgid "&5:4"
-msgstr "5:4"
+msgstr "&5:4"
 
 msgctxt "ID_ASPECTRATIO_16_9"
 msgid "&16:9"
-msgstr "16:9"
+msgstr "&16:9"
 
 msgctxt "ID_ASPECTRATIO_235_100"
 msgid "&235:100"
@@ -435,15 +430,15 @@ msgstr "1&85:100"
 
 msgctxt "ID_ASPECTRATIO_SAR"
 msgid "Assume &square pixels (SAR)"
-msgstr "Předpokládat čtvercové pixely (SAR)"
+msgstr "Předpokládat č&tvercové pixely (SAR)"
 
 msgctxt "ID_VIEW_VF_COMPMONDESKARDIFF"
 msgid "&Correct Monitor/Desktop AR Diff"
-msgstr "Opravit rozdíl poměru stran monitoru a plochy"
+msgstr "&Opravit rozdíl poměru stran obrazovky a plochy"
 
 msgctxt "POPUP"
-msgid "Pa&n && Scan"
-msgstr "Pan&&S&can"
+msgid "P&nS Frame Adjust"
+msgstr "Pan a Scan přizpůsobení obrazu"
 
 msgctxt "ID_VIEW_INCSIZE"
 msgid "&Increase Size"
@@ -471,23 +466,39 @@ msgstr "Zmenšit výšku"
 
 msgctxt "ID_PANSCAN_MOVERIGHT"
 msgid "Move &Right"
-msgstr "Posunout doprava"
+msgstr "Posunout do&prava"
 
 msgctxt "ID_PANSCAN_MOVELEFT"
 msgid "Move &Left"
-msgstr "Posunout doleva"
+msgstr "Posunout do&leva"
 
 msgctxt "ID_PANSCAN_MOVEUP"
 msgid "Move &Up"
-msgstr "Posunout nahoru"
+msgstr "Posunout &nahoru"
 
 msgctxt "ID_PANSCAN_MOVEDOWN"
 msgid "Move &Down"
-msgstr "Posunout dolů"
+msgstr "Posunout &dolů"
 
 msgctxt "ID_PANSCAN_CENTER"
 msgid "Cen&ter"
-msgstr "Vycentrovat"
+msgstr "Vy&centrovat"
+
+msgctxt "ID_PANSCAN_ROTATEZM"
+msgid "Rotate Cloc&kwise"
+msgstr "Otočit o 90° &doprava"
+
+msgctxt "ID_PANSCAN_ROTATEZ270"
+msgid "Rotate Counter-Clock&wise"
+msgstr "Otočit o 90° &doleva"
+
+msgctxt "ID_PANSCAN_ROTATEXM"
+msgid "&Flip Vertically"
+msgstr "&Otočit vertikálně"
+
+msgctxt "ID_PANSCAN_ROTATEYM"
+msgid "&Mirror"
+msgstr "&Zrcadlit"
 
 msgctxt "ID_VIEW_RESET"
 msgid "Re&set"
@@ -549,6 +560,94 @@ msgctxt "ID_PLAY_REPEAT_WHOLEPLAYLIST"
 msgid "&Playlist"
 msgstr "Seznam sto&p"
 
+msgctxt "ID_PLAY_REPEAT_AB"
+msgid "A-B (&Reset)"
+msgstr "A-B (&Reset)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_A"
+msgid "A-B (Mark &A)"
+msgstr "A-B (Počátek &A)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_B"
+msgid "A-B (Mark &B)"
+msgstr "A-B (Konec &B)"
+
+msgctxt "POPUP"
+msgid "&Playback Rate"
+msgstr "Rychlost přehrávání"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_025"
+msgid "0.25 x"
+msgstr "0.25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_050"
+msgid "0.50 x"
+msgstr "0.50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_075"
+msgid "0.75 x"
+msgstr "0.75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_090"
+msgid "0.90 x"
+msgstr "0.90 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_100"
+msgid "1.00 x"
+msgstr "1.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_110"
+msgid "1.10 x"
+msgstr "1.10 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_125"
+msgid "1.25 x"
+msgstr "1.25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_150"
+msgid "1.50 x"
+msgstr "1.50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_175"
+msgid "1.75 x"
+msgstr "1.75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_200"
+msgid "2.00 x"
+msgstr "2.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_300"
+msgid "3.00 x"
+msgstr "3.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_400"
+msgid "4.00 x"
+msgstr "4.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_600"
+msgid "6.00 x"
+msgstr "6.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_800"
+msgid "8.00 x"
+msgstr "8.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS23"
+msgid "23.976 fps"
+msgstr "23,976 FPS"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS24"
+msgid "24 fps"
+msgstr "24 FPS"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS25"
+msgid "25 fps"
+msgstr "25 FPS"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS59"
+msgid "59.94 fps"
+msgstr "59,94 FPS"
+
 msgctxt "ID_PLAY_DECRATE"
 msgid "&Decrease Rate"
 msgstr "Zpo&malit přehrávání"
@@ -563,11 +662,15 @@ msgstr "Výchozí rychlost"
 
 msgctxt "ID_FILTERS"
 msgid "&Filters"
-msgstr "Filtry"
+msgstr "&Filtry"
+
+msgctxt "ID_COLOR_CONTROLS"
+msgid "&Color controls..."
+msgstr "Nastavení &barev..."
 
 msgctxt "ID_SHADERS"
 msgid "S&haders"
-msgstr "Shadery"
+msgstr "&Shadery"
 
 msgctxt "ID_AUDIOS"
 msgid "&Audio Track"
@@ -577,13 +680,17 @@ msgctxt "ID_SUBTITLES"
 msgid "Su&btitle Track"
 msgstr "&Titulková stopa"
 
+msgctxt "ID_SUBTITLES_SECONDARY"
+msgid "Secondary Subtitle Track"
+msgstr "Sekundární titulková stopa"
+
 msgctxt "ID_VIDEO_STREAMS"
 msgid "Vide&o Track"
 msgstr "&Video stopa"
 
 msgctxt "POPUP"
 msgid "&Volume"
-msgstr "H&lasitost"
+msgstr "&Hlasitost"
 
 msgctxt "ID_VOLUME_UP"
 msgid "&Up"
@@ -611,11 +718,11 @@ msgstr "Přehrát &další soubor v adresáři"
 
 msgctxt "ID_AFTERPLAYBACK_MONITOROFF"
 msgid "Turn off the &monitor"
-msgstr "Vypnout &monitor"
+msgstr "Vypnout &obrazovku"
 
 msgctxt "ID_AFTERPLAYBACK_EXIT"
 msgid "&Exit"
-msgstr "&Zavřít přehrávač"
+msgstr "&Ukončit přehrávač"
 
 msgctxt "ID_AFTERPLAYBACK_STANDBY"
 msgid "&Stand By"
@@ -623,7 +730,7 @@ msgstr "Pohotovostní režim"
 
 msgctxt "ID_AFTERPLAYBACK_HIBERNATE"
 msgid "&Hibernate"
-msgstr "Režim spánku"
+msgstr "&Hibernace"
 
 msgctxt "ID_AFTERPLAYBACK_SHUTDOWN"
 msgid "Shut&down"
@@ -708,4 +815,3 @@ msgstr "Zaslat dar"
 msgctxt "ID_HELP_ABOUT"
 msgid "&About..."
 msgstr "&O programu..."
-

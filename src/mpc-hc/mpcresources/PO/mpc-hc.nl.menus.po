@@ -2,22 +2,18 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# B512, 2015
-# reneweesp <bmom43@hotmail.com>, 2016
-# Dennis Gerritsen <frostflame@hotmail.com>, 2014
-# Devrim, 2013-2015
-# DennisW, 2014
-# hendrickbert <hendrickbert@gmail.com>, 2015
-# kasper93, 2013
-# Marco Brohet <therbom@gmail.com>, 2015
-# rjongejan <ruben.jongejan@gmail.com>, 2014
+# MPC HC <adiposegithub@gmail.com>, 2020
+# Arne Bezuijen <transifex@arnage.nl>, 2021
+# mark van tilburg <markvantilburg@gmail.com>, 2025
+# Renz Straatman <renz@kabelkrant.net>, 2025
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2016-01-17 21:31:34+0000\n"
-"PO-Revision-Date: 2017-08-13 20:50+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Dutch (http://www.transifex.com/mpc-hc/mpc-hc/language/nl/)\n"
+"POT-Creation-Date: 2025-04-26 17:38:13+0000\n"
+"PO-Revision-Date: 2020-01-02 07:46+0000\n"
+"Last-Translator: Renz Straatman <renz@kabelkrant.net>, 2025\n"
+"Language-Team: Dutch (https://app.transifex.com/mpchc/teams/106126/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -30,27 +26,27 @@ msgstr "&Bestand"
 
 msgctxt "ID_FILE_OPENQUICK"
 msgid "&Quick Open File..."
-msgstr "Snel &bestand openen..."
+msgstr "Snel openen..."
 
 msgctxt "ID_FILE_OPENMEDIA"
-msgid "&Open File..."
-msgstr "Bestand &openen..."
+msgid "&Open File/URL..."
+msgstr "Open bestand..."
 
 msgctxt "ID_FILE_OPENDVDBD"
 msgid "Open &DVD/BD..."
-msgstr "&DVD/BD openen..."
+msgstr "Open DVD of Blu-ray..."
 
 msgctxt "ID_FILE_OPENDEVICE"
 msgid "Open De&vice..."
-msgstr "A&pparaat openen..."
+msgstr "Open apparaat..."
 
 msgctxt "ID_FILE_OPENDIRECTORY"
 msgid "Open Dir&ectory..."
-msgstr "&Map openen..."
+msgstr "Open map..."
 
 msgctxt "ID_FILE_OPENDISC"
 msgid "O&pen Disc"
-msgstr "Schijf openen"
+msgstr "Open schijf..."
 
 msgctxt "ID_RECENT_FILES"
 msgid "Recent &Files"
@@ -58,19 +54,19 @@ msgstr "&Recente bestanden"
 
 msgctxt "ID_FILE_CLOSE_AND_RESTORE"
 msgid "&Close"
-msgstr "Sl&uiten"
+msgstr "Sl&uit"
 
 msgctxt "ID_FILE_SAVE_COPY"
 msgid "&Save a Copy..."
-msgstr "&Opslaan als"
+msgstr "&Opslaan als..."
 
 msgctxt "ID_FILE_SAVE_IMAGE"
 msgid "Save &Image..."
-msgstr "Afbeeld&ing opslaan..."
+msgstr "Maak afbeelding..."
 
 msgctxt "ID_FILE_SAVE_THUMBNAILS"
 msgid "Save &Thumbnails..."
-msgstr "Miniatuurweergaven opslaan..."
+msgstr "Maak mozaïekweergave..."
 
 msgctxt "POPUP"
 msgid "S&ubtitles"
@@ -78,23 +74,23 @@ msgstr "Ondertiteling"
 
 msgctxt "ID_FILE_SUBTITLES_LOAD"
 msgid "&Load Subtitles..."
-msgstr "Ondertitlel &laden"
+msgstr "Ondertiteling openen"
 
 msgctxt "ID_FILE_SUBTITLES_SAVE"
 msgid "Save S&ubtitles..."
-msgstr "Op&slaan ondertitel"
+msgstr "Ondertiteling opslaan..."
 
 msgctxt "ID_FILE_SUBTITLES_DOWNLOAD"
 msgid "&Download Subtitles..."
-msgstr "Ophalen on&dertitel"
-
-msgctxt "ID_FILE_SUBTITLES_UPLOAD"
-msgid "&Upload Subtitles..."
-msgstr "Opst&uren ondertitel"
+msgstr "Ondertiteling downloaden"
 
 msgctxt "ID_FILE_PROPERTIES"
 msgid "P&roperties"
 msgstr "&Eigenschappen"
+
+msgctxt "ID_FILE_OPEN_LOCATION"
+msgid "Open File &Location"
+msgstr "Maplocatie openen"
 
 msgctxt "ID_FILE_EXIT"
 msgid "E&xit"
@@ -102,15 +98,15 @@ msgstr "Afsluiten"
 
 msgctxt "POPUP"
 msgid "&View"
-msgstr "Bee&ld"
+msgstr "Beeld"
 
 msgctxt "ID_VIEW_CAPTIONMENU"
 msgid "Caption&&Menu"
-msgstr "Titelbalk && menu"
+msgstr "Titelbalk en menu"
 
 msgctxt "ID_VIEW_SEEKER"
 msgid "See&k Bar"
-msgstr "&Zoekbalk"
+msgstr "Tijdlijn"
 
 msgctxt "ID_VIEW_CONTROLS"
 msgid "&Controls"
@@ -122,15 +118,15 @@ msgstr "&Informatie"
 
 msgctxt "ID_VIEW_STATISTICS"
 msgid "&Statistics"
-msgstr "S&tatistieken"
+msgstr "Statistieken"
 
 msgctxt "ID_VIEW_STATUS"
 msgid "St&atus"
-msgstr "St&atus"
+msgstr "St&atusbalk"
 
 msgctxt "ID_VIEW_SUBRESYNC"
 msgid "Su&bresync"
-msgstr "&Ondertiteling resync"
+msgstr "Ondertiteling-correctie"
 
 msgctxt "ID_VIEW_PLAYLIST"
 msgid "Pla&ylist"
@@ -144,17 +140,13 @@ msgctxt "ID_VIEW_NAVIGATION"
 msgid "Na&vigation"
 msgstr "Navigatie"
 
-msgctxt "ID_VIEW_DEBUGSHADERS"
-msgid "&Debug Shaders"
-msgstr "&Foutopsporing shaders"
-
 msgctxt "POPUP"
 msgid "&Presets..."
 msgstr "W&eergave..."
 
 msgctxt "ID_VIEW_PRESETS_MINIMAL"
 msgid "&Minimal"
-msgstr "&Minimum"
+msgstr "&Minimaal"
 
 msgctxt "ID_VIEW_PRESETS_COMPACT"
 msgid "&Compact"
@@ -162,7 +154,11 @@ msgstr "&Compact"
 
 msgctxt "ID_VIEW_PRESETS_NORMAL"
 msgid "&Normal"
-msgstr "&Standaard"
+msgstr "&Volledig"
+
+msgctxt "ID_VIEW_PRESETS_CUSTOM"
+msgid "C&ustom"
+msgstr ""
 
 msgctxt "ID_VIEW_FULLSCREEN"
 msgid "F&ull Screen"
@@ -171,6 +167,10 @@ msgstr "&Volledig scherm"
 msgctxt "POPUP"
 msgid "&Zoom"
 msgstr "&In- en uit&zoomen"
+
+msgctxt "ID_VIEW_ZOOM_25"
+msgid "&25%"
+msgstr "25%"
 
 msgctxt "ID_VIEW_ZOOM_50"
 msgid "&50%"
@@ -186,15 +186,11 @@ msgstr "&200%"
 
 msgctxt "ID_VIEW_ZOOM_AUTOFIT"
 msgid "Auto &Fit"
-msgstr "Auto passend"
-
-msgctxt "ID_VIEW_ZOOM_AUTOFIT_LARGER"
-msgid "Auto Fit (&Larger Only)"
-msgstr "Auto  passend (a&lleen groot)"
+msgstr "Automatisch aanpassen"
 
 msgctxt "POPUP"
 msgid "R&enderer Settings"
-msgstr "Opbouw instellingen"
+msgstr "Renderinstellingen"
 
 msgctxt "ID_VIEW_TEARING_TEST"
 msgid "&Tearing Test"
@@ -202,15 +198,15 @@ msgstr "&Tearing test"
 
 msgctxt "ID_VIEW_DISPLAY_RENDERER_STATS"
 msgid "&Display Statistics"
-msgstr "&Statistieken weergeven"
+msgstr "Toon statistieken"
 
 msgctxt "ID_VIEW_OSD_DISPLAY_TIME"
 msgid "Display Current T&ime"
-msgstr "Hu&idige tijd weergeven"
+msgstr "Toon huidige tijd"
 
 msgctxt "ID_VIEW_OSD_SHOW_FILENAME"
 msgid "Show &File Name"
-msgstr "&Bestandsnaam weergeven"
+msgstr "Toon bestandsnaam"
 
 msgctxt "POPUP"
 msgid "&Output Range"
@@ -226,7 +222,7 @@ msgstr "16 - 235"
 
 msgctxt "POPUP"
 msgid "&Presentation"
-msgstr "Presentatie"
+msgstr "Presentator"
 
 msgctxt "ID_VIEW_D3DFULLSCREEN"
 msgid "D3D Fullscreen &Mode"
@@ -258,7 +254,7 @@ msgstr "Aero uitschakelen tijdens afspelen"
 
 msgctxt "ID_VIEW_ENABLEFRAMETIMECORRECTION"
 msgid "Enable Frame Time &Correction"
-msgstr "Beeldtijd correctie inschakelen"
+msgstr "Framerate-correctie inschakelen"
 
 msgctxt "POPUP"
 msgid "&Color Management"
@@ -306,11 +302,11 @@ msgstr "Donker (2.4 Gamma)"
 
 msgctxt "POPUP"
 msgid "&Rendering Intent"
-msgstr "Opbouw intentie"
+msgstr "Render-intentie"
 
 msgctxt "ID_VIEW_CM_INTENT_PERCEPTUAL"
 msgid "&Perceptual"
-msgstr "Perceptual"
+msgstr "Perceptueel"
 
 msgctxt "ID_VIEW_CM_INTENT_RELATIVECOLORIMETRIC"
 msgid "&Relative Colorimetric"
@@ -364,17 +360,9 @@ msgctxt "ID_VIEW_FLUSHGPU_WAIT"
 msgid "&Wait for flushes"
 msgstr "Wacht tot GPU leeg is"
 
-msgctxt "POPUP"
-msgid "R&eset"
-msgstr "Resetten"
-
 msgctxt "ID_VIEW_RESET_DEFAULT"
 msgid "Reset to &default renderer settings"
-msgstr "Standaardinstellingen opbouwer herstellen"
-
-msgctxt "ID_VIEW_RESET_OPTIMAL"
-msgid "Reset to &optimal renderer settings"
-msgstr "Optimale opbopuw instellingen herstellen"
+msgstr "Reset naar standaard render-instellingen"
 
 msgctxt "POPUP"
 msgid "Video &Frame"
@@ -398,7 +386,7 @@ msgstr "Spreiden"
 
 msgctxt "ID_VIEW_VF_FROMINSIDE"
 msgid "Touch Window From &Inside"
-msgstr "Pas venster vanuit binnen aan"
+msgstr "Passend binnen venster"
 
 msgctxt "ID_VIEW_VF_ZOOM1"
 msgid "Zoom &1"
@@ -410,11 +398,11 @@ msgstr "Zoom &2"
 
 msgctxt "ID_VIEW_VF_FROMOUTSIDE"
 msgid "Touch Window From &Outside"
-msgstr "Pas venster vanaf buiten aan"
+msgstr "Passend buiten venster"
 
 msgctxt "POPUP"
 msgid "&Aspect Ratio"
-msgstr "Verw&achtte verhouding"
+msgstr "Beeldverhouding aanpassen..."
 
 msgctxt "ID_ASPECTRATIO_DAR"
 msgid "&Default (DAR)"
@@ -442,15 +430,15 @@ msgstr "185:100"
 
 msgctxt "ID_ASPECTRATIO_SAR"
 msgid "Assume &square pixels (SAR)"
-msgstr "Veronderstel verkante pixels (SAR)"
+msgstr "Vierkante pixels (SAR)"
 
 msgctxt "ID_VIEW_VF_COMPMONDESKARDIFF"
 msgid "&Correct Monitor/Desktop AR Diff"
-msgstr "AR afwijking scherm/bureaublad corrigeren"
+msgstr "Corrigeer afwijking in beeldschermverhouding"
 
 msgctxt "POPUP"
-msgid "Pa&n && Scan"
-msgstr "Pa&n && scan"
+msgid "P&nS Frame Adjust"
+msgstr "Pan en scan"
 
 msgctxt "ID_VIEW_INCSIZE"
 msgid "&Increase Size"
@@ -496,13 +484,29 @@ msgctxt "ID_PANSCAN_CENTER"
 msgid "Cen&ter"
 msgstr "&Centreren"
 
+msgctxt "ID_PANSCAN_ROTATEZM"
+msgid "Rotate Cloc&kwise"
+msgstr "Rechtsom draaien"
+
+msgctxt "ID_PANSCAN_ROTATEZ270"
+msgid "Rotate Counter-Clock&wise"
+msgstr "Linksom draaien"
+
+msgctxt "ID_PANSCAN_ROTATEXM"
+msgid "&Flip Vertically"
+msgstr "Verticaal spiegelen"
+
+msgctxt "ID_PANSCAN_ROTATEYM"
+msgid "&Mirror"
+msgstr "Spiegelen"
+
 msgctxt "ID_VIEW_RESET"
 msgid "Re&set"
 msgstr "Resetten"
 
 msgctxt "POPUP"
 msgid "On &Top"
-msgstr "Op voorgrond"
+msgstr "Altijd op voorgrond"
 
 msgctxt "ID_ONTOP_DEFAULT"
 msgid "&Default"
@@ -522,7 +526,7 @@ msgstr "Tijdens afspelen video"
 
 msgctxt "ID_VIEW_OPTIONS"
 msgid "&Options..."
-msgstr "&Opties..."
+msgstr "&Opties"
 
 msgctxt "POPUP"
 msgid "&Play"
@@ -530,7 +534,7 @@ msgstr "&Afspelen"
 
 msgctxt "ID_PLAY_PLAYPAUSE"
 msgid "&Play/Pause"
-msgstr "Afspelen/&pauze"
+msgstr "Afspelen en &pauzeren"
 
 msgctxt "ID_PLAY_STOP"
 msgid "&Stop"
@@ -538,7 +542,7 @@ msgstr "&Stoppen"
 
 msgctxt "ID_PLAY_FRAMESTEP"
 msgid "Fra&me Step"
-msgstr "&Beeld stap"
+msgstr "1 frame vooruit"
 
 msgctxt "POPUP"
 msgid "&Repeat"
@@ -546,7 +550,7 @@ msgstr "He&rhalen"
 
 msgctxt "ID_PLAY_REPEAT_FOREVER"
 msgid "F&orever"
-msgstr "Eeuwig"
+msgstr "Oneindig"
 
 msgctxt "ID_PLAY_REPEAT_ONEFILE"
 msgid "&File"
@@ -555,6 +559,94 @@ msgstr "Bestand"
 msgctxt "ID_PLAY_REPEAT_WHOLEPLAYLIST"
 msgid "&Playlist"
 msgstr "Afs&peellijst"
+
+msgctxt "ID_PLAY_REPEAT_AB"
+msgid "A-B (&Reset)"
+msgstr "A-B (reset)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_A"
+msgid "A-B (Mark &A)"
+msgstr "A-B (markeer A)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_B"
+msgid "A-B (Mark &B)"
+msgstr "A-B (markeer B)"
+
+msgctxt "POPUP"
+msgid "&Playback Rate"
+msgstr "Afspeelsnelheid"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_025"
+msgid "0.25 x"
+msgstr "0,25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_050"
+msgid "0.50 x"
+msgstr "0,50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_075"
+msgid "0.75 x"
+msgstr "0,75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_090"
+msgid "0.90 x"
+msgstr "0,90 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_100"
+msgid "1.00 x"
+msgstr "1,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_110"
+msgid "1.10 x"
+msgstr "1,10 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_125"
+msgid "1.25 x"
+msgstr "1,25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_150"
+msgid "1.50 x"
+msgstr "1,50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_175"
+msgid "1.75 x"
+msgstr "1.75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_200"
+msgid "2.00 x"
+msgstr "2,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_300"
+msgid "3.00 x"
+msgstr "3,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_400"
+msgid "4.00 x"
+msgstr "4,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_600"
+msgid "6.00 x"
+msgstr "6,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_800"
+msgid "8.00 x"
+msgstr "8,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS23"
+msgid "23.976 fps"
+msgstr "23.976 fps"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS24"
+msgid "24 fps"
+msgstr "24 fps"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS25"
+msgid "25 fps"
+msgstr "25 fps"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS59"
+msgid "59.94 fps"
+msgstr "59.94 fps"
 
 msgctxt "ID_PLAY_DECRATE"
 msgid "&Decrease Rate"
@@ -572,17 +664,25 @@ msgctxt "ID_FILTERS"
 msgid "&Filters"
 msgstr "&Filters"
 
+msgctxt "ID_COLOR_CONTROLS"
+msgid "&Color controls..."
+msgstr ""
+
 msgctxt "ID_SHADERS"
 msgid "S&haders"
-msgstr "Pixel s&hader"
+msgstr "Shaders"
 
 msgctxt "ID_AUDIOS"
 msgid "&Audio Track"
-msgstr "&Geluidsspoor"
+msgstr "&Audiospoor"
 
 msgctxt "ID_SUBTITLES"
 msgid "Su&btitle Track"
 msgstr "&Ondertiteling"
+
+msgctxt "ID_SUBTITLES_SECONDARY"
+msgid "Secondary Subtitle Track"
+msgstr ""
 
 msgctxt "ID_VIDEO_STREAMS"
 msgid "Vide&o Track"
@@ -606,7 +706,7 @@ msgstr "&Dempen"
 
 msgctxt "POPUP"
 msgid "Af&ter Playback"
-msgstr "&Na weergave"
+msgstr "Na afspelen"
 
 msgctxt "ID_AFTERPLAYBACK_DONOTHING"
 msgid "Do no&thing"
@@ -694,19 +794,19 @@ msgstr "&Help"
 
 msgctxt "ID_HELP_HOMEPAGE"
 msgid "&Home Page"
-msgstr "T&huispagina"
+msgstr "Website"
 
 msgctxt "ID_HELP_CHECKFORUPDATE"
 msgid "Check for &updates"
-msgstr "Controleren op o&pwaarderingen"
+msgstr "Controleer op updates"
 
 msgctxt "ID_HELP_SHOWCOMMANDLINESWITCHES"
 msgid "&Command Line Switches"
-msgstr "&Opdrachtprompt parameters"
+msgstr "Opdrachtprompt-parameters"
 
 msgctxt "ID_HELP_TOOLBARIMAGES"
 msgid "Download &Toolbar Images"
-msgstr "&Werkbalk afbeeldingen ophalen"
+msgstr "Skins"
 
 msgctxt "ID_HELP_DONATE"
 msgid "&Donate"
@@ -715,4 +815,3 @@ msgstr "Doneren"
 msgctxt "ID_HELP_ABOUT"
 msgid "&About..."
 msgstr "&Over"
-

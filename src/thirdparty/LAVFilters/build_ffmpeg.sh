@@ -3,12 +3,6 @@
 echo "$(pwd)" | grep -q '[[:blank:]]' &&
   echo "Out of tree builds are impossible with whitespace in source path." && exit 1
 
-if [ "${4}" == "VS2015" ]; then
-  bin_folder=bin15
-else
-  bin_folder=bin
-fi
-
 if [ "${1}" == "x64" ]; then
   arch=x86_64
   archdir=x64
@@ -24,16 +18,20 @@ else
 fi
 
 if [ "${2}" == "Debug" ]; then
-  FFMPEG_DLL_PATH=$(readlink -f ../../..)/${bin_folder}/${mpc_hc_folder}_Debug/${lav_folder}
+  FFMPEG_DLL_PATH=$(readlink -f ../../..)/bin/${mpc_hc_folder}_Debug/${lav_folder}
   BASEDIR=$(pwd)/src/bin_${archdir}d
+  cross_prefix=
+  COMPILER=MSVC
 else
-  FFMPEG_DLL_PATH=$(readlink -f ../../..)/${bin_folder}/${mpc_hc_folder}/${lav_folder}
+  FFMPEG_DLL_PATH=$(readlink -f ../../..)/bin/${mpc_hc_folder}/${lav_folder}
   BASEDIR=$(pwd)/src/bin_${archdir}
+  COMPILER=GCC
 fi
 
 THIRDPARTYPREFIX=${BASEDIR}/thirdparty
 FFMPEG_BUILD_PATH=${THIRDPARTYPREFIX}/ffmpeg
 FFMPEG_LIB_PATH=${BASEDIR}/lib
+NUMBER_OF_PROCESSORS=4
 
 make_dirs() {
   mkdir -p ${FFMPEG_LIB_PATH}
@@ -41,10 +39,21 @@ make_dirs() {
   mkdir -p ${FFMPEG_DLL_PATH}
 }
 
+CV2PDB=$(readlink -f ../../..)/build/cv2pdb.exe
+
 copy_libs() {
-  # install -s --strip-program=${cross_prefix}strip lib*/*-lav-*.dll ${FFMPEG_DLL_PATH}
-  cp lib*/*-lav-*.dll ${FFMPEG_DLL_PATH}
-  ${cross_prefix}strip ${FFMPEG_DLL_PATH}/*-lav-*.dll
+  # copy and process .dll/.pdb
+  if [ "${COMPILER}" == "GCC" ]; then
+    for file in lib*/*-lav-*.dll; do
+      file_basename=$(basename $file)
+      file_pdb=$(basename $file .dll).pdb
+      ${CV2PDB} -p${file_pdb} ${file} ${FFMPEG_DLL_PATH}/${file_basename}
+    done
+  else
+    cp lib*/*-lav-*.dll ${FFMPEG_DLL_PATH}
+  fi
+  
+  # copy lib files
   cp -u lib*/*.lib ${FFMPEG_LIB_PATH}
 }
 
@@ -52,7 +61,7 @@ clean() {
   cd ${FFMPEG_BUILD_PATH}
   echo Cleaning...
   if [ -f ffbuild/config.mak ]; then
-    make distclean > /dev/null 2>&1
+    rm -r ${FFMPEG_BUILD_PATH}
   fi
   cd ${BASEDIR}
 }
@@ -63,46 +72,83 @@ configure() {
     --disable-static                \
     --enable-gpl                    \
     --enable-version3               \
+    --disable-autodetect            \
     --enable-w32threads             \
     --disable-demuxer=matroska      \
     --disable-filters               \
-    --enable-filter=scale,yadif,w3fdif \
+    --enable-filter=scale,yadif,w3fdif,bwdif \
     --disable-protocol=async,cache,concat,httpproxy,icecast,md5,subfile \
     --disable-muxers                \
     --enable-muxer=spdif            \
     --disable-bsfs                  \
-    --enable-bsf=extract_extradata,vp9_superframe \
-    --disable-cuda                  \
-    --disable-cuvid                 \
-    --disable-nvenc                 \
-    --enable-libspeex               \
-    --enable-libopencore-amrnb      \
-    --enable-libopencore-amrwb      \
-    --enable-avresample             \
-    --enable-avisynth               \
+    --enable-bsf=extract_extradata,dovi_split  \
     --disable-avdevice              \
-    --disable-postproc              \
-    --disable-swresample            \
     --disable-encoders              \
     --disable-devices               \
     --disable-programs              \
-    --disable-debug                 \
     --disable-doc                   \
+    --enable-avisynth               \
+    --enable-d3d11va                \
+    --enable-dxva2                  \
+    --enable-zlib                   \
     --build-suffix=-lav             \
+    --disable-stripping             \
     --arch=${arch}"
 
-  EXTRA_CFLAGS="-fno-tree-vectorize -D_WIN32_WINNT=0x0601 -DWINVER=0x0601 -I../../../thirdparty/include"
+  if [ "${COMPILER}" == "GCC" ]; then
+    OPTIONS="${OPTIONS}             \
+    --disable-debug                 \
+    --enable-bzlib                  \
+    --enable-gnutls                 \
+    --enable-gmp                    \
+    --enable-libdav1d               \
+    --enable-libspeex               \
+    --enable-libopencore-amrnb      \
+    --enable-libopencore-amrwb      \
+    --enable-libxml2"
+  fi
+  
+  if [ "${COMPILER}" == "MSVC" ]; then
+    OPTIONS="${OPTIONS} --enable-schannel --disable-decoder=sanm"
+  fi
+  
   EXTRA_LDFLAGS=""
+  PKG_CONFIG_PREFIX_DIR=""
+  TOOLCHAIN=""
   if [ "${arch}" == "x86_64" ]; then
-    OPTIONS="${OPTIONS} --enable-cross-compile --cross-prefix=${cross_prefix} --target-os=mingw32 --pkg-config=pkg-config"
-    EXTRA_LDFLAGS="${EXTRA_LDFLAGS} -L../../../thirdparty/lib64"
+    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:../../../thirdparty/64/lib/pkgconfig/"
+    if [ "${COMPILER}" == "MSVC" ]; then
+      OPTIONS="${OPTIONS} --enable-debug"
+      EXTRA_CFLAGS="-D_WIN32_WINNT=0x0601 -DWINVER=0x0601 -Zo -GS-"
+      EXTRA_CFLAGS="${EXTRA_CFLAGS} -I../../../thirdparty/64/include -I../../../../../zlib -I../../../../msvcInclude -MDd"
+      EXTRA_LDFLAGS="${EXTRA_LDFLAGS} -LIBPATH:../../../thirdparty/64/lib -LIBPATH:../../../../../../../bin/lib/Debug_x64 -NODEFAULTLIB:libcmt"
+      TOOLCHAIN="--toolchain=msvc"
+    else
+      OPTIONS="${OPTIONS} --enable-cross-compile --cross-prefix=${cross_prefix} --target-os=mingw32 --pkg-config=pkg-config"
+      EXTRA_CFLAGS="-fno-tree-vectorize -D_WIN32_WINNT=0x0601 -DWINVER=0x0601 -gdwarf-5 -fno-omit-frame-pointer"
+      EXTRA_CFLAGS="${EXTRA_CFLAGS} -I../../../thirdparty/64/include"
+      EXTRA_LDFLAGS="${EXTRA_LDFLAGS} -L../../../thirdparty/64/lib"
+    fi
+    PKG_CONFIG_PREFIX_DIR="--define-variable=prefix=../../../thirdparty/64"
   else
-    OPTIONS="${OPTIONS} --cpu=i686"
-    EXTRA_CFLAGS="${EXTRA_CFLAGS} -mmmx -msse -msse2 -mfpmath=sse -mstackrealign"
-    EXTRA_LDFLAGS="${EXTRA_LDFLAGS} -L../../../thirdparty/lib32"
+    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:../../../thirdparty/32/lib/pkgconfig/"
+    if [ "${COMPILER}" == "MSVC" ]; then
+      OPTIONS="${OPTIONS} --enable-debug"
+      EXTRA_CFLAGS="-D_WIN32_WINNT=0x0601 -DWINVER=0x0601 -Zo -GS-"
+      EXTRA_CFLAGS="${EXTRA_CFLAGS} -I../../../thirdparty/32/include -I../../../../../zlib -I../../../../msvcInclude -MDd"
+      EXTRA_LDFLAGS="${EXTRA_LDFLAGS} -LIBPATH:../../../thirdparty/32/lib -LIBPATH:../../../../../../../bin/lib/Debug_Win32 -NODEFAULTLIB:libcmt"
+      TOOLCHAIN="--toolchain=msvc"
+    else
+      OPTIONS="${OPTIONS} --cpu=i686 --target-os=mingw32"
+      EXTRA_CFLAGS="-fno-tree-vectorize -D_WIN32_WINNT=0x0601 -DWINVER=0x0601 -gdwarf-5 -fno-omit-frame-pointer"
+      EXTRA_CFLAGS="${EXTRA_CFLAGS} -I../../../thirdparty/32/include -mmmx -msse -msse2 -mfpmath=sse -mstackrealign"
+      EXTRA_LDFLAGS="${EXTRA_LDFLAGS} -L../../../thirdparty/32/lib"
+    fi
+    PKG_CONFIG_PREFIX_DIR="--define-variable=prefix=../../../thirdparty/32"
   fi
 
-  sh ../../../ffmpeg/configure --x86asmexe=yasm --extra-ldflags="${EXTRA_LDFLAGS}" --extra-cflags="${EXTRA_CFLAGS}" ${OPTIONS}
+  echo tc=${TOOLCHAIN}
+  sh ../../../ffmpeg/configure ${TOOLCHAIN} --x86asmexe=nasm --extra-ldflags="${EXTRA_LDFLAGS}" --extra-cflags="${EXTRA_CFLAGS}" --pkg-config-flags="--static ${PKG_CONFIG_PREFIX_DIR}" ${OPTIONS}
 }
 
 build() {
@@ -140,7 +186,7 @@ configureAndBuild() {
   cd ${BASEDIR}
 }
 
-echo Building ffmpeg in GCC ${arch} Release config...
+echo Building ffmpeg in ${COMPILER} ${arch} ${2} config...
 
 make_dirs
 

@@ -21,10 +21,10 @@
 #pragma once
 
 #include <afxwin.h>
-#include "ResizableLib/ResizableDialog.h"
+#include "CMPCThemeResizableDialog.h"
 #include "resource.h"
 
-class CmdLineHelpDlg : public CResizableDialog
+class CmdLineHelpDlg : public CMPCThemeResizableDialog
 {
 private:
     CStatic m_icon;
@@ -36,6 +36,9 @@ public:
     virtual ~CmdLineHelpDlg();
 
     enum { IDD = IDD_CMD_LINE_HELP };
+
+    UINT GetDialogTemplateID() const override { return IDD; }
+    void SetupAnchors() override;
 
 protected:
     virtual void DoDataExchange(CDataExchange* pDX);

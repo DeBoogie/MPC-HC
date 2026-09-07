@@ -26,18 +26,13 @@
 #include "AllocatorCommon.h"
 #include "../../../DSUtil/WinapiFunc.h"
 #include <d3d9.h>
-#include <d3d10.h>
-#include <dxgi.h>
 #include <dxva2api.h>
-#include <d3dx9.h>
+#include "d3dx9/d3dx9.h"
 
 #define VMRBITMAP_UPDATE 0x80000000
 #define MAX_PICTURE_SLOTS (60 + 2) // Last 2 for pixels shader!
 #define NB_JITTER 126
 #include "AsyncCallback.h"
-
-extern bool g_bNoDuration; // Defined in MainFrm.cpp
-extern bool g_bExternalSubtitleTime;
 
 class CFocusThread;
 
@@ -117,9 +112,6 @@ namespace GothSync
         HMODULE m_hDWMAPI;
         HRESULT(__stdcall* m_pDwmIsCompositionEnabled)(__out BOOL* pfEnabled);
         HRESULT(__stdcall* m_pDwmEnableComposition)(UINT uCompositionAction);
-        HMODULE m_hD3D9;
-        HRESULT(__stdcall* m_pDirect3DCreate9Ex)(UINT SDKVersion, IDirect3D9Ex**);
-        decltype(&Direct3DCreate9) m_pDirect3DCreate9;
 
         CCritSec m_allocatorLock;
         CComPtr<IDirect3D9Ex> m_pD3DEx;
@@ -198,6 +190,7 @@ namespace GothSync
         HRESULT TextureResizeBilinear(IDirect3DTexture9* pTexture, const Vector dst[4], const CRect& SrcRect);
         HRESULT TextureResizeBicubic1pass(IDirect3DTexture9* pTexture, const Vector dst[4], const CRect& SrcRect);
         HRESULT TextureResizeBicubic2pass(IDirect3DTexture9* pTexture, const Vector dst[4], const CRect& SrcRect);
+        HRESULT Resize(IDirect3DTexture9* pTexture, const CRect& srcRect, const CRect& destRect);
 
         typedef HRESULT(WINAPI* D3DXLoadSurfaceFromMemoryPtr)(
             LPDIRECT3DSURFACE9 pDestSurface,
@@ -210,6 +203,16 @@ namespace GothSync
             CONST RECT* pSrcRect,
             DWORD Filter,
             D3DCOLOR ColorKey);
+
+        typedef HRESULT(WINAPI* D3DXLoadSurfaceFromSurfacePtr)(
+            LPDIRECT3DSURFACE9        pDestSurface,
+            CONST PALETTEENTRY* pDestPalette,
+            CONST RECT* pDestRect,
+            LPDIRECT3DSURFACE9        pSrcSurface,
+            CONST PALETTEENTRY* pSrcPalette,
+            CONST RECT* pSrcRect,
+            DWORD                     Filter,
+            D3DCOLOR                  ColorKey);
 
         typedef HRESULT(WINAPI* D3DXCreateLinePtr)
         (LPDIRECT3DDEVICE9 pDevice,
@@ -240,6 +243,7 @@ namespace GothSync
         int m_VMR9AlphaBitmapWidthBytes;
 
         D3DXLoadSurfaceFromMemoryPtr m_pD3DXLoadSurfaceFromMemory;
+        D3DXLoadSurfaceFromSurfacePtr m_pD3DXLoadSurfaceFromSurface;
         D3DXCreateLinePtr m_pD3DXCreateLine;
         D3DXCreateFontPtr m_pD3DXCreateFont;
         HRESULT(__stdcall* m_pD3DXCreateSprite)(LPDIRECT3DDEVICE9 pDevice, LPD3DXSPRITE* ppSprite);
@@ -266,7 +270,7 @@ namespace GothSync
         bool m_bHighColorResolution;
         bool m_bCompositionEnabled;
         bool m_bDesktopCompositionDisabled;
-        bool m_bIsFullscreen;
+        bool m_bIsFullscreen, fullScreenChanged;
         bool m_bNeedCheckSample;
         DWORD m_dMainThreadId;
 
@@ -486,7 +490,7 @@ namespace GothSync
 
         bool m_bUseInternalTimer;
         INT32 m_LastSetOutputRange;
-        bool m_bPendingRenegotiate;
+        std::atomic_bool m_bPendingRenegotiate;
         bool m_bPendingMediaFinished;
         bool m_bPrerolled;  // true if first sample has been displayed.
 
@@ -549,7 +553,6 @@ namespace GothSync
 
     class CSyncRenderer:
         public CUnknown,
-        public IVMRffdshow9,
         public IVMRMixerBitmap9,
         public IBaseFilter
     {
@@ -575,9 +578,6 @@ namespace GothSync
         virtual HRESULT STDMETHODCALLTYPE SetSyncSource(__in_opt  IReferenceClock* pClock);
         virtual HRESULT STDMETHODCALLTYPE GetSyncSource(__deref_out_opt  IReferenceClock** pClock);
         virtual HRESULT STDMETHODCALLTYPE GetClassID(__RPC__out CLSID* pClassID);
-
-        // IVMRffdshow9
-        virtual HRESULT STDMETHODCALLTYPE support_ffdshow();
 
         // IVMRMixerBitmap9
         STDMETHODIMP GetAlphaBitmapParameters(VMR9AlphaBitmap* pBmpParms);

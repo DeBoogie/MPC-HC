@@ -22,9 +22,9 @@
 #include "stdafx.h"
 #include "MemSubPic.h"
 
-// For CPUID usage
-#include "../DSUtil/vd.h"
 #include <emmintrin.h>
+#include "stb/stb_image.h"
+#include "stb/stb_image_resize2.h"
 
 // color conv
 
@@ -152,11 +152,13 @@ STDMETHODIMP CMemSubPic::CopyTo(ISubPic* pSubPic)
     return S_OK;
 }
 
-STDMETHODIMP CMemSubPic::ClearDirtyRect(DWORD color)
+STDMETHODIMP CMemSubPic::ClearDirtyRect()
 {
     if (m_rcDirty.IsRectEmpty()) {
         return S_FALSE;
     }
+
+    DWORD color = m_bInvAlpha ? 0x00000000 : 0xFF000000;
 
     BYTE* p = m_spd.bits + m_spd.pitch * m_rcDirty.top + m_rcDirty.left * (m_spd.bpp >> 3);
     for (ptrdiff_t j = 0, h = m_rcDirty.Height(); j < h; j++, p += m_spd.pitch) {
@@ -184,6 +186,57 @@ STDMETHODIMP CMemSubPic::Lock(SubPicDesc& spd)
     return GetDesc(spd);
 }
 
+HRESULT CMemSubPic::UnlockARGB() { //derived from Unlock(), supports ARGB
+    m_rcDirty = CRect(0, 0, m_spd.w, m_spd.h);
+
+    if (m_rcDirty.IsRectEmpty()) {
+        return S_OK;
+    }
+
+    if (m_spd.bpp != 32 || m_spd.type != MSP_RGB32) {
+        return E_INVALIDARG;
+    }
+
+    CRect r = m_spd.vidrect;
+    CRect rcDirty = m_rcDirty;
+    if (m_spd.h != r.Height() || m_spd.w != r.Width()) {
+        if (!m_resizedSpd) {
+            m_resizedSpd = std::unique_ptr<SubPicDesc>(DEBUG_NEW SubPicDesc);
+        }
+
+        m_resizedSpd->type = m_spd.type;
+        m_resizedSpd->w = r.Width();
+        m_resizedSpd->h = r.Height();
+        m_resizedSpd->pitch = r.Width() * 4;
+        m_resizedSpd->bpp = m_spd.bpp;
+        m_resizedSpd->vidrect = { 0,0,r.Width(),r.Height() };
+
+        if (!m_resizedSpd->bits) {
+            m_pAllocator->AllocSpdBits(*m_resizedSpd);
+        }
+
+        auto& s = m_spd;
+        auto& d = *m_resizedSpd;
+        stbir_resize(s.bits, s.w, s.h, s.pitch, d.bits, d.w, d.h, d.pitch, STBIR_RGBA_PM, STBIR_TYPE_UINT8_SRGB, STBIR_EDGE_CLAMP, STBIR_FILTER_DEFAULT);
+        TRACE("CMemSubPic: Resized SubPic %dx%d -> %dx%d\n", m_spd.w, m_spd.h, r.Width(), r.Height());
+
+        // Set whole resized spd as dirty, we are not going to reuse it.
+        rcDirty.SetRect(0, 0, m_resizedSpd->w, m_resizedSpd->h);
+    }
+    else if (m_resizedSpd) {
+        // Resize is not needed so release m_resizedSpd.
+        m_pAllocator->FreeSpdBits(*m_resizedSpd);
+        m_resizedSpd = nullptr;
+    }
+
+    if (!m_resizedSpd) {
+        m_rcDirty = rcDirty;
+    }
+
+    return S_OK;
+}
+
+
 STDMETHODIMP CMemSubPic::Unlock(RECT* pDirtyRect)
 {
     m_rcDirty = pDirtyRect ? *pDirtyRect : CRect(0, 0, m_spd.w, m_spd.h);
@@ -209,8 +262,11 @@ STDMETHODIMP CMemSubPic::Unlock(RECT* pDirtyRect)
             m_pAllocator->AllocSpdBits(*m_resizedSpd);
         }
 
-        BitBltFromRGBToRGBStretch(m_resizedSpd->w, m_resizedSpd->h, m_resizedSpd->bits, m_resizedSpd->pitch, m_resizedSpd->bpp
-                                  , m_spd.w, m_spd.h, m_spd.bits, m_spd.pitch, m_spd.bpp);
+        // Straight (non-premultiplied) data: resize the four channels
+        // independently, matching the former VDPixmapResample XRGB behavior.
+        stbir_resize(m_spd.bits, m_spd.w, m_spd.h, m_spd.pitch,
+                     m_resizedSpd->bits, m_resizedSpd->w, m_resizedSpd->h, m_resizedSpd->pitch,
+                     STBIR_4CHANNEL, STBIR_TYPE_UINT8, STBIR_EDGE_CLAMP, STBIR_FILTER_CATMULLROM);
         TRACE("CMemSubPic: Resized SubPic %dx%d -> %dx%d\n", m_spd.w, m_spd.h, r.Width(), r.Height());
 
         // Set whole resized spd as dirty, we are not going to reuse it.
@@ -674,6 +730,7 @@ bool CMemSubPicAllocator::Alloc(bool fStatic, ISubPic** ppSubPic)
     }
 
     (*ppSubPic)->AddRef();
+    (*ppSubPic)->SetInverseAlpha(m_bInvAlpha);
 
     return true;
 }
@@ -715,7 +772,7 @@ void CMemSubPicAllocator::FreeSpdBits(SubPicDesc& spd)
 
 STDMETHODIMP CMemSubPicAllocator::SetMaxTextureSize(SIZE maxTextureSize)
 {
-    if (m_maxsize != maxTextureSize) {
+    if (maxTextureSize.cx > 0 && maxTextureSize.cy > 0 && m_maxsize != maxTextureSize) {
         m_maxsize = maxTextureSize;
         CAutoLock cAutoLock(this);
         for (const auto& p : m_freeMemoryChunks) {

@@ -28,9 +28,9 @@
 
 // CPPageSubtitles dialog
 
-IMPLEMENT_DYNAMIC(CPPageSubtitles, CPPageBase)
+IMPLEMENT_DYNAMIC(CPPageSubtitles, CMPCThemePPageBase)
 CPPageSubtitles::CPPageSubtitles()
-    : CPPageBase(CPPageSubtitles::IDD, CPPageSubtitles::IDD)
+    : CMPCThemePPageBase(CPPageSubtitles::IDD, CPPageSubtitles::IDD)
     , m_bOverridePlacement(FALSE)
     , m_nHorPos(0)
     , m_nVerPos(0)
@@ -70,7 +70,7 @@ void CPPageSubtitles::DoDataExchange(CDataExchange* pDX)
 }
 
 
-BEGIN_MESSAGE_MAP(CPPageSubtitles, CPPageBase)
+BEGIN_MESSAGE_MAP(CPPageSubtitles, CMPCThemePPageBase)
     ON_UPDATE_COMMAND_UI(IDC_EDIT2, OnUpdatePosOverride)
     ON_UPDATE_COMMAND_UI(IDC_SPIN2, OnUpdatePosOverride)
     ON_UPDATE_COMMAND_UI(IDC_EDIT3, OnUpdatePosOverride)
@@ -95,51 +95,76 @@ END_MESSAGE_MAP()
 
 // CPPageSubtitles message handlers
 
-static int TranslateResSettingToUIPos(int nResSetting)
+static int TranslateResSettingToUIPos(int nMaxResX, int nMaxResY)
 {
-    switch (nResSetting) {
-        default:
-            ASSERT(FALSE);
-        // no break
-        case 0:
-            return 0;
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-            return nResSetting + 5;
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-            return nResSetting - 4;
-        case 10:
-            return 1;
+    if (nMaxResX >= 3840) {
+        return 8;
     }
+    if (nMaxResX >= 2560) {
+        return nMaxResY >= 1600 ? 7 : 6;
+    }
+    if (nMaxResX >= 1920) {
+        return nMaxResY >= 1200 ? 5 : 4;
+    }
+    if (nMaxResX >= 1600) {
+        return 3;
+    }
+    if (nMaxResX >= 1280) {
+        return 2;
+    }
+    if (nMaxResX >= 800) {
+        return 1;
+    }
+    if (nMaxResX >= 640) {
+        return 0;
+    }
+    return 4;
 }
 
-static int TranslateResUIPosToSetting(int nResPos)
+static void TranslateResUIPosToSetting(int nResPos, int& nMaxResX, int& nMaxResY)
 {
     switch (nResPos) {
+        case 0:
+            nMaxResX = 640;
+            nMaxResY = 480;
+            break;
+        case 1:
+            nMaxResX = 800;
+            nMaxResY = 600;
+            break;
+        case 2:
+            nMaxResX = 1280;
+            nMaxResY = 720;
+            break;
+        case 3:
+            nMaxResX = 1600;
+            nMaxResY = 900;
+            break;
+        case 4:
+            nMaxResX = 1920;
+            nMaxResY = 1080;
+            break;
+        case 5:
+            nMaxResX = 1920;
+            nMaxResY = 1200;
+            break;
+        case 6:
+            nMaxResX = 2560;
+            nMaxResY = 1440;
+            break;
+        case 7:
+            nMaxResX = 2560;
+            nMaxResY = 1600;
+            break;
+        case 8:
+            nMaxResX = 3840;
+            nMaxResY = 2160;
+            break;
         default:
             ASSERT(FALSE);
-        // no break
-        case 0:
-            return 0;
-        case 1:
-            return 10;
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-            return nResPos + 4;
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-            return nResPos - 5;
+            nMaxResX = 2560;
+            nMaxResY = 1440;
+            // no break
     }
 }
 
@@ -159,18 +184,16 @@ BOOL CPPageSubtitles::OnInitDialog()
     m_verPosCtrl.SetRange32(140, -40);
     m_nSPQSize = r.subPicQueueSettings.nSize;
     m_SPQSizeCtrl.SetRange32(0, 120);
-    m_cbSPQMaxRes.AddString(_T("Desktop"));
-    m_cbSPQMaxRes.AddString(_T("Video"));
-    m_cbSPQMaxRes.AddString(_T("2560x1600"));
-    m_cbSPQMaxRes.AddString(_T("1920x1080"));
-    m_cbSPQMaxRes.AddString(_T("1320x900"));
-    m_cbSPQMaxRes.AddString(_T("1280x720"));
-    m_cbSPQMaxRes.AddString(_T("1024x768"));
-    m_cbSPQMaxRes.AddString(_T("800x600"));
     m_cbSPQMaxRes.AddString(_T("640x480"));
-    m_cbSPQMaxRes.AddString(_T("512x384"));
-    m_cbSPQMaxRes.AddString(_T("384x288"));
-    m_cbSPQMaxRes.SetCurSel(TranslateResSettingToUIPos(r.subPicQueueSettings.nMaxRes));
+    m_cbSPQMaxRes.AddString(_T("800x600"));
+    m_cbSPQMaxRes.AddString(_T("1280x720"));
+    m_cbSPQMaxRes.AddString(_T("1600x900"));
+    m_cbSPQMaxRes.AddString(_T("1920x1080"));
+    m_cbSPQMaxRes.AddString(_T("1920x1200"));
+    m_cbSPQMaxRes.AddString(_T("2560x1440"));
+    m_cbSPQMaxRes.AddString(_T("2560x1600"));
+    m_cbSPQMaxRes.AddString(_T("3840x2160"));
+    m_cbSPQMaxRes.SetCurSel(TranslateResSettingToUIPos(r.subPicQueueSettings.nMaxResX, r.subPicQueueSettings.nMaxResY));
     m_bDisableSubtitleAnimation = r.subPicQueueSettings.bDisableSubtitleAnimation;
     m_nRenderAtWhenAnimationIsDisabled = r.subPicQueueSettings.nRenderAtWhenAnimationIsDisabled;
     m_bAllowDroppingSubpic = r.subPicQueueSettings.bAllowDroppingSubpic;
@@ -186,7 +209,8 @@ BOOL CPPageSubtitles::OnInitDialog()
 
     UpdateData(FALSE);
 
-    EnableToolTips(TRUE);
+    AdjustDynamicWidgets();
+    EnableThemedDialogTooltips(this);
     CreateToolTip();
 
     return TRUE;  // return TRUE unless you set the focus to a control
@@ -199,10 +223,15 @@ BOOL CPPageSubtitles::OnApply()
 
     CAppSettings& s = AfxGetAppSettings();
     CRenderersSettings& r = GetRenderersSettings();
+    bool changed = false;
+
+    if (m_nSubDelayStep < 10) {
+        m_nSubDelayStep = 500;
+    }
 
     r.subPicQueueSettings.nSize = m_nSPQSize;
     s.nSubDelayStep = m_nSubDelayStep;
-    r.subPicQueueSettings.nMaxRes = TranslateResUIPosToSetting(m_cbSPQMaxRes.GetCurSel());
+    TranslateResUIPosToSetting(m_cbSPQMaxRes.GetCurSel(), r.subPicQueueSettings.nMaxResX, r.subPicQueueSettings.nMaxResY);
     r.subPicQueueSettings.bDisableSubtitleAnimation = !!m_bDisableSubtitleAnimation;
     r.subPicQueueSettings.nRenderAtWhenAnimationIsDisabled = std::max(0, std::min(m_nRenderAtWhenAnimationIsDisabled, 100));
     r.subPicQueueSettings.nAnimationRate = std::max(10, std::min(m_nAnimationRate, 100));
@@ -210,9 +239,7 @@ BOOL CPPageSubtitles::OnApply()
 
     if (s.bSubtitleARCompensation != !!m_bSubtitleARCompensation) {
         s.bSubtitleARCompensation = !!m_bSubtitleARCompensation;
-        if (CMainFrame* pMainFrame = AfxGetMainFrame()) {
-            pMainFrame->UpdateSubAspectRatioCompensation();
-        }
+        changed = true;
     }
 
     if (s.fOverridePlacement != !!m_bOverridePlacement
@@ -221,8 +248,13 @@ BOOL CPPageSubtitles::OnApply()
         s.fOverridePlacement = !!m_bOverridePlacement;
         s.nHorPos = m_nHorPos;
         s.nVerPos = m_nVerPos;
+        changed = true;        
+    }
+
+    if (changed) {
         if (CMainFrame* pMainFrame = AfxGetMainFrame()) {
-            pMainFrame->UpdateSubOverridePlacement();
+            pMainFrame->UpdateSubtitleRenderingParameters();
+            pMainFrame->RepaintVideo();
         }
     }
 
@@ -291,5 +323,16 @@ BOOL CPPageSubtitles::OnToolTipNotify(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
             break;
     }
 
+    if (bRet) {
+        PlaceThemedDialogTooltip(nID);
+    }
+
     return bRet;
+}
+
+void CPPageSubtitles::AdjustDynamicWidgets() {
+    AdjustDynamicWidgetPair(this, IDC_STATIC9, IDC_SUBPIC_TO_BUFFER);
+    AdjustDynamicWidgetPair(this, IDC_STATIC21, IDC_COMBO1);
+    AdjustDynamicWidgetPair(this, IDC_STATIC1, IDC_EDIT2);
+    AdjustDynamicWidgetPair(this, IDC_STATIC3, IDC_EDIT3);
 }

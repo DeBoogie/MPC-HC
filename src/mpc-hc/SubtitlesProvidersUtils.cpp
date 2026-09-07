@@ -37,6 +37,7 @@
 #include <afxinet.h>
 #include <WinCrypt.h>
 #include <sstream>
+#include <cstdlib>
 
 int SubtitlesProvidersUtils::LevenshteinDistance(std::string s, std::string t)
 {
@@ -527,7 +528,7 @@ bool SubtitlesProvidersUtils::FileUnRar(CString fn, stringMap& dataOut)
     }
 
     RARHeaderDataEx HeaderDataEx;
-    HeaderDataEx.CmtBuf = nullptr;
+    ZeroMemory(&HeaderDataEx, sizeof(HeaderDataEx));
 
     while (ReadHeaderEx(hArcData, &HeaderDataEx) == 0) {
         if (wcslen(HeaderDataEx.FileNameW) >= 4 && Subtitle::IsTextSubtitleFileName(HeaderDataEx.FileNameW)) {
@@ -617,8 +618,13 @@ HRESULT SubtitlesProvidersUtils::StringDownload(const std::string& url, const st
                                                 std::string& data, bool bAutoRedirect, DWORD* dwStatusCode)
 {
     data.clear();
+    if (dwStatusCode) {
+        *dwStatusCode = 0;
+    }
+
     try {
         CInternetSession is;
+        is.SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, 10000); /* default=60000 */
 
         std::string strHeaders;
         for (const auto& iter : headers) {
@@ -627,7 +633,6 @@ HRESULT SubtitlesProvidersUtils::StringDownload(const std::string& url, const st
             }
         }
 
-        is.SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, 5000 /*default=60000*/);
         CAutoPtr<CHttpFile> pHttpFile((CHttpFile*)is.OpenURL(UTF8To16(url.c_str()),
                                                              1,
                                                              INTERNET_FLAG_TRANSFER_BINARY | INTERNET_FLAG_EXISTING_CONNECT | (bAutoRedirect ? INTERNET_FLAG_NO_AUTO_REDIRECT : NULL),
@@ -648,15 +653,13 @@ HRESULT SubtitlesProvidersUtils::StringDownload(const std::string& url, const st
         }
 
         pHttpFile->Close(); // must close it because the destructor doesn't seem to do it and we will get an exception when "is" is destroying
-    } catch (CInternetException* ie) {
-        HRESULT hr = HRESULT_FROM_WIN32(ie->m_dwError);
-        TCHAR szErr[1024];
-        szErr[0] = '\0';
-        if (!ie->GetErrorMessage(szErr, 1024)) {
-            wcscpy_s(szErr, L"Some crazy unknown error");
+    } catch (CInternetException* pEx) {
+        HRESULT hr = HRESULT_FROM_WIN32(pEx->m_dwError);
+        if (dwStatusCode) {
+            *dwStatusCode = pEx->m_dwError;
         }
-        TRACE("File transfer failed!! - %s", szErr);
-        ie->Delete();
+        TRACE("File transfer failed - 0x%lx - %s\n", hr, url.c_str());
+        pEx->Delete();
         return hr;
     }
     return S_OK;
@@ -675,6 +678,7 @@ HRESULT SubtitlesProvidersUtils::StringUpload(const std::string& url, const stri
         }
 
         CInternetSession is;
+        is.SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, 10000);
         CAutoPtr<CHttpConnection> pHttpConnection(is.GetHttpConnection(strServer));
         CAutoPtr<CHttpFile> pHttpFile(pHttpConnection->OpenRequest(CHttpConnection::HTTP_VERB_POST, strObject, 0, 1, 0, 0, INTERNET_FLAG_KEEP_CONNECTION | (bAutoRedirect == FALSE ? INTERNET_FLAG_NO_AUTO_REDIRECT : NULL)));
 
@@ -774,7 +778,16 @@ std::list<std::string> SubtitlesProvidersUtils::LanguagesISO6391()
 {
     std::list<std::string> result;
     for (const auto& iter : StringTokenize(UTF16To8(AfxGetAppSettings().strSubtitlesLanguageOrder).GetString(), ",; ")) {
-        result.push_back(iter.length() > 2 ? CStringA(ISOLang::ISO6392To6391(iter.c_str())).GetString() : iter);
+        if (iter.length() > 2) {
+            std::string lang = CStringA(ISOLang::ISO6392To6391(iter.c_str())).GetString();
+            if (!lang.empty()) {
+                result.push_back(lang);
+            }
+        } else if (iter.length() == 2) {
+            if (ISOLang::IsISO6391(iter.c_str())) {
+                result.push_back(iter);
+            }
+        }
     }
     return result;
 }
@@ -783,7 +796,17 @@ std::list<std::string> SubtitlesProvidersUtils::LanguagesISO6392()
 {
     std::list<std::string> result;
     for (const auto& iter : StringTokenize(UTF16To8(AfxGetAppSettings().strSubtitlesLanguageOrder).GetString(), ",; ")) {
-        result.push_back(iter.length() < 3 ? ISOLang::ISO6391To6392(iter.c_str()).GetString() : iter);
+        if (iter.length() == 2) {
+            std::string lang = ISOLang::ISO6391To6392(iter.c_str()).GetString();
+            if (!lang.empty()) {
+                result.push_back(lang);
+            }
+        } else if (iter.length() == 3) {
+            if (ISOLang::IsISO6392(iter.c_str())) {
+                result.push_back(iter);
+            }
+        }
+        
     }
     return result;
 }
@@ -791,24 +814,53 @@ std::list<std::string> SubtitlesProvidersUtils::LanguagesISO6392()
 UINT64 SubtitlesProvidersUtils::GenerateOSHash(SubtitlesInfo& pFileInfo)
 {
     UINT64 fileHash = pFileInfo.fileSize;
+    UINT64 errval = 0x123456789; // random value that should not give any search results
+
+    UINT64* buffer = (UINT64*)std::malloc(PROBE_SIZE);
+    if (!buffer) return errval;
+
     if (pFileInfo.pAsyncReader) {
         UINT64 position = 0;
-        for (UINT64 tmp = 0, i = 0;
-                i < PROBE_SIZE / sizeof(tmp) && SUCCEEDED(pFileInfo.pAsyncReader->SyncRead(position, sizeof(tmp), (BYTE*)&tmp));
-                fileHash += tmp, position += sizeof(tmp), ++i);
+        if (SUCCEEDED(pFileInfo.pAsyncReader->SyncRead(position, PROBE_SIZE, (BYTE*)buffer))) {
+            for (int i = 0; i < PROBE_SIZE / sizeof(UINT64); ++i) {
+                fileHash += buffer[i];
+            }
+        } else { std::free(buffer); return errval; }
         position = std::max(0ui64, pFileInfo.fileSize - PROBE_SIZE);
-        for (UINT64 tmp = 0, i = 0;
-                i < PROBE_SIZE / sizeof(tmp) && SUCCEEDED(pFileInfo.pAsyncReader->SyncRead(position, sizeof(tmp), (BYTE*)&tmp));
-                fileHash += tmp, position += sizeof(tmp), ++i);
+        if (SUCCEEDED(pFileInfo.pAsyncReader->SyncRead(position, PROBE_SIZE, (BYTE*)buffer))) {
+            for (int i = 0; i < PROBE_SIZE / sizeof(UINT64); ++i) {
+                fileHash += buffer[i];
+            }
+        } else { std::free(buffer); return errval; }
     } else {
         CFile file;
         CFileException fileException;
         if (file.Open(CString(pFileInfo.filePathW.c_str()),
                       CFile::modeRead | CFile::osSequentialScan | CFile::shareDenyNone | CFile::typeBinary, &fileException)) {
-            for (UINT64 tmp = 0, i = 0; i < PROBE_SIZE / sizeof(tmp) && file.Read(&tmp, sizeof(tmp)); fileHash += tmp, ++i);
+            if (file.Read(buffer, PROBE_SIZE)) {
+                for (int i = 0; i < PROBE_SIZE / sizeof(UINT64); ++i) {
+                    fileHash += buffer[i];
+                }
+            } else { std::free(buffer); return errval; }
             file.Seek(std::max(0ui64, pFileInfo.fileSize - PROBE_SIZE), CFile::begin);
-            for (UINT64 tmp = 0, i = 0; i < PROBE_SIZE / sizeof(tmp) && file.Read(&tmp, sizeof(tmp)); fileHash += tmp, ++i);
+            if (file.Read(buffer, PROBE_SIZE)) {
+                for (int i = 0; i < PROBE_SIZE / sizeof(UINT64); ++i) {
+                    fileHash += buffer[i];
+                }
+            } else { std::free(buffer); return errval; }
         }
     }
+    std::free(buffer);
     return fileHash;
 }
+
+std::wstring SubtitlesProvidersUtils::JoinContainer(std::list<std::string> c, LPCWSTR delim) {
+    std::wstring ret = L"";
+    for (auto it = c.begin(); it != c.end(); it++) {
+        ret += UTF8To16(it->c_str());
+        if (std::next(it) != c.end()) {
+            ret += delim;
+        }
+    }
+    return ret;
+};

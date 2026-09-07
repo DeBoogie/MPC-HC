@@ -23,27 +23,63 @@
 #include "CoverArt.h"
 #include "DSMPropertyBag.h"
 
-CString CoverArt::FindExternal(const CString& path, const CString& author)
+CString CoverArt::FindExternal(const CString& filename_no_ext, const CString& path, const CString& author, bool & isFileArt)
 {
+    isFileArt = false;
     if (!path.IsEmpty()) {
         CAtlList<CString> files;
-        FindFiles(path + _T("\\*front*.png"), files);
-        FindFiles(path + _T("\\*front*.jp*g"), files);
-        FindFiles(path + _T("\\*front*.bmp"), files);
-        FindFiles(path + _T("\\*cover*.png"), files);
-        FindFiles(path + _T("\\*cover*.jp*g"), files);
-        FindFiles(path + _T("\\*cover*.bmp"), files);
-        FindFiles(path + _T("\\*folder*.png"), files);
-        FindFiles(path + _T("\\*folder*.jp*g"), files);
-        FindFiles(path + _T("\\*folder*.bmp"), files);
+        // file match
+        FindFiles(filename_no_ext + _T(".png"), files);
+        FindFiles(filename_no_ext + _T(".jp*g"), files);
+        FindFiles(filename_no_ext + _T(".bmp"), files);
+        if (!files.IsEmpty()) {
+            isFileArt = true;
+            return files.GetHead();
+        }
+
+        // album match
+        FindFiles(path + _T("\\front.png"), files);
+        FindFiles(path + _T("\\front.jp*g"), files);
+        FindFiles(path + _T("\\front.bmp"), files);
+        FindFiles(path + _T("\\cover.png"), files);
+        FindFiles(path + _T("\\cover.jp*g"), files);
+        FindFiles(path + _T("\\cover.bmp"), files);
+        FindFiles(path + _T("\\folder.png"), files);
+        FindFiles(path + _T("\\folder.jp*g"), files);
+        FindFiles(path + _T("\\folder.bmp"), files);
+        if (!files.IsEmpty()) {
+            return files.GetHead();
+        }
+#if 0
+        FindFiles(path + _T("\\* front.png"), files);
+        FindFiles(path + _T("\\* front.jp*g"), files);
+        FindFiles(path + _T("\\* front.bmp"), files);
+        FindFiles(path + _T("\\* cover.png"), files);
+        FindFiles(path + _T("\\* cover.jp*g"), files);
+        FindFiles(path + _T("\\* cover.bmp"), files);
+        if (!files.IsEmpty()) {
+            return files.GetHead();
+        }
+        FindFiles(path + _T("\\* ?front?.png"), files);
+        FindFiles(path + _T("\\* ?front?.jp*g"), files);
+        FindFiles(path + _T("\\* ?front?.bmp"), files);
+        FindFiles(path + _T("\\* ?cover?.png"), files);
+        FindFiles(path + _T("\\* ?cover?.jp*g"), files);
+        FindFiles(path + _T("\\* ?cover?.bmp"), files);
+        if (!files.IsEmpty()) {
+            return files.GetHead();
+        }
+#endif
+
         if (!author.IsEmpty()) {
+            files.RemoveAll();
+            // author match
             FindFiles(path + _T("\\*") + author + _T("*.png"), files);
             FindFiles(path + _T("\\*") + author + _T("*.jp*g"), files);
             FindFiles(path + _T("\\*") + author + _T("*.bmp"), files);
-        }
-
-        if (!files.IsEmpty()) {
-            return files.GetHead();
+            if (!files.IsEmpty()) {
+                return files.GetHead();
+            }
         }
     }
     return _T("");
@@ -53,7 +89,7 @@ bool CoverArt::FindEmbedded(CComPtr<IFilterGraph> pFilterGraph, std::vector<BYTE
 {
     internalCover.clear();
 
-    bool bGoodMatch = false;
+    int best_score = 0;
     BeginEnumFilters(pFilterGraph, pEF, pBF) {
         if (CComQIPtr<IDSMResourceBag> pRB = pBF) {
             for (DWORD j = 0; j < pRB->ResGetCount(); j++) {
@@ -62,16 +98,30 @@ bool CoverArt::FindEmbedded(CComPtr<IFilterGraph> pFilterGraph, std::vector<BYTE
                 DWORD len = 0;
 
                 if (SUCCEEDED(pRB->ResGet(j, &name, &desc, &mime, &pData, &len, nullptr)) && len > 0) {
-                    if (name == _T("EmbeddedCover.jpg")) { // Embedded cover as exported by our custom internal LAV Splitter
-                        internalCover.assign(pData, pData + len);
-                        break; // Always preferred
-                    } else if (!bGoodMatch && CString(mime).MakeLower().Find(_T("image")) != -1) {
-                        // Check if we have a good match
-                        CString nameLower = CString(name).MakeLower();
-                        bGoodMatch = nameLower.Find(_T("cover")) || nameLower.Find(_T("front"));
-                        // Override the previous match only if we think this one is better
-                        if (bGoodMatch || internalCover.empty()) {
+                    int score = 0;
+                    if (CString(name).Left(13) == _T("EmbeddedCover")) { // Embedded cover as exported by LAV Splitter
+                        score = 1;
+                        CString descLower = CString(desc).MakeLower();
+                        if (descLower.Find(_T("cover")) != -1 || descLower.Find(_T("front")) != -1) {
+                            score = 2;
+                        }
+                        if (score > best_score || internalCover.empty()) {
                             internalCover.assign(pData, pData + len);
+                            best_score = score;
+                            if (best_score == 2) {
+                                CoTaskMemFree(pData);
+                                break;
+                            }
+                        }
+                    } else if (!best_score && CString(mime).MakeLower().Find(_T("image")) != -1) {
+                        CString nameLower = CString(name).MakeLower();
+                        if (nameLower.Find(_T("cover")) != -1 || nameLower.Find(_T("front")) != -1) {
+                            score = 1;
+                        }
+                        // Override the previous match only if we think this one is better
+                        if (score > best_score || internalCover.empty()) {
+                            internalCover.assign(pData, pData + len);
+                            best_score = score;
                         }
                         // Keep looking for a better match
                     }

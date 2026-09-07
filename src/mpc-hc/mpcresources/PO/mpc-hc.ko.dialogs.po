@@ -2,15 +2,17 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# Level ASMer <zx132435@naver.com>, 2014-2017
-# limeburst <me@limeburst.net>, 2014
+# MPC HC <adiposegithub@gmail.com>, 2020
+# Hack茶ん, 2026
+# Transifex sync (Studio), 2026
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2017-07-29 17:00:42+0000\n"
-"PO-Revision-Date: 2017-08-01 21:06+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Korean (http://www.transifex.com/mpc-hc/mpc-hc/language/ko/)\n"
+"POT-Creation-Date: 2026-06-02 02:11:23+0000\n"
+"PO-Revision-Date: 2026-08-31 14:37+0000\n"
+"Last-Translator: Transifex sync (Studio)\n"
+"Language-Team: Korean (https://app.transifex.com/mpchc/teams/106126/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -31,7 +33,7 @@ msgstr "취소"
 
 msgctxt "IDD_CAPTURE_DLG_IDC_STATIC1"
 msgid "Video"
-msgstr "비디오"
+msgstr "영상"
 
 msgctxt "IDD_CAPTURE_DLG_IDC_BUTTON1"
 msgid "Set"
@@ -51,7 +53,7 @@ msgstr "녹화"
 
 msgctxt "IDD_CAPTURE_DLG_IDC_CHECK2"
 msgid "Preview"
-msgstr "미리보기"
+msgstr "미리 보기"
 
 msgctxt "IDD_CAPTURE_DLG_IDC_CHECK3"
 msgid "Record Audio"
@@ -59,31 +61,31 @@ msgstr "녹음"
 
 msgctxt "IDD_CAPTURE_DLG_IDC_CHECK4"
 msgid "Preview"
-msgstr "미리듣기"
+msgstr "미리 보기"
 
 msgctxt "IDD_CAPTURE_DLG_IDC_STATIC"
 msgid "V/A Buffers:"
-msgstr "V/A 버퍼:"
+msgstr "V/A 버퍼 :"
 
 msgctxt "IDD_CAPTURE_DLG_IDC_CHECK5"
 msgid "Audio to wav"
-msgstr "WAV"
+msgstr "오디오를 wav로 변환"
 
 msgctxt "IDD_CAPTURE_DLG_IDC_BUTTON2"
 msgid "Record"
-msgstr "녹화"
+msgstr "기록"
 
 msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_CHECK2"
 msgid "Enable built-in audio switcher filter (requires restart)"
-msgstr "내장 오디오 스위칭 필터 사용 (재시작 필요)"
+msgstr "내장 오디오 스위처 필터 사용(다시 시작 필요)"
 
 msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_CHECK5"
 msgid "Normalize"
-msgstr "노멀라이즈"
+msgstr "정상화"
 
 msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_STATIC4"
 msgid "Max amplification:"
-msgstr "최대 증폭:"
+msgstr "최대 증폭 :"
 
 msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_STATIC5"
 msgid "%"
@@ -91,75 +93,79 @@ msgstr "%"
 
 msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_CHECK6"
 msgid "Regain volume"
-msgstr "볼륨 복원"
+msgstr "음량 복구"
 
 msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_STATIC6"
 msgid "Boost:"
-msgstr "증폭:"
-
-msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_CHECK3"
-msgid "Down-sample to 44100 Hz"
-msgstr "44100Hz로 다운샘플"
+msgstr "증폭 :"
 
 msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_CHECK4"
 msgid "Audio time shift (ms):"
-msgstr "오디오 시간 조절 (ms):"
+msgstr "음향 시간 조절(밀리초) :"
 
 msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_CHECK1"
 msgid "Enable custom channel mapping"
-msgstr "사용자정의 채널/스피커배치기능 사용"
+msgstr "사용자 정의 채널/스피커 배치 기능 사용"
 
-msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_STATIC1"
+msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_STATIC_CM1"
 msgid "Speaker configuration for"
-msgstr "스피커 채널 설정"
+msgstr "스피커 구성"
 
-msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_STATIC2"
+msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_STATIC_CM2"
 msgid "input channels:"
-msgstr "입력 채널:"
+msgstr "입력 채널 :"
 
-msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_STATIC3"
+msgctxt "IDD_PPAGEAUDIOSWITCHER_IDC_STATIC_CM3"
 msgid "Hold shift for immediate changes when clicking something"
-msgstr "Shift키를 누른채로 설정을 변경시키면 즉시 설정이 반영됩니다."
+msgstr "클릭 시 Shift 키를 길게 눌러 즉시 변경"
 
 msgctxt "IDD_GOTO_DLG_CAPTION"
 msgid "Go To..."
 msgstr "이동..."
 
 msgctxt "IDD_GOTO_DLG_IDC_STATIC"
-msgid "Enter a timecode using the format [hh:]mm:ss.ms to jump to a specified time. You do not need to enter the separators explicitly."
+msgid ""
+"Enter a timecode using the format [hh:]mm:ss.ms to jump to a specified time."
+" You do not need to enter the separators explicitly."
 msgstr ""
+"지정된 시간으로 이동하려면 [hh:]mm:ss.ms 형식을 사용하여 타임코드를 입력합니다. 구분 기호를 명시적으로 입력할 필요가 "
+"없습니다."
 
 msgctxt "IDD_GOTO_DLG_IDC_STATIC"
 msgid "Time"
-msgstr "시간:"
+msgstr "시간"
 
 msgctxt "IDD_GOTO_DLG_IDC_OK1"
 msgid "Go!"
-msgstr "이동"
+msgstr "이동!"
 
 msgctxt "IDD_GOTO_DLG_IDC_STATIC"
-msgid "Enter two numbers to jump to a specified frame, the first is the frame number, the second is the frame rate."
-msgstr "프레임이나 프레임률을 입력하면 위치로 이동하여 재생할수 있습니다.\n예)12345, 20.25 -> 12345프레임 20.25FPS"
+msgid ""
+"Enter two numbers to jump to a specified frame, the first is the frame "
+"number, the second is the frame rate."
+msgstr "지정된 프레임으로 이동하려면 2개의 숫자를 입력하십시오. 1번째는 프레임 번호이고 2번째는 프레임 속도입니다."
 
 msgctxt "IDD_GOTO_DLG_IDC_STATIC"
 msgid "Frame"
-msgstr "프레임:"
+msgstr "프레임"
 
 msgctxt "IDD_GOTO_DLG_IDC_OK2"
 msgid "Go!"
-msgstr "이동"
+msgstr "이동!"
 
 msgctxt "IDD_OPEN_DLG_CAPTION"
 msgid "Open"
 msgstr "열기"
 
 msgctxt "IDD_OPEN_DLG_IDC_STATIC"
-msgid "Type the address of a movie or audio file (on the Internet or your computer) and the player will open it for you."
-msgstr "재생할 파일의 위치(인터넷 또는 로컬컴퓨터)를 입력하세요."
+msgid ""
+"Type the address of a movie or audio file (on the Internet or your computer)"
+" and the player will open it for you."
+msgstr "재생할 파일의 경로(인터넷 또는 로컬 컴퓨터)를 입력하세요."
 
 msgctxt "IDD_OPEN_DLG_IDC_STATIC"
 msgid "Open:"
-msgstr "열기:"
+msgstr "열기 :"
 
 msgctxt "IDD_OPEN_DLG_IDC_BUTTON1"
 msgid "Browse..."
@@ -167,11 +173,15 @@ msgstr "찾아보기..."
 
 msgctxt "IDD_OPEN_DLG_IDC_STATIC1"
 msgid "Dub:"
-msgstr "더빙:"
+msgstr "더빙 :"
 
 msgctxt "IDD_OPEN_DLG_IDC_BUTTON2"
 msgid "Browse..."
 msgstr "찾아보기..."
+
+msgctxt "IDD_OPEN_DLG_IDC_CHECK1"
+msgid "Add to playlist without opening"
+msgstr "열지 말고 재생 목록에만 추가"
 
 msgctxt "IDD_OPEN_DLG_IDOK"
 msgid "OK"
@@ -181,25 +191,18 @@ msgctxt "IDD_OPEN_DLG_IDCANCEL"
 msgid "Cancel"
 msgstr "취소"
 
-msgctxt "IDD_OPEN_DLG_IDC_CHECK1"
-msgid "Add to playlist without opening"
-msgstr "열지 말고 재생목록에만 추가"
-
 msgctxt "IDD_ABOUTBOX_CAPTION"
 msgid "About"
 msgstr "정보"
 
-msgctxt "IDD_ABOUTBOX_IDC_AUTHORS_LINK"
-msgid "Copyright © 2002-2017 see Authors.txt"
-msgstr "Copyright © 2002-2017 'Authors.txt' 파일 참조"
-
 msgctxt "IDD_ABOUTBOX_IDC_STATIC"
-msgid "This program is freeware and released under the GNU General Public License."
+msgid ""
+"This program is freeware and released under the GNU General Public License."
 msgstr "이 프로그램은 프리웨어이며 GNU GPL 라이센스로 릴리즈됩니다."
 
 msgctxt "IDD_ABOUTBOX_IDC_STATIC"
 msgid "English translation made by MPC-HC Team"
-msgstr "한글번역제공: XNeo(xneokr@naver.com)"
+msgstr "한글화 : Hack茶ん <https://blog.naver.com/jhacker>"
 
 msgctxt "IDD_ABOUTBOX_IDC_STATIC"
 msgid "Build information"
@@ -207,19 +210,15 @@ msgstr "빌드 정보"
 
 msgctxt "IDD_ABOUTBOX_IDC_STATIC"
 msgid "Version:"
-msgstr "버전:"
-
-msgctxt "IDD_ABOUTBOX_IDC_STATIC"
-msgid "Compiler:"
-msgstr "컴파일러:"
-
-msgctxt "IDD_ABOUTBOX_IDC_LAVFILTERS_VERSION"
-msgid "Not used"
-msgstr "사용되지 않음"
+msgstr "버전 :"
 
 msgctxt "IDD_ABOUTBOX_IDC_STATIC"
 msgid "Build date:"
-msgstr "빌드 날짜:"
+msgstr "빌드 날짜 :"
+
+msgctxt "IDD_ABOUTBOX_IDC_LAVFILTERS_VERSION"
+msgid "Not used"
+msgstr "미사용"
 
 msgctxt "IDD_ABOUTBOX_IDC_STATIC"
 msgid "Operating system"
@@ -227,7 +226,7 @@ msgstr "운영체제"
 
 msgctxt "IDD_ABOUTBOX_IDC_STATIC"
 msgid "Name:"
-msgstr "이름:"
+msgstr "이름 :"
 
 msgctxt "IDD_ABOUTBOX_IDC_BUTTON1"
 msgid "Copy to clipboard"
@@ -243,15 +242,11 @@ msgstr "열기 옵션"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_RADIO1"
 msgid "Use the same player for each media file"
-msgstr "파일을 열때 마다 같은 플레이어창 사용"
+msgstr "파일을 열 때 마다 같은 재생기창 사용"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_RADIO2"
 msgid "Open a new player for each media file played"
-msgstr "파일을 열때 마다 새 플레이어창 사용"
-
-msgctxt "IDD_PPAGEPLAYER_IDC_STATIC"
-msgid "Language"
-msgstr "언어"
+msgstr "파일을 열 때 마다 새 재생기창 사용"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_STATIC"
 msgid "Title bar"
@@ -263,7 +258,7 @@ msgstr "전체 경로 표시"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_RADIO4"
 msgid "File name only"
-msgstr "파일 이름만 표시"
+msgstr "파일 이름만"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_RADIO5"
 msgid "Don't prefix anything"
@@ -271,7 +266,7 @@ msgstr "아무것도 표시하지 않음"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_CHECK13"
 msgid "Replace file name with title"
-msgstr "제목과 파일이름 같이 보이기"
+msgstr "제목과 파일 이름 함께 보이기"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_STATIC"
 msgid "Other"
@@ -279,35 +274,23 @@ msgstr "기타"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_CHECK3"
 msgid "Tray icon"
-msgstr "트래이에 아이콘 보이기"
-
-msgctxt "IDD_PPAGEPLAYER_IDC_SHOW_OSD"
-msgid "Show OSD (requires restart)"
-msgstr "OSD 보이기 (재시작 필요)"
-
-msgctxt "IDD_PPAGEPLAYER_IDC_CHECK4"
-msgid "Limit window proportions on resize"
-msgstr "리사이즈시 창 비율 제한"
-
-msgctxt "IDD_PPAGEPLAYER_IDC_CHECK12"
-msgid "Snap to desktop edges"
-msgstr "바탕화면 자석효과 사용"
+msgstr "트레이 아이콘 표시"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_CHECK8"
 msgid "Store settings in .ini file"
-msgstr "INI파일에 설정 저장"
+msgstr "INI 파일에 설정 저장"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_CHECK10"
 msgid "Disable \"Open Disc\" menu"
-msgstr "'디스크 열기' 메뉴 사용안함"
+msgstr "\"디스크 열기\" 메뉴 사용 안 함"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_CHECK9"
 msgid "Process priority above normal"
-msgstr "프로세스 우선순위 높이기"
+msgstr "프로세스 우선 순위 높이기"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_CHECK14"
 msgid "Enable cover-art support"
-msgstr "커버 아트 지원시 활성화"
+msgstr "커버 아트 지원 활성화"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_STATIC"
 msgid "History"
@@ -315,11 +298,11 @@ msgstr "기록"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_CHECK1"
 msgid "Keep history of recently opened files"
-msgstr "최근에 열었던 파일목록 기억"
+msgstr "최근에 열었던 파일 목록 기억"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_CHECK2"
 msgid "Remember last playlist"
-msgstr "최근 재생 목록를 기억"
+msgstr "마지막 재생 목록 기억"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_FILE_POS"
 msgid "Remember File position"
@@ -331,31 +314,31 @@ msgstr "DVD 위치 기억"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_CHECK6"
 msgid "Remember last window position"
-msgstr "최근 창 위치 기억"
+msgstr "마지막 창 위치 기억"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_CHECK7"
 msgid "Remember last window size"
-msgstr "최근 창 크기 기억"
+msgstr "마지막 창 크기 기억"
 
 msgctxt "IDD_PPAGEPLAYER_IDC_CHECK11"
 msgid "Remember last Pan && Scan Zoom"
-msgstr ""
+msgstr "마지막 위치 && 크기 기억"
 
 msgctxt "IDD_PPAGEDVD_IDC_STATIC"
 msgid "\"Open DVD/BD\" behavior"
-msgstr ""
+msgstr "\"DVD/BD 열기\" 동작"
 
 msgctxt "IDD_PPAGEDVD_IDC_RADIO1"
 msgid "Prompt for location"
-msgstr ""
+msgstr "위치 확인"
 
 msgctxt "IDD_PPAGEDVD_IDC_RADIO2"
 msgid "Always open the default location:"
-msgstr ""
+msgstr "항상 기본 위치 열기 :"
 
 msgctxt "IDD_PPAGEDVD_IDC_STATIC"
-msgid "Preferred language for DVD Navigator and the external OGM Splitter"
-msgstr "DVD메뉴/외부OGM스플리터에서 사용할 언어"
+msgid "Preferred language for DVD"
+msgstr "DVD 기본 언어"
 
 msgctxt "IDD_PPAGEDVD_IDC_RADIO3"
 msgid "Menu"
@@ -363,7 +346,7 @@ msgstr "메뉴"
 
 msgctxt "IDD_PPAGEDVD_IDC_RADIO4"
 msgid "Audio"
-msgstr "오디오"
+msgstr "음향"
 
 msgctxt "IDD_PPAGEDVD_IDC_RADIO5"
 msgid "Subtitles"
@@ -375,15 +358,15 @@ msgstr "추가 설정"
 
 msgctxt "IDD_PPAGEDVD_IDC_CHECK2"
 msgid "Allow closed captions in \"Line 21 Decoder\""
-msgstr "Line 21 디코더에서 자막 닫기 허용"
+msgstr "\"21번 라인 디코더\"에서 선택 자막 허용"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
 msgid "Audio"
-msgstr "오디오"
+msgstr "음향"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
 msgid "Volume"
-msgstr "볼륨"
+msgstr "음량"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
 msgid "Min"
@@ -395,7 +378,7 @@ msgstr "최대"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC_BALANCE"
 msgid "Balance"
-msgstr "음균형"
+msgstr "균형"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
 msgid "L"
@@ -406,60 +389,84 @@ msgid "R"
 msgstr "우"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
+msgid "Control"
+msgstr "제어"
+
+msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC5"
+msgid "Volume step:"
+msgstr "음량 단계 :"
+
+msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
+msgid "%"
+msgstr "%"
+
+msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC6"
+msgid "Speed step:"
+msgstr "속도 단계 :"
+
+msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
 msgid "Playback"
 msgstr "재생"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_RADIO1"
 msgid "Play"
-msgstr "파일을"
+msgstr "재생"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_RADIO2"
 msgid "Repeat forever"
-msgstr "계속 반복"
+msgstr "무한 반복"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC1"
 msgid "time(s)"
-msgstr "번 재생"
+msgstr "시간"
 
-msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
+msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC7"
 msgid "Repeat mode:"
-msgstr "반복 모드:"
+msgstr "반복 모드 :"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
 msgid "After Playback"
-msgstr ""
+msgstr "재생 후"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
-msgid "Default zoom"
-msgstr ""
+msgid "Zoom and Alignment"
+msgstr "확대/축소 및 정렬"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_CHECK5"
 msgid "Auto-zoom:"
-msgstr "자동 확대:"
+msgstr "자동 확대 :"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC2"
 msgid "Auto fit factor:"
-msgstr ""
+msgstr "자동 맞춤 계수 :"
 
-msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC3"
-msgid "%"
-msgstr "%"
+msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
+msgid "min %"
+msgstr "최소 %"
+
+msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
+msgid "max %"
+msgstr "최고 %"
+
+msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC4"
+msgid "Vertical Alignment:"
+msgstr "수직 정렬 :"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
 msgid "Default track preference"
-msgstr "기본 선호 트랙"
+msgstr "기본 트랙 환경 설정"
 
-msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
+msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC8"
 msgid "Subtitles:"
-msgstr "자막언어"
+msgstr "자막 :"
 
-msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
+msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC9"
 msgid "Audio:"
-msgstr "오디오언어"
+msgstr "음향 :"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_CHECK4"
 msgid "Allow overriding external splitter choice"
-msgstr ""
+msgstr "외부 분배기 선택 재정의 허용"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
 msgid "Open settings"
@@ -467,39 +474,23 @@ msgstr "열기 설정"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_CHECK7"
 msgid "Use worker thread to construct the filter graph"
-msgstr "필터그래프를 생성하는 작업자 쓰레드 사용"
+msgstr "필터 그래프를 생성하는 작업자 쓰레드 사용"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_CHECK6"
 msgid "Report pins which fail to render"
-msgstr "렌더링에 실패하면 pin 보고"
+msgstr "렌더링에 실패하면 핀 보고"
 
 msgctxt "IDD_PPAGEPLAYBACK_IDC_CHECK2"
 msgid "Auto-load audio files"
-msgstr "오디오파일을 자동으로 열기"
-
-msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
-msgid "Control"
-msgstr "컨트롤"
-
-msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
-msgid "Volume step:"
-msgstr ""
-
-msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
-msgid "%"
-msgstr "%"
-
-msgctxt "IDD_PPAGEPLAYBACK_IDC_STATIC"
-msgid "Speed step:"
-msgstr ""
+msgstr "음향 파일을 자동으로 열기"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_CHECK3"
 msgid "Override placement"
-msgstr "자막 표시 위치"
+msgstr "배치 재정의"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC1"
 msgid "Horizontal:"
-msgstr "수평:"
+msgstr "수평 :"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC2"
 msgid "%"
@@ -507,7 +498,7 @@ msgstr "%"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC3"
 msgid "Vertical:"
-msgstr "수직:"
+msgstr "수직 :"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC4"
 msgid "%"
@@ -515,7 +506,7 @@ msgstr "%"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC"
 msgid "Delay step"
-msgstr ""
+msgstr "지연 단계"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC"
 msgid "ms"
@@ -523,55 +514,58 @@ msgstr "밀리초"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC"
 msgid "Texture settings (open the video again to see the changes)"
-msgstr "텍스쳐 설정 (파일을 다시 열어야함)"
+msgstr "텍스쳐 설정(파일을 다시 열어야 적용)"
 
-msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC"
+msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC9"
 msgid "Sub pictures to buffer:"
-msgstr "버퍼로 읽어올 서브픽쳐 갯수:"
+msgstr "버퍼링할 자막 :"
 
-msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC"
+msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC21"
 msgid "Maximum texture resolution:"
-msgstr "최대 텍스쳐 해상도:"
+msgstr "텍스처 해상도 최대치 :"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_CHECK_NO_SUB_ANIM"
 msgid "Never animate the subtitles"
-msgstr ""
+msgstr "자막 애니메이션 안 함"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC5"
 msgid "Render at"
-msgstr ""
+msgstr "렌더링 시간"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC6"
 msgid "% of the animation"
-msgstr ""
+msgstr "애니메이션 비율"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC7"
 msgid "Animate at"
-msgstr ""
+msgstr "애니메이션"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC8"
 msgid "% of the video frame rate"
-msgstr ""
+msgstr "영상 프레임 속도 비율"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_CHECK_ALLOW_DROPPING_SUBPIC"
 msgid "Allow dropping some subpictures if the queue is running late"
-msgstr ""
+msgstr "대기열이 지연되는 경우 일부 하위 사진 삭제 허용"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC"
 msgid "Renderer Layout"
-msgstr ""
+msgstr "렌더러 레이아웃"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_CHECK_SUB_AR_COMPENSATION"
 msgid "Apply aspect ratio compensation for anamorphic videos"
-msgstr ""
+msgstr "애너모픽 영상에 대한 화면비 보정 적용"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC"
 msgid "Warning"
 msgstr "경고"
 
 msgctxt "IDD_PPAGESUBTITLES_IDC_STATIC"
-msgid "If you override and enable fullscreen antialiasing somewhere at your videocard's settings, subtitles aren't going to look any better but it will surely eat your CPU."
-msgstr "만약 비디오카드 설정으로 위치설정 및 전체화면 안티앨리어싱을 설정했다면 자막이 잘 표시되지 않을수도 있습니다."
+msgid ""
+"If you override and enable fullscreen antialiasing somewhere at your "
+"videocard's settings, subtitles aren't going to look any better but it will "
+"surely eat your CPU."
+msgstr "만약 비디오 카드 설정으로 위치 설정 및 전체 화면 안티에일리어어싱을 설정했다면 자막이 흐려 보일 수 있습니다."
 
 msgctxt "IDD_PPAGEFORMATS_IDC_STATIC2"
 msgid "File extensions"
@@ -591,55 +585,35 @@ msgstr "연결"
 
 msgctxt "IDD_PPAGEFORMATS_IDC_CHECK8"
 msgid "Use the format-specific icons"
-msgstr ""
+msgstr "형식별 아이콘 사용"
 
 msgctxt "IDD_PPAGEFORMATS_IDC_BUTTON1"
 msgid "Run as &administrator"
-msgstr "관리자 권한으로 실행"
+msgstr "관리자 권한으로 실행(&A)"
 
 msgctxt "IDD_PPAGEFORMATS_IDC_BUTTON7"
 msgid "Set as &default program"
-msgstr "기본 프로그램으로 설정"
-
-msgctxt "IDD_PPAGEFORMATS_IDC_STATIC"
-msgid "Real-Time Streaming Protocol handler (for rtsp://... URLs)"
-msgstr "실시간 스트리밍 프로토콜 핸들러 (rtsp://...)"
-
-msgctxt "IDD_PPAGEFORMATS_IDC_RADIO1"
-msgid "RealMedia"
-msgstr "RealMedia"
-
-msgctxt "IDD_PPAGEFORMATS_IDC_RADIO2"
-msgid "QuickTime"
-msgstr "QuickTime"
-
-msgctxt "IDD_PPAGEFORMATS_IDC_RADIO3"
-msgid "DirectShow"
-msgstr "DirectShow"
-
-msgctxt "IDD_PPAGEFORMATS_IDC_CHECK5"
-msgid "Check file extension first"
-msgstr "확장명으로 먼저 인식"
+msgstr "기본 프로그램으로 설정(&D)"
 
 msgctxt "IDD_PPAGEFORMATS_IDC_STATIC"
 msgid "Explorer Context Menu"
-msgstr "탐색기 메뉴"
+msgstr "탐색기 컨텍스트 메뉴"
 
 msgctxt "IDD_PPAGEFORMATS_IDC_CHECK6"
 msgid "Directory"
-msgstr "디렉토리"
+msgstr "디렉터리"
 
 msgctxt "IDD_PPAGEFORMATS_IDC_CHECK7"
-msgid "File(s)"
-msgstr "파일"
+msgid "Playlist"
+msgstr "재생 목록"
 
 msgctxt "IDD_PPAGEFORMATS_IDC_STATIC1"
 msgid "Autoplay"
-msgstr "자동 실행 (XP 전용)"
+msgstr "자동 재생"
 
 msgctxt "IDD_PPAGEFORMATS_IDC_CHECK1"
 msgid "Video"
-msgstr "비디오"
+msgstr "영상"
 
 msgctxt "IDD_PPAGEFORMATS_IDC_CHECK2"
 msgid "Music"
@@ -651,55 +625,38 @@ msgstr "DVD"
 
 msgctxt "IDD_PPAGEFORMATS_IDC_CHECK3"
 msgid "Audio CD"
-msgstr "오디오 CD"
+msgstr "음향 CD"
 
 msgctxt "IDD_PPAGETWEAKS_IDC_STATIC"
 msgid "Jump distances (small, medium, large in ms)"
-msgstr "이동 간격 (최소/중간/최대 간격을 밀리초 단위로 입력)"
+msgstr "이동 간격(최소/중간/최대 간격을 밀리초 단위로)"
 
 msgctxt "IDD_PPAGETWEAKS_IDC_BUTTON1"
 msgid "Default"
 msgstr "기본값"
 
-msgctxt "IDD_PPAGETWEAKS_IDC_FASTSEEK_CHECK"
-msgid "Fast seek (on keyframe)"
-msgstr "빠른 탐색 (키프레임)"
-
-msgctxt "IDD_PPAGETWEAKS_IDC_CHECK2"
-msgid "Show chapter marks in seek bar"
-msgstr "탐색 바에 챕터 마크를 보여주기"
-
-msgctxt "IDD_PPAGETWEAKS_IDC_CHECK4"
-msgid "Display \"Now Playing\" information in Skype's mood message"
-msgstr ""
-
-msgctxt "IDD_PPAGETWEAKS_IDC_CHECK6"
-msgid "Prevent minimizing the player when in fullscreen on a non default monitor"
-msgstr "전체화면시 최소화 예방 (기본 모니터가 없을시)"
-
-msgctxt "IDD_PPAGETWEAKS_IDC_CHECK_ENHANCED_TASKBAR"
-msgid "Use enhanced taskbar features"
-msgstr "고도화된 작업 표시줄 기능 사용"
-
-msgctxt "IDD_PPAGETWEAKS_IDC_CHECK7"
-msgid "Open previous/next file in folder on \"Skip back/forward\" when there is only one item in playlist"
-msgstr ""
-
-msgctxt "IDD_PPAGETWEAKS_IDC_CHECK8"
-msgid "Show time tooltip:"
-msgstr "시간 툴팁 사용:"
-
-msgctxt "IDD_PPAGETWEAKS_IDC_STATIC"
-msgid "OSD font:"
-msgstr "OSD 글꼴:"
+msgctxt "IDD_PPAGETWEAKS_IDC_CHECK3"
+msgid "Auto-hide the mouse pointer during playback in windowed mode"
+msgstr "창 모드에서 재생하는 동안 마우스 포인터 자동 숨기기"
 
 msgctxt "IDD_PPAGETWEAKS_IDC_CHECK_LCD"
 msgid "Enable Logitech LCD support (experimental)"
-msgstr "Logitech LCD 지원 활성화 (실험적)"
+msgstr "로지텍 LCD 지원 활성화(실험적)"
 
-msgctxt "IDD_PPAGETWEAKS_IDC_CHECK3"
-msgid "Auto-hide the mouse pointer during playback in windowed mode"
-msgstr ""
+msgctxt "IDD_PPAGETWEAKS_IDC_CHECK6"
+msgid ""
+"Prevent minimizing the player when in fullscreen on a non default monitor"
+msgstr "기본이 아닌 모니터에서 전체 화면일 때 재생기 최소화 방지"
+
+msgctxt "IDD_PPAGETWEAKS_IDC_CHECK7"
+msgid ""
+"Open previous/next file in folder on \"Skip back/forward\" when there is "
+"only one item in playlist"
+msgstr "재생 목록에 항목이 하나만 있는 경우 \"뒤로/앞으로 건너뛰기\"에서 폴더의 이전/다음 파일 열기"
+
+msgctxt "IDD_PPAGETWEAKS_IDC_FASTSEEK_CHECK"
+msgid "Fast seek (on keyframe)"
+msgstr "빠른 탐색(키 프레임)"
 
 msgctxt "IDD_PPAGEEXTERNALFILTERS_IDC_BUTTON1"
 msgid "Add Filter..."
@@ -711,7 +668,7 @@ msgstr "제거"
 
 msgctxt "IDD_PPAGEEXTERNALFILTERS_IDC_RADIO1"
 msgid "Prefer"
-msgstr "사용(최우선)"
+msgstr "최우선"
 
 msgctxt "IDD_PPAGEEXTERNALFILTERS_IDC_RADIO2"
 msgid "Block"
@@ -719,7 +676,7 @@ msgstr "차단"
 
 msgctxt "IDD_PPAGEEXTERNALFILTERS_IDC_RADIO3"
 msgid "Set merit:"
-msgstr "우선순위 설정:"
+msgstr "우선 순위 설정 :"
 
 msgctxt "IDD_PPAGEEXTERNALFILTERS_IDC_BUTTON3"
 msgid "Up"
@@ -735,7 +692,7 @@ msgstr "미디어 형식 추가..."
 
 msgctxt "IDD_PPAGEEXTERNALFILTERS_IDC_BUTTON6"
 msgid "Add Sub Type..."
-msgstr "서브 형식 추가..."
+msgstr "하위 유형 추가..."
 
 msgctxt "IDD_PPAGEEXTERNALFILTERS_IDC_BUTTON7"
 msgid "Delete"
@@ -747,71 +704,75 @@ msgstr "목록 초기화"
 
 msgctxt "IDD_FILEPROPDETAILS_IDC_STATIC"
 msgid "Type:"
-msgstr "형식:"
+msgstr "형식 :"
 
 msgctxt "IDD_FILEPROPDETAILS_IDC_STATIC"
 msgid "Size:"
-msgstr "크기:"
+msgstr "크기 :"
 
 msgctxt "IDD_FILEPROPDETAILS_IDC_STATIC"
 msgid "Media length:"
-msgstr "미디어 길이:"
+msgstr "미디어 길이 :"
 
 msgctxt "IDD_FILEPROPDETAILS_IDC_STATIC"
 msgid "Video size:"
-msgstr "비디오 크기:"
+msgstr "해상도 :"
 
 msgctxt "IDD_FILEPROPDETAILS_IDC_STATIC"
 msgid "Created:"
-msgstr "제작:"
+msgstr "제작 :"
 
 msgctxt "IDD_FILEPROPCLIP_IDC_STATIC"
 msgid "Clip:"
-msgstr "클립:"
+msgstr "클립 :"
 
 msgctxt "IDD_FILEPROPCLIP_IDC_STATIC"
 msgid "Author:"
-msgstr "만든이:"
+msgstr "만든이 :"
 
 msgctxt "IDD_FILEPROPCLIP_IDC_STATIC"
 msgid "Copyright:"
-msgstr "저작권:"
+msgstr "저작권 :"
 
 msgctxt "IDD_FILEPROPCLIP_IDC_STATIC"
 msgid "Rating:"
-msgstr "등급:"
+msgstr "등급 :"
 
 msgctxt "IDD_FILEPROPCLIP_IDC_STATIC"
 msgid "Location:"
-msgstr "위치:"
+msgstr "위치 :"
 
 msgctxt "IDD_FILEPROPCLIP_IDC_STATIC"
 msgid "Description:"
-msgstr "설명:"
+msgstr "설명 :"
 
 msgctxt "IDD_FAVADD_CAPTION"
 msgid "Add Favorite"
 msgstr "즐겨찾기에 추가"
 
-msgctxt "IDD_FAVADD_IDC_STATIC"
+msgctxt "IDD_FAVADD_IDC_STATIC1"
 msgid "Choose a name for your shortcut:"
-msgstr "바로가기의 이름을 입력하세요:"
+msgstr "바로 가기 이름을 선택 :"
 
 msgctxt "IDD_FAVADD_IDC_CHECK1"
 msgid "Remember position"
-msgstr "재생위치 기억"
+msgstr "재생 위치 기억"
 
-msgctxt "IDD_FAVADD_IDCANCEL"
-msgid "Cancel"
-msgstr "취소"
+msgctxt "IDD_FAVADD_IDC_CHECK3"
+msgid "Remember A-B repeat marks"
+msgstr "구간 반복 지정 기억"
+
+msgctxt "IDD_FAVADD_IDC_CHECK2"
+msgid "Relative drive"
+msgstr "연결된 드라이브"
 
 msgctxt "IDD_FAVADD_IDOK"
 msgid "OK"
 msgstr "확인"
 
-msgctxt "IDD_FAVADD_IDC_CHECK2"
-msgid "Relative drive"
-msgstr "연결된 드라이브"
+msgctxt "IDD_FAVADD_IDCANCEL"
+msgid "Cancel"
+msgstr "취소"
 
 msgctxt "IDD_FAVORGANIZE_CAPTION"
 msgid "Organize Favorites"
@@ -823,11 +784,11 @@ msgstr "이름 바꾸기"
 
 msgctxt "IDD_FAVORGANIZE_IDC_BUTTON3"
 msgid "Move Up"
-msgstr "위로"
+msgstr "위로 이동"
 
 msgctxt "IDD_FAVORGANIZE_IDC_BUTTON4"
 msgid "Move Down"
-msgstr "아래로"
+msgstr "아래로 이동"
 
 msgctxt "IDD_FAVORGANIZE_IDC_BUTTON2"
 msgid "Delete"
@@ -837,9 +798,17 @@ msgctxt "IDD_FAVORGANIZE_IDOK"
 msgid "OK"
 msgstr "확인"
 
+msgctxt "IDD_FAVORGANIZE_IDCANCEL"
+msgid "Cancel"
+msgstr "취소"
+
+msgctxt "IDD_FAVORGANIZE_ID_APPLY_NOW"
+msgid "Apply"
+msgstr "적용"
+
 msgctxt "IDD_PNSPRESET_DLG_CAPTION"
-msgid "Pan & Scan Presets"
-msgstr "확대/축소"
+msgid "PnS Frame Adjust Presets"
+msgstr "팬&스캔 프레임 조정 프리셋"
 
 msgctxt "IDD_PNSPRESET_DLG_IDC_BUTTON2"
 msgid "New"
@@ -869,17 +838,21 @@ msgctxt "IDD_PNSPRESET_DLG_IDOK"
 msgid "&Save"
 msgstr "저장(&S)"
 
-msgctxt "IDD_PNSPRESET_DLG_IDC_STATIC"
+msgctxt "IDD_PNSPRESET_DLG_IDC_STATIC2"
 msgid "Pos: 0.0 -> 1.0"
-msgstr "위치: 0.0 -> 1.0"
+msgstr "위치 : 0.0 → 1.0"
 
-msgctxt "IDD_PNSPRESET_DLG_IDC_STATIC"
+msgctxt "IDD_PNSPRESET_DLG_IDC_STATIC3"
 msgid "Zoom: 0.2 -> 3.0"
-msgstr "확대: 0.2 -> 3.0"
+msgstr "확대/축소 : 0.2 → 3.0"
+
+msgctxt "IDD_PPAGEACCELTBL_CAPTION"
+msgid "Shortcut Keys"
+msgstr "단축키"
 
 msgctxt "IDD_PPAGEACCELTBL_IDC_CHECK2"
 msgid "Global Media Keys"
-msgstr "멀티미디어기능 키보드"
+msgstr "멀티미디어 기능키"
 
 msgctxt "IDD_PPAGEACCELTBL_IDC_BUTTON1"
 msgid "Select All"
@@ -894,12 +867,14 @@ msgid "Warning"
 msgstr "경고"
 
 msgctxt "IDD_MEDIATYPES_DLG_IDC_STATIC1"
-msgid "MPC-HC could not render some of the pins in the graph, you may not have the needed codecs or filters installed on the system."
-msgstr "MPC-HC 가 파일을 렌더하는데 실패했습니다. 추가적인 코덱이나 필터를 설치해야 할수도 있습니다."
+msgid ""
+"MPC-HC could not render some of the pins in the graph, you may not have the "
+"needed codecs or filters installed on the system."
+msgstr "MPC-HC가 파일 렌더링에 실패했습니다. 필요한 코덱이나 필터가 시스템에 설치되어 있지 않을 수 있습니다."
 
 msgctxt "IDD_MEDIATYPES_DLG_IDC_STATIC2"
 msgid "The following pin(s) failed to find a connectable filter:"
-msgstr "다음 pin이 연결가능한 필터를 찾는데 실패했습니다:"
+msgstr "다음 핀이 연결 가능한 필터 찾기 실패 :"
 
 msgctxt "IDD_MEDIATYPES_DLG_IDOK"
 msgid "Close"
@@ -907,55 +882,11 @@ msgstr "닫기"
 
 msgctxt "IDD_SAVE_DLG_CAPTION"
 msgid "Saving..."
-msgstr "저장중..."
+msgstr "저장 중..."
 
 msgctxt "IDD_SAVE_DLG_IDCANCEL"
 msgid "Cancel"
 msgstr "취소"
-
-msgctxt "IDD_SAVETEXTFILEDIALOGTEMPL_IDC_STATIC1"
-msgid "Encoding:"
-msgstr "인코딩:"
-
-msgctxt "IDD_SAVESUBTITLESFILEDIALOGTEMPL_IDC_STATIC1"
-msgid "Encoding:"
-msgstr "인코딩:"
-
-msgctxt "IDD_SAVESUBTITLESFILEDIALOGTEMPL_IDC_STATIC"
-msgid "Delay:"
-msgstr "딜레이:"
-
-msgctxt "IDD_SAVESUBTITLESFILEDIALOGTEMPL_IDC_STATIC"
-msgid "ms"
-msgstr "밀리초"
-
-msgctxt "IDD_SAVESUBTITLESFILEDIALOGTEMPL_IDC_CHECK1"
-msgid "Save custom style"
-msgstr "사용자 정의 스타일 저장"
-
-msgctxt "IDD_SAVETHUMBSDIALOGTEMPL_IDC_STATIC"
-msgid "JPEG quality:"
-msgstr "JPEG 품질:"
-
-msgctxt "IDD_SAVETHUMBSDIALOGTEMPL_IDC_STATIC"
-msgid "Thumbnails:"
-msgstr "썸네일:"
-
-msgctxt "IDD_SAVETHUMBSDIALOGTEMPL_IDC_STATIC"
-msgid "rows"
-msgstr "행"
-
-msgctxt "IDD_SAVETHUMBSDIALOGTEMPL_IDC_STATIC"
-msgid "columns"
-msgstr "열"
-
-msgctxt "IDD_SAVETHUMBSDIALOGTEMPL_IDC_STATIC"
-msgid "Image width:"
-msgstr "이미지 가로크기:"
-
-msgctxt "IDD_SAVETHUMBSDIALOGTEMPL_IDC_STATIC"
-msgid "pixels"
-msgstr "픽셀"
 
 msgctxt "IDD_ADDREGFILTER_CAPTION"
 msgid "Select Filter"
@@ -975,27 +906,27 @@ msgstr "취소"
 
 msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
 msgid "Font"
-msgstr "글꼴 종류/크기/모양"
+msgstr "글꼴"
 
 msgctxt "IDD_PPAGESUBSTYLE_IDC_BUTTON1"
 msgid "Font"
-msgstr "글꼴 종류/크기/모양"
+msgstr "글꼴"
 
-msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC1"
 msgid "Spacing"
 msgstr "간격"
 
-msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC2"
 msgid "Angle (z,°)"
-msgstr "기울기 (z,°)"
+msgstr "각도(z,°)"
 
-msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC3"
 msgid "Scale (x,%)"
-msgstr "배율 (x,%)"
+msgstr "배율(x,%)"
 
-msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC4"
 msgid "Scale (y,%)"
-msgstr "배율 (y,%)"
+msgstr "배율(y,%)"
 
 msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
 msgid "Border Style"
@@ -1009,37 +940,37 @@ msgctxt "IDD_PPAGESUBSTYLE_IDC_RADIO2"
 msgid "Opaque box"
 msgstr "불투명 상자"
 
-msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC5"
 msgid "Width"
-msgstr "두께"
+msgstr "폭"
 
-msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC6"
 msgid "Shadow"
-msgstr "그림자"
+msgstr "음영"
 
 msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
 msgid "Screen Alignment && Margins"
-msgstr "자막 위치/여백"
+msgstr "화면 정렬 && 여백"
 
-msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC7"
 msgid "Left"
 msgstr "좌"
 
-msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
-msgid "Right"
-msgstr "우"
-
-msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC9"
 msgid "Top"
 msgstr "상"
 
-msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC8"
+msgid "Right"
+msgstr "우"
+
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC10"
 msgid "Bottom"
 msgstr "하"
 
 msgctxt "IDD_PPAGESUBSTYLE_IDC_CHECK_RELATIVETO"
 msgid "Position subtitles relative to the video frame"
-msgstr "비디오 프레임에 따라 자막위치를 지정"
+msgstr "영상 프레임에 따라 자막 위치를 지정"
 
 msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
 msgid "Colors && Transparency"
@@ -1055,23 +986,65 @@ msgstr "100%"
 
 msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
 msgid "Primary"
-msgstr "첫번째 자막"
+msgstr "메인 자막"
 
 msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
 msgid "Secondary"
-msgstr "두번째 자막"
+msgstr "서브 자막"
 
 msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
 msgid "Outline"
-msgstr "테두리"
+msgstr "개요"
+
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC"
+msgid "Shadow"
+msgstr "그림자"
 
 msgctxt "IDD_PPAGESUBSTYLE_IDC_CHECK1"
 msgid "Link alpha channels"
 msgstr "슬라이더 같이 움직이기"
 
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC21"
+msgid "8-bit Character Set"
+msgstr "8비트 문자 집합"
+
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC22"
+msgid "OpenType Language"
+msgstr "OpenType 언어"
+
+msgctxt "IDD_PPAGESUBSTYLE_IDC_STATIC_LIBASS"
+msgid "Libass Options"
+msgstr "Libass 옵션"
+
+msgctxt "IDD_PPAGESUBSTYLE_IDC_CHECK2"
+msgid "Use libass for SSA/ASS"
+msgstr "SSA/ASS에 libass 사용"
+
+msgctxt "IDD_PPAGEMOUSE_IDC_STATIC"
+msgid "Buttons"
+msgstr "버튼"
+
+msgctxt "IDD_PPAGEMOUSE_IDC_STATIC"
+msgid "Click"
+msgstr "클릭"
+
+msgctxt "IDD_PPAGEMOUSE_IDC_STATIC"
+msgid "Double click"
+msgstr "두 번 클릭"
+
+msgctxt "IDD_PPAGEMOUSE_IDC_STATIC"
+msgid "Right click"
+msgstr "오른쪽 클릭"
+
+msgctxt "IDD_PPAGEMOUSE_IDC_BUTTON2"
+msgid "Default"
+msgstr "기본값"
+
 msgctxt "IDD_PPAGEINTERNALFILTERS_IDC_STATIC"
-msgid "If you would like to use the stand-alone versions of these filters or another replacement, disable them here."
-msgstr "다음 필터들의 단독실행 버전을 사용하거나 대체하는 다른 필터들을 사용하려면 체크, 또는 체크해제하세요."
+msgid ""
+"If you would like to use the stand-alone versions of these filters or "
+"another replacement, disable them here."
+msgstr "다음 필터의 독립 실행형 버전 또는 다른 대체 필터를 사용하려면 여기에서 해당 필터 체크를 해제하세요."
 
 msgctxt "IDD_PPAGEINTERNALFILTERS_IDC_STATIC"
 msgid "Source Filters"
@@ -1087,111 +1060,47 @@ msgstr "내장 LAV 필터 설정"
 
 msgctxt "IDD_PPAGEINTERNALFILTERS_IDC_SPLITTER_CONF"
 msgid "Splitter"
-msgstr ""
+msgstr "분배기"
 
 msgctxt "IDD_PPAGEINTERNALFILTERS_IDC_VIDEO_DEC_CONF"
 msgid "Video decoder"
-msgstr "비디오 디코더"
+msgstr "영상 디코더"
 
 msgctxt "IDD_PPAGEINTERNALFILTERS_IDC_AUDIO_DEC_CONF"
 msgid "Audio decoder"
-msgstr "오디오 디코더"
+msgstr "음향 디코더"
+
+msgctxt "IDD_PPAGELOGO_IDC_CHECK1"
+msgid "Apply Monitor Color Profile"
+msgstr "모니터 색상 프로필 적용"
 
 msgctxt "IDD_PPAGELOGO_IDC_RADIO1"
 msgid "Internal:"
-msgstr "내부:"
+msgstr "내부 :"
 
 msgctxt "IDD_PPAGELOGO_IDC_RADIO2"
 msgid "External:"
-msgstr "외부:"
+msgstr "외부 :"
 
 msgctxt "IDD_PPAGELOGO_IDC_BUTTON2"
 msgid "Browse..."
 msgstr "찾아보기..."
 
 msgctxt "IDD_PPAGEOUTPUT_IDC_STATIC"
-msgid "DirectShow Video"
-msgstr "DirectShow 비디오"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_STATIC"
-msgid "RealMedia Video"
-msgstr "RealMedia 비디오"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_STATIC"
-msgid "QuickTime Video"
-msgstr "QuickTime 비디오"
+msgid "Video Renderer"
+msgstr "영상 렌더러"
 
 msgctxt "IDD_PPAGEOUTPUT_IDC_STATIC"
 msgid "Audio Renderer"
-msgstr "DirectShow 오디오"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_STATIC"
-msgid "VMR-9 (renderless) and EVR (CP) settings"
-msgstr "VMR-9 (렌더리스)와 "
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_STATIC"
-msgid "Surface:"
-msgstr "화면:"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_STATIC"
-msgid "Resizer:"
-msgstr "리사이즈:"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_D3D9DEVICE"
-msgid "Select D3D9 Render Device"
-msgstr "D3D9 렌더링장치 설정"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_RESETDEVICE"
-msgid "Reinitialize when changing display"
-msgstr "디스플레이변경시 다시로드"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_FULLSCREEN_MONITOR_CHECK"
-msgid "D3D Fullscreen"
-msgstr "Direct3D 전체화면 (잔상제거)"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_DSVMR9ALTERNATIVEVSYNC"
-msgid "Alternative VSync"
-msgstr "대체 VSync"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_DSVMR9LOADMIXER"
-msgid "VMR-9 Mixer Mode"
-msgstr "VMR-9 혼합 모드"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_EVR_BUFFERS_TXT"
-msgid "EVR Buffers:"
-msgstr "EVR 버퍼:"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_STATIC"
-msgid "DXVA"
-msgstr "DXVA"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_STATIC"
-msgid "Subtitles"
-msgstr "자막"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_STATIC"
-msgid "Screenshot"
-msgstr "스크린샷"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_STATIC"
-msgid "Shaders"
-msgstr "셰이더"
-
-msgctxt "IDD_PPAGEOUTPUT_IDC_STATIC"
-msgid "Rotation"
-msgstr "회전"
+msgstr "음향 렌더러"
 
 msgctxt "IDD_PPAGEOUTPUT_IDC_STATIC"
 msgid "Subtitle Renderer"
 msgstr "자막 렌더러"
 
-msgctxt "IDD_PPAGEOUTPUT_IDC_CACHESHADERS"
-msgid "Cache compiled Shaders"
-msgstr ""
-
 msgctxt "IDD_PPAGEWEBSERVER_IDC_CHECK1"
 msgid "Listen on port:"
-msgstr "사용할 포트:"
+msgstr "사용할 포트 :"
 
 msgctxt "IDD_PPAGEWEBSERVER_IDC_STATIC1"
 msgid "Launch in web browser..."
@@ -1199,15 +1108,15 @@ msgstr "웹 브라우저로 실행..."
 
 msgctxt "IDD_PPAGEWEBSERVER_IDC_CHECK3"
 msgid "Enable compression"
-msgstr "압축기능 사용"
+msgstr "압축기능 활성화"
 
 msgctxt "IDD_PPAGEWEBSERVER_IDC_CHECK5"
 msgid "Allow access from localhost only"
-msgstr "로컬호스트로만 접속허용"
+msgstr "로컬 호스트로만 접속 허용"
 
 msgctxt "IDD_PPAGEWEBSERVER_IDC_CHECK6"
 msgid "Enable preview"
-msgstr "미리보기 활성화"
+msgstr "미리 보기 활성화"
 
 msgctxt "IDD_PPAGEWEBSERVER_IDC_CHECK2"
 msgid "Print debug information"
@@ -1215,7 +1124,7 @@ msgstr "디버그 정보 인쇄"
 
 msgctxt "IDD_PPAGEWEBSERVER_IDC_CHECK4"
 msgid "Serve pages from:"
-msgstr "다음을 서버의 루트로 사용:"
+msgstr "페이지 제공처 :"
 
 msgctxt "IDD_PPAGEWEBSERVER_IDC_BUTTON1"
 msgid "Browse..."
@@ -1223,19 +1132,19 @@ msgstr "찾아보기..."
 
 msgctxt "IDD_PPAGEWEBSERVER_IDC_BUTTON2"
 msgid "Deploy..."
-msgstr "배치..."
+msgstr "배포..."
 
 msgctxt "IDD_PPAGEWEBSERVER_IDC_STATIC"
 msgid "Default page:"
-msgstr "기본 페이지:"
+msgstr "기본 페이지 :"
 
 msgctxt "IDD_PPAGEWEBSERVER_IDC_STATIC"
 msgid "CGI handlers: (.ext1=path1;.ext2=path2;...)"
-msgstr "CGI 핸들러: (.확장명1=경로1;.확장명2=경로2;...)"
+msgstr "CGI 핸들러 : (.확장자1=경로1;.확장자2=경로2;...)"
 
 msgctxt "IDD_SUBTITLEDL_DLG_CAPTION"
 msgid "Download subtitles"
-msgstr "자막 다운로드"
+msgstr "자막 내려받기"
 
 msgctxt "IDD_SUBTITLEDL_DLG_IDC_CHECK1"
 msgid "Replace currently loaded subtitles"
@@ -1243,63 +1152,27 @@ msgstr "지금 로드한 자막과 대체"
 
 msgctxt "IDD_SUBTITLEDL_DLG_IDOK"
 msgid "Download"
-msgstr "다운로드"
+msgstr "내려받기"
 
 msgctxt "IDD_SUBTITLEDL_DLG_IDC_BUTTON1"
 msgid "Refresh"
-msgstr "새로고침"
+msgstr "새로 고침"
 
 msgctxt "IDD_SUBTITLEDL_DLG_IDC_BUTTON2"
 msgid "Abort"
-msgstr "중단됨"
+msgstr "중단"
 
 msgctxt "IDD_SUBTITLEDL_DLG_IDC_BUTTON3"
 msgid "Options"
 msgstr "옵션"
 
-msgctxt "IDD_SUBTITLEUP_DLG_CAPTION"
-msgid "Upload subtitles"
-msgstr "자막 업로드"
-
-msgctxt "IDD_SUBTITLEUP_DLG_IDOK"
-msgid "Upload"
-msgstr "업로드"
-
-msgctxt "IDD_SUBTITLEUP_DLG_IDC_BUTTON1"
-msgid "Abort"
-msgstr "중단됨"
-
-msgctxt "IDD_SUBTITLEUP_DLG_IDC_BUTTON2"
-msgid "Options"
-msgstr "옵션"
+msgctxt "IDD_SUBTITLEDL_DLG_IDC_BUTTON4"
+msgid "Search"
+msgstr "찾기"
 
 msgctxt "IDD_FILEPROPRES_IDC_BUTTON1"
 msgid "Save As..."
 msgstr "다른 이름으로 저장..."
-
-msgctxt "IDD_PPAGEMISC_IDC_STATIC"
-msgid "Color controls (for VMR-9, EVR and madVR)"
-msgstr "컬러 컨트롤 (VMR-9 / EVR / madVR 전용)"
-
-msgctxt "IDD_PPAGEMISC_IDC_STATIC"
-msgid "Brightness"
-msgstr "밝기"
-
-msgctxt "IDD_PPAGEMISC_IDC_STATIC"
-msgid "Contrast"
-msgstr "대조"
-
-msgctxt "IDD_PPAGEMISC_IDC_STATIC"
-msgid "Hue"
-msgstr "색조"
-
-msgctxt "IDD_PPAGEMISC_IDC_STATIC"
-msgid "Saturation"
-msgstr "채도"
-
-msgctxt "IDD_PPAGEMISC_IDC_RESET"
-msgid "Reset"
-msgstr "리셋"
 
 msgctxt "IDD_PPAGEMISC_IDC_STATIC"
 msgid "Update check"
@@ -1311,11 +1184,19 @@ msgstr "자동으로 업데이트 확인 활성화"
 
 msgctxt "IDD_PPAGEMISC_IDC_STATIC5"
 msgid "Check every:"
-msgstr ""
+msgstr "확인 간격 :"
 
 msgctxt "IDD_PPAGEMISC_IDC_STATIC6"
 msgid "day(s)"
 msgstr "일"
+
+msgctxt "IDD_PPAGEMISC_IDC_STATIC"
+msgid "Color controls"
+msgstr ""
+
+msgctxt "IDD_PPAGEMISC_IDC_COLOR_CONTROLS"
+msgid "Open"
+msgstr ""
 
 msgctxt "IDD_PPAGEMISC_IDC_STATIC"
 msgid "Settings management"
@@ -1325,17 +1206,17 @@ msgctxt "IDD_PPAGEMISC_IDC_RESET_SETTINGS"
 msgid "Reset"
 msgstr "초기화"
 
-msgctxt "IDD_PPAGEMISC_IDC_EXPORT_SETTINGS"
-msgid "Export"
-msgstr "내보내기"
-
 msgctxt "IDD_PPAGEMISC_IDC_EXPORT_KEYS"
 msgid "Export keys"
 msgstr "키 내보내기"
 
+msgctxt "IDD_PPAGEMISC_IDC_EXPORT_SETTINGS"
+msgid "Export"
+msgstr "내보내기"
+
 msgctxt "IDD_TUNER_SCAN_CAPTION"
 msgid "Tuner scan"
-msgstr "튜너스캔"
+msgstr "튜너 스캔"
 
 msgctxt "IDD_TUNER_SCAN_ID_START"
 msgid "Start"
@@ -1367,7 +1248,7 @@ msgstr "저장"
 
 msgctxt "IDD_TUNER_SCAN_IDC_STATIC"
 msgid "S"
-msgstr ""
+msgstr "S"
 
 msgctxt "IDD_TUNER_SCAN_IDC_STATIC"
 msgid "Q"
@@ -1377,9 +1258,13 @@ msgctxt "IDD_TUNER_SCAN_IDC_CHECK_OFFSET"
 msgid "Use an offset"
 msgstr "오프셋 사용"
 
+msgctxt "IDD_TUNER_SCAN_IDC_STATIC"
+msgid "Symbol Rate"
+msgstr "기호 비율"
+
 msgctxt "IDD_PPAGECAPTURE_IDC_STATIC"
 msgid "Default Device"
-msgstr "기본장치"
+msgstr "기본 장치"
 
 msgctxt "IDD_PPAGECAPTURE_IDC_RADIO1"
 msgid "Analog"
@@ -1395,11 +1280,11 @@ msgstr "아날로그 설정"
 
 msgctxt "IDD_PPAGECAPTURE_IDC_STATIC1"
 msgid "Video"
-msgstr "비디오"
+msgstr "영상"
 
 msgctxt "IDD_PPAGECAPTURE_IDC_STATIC2"
 msgid "Audio"
-msgstr "오디오"
+msgstr "음향"
 
 msgctxt "IDD_PPAGECAPTURE_IDC_STATIC3"
 msgid "Country"
@@ -1407,7 +1292,7 @@ msgstr "국가"
 
 msgctxt "IDD_PPAGECAPTURE_IDC_STATIC"
 msgid "Digital settings (BDA)"
-msgstr "디지털 설정 (BDA)"
+msgstr "디지털 설정(BDA)"
 
 msgctxt "IDD_PPAGECAPTURE_IDC_STATIC4"
 msgid "Network Provider"
@@ -1423,75 +1308,135 @@ msgstr "리시버"
 
 msgctxt "IDD_PPAGECAPTURE_IDC_PPAGECAPTURE_ST10"
 msgid "Channel switching approach:"
-msgstr ""
+msgstr "채널 전환 방식 :"
 
 msgctxt "IDD_PPAGECAPTURE_IDC_PPAGECAPTURE_ST11"
 msgid "Rebuild filter graph"
-msgstr ""
+msgstr "필터 그래프 재구성"
 
 msgctxt "IDD_PPAGECAPTURE_IDC_PPAGECAPTURE_ST12"
 msgid "Stop filter graph"
 msgstr "필터 그래프 중단"
 
-msgctxt "IDD_PPAGESYNC_IDC_SYNCVIDEO"
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC"
+msgid "Common"
+msgstr "공통"
+
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC"
+msgid "Resizer:"
+msgstr "크기 조정 :"
+
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC"
+msgid "Surface:"
+msgstr "표면 :"
+
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_EVR_BUFFERS_TXT"
+msgid "EVR Buffers:"
+msgstr "EVR 버퍼 :"
+
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_RESETDEVICE"
+msgid "Reinitialize when changing display"
+msgstr "디스플레이 변경 시, 다시 초기화"
+
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_CACHESHADERS"
+msgid "Cache compiled Shaders"
+msgstr "컴파일된 셰이더 캐시"
+
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_FULLSCREEN_MONITOR_CHECK"
+msgid "D3D Fullscreen"
+msgstr "Direct3D 전체 화면"
+
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_DSVMR9LOADMIXER"
+msgid "VMR-9 Mixer Mode"
+msgstr "VMR-9 혼합 모드"
+
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_D3D9DEVICE"
+msgid "Select D3D9 Render Device"
+msgstr "D3D9 렌더러 장치 선택"
+
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_SYNC_GROUP"
+msgid "Sync Renderer"
+msgstr "동기화 렌더러"
+
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_SYNCVIDEO"
 msgid "Sync video to display"
-msgstr "비디오에서 디스플레이로 싱크"
+msgstr "영상을 화면에 동기화"
 
-msgctxt "IDD_PPAGESYNC_IDC_STATIC1"
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC1"
 msgid "Frequency adjustment:"
-msgstr "주파수 조정:"
+msgstr "주파수 조정 :"
 
-msgctxt "IDD_PPAGESYNC_IDC_SYNCDISPLAY"
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_SYNCDISPLAY"
 msgid "Sync display to video"
-msgstr "디스클레이에서 비디오로 싱크"
+msgstr "화면을 영상에 동기화"
 
-msgctxt "IDD_PPAGESYNC_IDC_STATIC2"
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC2"
 msgid "Frequency adjustment:"
-msgstr "주파수 조정:"
+msgstr "주파수 조정 :"
 
-msgctxt "IDD_PPAGESYNC_IDC_STATIC3"
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC3"
 msgid "lines"
-msgstr "가로"
+msgstr "라인"
 
-msgctxt "IDD_PPAGESYNC_IDC_STATIC4"
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC4"
 msgid "columns"
-msgstr "세로"
+msgstr "행"
 
-msgctxt "IDD_PPAGESYNC_IDC_SYNCNEAREST"
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_SYNCNEAREST"
 msgid "Present at nearest VSync"
-msgstr "가장 근접한 VSync에 맞추기"
+msgstr "근린 수직 동기화 적용"
 
-msgctxt "IDD_PPAGESYNC_IDC_STATIC5"
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC5"
 msgid "Target sync offset:"
-msgstr "목표 싱크 오프셋:"
+msgstr "대상 동기화 오프셋 :"
 
-msgctxt "IDD_PPAGESYNC_IDC_STATIC6"
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC6"
 msgid "ms"
 msgstr "밀리초"
 
-msgctxt "IDD_PPAGESYNC_IDC_STATIC7"
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC7"
 msgid "Control limits:"
-msgstr "한계:"
+msgstr "관리 한계 :"
 
-msgctxt "IDD_PPAGESYNC_IDC_STATIC8"
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC8"
 msgid "+/-"
 msgstr "+/-"
 
-msgctxt "IDD_PPAGESYNC_IDC_STATIC9"
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC9"
 msgid "ms"
 msgstr "밀리초"
 
-msgctxt "IDD_PPAGESYNC_IDC_STATIC10"
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC10"
 msgid "Changes take effect after the playback has been closed and restarted."
-msgstr "현재 파일을 닫고 다시 시작해야만 설정이 적용됩니다."
+msgstr "변경 사항은 재생을 종료한 후, 다시 시작해야 적용됩니다."
+
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_STATIC"
+msgid "More renderer settings are available in the Play menu"
+msgstr "재생 메뉴에서 더 많은 렌더링 설정 옵션 사용 가능"
+
+msgctxt "IDD_PPAGEVIDEORENDERER_IDC_RESET"
+msgid "Reset"
+msgstr "초기화"
+
+msgctxt "IDD_PPAGEFULLSCREEN_IDC_STATIC"
+msgid "Fullscreen monitor"
+msgstr "전체 화면 모니터"
 
 msgctxt "IDD_PPAGEFULLSCREEN_IDC_CHECK1"
 msgid "Launch files in fullscreen"
-msgstr "전체화면으로 재생시작"
+msgstr "전체 화면으로 재생 시작"
+
+msgctxt "IDD_PPAGEFULLSCREEN_IDC_CHECK7"
+msgid "Allow separate control window"
+msgstr "별도의 제어 창 허용"
+
+msgctxt "IDD_PPAGEFULLSCREEN_IDC_CHECK5"
+msgid "Exit fullscreen at the end of playback"
+msgstr "재생이 끝나면 전체 화면 종료"
 
 msgctxt "IDD_PPAGEFULLSCREEN_IDC_CHECK4"
 msgid "Hide controls in fullscreen"
-msgstr "전체화면에서 컨트롤 숨기기"
+msgstr "전체 화면에서 컨트롤 숨기기"
 
 msgctxt "IDD_PPAGEFULLSCREEN_IDC_STATIC1"
 msgid "ms"
@@ -1499,19 +1444,11 @@ msgstr "밀리초"
 
 msgctxt "IDD_PPAGEFULLSCREEN_IDC_CHECK6"
 msgid "Hide docked panels"
-msgstr ""
-
-msgctxt "IDD_PPAGEFULLSCREEN_IDC_CHECK5"
-msgid "Exit fullscreen at the end of playback"
-msgstr "재생이 끝나면 전체화면 종료"
-
-msgctxt "IDD_PPAGEFULLSCREEN_IDC_STATIC"
-msgid "Fullscreen monitor"
-msgstr "전체화면 모니터"
+msgstr "고정 패널 숨기기"
 
 msgctxt "IDD_PPAGEFULLSCREEN_IDC_CHECK2"
 msgid "Use autochange fullscreen monitor mode"
-msgstr "전체화면 모니터 모드 자동전환 사용"
+msgstr "전체 화면 모니터 모드 자동 전환 사용"
 
 msgctxt "IDD_PPAGEFULLSCREEN_IDC_BUTTON1"
 msgid "Add"
@@ -1529,21 +1466,21 @@ msgctxt "IDD_PPAGEFULLSCREEN_IDC_BUTTON4"
 msgid "Down"
 msgstr "아래로"
 
-msgctxt "IDD_PPAGEFULLSCREEN_IDC_CHECK3"
-msgid "Apply default monitor mode on fullscreen exit"
-msgstr "전체화면 종료시 기본값 모니터 모드로 적용"
-
-msgctxt "IDD_PPAGEFULLSCREEN_IDC_RESTORERESCHECK"
-msgid "Restore resolution on program exit"
-msgstr "종료후에 해상도 복원"
-
 msgctxt "IDD_PPAGEFULLSCREEN_IDC_STATIC"
 msgid "Delay"
-msgstr ""
+msgstr "지연"
 
 msgctxt "IDD_PPAGEFULLSCREEN_IDC_STATIC2"
 msgid "s"
-msgstr ""
+msgstr "초"
+
+msgctxt "IDD_PPAGEFULLSCREEN_IDC_CHECK3"
+msgid "Apply default monitor mode on fullscreen exit"
+msgstr "전체 화면 종료 시, 기본값 모니터 모드로 적용"
+
+msgctxt "IDD_PPAGEFULLSCREEN_IDC_RESTORERESCHECK"
+msgid "Restore resolution on program exit"
+msgstr "종료 후에 해상도 복원"
 
 msgctxt "IDD_NAVIGATION_DLG_IDC_NAVIGATION_INFO"
 msgid "Info"
@@ -1555,15 +1492,15 @@ msgstr "스캔"
 
 msgctxt "IDD_PPAGESUBMISC_IDC_CHECK1"
 msgid "Prefer forced and/or default subtitles tracks"
-msgstr ""
+msgstr "강제 기본 자막 트랙 선호"
 
 msgctxt "IDD_PPAGESUBMISC_IDC_CHECK2"
 msgid "Prefer external subtitles over embedded subtitles"
-msgstr "항상 외부 자막보기(사용가능한경우)"
+msgstr "외부 자막 선호"
 
 msgctxt "IDD_PPAGESUBMISC_IDC_CHECK3"
 msgid "Ignore embedded subtitles"
-msgstr "내장 자막 불러오지않음"
+msgstr "내장 자막 무시"
 
 msgctxt "IDD_PPAGESUBMISC_IDC_STATIC"
 msgid "Autoload paths"
@@ -1574,28 +1511,30 @@ msgid "Reset"
 msgstr "초기화"
 
 msgctxt "IDD_PPAGESUBMISC_IDC_STATIC"
-msgid "Online search, download and upload subtitles"
-msgstr "자막 온라인 검색, 다운로드와 업로드"
+msgid "Online subtitle search"
+msgstr "온라인 자막 검색"
 
 msgctxt "IDD_PPAGESUBMISC_IDC_CHECK4"
 msgid "Automatically search and download subtitles if none are found locally"
-msgstr ""
+msgstr "자막이 없는 경우 자동으로 자막 검색하여 내려받기"
 
 msgctxt "IDD_PPAGESUBMISC_IDC_CHECK5"
-msgid "Prefer subtitles for hearing impaired (when indicated by subtitles provider)"
-msgstr ""
+msgid ""
+"Prefer subtitles for hearing impaired (when indicated by subtitles provider)"
+msgstr "청각 장애인을 위한 자막 선호(자막에 명시한 경우)"
 
 msgctxt "IDD_PPAGESUBMISC_IDC_STATIC1"
 msgid "Ignore files containing any of the following word(s):"
-msgstr ""
+msgstr "다음 단어가 포함된 파일 무시 :"
 
-msgctxt "IDD_PPAGESUBMISC_IDC_STATIC"
+msgctxt "IDD_PPAGESUBMISC_IDC_STATIC2"
 msgid "Languages in order of preference:"
-msgstr ""
+msgstr "선호하는 언어 순 정렬 :"
 
-msgctxt "IDD_PPAGESUBMISC_IDC_CHECK6"
-msgid "Automatically upload active subtitles at the end of video playback"
-msgstr ""
+msgctxt "IDD_PPAGESUBMISC_IDC_CHECK_AUTOSAVE_ONLINE_SUBTITLE"
+msgid ""
+"Automatically save downloaded subtitles to the first autoload path folder"
+msgstr "내려받은 자막을 1번째 자동 불러오기 경로 폴더에 자동 저장"
 
 msgctxt "IDD_UPDATE_DIALOG_CAPTION"
 msgid "Update Checker"
@@ -1603,7 +1542,7 @@ msgstr "업데이트 검사"
 
 msgctxt "IDD_UPDATE_DIALOG_IDC_UPDATE_DL_BUTTON"
 msgid "&Download now"
-msgstr "지금 다운로드"
+msgstr "지금 내려받기(&D)"
 
 msgctxt "IDD_UPDATE_DIALOG_IDC_UPDATE_LATER_BUTTON"
 msgid "Remind me &later"
@@ -1611,11 +1550,13 @@ msgstr "나중에 알림"
 
 msgctxt "IDD_UPDATE_DIALOG_IDC_UPDATE_IGNORE_BUTTON"
 msgid "&Ignore this update"
-msgstr "이 업데이트를 무시"
+msgstr "이 업데이트를 무시(&I)"
 
 msgctxt "IDD_PPAGESHADERS_IDC_STATIC"
-msgid "Shaders contain special effects which can be added to the video rendering process."
-msgstr ""
+msgid ""
+"Shaders contain special effects which can be added to the video rendering "
+"process."
+msgstr "셰이더는 영상 렌더링 프로세스에 추가할 수 있는 특수 효과를 포함합니다."
 
 msgctxt "IDD_PPAGESHADERS_IDC_BUTTON12"
 msgid "Add shader file"
@@ -1627,11 +1568,11 @@ msgstr "제거"
 
 msgctxt "IDD_PPAGESHADERS_IDC_BUTTON1"
 msgid "Add to pre-resize"
-msgstr ""
+msgstr "크기 조정 전 추가"
 
 msgctxt "IDD_PPAGESHADERS_IDC_BUTTON2"
 msgid "Add to post-resize"
-msgstr ""
+msgstr "크기 조정 후 추가"
 
 msgctxt "IDD_PPAGESHADERS_IDC_STATIC"
 msgid "Shader presets"
@@ -1651,19 +1592,21 @@ msgstr "삭제"
 
 msgctxt "IDD_PPAGESHADERS_IDC_STATIC"
 msgid "Active pre-resize shaders"
-msgstr ""
+msgstr "크기 조정 전 셰이더 활성화"
 
 msgctxt "IDD_PPAGESHADERS_IDC_STATIC"
 msgid "Active post-resize shaders"
-msgstr ""
+msgstr "크기 조정 후 셰이더 활성화"
+
+msgctxt "IDD_PPAGESHADERS_IDC_STATIC5"
+msgid ""
+"MPC-VR does not support pre-resize shaders. It will run them after resize, "
+"before the post-resize shaders."
+msgstr "MPC-VR은 크기 조정 전 셰이더를 지원하지 않습니다. 크기 조정 후 쉐이더 이전에 크기 조정 후 실행합니다."
 
 msgctxt "IDD_DEBUGSHADERS_DLG_CAPTION"
 msgid "Debug Shaders"
 msgstr "셰이더 디버그"
-
-msgctxt "IDD_DEBUGSHADERS_DLG_IDC_STATIC"
-msgid "Debug Information"
-msgstr "디버그 정보"
 
 msgctxt "IDD_DEBUGSHADERS_DLG_IDC_RADIO1"
 msgid "PS 2.0"
@@ -1681,73 +1624,71 @@ msgctxt "IDD_DEBUGSHADERS_DLG_IDC_RADIO4"
 msgid "PS 3.0"
 msgstr "PS 3.0"
 
+msgctxt "IDD_DEBUGSHADERS_DLG_IDC_STATIC1"
+msgid "Debug Information"
+msgstr "디버그 정보"
+
 msgctxt "IDD_PPAGEADVANCED_IDC_STATIC"
 msgid "Advanced Settings, do not edit unless you know what you are doing."
 msgstr "고급 설정, 당신이 무엇을 하는지 모르시면 편집하지 마십시오."
 
 msgctxt "IDD_PPAGEADVANCED_IDC_RADIO1"
 msgid "True"
-msgstr ""
+msgstr "적용"
 
 msgctxt "IDD_PPAGEADVANCED_IDC_RADIO2"
 msgid "False"
-msgstr ""
+msgstr "해제"
 
 msgctxt "IDD_PPAGEADVANCED_IDC_BUTTON1"
 msgid "Default"
 msgstr "기본값"
 
-msgctxt "IDD_PPAGEAUDIORENDERER_IDC_STATIC"
+msgctxt "IDD_PPAGEAUDIORENDERER_IDC_STATIC5"
 msgid "Device"
-msgstr "기기"
+msgstr "장치"
 
-msgctxt "IDD_PPAGEAUDIORENDERER_IDC_CHECK1"
-msgid "Exclusive mode"
-msgstr ""
-
-msgctxt "IDD_PPAGEAUDIORENDERER_IDC_CHECK2"
-msgid "Allow bitstreaming"
-msgstr "비트스트리밍 허용"
-
-msgctxt "IDD_PPAGEAUDIORENDERER_IDC_STATIC"
+msgctxt "IDD_PPAGEAUDIORENDERER_IDC_STATIC6"
 msgid "Options"
 msgstr "옵션"
 
-msgctxt "IDD_PPAGEAUDIORENDERER_IDC_CHECK3"
-msgid "Enable stereo crossfeed (for headphones)"
-msgstr "스테레오 크로스피드 활성화 (헤드폰용)"
-
-msgctxt "IDD_PPAGEAUDIORENDERER_IDC_BUTTON1"
-msgid "C. Moy"
-msgstr ""
-
-msgctxt "IDD_PPAGEAUDIORENDERER_IDC_BUTTON2"
-msgid "J. Meier"
-msgstr ""
-
-msgctxt "IDD_PPAGEAUDIORENDERER_IDC_STATIC1"
-msgid "Cut-off:"
-msgstr ""
-
-msgctxt "IDD_PPAGEAUDIORENDERER_IDC_STATIC3"
-msgid "Level:"
-msgstr "레벨:"
+msgctxt "IDD_PPAGEAUDIORENDERER_IDC_CHECK1"
+msgid "Exclusive mode"
+msgstr "전용 모드"
 
 msgctxt "IDD_PPAGEAUDIORENDERER_IDC_CHECK4"
 msgid "Ignore system channel mixer (always ignored in exclusive WASAPI mode)"
-msgstr ""
+msgstr "시스템 채널 혼합 무시(배타적 WASAPI 모드에서는 항상 무시)"
 
-msgctxt "IDD_PPAGEAUDIORENDERER_IDC_STATIC"
+msgctxt "IDD_PPAGEAUDIORENDERER_IDC_CHECK3"
+msgid "Enable stereo crossfeed (for headphones)"
+msgstr "스테레오 크로스 피드 활성화(헤드폰용)"
+
+msgctxt "IDD_PPAGEAUDIORENDERER_IDC_BUTTON1"
+msgid "C. Moy"
+msgstr "C. 모이"
+
+msgctxt "IDD_PPAGEAUDIORENDERER_IDC_BUTTON2"
+msgid "J. Meier"
+msgstr "J. 마이어"
+
+msgctxt "IDD_PPAGEAUDIORENDERER_IDC_STATIC1"
+msgid "Cut-off:"
+msgstr "컷오프 :"
+
+msgctxt "IDD_PPAGEAUDIORENDERER_IDC_STATIC3"
+msgid "Level:"
+msgstr "레벨 :"
+
+msgctxt "IDD_PPAGEAUDIORENDERER_IDC_STATIC7"
 msgid "Note"
 msgstr "참고"
 
-msgctxt "IDD_PPAGEAUDIORENDERER_IDC_STATIC"
-msgid "To minimize audio distortion, it is recommended to keep player volume at around 85% when playing loud lossy-encoded content."
-msgstr ""
-
-msgctxt "IDD_SAVEIMAGEDIALOGTEMPL_IDC_STATIC"
-msgid "JPEG quality:"
-msgstr "JPEG 품질:"
+msgctxt "IDD_PPAGEAUDIORENDERER_IDC_STATIC8"
+msgid ""
+"To minimize audio distortion, it is recommended to keep player volume at "
+"around 85% when playing loud lossy-encoded content."
+msgstr "음향 왜곡을 최소화하려면 치명적 손실 인코딩 콘텐츠를 재생 시, 재생기 음량을 약 85%로 유지하는 것을 추천합니다."
 
 msgctxt "IDD_CMD_LINE_HELP_CAPTION"
 msgid "Command line help"
@@ -1763,11 +1704,11 @@ msgstr "충돌 보고"
 
 msgctxt "IDD_CRASH_REPORTER_IDC_STATIC"
 msgid "We are sorry, it seems MPC-HC just crashed. :("
-msgstr "죄송합니다, MPC-HC가 그냥 충돌 된 것 같습니다. :("
+msgstr "죄송합니다, MPC-HC가 충돌이 발생하였습니다. :("
 
 msgctxt "IDD_CRASH_REPORTER_IDC_CHECK1"
 msgid "Send a bug report to help us diagnose and fix the problem."
-msgstr ""
+msgstr "문제를 진단하고 수정하는 데 도움이 되도록 버그 보고서를 보내주십시오."
 
 msgctxt "IDD_CRASH_REPORTER_IDC_STATIC1"
 msgid "Optional information"
@@ -1775,21 +1716,314 @@ msgstr "임의 정보"
 
 msgctxt "IDD_CRASH_REPORTER_IDC_STATIC2"
 msgid "Email:"
-msgstr "이메일:"
+msgstr "이메일 :"
 
 msgctxt "IDD_CRASH_REPORTER_IDC_STATIC3"
-msgid "Your email address is optional and will only be used if the developers need to contact you for more information."
-msgstr ""
+msgid ""
+"Your email address is optional and will only be used if the developers need "
+"to contact you for more information."
+msgstr "당신의 메일 주소 입력은 선택 사항이며 개발자가 추가적인 질문을 위해 당신에게 연락해야 하는 경우에만 사용됩니다."
 
 msgctxt "IDD_CRASH_REPORTER_IDC_STATIC4"
 msgid "Problem description (use English only):"
-msgstr "문제 설명 (영어만 사용):"
+msgstr "문제 설명(영어로만 작성) :"
 
 msgctxt "IDD_CRASH_REPORTER_IDC_BUTTON1"
 msgid "Restart MPC-HC"
-msgstr "MPC-HC 재시작"
+msgstr "MPC-HC 다시 시작"
 
 msgctxt "IDD_CRASH_REPORTER_IDC_BUTTON2"
 msgid "Quit MPC-HC"
 msgstr "MPC-HC 종료"
 
+msgctxt "IDD_PPAGEDPICALC_IDC_STATIC1"
+msgid "Groupbox"
+msgstr "그룹 박스"
+
+msgctxt "IDD_PPAGEDPICALC_IDC_STATIC2"
+msgid "Autoplay"
+msgstr "자동 재생"
+
+msgctxt "IDD_ADDCOMMAND_DLG_CAPTION"
+msgid "Select command"
+msgstr "명령 선택"
+
+msgctxt "IDD_ADDCOMMAND_DLG_IDC_STATIC"
+msgid "Filter:"
+msgstr "필터 :"
+
+msgctxt "IDD_ADDCOMMAND_DLG_IDOK"
+msgid "OK"
+msgstr "확인"
+
+msgctxt "IDD_ADDCOMMAND_DLG_IDCANCEL"
+msgid "Cancel"
+msgstr "취소"
+
+msgctxt "IDD_HISTORY_CAPTION"
+msgid "History"
+msgstr "기록"
+
+msgctxt "IDD_HISTORY_IDC_BUTTON1"
+msgid "Menu"
+msgstr "메뉴"
+
+msgctxt "IDD_HISTORY_IDC_BUTTON2"
+msgid "Remove selected"
+msgstr "선택한 항목 제거"
+
+msgctxt "IDD_COLORCONTROLS_DLG_CAPTION"
+msgid "Color controls"
+msgstr "색상 제어"
+
+msgctxt "IDD_COLORCONTROLS_DLG_IDC_STATIC5"
+msgid "Brightness"
+msgstr ""
+
+msgctxt "IDD_COLORCONTROLS_DLG_IDC_STATIC6"
+msgid "Contrast"
+msgstr ""
+
+msgctxt "IDD_COLORCONTROLS_DLG_IDC_STATIC7"
+msgid "Hue"
+msgstr ""
+
+msgctxt "IDD_COLORCONTROLS_DLG_IDC_STATIC8"
+msgid "Saturation"
+msgstr ""
+
+msgctxt "IDD_COLORCONTROLS_DLG_IDC_RESET"
+msgid "Reset"
+msgstr "초기화"
+
+msgctxt "IDD_COLORCONTROLS_DLG_IDCANCEL"
+msgid "Close"
+msgstr "닫기"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC1"
+msgid "Theme"
+msgstr "테마"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK1"
+msgid "Use Modern Theme"
+msgstr "모던 테마 사용"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC2"
+msgid "Modern Theme Color:"
+msgstr "모던 테마 색상 :"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC4"
+msgid "Seekbar"
+msgstr "탐색 막대"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC22"
+msgid "Modern Seekbar height:"
+msgstr "모던 탐색 막대 높이 :"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK2"
+msgid "Show chapter marks on seekbar"
+msgstr "탐색 막대에 챕터 마크 표시"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC"
+msgid "Time on seekbar:"
+msgstr "탐색 막대에 표시된 시간 :"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC8"
+msgid "Seekbar Hover"
+msgstr "탐색 막대 호버"
+
+msgctxt "IDD_PPAGETHEME_IDC_SEEK_PREVIEW"
+msgid "Show video preview"
+msgstr "영상 미리보기 표시"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK14"
+msgid "Show time"
+msgstr "시간 표시"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC11"
+msgid "Hover Position:"
+msgstr "호버 위치 :"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC7"
+msgid "Preview width (% of screen)"
+msgstr "미리 보기 너비(화면비)"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC10"
+msgid "Status Bar Elements"
+msgstr "상태 표시줄 항목"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK3"
+msgid "Track Language"
+msgstr "트랙 언어"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK4"
+msgid "Video Info"
+msgstr "영상 정보"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK12"
+msgid "Audio Info"
+msgstr "음향 정보"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK5"
+msgid "FPS"
+msgstr "초당 프레임"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK6"
+msgid "A-B Marks"
+msgstr "구간 지정"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC21"
+msgid "Language"
+msgstr "언어"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC5"
+msgid "Language:"
+msgstr "언어 :"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC9"
+msgid "On Screen Display (OSD)"
+msgstr "화면 표시 장치(OSD)"
+
+msgctxt "IDD_PPAGETHEME_IDC_SHOW_OSD"
+msgid "Show OSD (requires restart)"
+msgstr "화면 표시 장치 표시(다시 시작 필요)"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC6"
+msgid "Font:"
+msgstr "글꼴 :"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC23"
+msgid "Font size:"
+msgstr "글자 크기 :"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK13"
+msgid "Display Current Time"
+msgstr "현재 시간을 표시"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC"
+msgid "Window Behavior"
+msgstr "창 동작"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK7"
+msgid "Limit window proportions on resize"
+msgstr "크기 조정 시, 창 비율 제한"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK9"
+msgid "Snap to desktop edges"
+msgstr "바탕 화면 가장자리에 맞추기"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK10"
+msgid "Hide Windowed Controls"
+msgstr "창으로 표시된 컨트롤 숨기기"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC"
+msgid "Windows Integration"
+msgstr "윈도 연동"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK_ENHANCED_TASKBAR"
+msgid "Use enhanced taskbar features"
+msgstr "향상된 작업 표시줄 기능 사용"
+
+msgctxt "IDD_PPAGETHEME_IDC_CHECK11"
+msgid "Control via Windows UI (SMTC)"
+msgstr "윈도 사용자 인터페이스를 통한 제어(SMTC)"
+
+msgctxt "IDD_PPAGETHEME_IDC_STATIC"
+msgid "Custom Preset (4)"
+msgstr "사용자 지정 사전 설정(4)"
+
+msgctxt "IDD_PPAGETHEME_IDC_CUSTOMPRESET_MENU"
+msgid "Menu"
+msgstr "메뉴"
+
+msgctxt "IDD_PPAGETHEME_IDC_CUSTOMPRESET_STATUSBAR"
+msgid "Status"
+msgstr "상태"
+
+msgctxt "IDD_PPAGETHEME_IDC_CUSTOMPRESET_SEEKBAR"
+msgid "Seek Bar"
+msgstr "탐색 막대"
+
+msgctxt "IDD_PPAGETHEME_IDC_CUSTOMPRESET_INFO"
+msgid "Information"
+msgstr "정보"
+
+msgctxt "IDD_PPAGETHEME_IDC_CUSTOMPRESET_TOOLBAR"
+msgid "Controls"
+msgstr "제어"
+
+msgctxt "IDD_PPAGETHEME_IDC_CUSTOMPRESET_STATS"
+msgid "Statistics"
+msgstr "통계"
+
+msgctxt "IDD_RAR_ENTRY_SELECTOR_CAPTION"
+msgid "Select Media from RAR"
+msgstr "RAR에서 미디어 선택"
+
+msgctxt "IDD_RAR_ENTRY_SELECTOR_IDOK"
+msgid "Select"
+msgstr "선택"
+
+msgctxt "IDD_RAR_ENTRY_SELECTOR_IDCANCEL"
+msgid "Cancel"
+msgstr "취소"
+
+msgctxt "IDD_PPAGETOOLBAR_IDC_STATIC"
+msgid "Toolbar Style"
+msgstr "도구 모음 스타일"
+
+msgctxt "IDD_PPAGETOOLBAR_IDC_STATIC3"
+msgid "Toolbar Scale:"
+msgstr "도구 모음 크기 :"
+
+msgctxt "IDD_PPAGETOOLBAR_IDC_STATIC"
+msgid "Toolbar Alignment:"
+msgstr "툴바 정렬 :"
+
+msgctxt "IDD_PPAGETOOLBAR_IDC_STATIC"
+msgid "Active Style:"
+msgstr "액티브 스타일 :"
+
+msgctxt "IDD_PPAGETOOLBAR_IDC_STATIC"
+msgid "Custom Button 1"
+msgstr "사용자 정의 버튼 1"
+
+msgctxt "IDD_PPAGETOOLBAR_IDC_STATIC"
+msgid "Click"
+msgstr "클릭"
+
+msgctxt "IDD_PPAGETOOLBAR_IDC_STATIC"
+msgid "Right click"
+msgstr "오른쪽 클릭"
+
+msgctxt "IDD_PPAGETOOLBAR_IDC_STATIC"
+msgid "Custom Button 2"
+msgstr "사용자 정의 버튼 2"
+
+msgctxt "IDD_PPAGETOOLBAR_IDC_STATIC"
+msgid "Custom Button 3"
+msgstr "사용자 정의 버튼 3"
+
+msgctxt "IDD_PPAGETOOLBAR_IDC_STATIC"
+msgid "Custom Button 4"
+msgstr "사용자 정의 버튼 4"
+
+msgctxt "IDD_PPAGETOOLBARLAYOUT_IDC_BUTTON3"
+msgid "<<"
+msgstr "<<"
+
+msgctxt "IDD_PPAGETOOLBARLAYOUT_IDC_BUTTON4"
+msgid ">>"
+msgstr ">>"
+
+msgctxt "IDD_PPAGETOOLBARLAYOUT_IDC_BUTTON5"
+msgid "^"
+msgstr "^"
+
+msgctxt "IDD_PPAGETOOLBARLAYOUT_IDC_BUTTON6"
+msgid "v"
+msgstr "v"
+
+msgctxt "IDD_PPAGETOOLBARLAYOUT_IDC_BUTTON1"
+msgid "Default"
+msgstr "기본값"

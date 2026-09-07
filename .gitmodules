@@ -1,43 +1,51 @@
 [submodule "bs2b"]
-    path = src/thirdparty/bs2b/libbs2b
-    url = https://github.com/alexmarsev/libbs2b.git
+	path = src/thirdparty/bs2b/libbs2b
+	url = https://github.com/alexmarsev/libbs2b.git
 [submodule "LAVFilters"]
-    path = src/thirdparty/LAVFilters/src
-    url = https://github.com/mpc-hc/LAVFilters.git
+	path = src/thirdparty/LAVFilters/src
+	url = https://github.com/clsid2/LAVFilters.git
 [submodule "lcms2"]
-    path = src/thirdparty/lcms2/library
-    url = https://github.com/mm2/Little-CMS.git
-[submodule "MediaInfoLib"]
-    path = src/thirdparty/MediaInfo/library
-    url = https://github.com/MediaArea/MediaInfoLib.git
+	path = src/thirdparty/lcms2/library
+	url = https://github.com/mm2/Little-CMS.git
 [submodule "NanoSVG"]
-    path = src/thirdparty/nanosvg
-    url = https://github.com/memononen/nanosvg.git
+	path = src/thirdparty/nanosvg
+	url = https://github.com/memononen/nanosvg.git
 [submodule "rapidjson"]
-    path = src/thirdparty/rapidjson
-    url = https://github.com/miloyip/rapidjson.git
-[submodule "RARFileSource"]
-    path = src/thirdparty/RARFileSource/library
-    url = https://github.com/mpc-hc/rarfilesource.git
-[submodule "sanear"]
-    path = src/thirdparty/sanear/sanear
-    url = https://github.com/mpc-hc/sanear.git
-    branch = core
+	path = src/thirdparty/rapidjson
+	url = https://github.com/tencent/rapidjson.git
 [submodule "soundtouch"]
-    path = src/thirdparty/SoundTouch/soundtouch
-    url = https://github.com/alexmarsev/soundtouch.git
+	path = src/thirdparty/SoundTouch/soundtouch
+	url = https://github.com/alexmarsev/soundtouch.git
 [submodule "soxr"]
-    path = src/thirdparty/soxr/libsoxr
-    url = https://github.com/alexmarsev/soxr.git
+	path = src/thirdparty/soxr/libsoxr
+	url = https://github.com/dofuuz/soxr.git
 [submodule "tinyxml2"]
-    path = src/thirdparty/tinyxml2/library
-    url = https://github.com/leethomason/tinyxml2.git
-[submodule "XmlRpc4Win"]
-    path = src/thirdparty/XmlRpc4Win
-    url = https://github.com/drtimcooper/XmlRpc4Win.git
-[submodule "ZenLib"]
-    path = src/thirdparty/ZenLib/library
-    url = https://github.com/MediaArea/ZenLib.git
+	path = src/thirdparty/tinyxml2/library
+	url = https://github.com/leethomason/tinyxml2.git
 [submodule "src/thirdparty/minhook/minhook"]
-    path = src/thirdparty/minhook/minhook
-    url = https://github.com/TsudaKageyu/minhook.git
+	path = src/thirdparty/minhook/minhook
+	url = https://github.com/TsudaKageyu/minhook.git
+[submodule "src/thirdparty/libass/libass"]
+	path = src/thirdparty/libass/libass
+	url = https://github.com/libass/libass.git
+[submodule "src/thirdparty/fribidi/fribidi"]
+	path = src/thirdparty/fribidi/fribidi
+	url = https://github.com/fribidi/fribidi.git
+[submodule "src/thirdparty/harfbuzz/harfbuzz"]
+	path = src/thirdparty/harfbuzz/harfbuzz
+	url = https://github.com/harfbuzz/harfbuzz.git
+[submodule "src/thirdparty/freetype2/freetype2"]
+	path = src/thirdparty/freetype2/freetype2
+	url = https://gitlab.freedesktop.org/freetype/freetype.git
+[submodule "src/thirdparty/libiconv/libiconv-for-Windows"]
+	path = src/thirdparty/libiconv/libiconv-for-Windows
+	url = https://github.com/pffang/libiconv-for-Windows.git
+[submodule "src/thirdparty/libunibreak/libunibreak"]
+	path = src/thirdparty/libunibreak/libunibreak
+	url = https://github.com/adah1972/libunibreak
+[submodule "src/thirdparty/stb"]
+	path = src/thirdparty/stb
+	url = https://github.com/nothings/stb
+[submodule "src/thirdparty/ResizableLib/ResizableLib"]
+	path = src/thirdparty/ResizableLib/ResizableLib
+	url = https://github.com/adipose/resizablelib

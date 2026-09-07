@@ -23,18 +23,20 @@
 
 #include "mplayerc.h"
 #include "PPagePlayer.h"
+#include "PPageToolBar.h"
+#include "PPageToolBarLayout.h"
+#include "PPageTheme.h"
 #include "PPageFormats.h"
 #include "PPageAccelTbl.h"
+#include "PPageMouse.h"
 #include "PPageLogo.h"
 #include "PPagePlayback.h"
 #include "PPageDVD.h"
 #include "PPageOutput.h"
 #include "PPageFullscreen.h"
-#include "PPageSync.h"
 #include "PPageWebServer.h"
 #include "PPageInternalFilters.h"
 #include "PPageAudioSwitcher.h"
-#include "PPageAudioRenderer.h"
 #include "PPageExternalFilters.h"
 #include "PPageSubtitles.h"
 #include "PPageSubStyle.h"
@@ -46,7 +48,9 @@
 #include "PPageAdvanced.h"
 #include "TreePropSheet/TreePropSheet.h"
 #include "DpiHelper.h"
-
+#include "CMPCThemeUtil.h"
+#include "CMPCThemePropPageFrame.h"
+#include "CMPCThemeTreeCtrl.h"
 
 // CTreePropSheetTreeCtrl
 
@@ -63,9 +67,14 @@ protected:
     virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 };
 
+class CPPageDPICalc : public CMPCThemePPageBase {
+public:
+    CPPageDPICalc() : CMPCThemePPageBase(IDD_PPAGEDPICALC, 0) {};
+};
+
 // CPPageSheet
 
-class CPPageSheet : public TreePropSheet::CTreePropSheet
+class CPPageSheet : public TreePropSheet::CTreePropSheet, public CMPCThemeUtil
 {
     DECLARE_DYNAMIC(CPPageSheet)
 
@@ -74,14 +83,21 @@ public:
         APPLY_LANGUAGE_CHANGE = 100, // 100 is a magic number than won't collide with WinAPI constants
         RESET_SETTINGS
     };
-
+    CPtrArray& getPages() { return m_pages; };
 private:
     bool m_bLockPage;
     bool m_bLanguageChanged;
+    bool initialized;
+    bool changingDPI;
+    CFont dpiButtonFont, dpiTabFont;
 
     CPPagePlayer m_player;
+    CPPageToolBar m_toolBar;
+    CPPageToolBarLayout m_toolBarLayout;
+    CPPageTheme m_theme;
     CPPageFormats m_formats;
     CPPageAccelTbl m_acceltbl;
+    CPPageMouse m_mouse;
     CPPageLogo m_logo;
     CPPageWebServer m_webserver;
     CPPagePlayback m_playback;
@@ -89,13 +105,12 @@ private:
     CPPageOutput m_output;
     CPPageShaders m_shaders;
     CPPageFullscreen m_fullscreen;
-    CPPageSync m_sync;
     CPPageCapture m_tuner;
-#ifndef MPCHC_LITE
+    CPPageDPICalc m_dpiCalc;
+#if USE_LAVFILTERS
     CPPageInternalFilters m_internalfilters;
 #endif
     CPPageAudioSwitcher m_audioswitcher;
-    CPPageAudioRenderer m_audiorenderer;
     CPPageExternalFilters m_externalfilters;
     CPPageSubtitles m_subtitles;
     CPPageSubStyle m_substyle;
@@ -107,16 +122,21 @@ private:
     EventClient m_eventc;
     void EventCallback(MpcEvent ev);
 
-    CTreeCtrl* CreatePageTreeObject();
+    CMPCThemeTreeCtrl* CreatePageTreeObject();
+    virtual void SetTreeCtrlTheme(CTreeCtrl* ctrl);
+    static bool IsParentOnlyNode(CTreeCtrl* pTree, HTREEITEM hItem);
 
 public:
     CPPageSheet(LPCTSTR pszCaption, IFilterGraph* pFG, CWnd* pParentWnd, UINT idPage = 0);
+    CPPageSheet();
     virtual ~CPPageSheet();
-
+    void fulfillThemeReqs();
+    virtual INT_PTR DoModal(); //override to handle RTL without using SetWindowLongPtr
     void LockPage() { m_bLockPage = true; };
 
 protected:
     DpiHelper m_dpi;
+    bool isDummySheet; //is a temporarily created sheet to calculate proper DPI scaling
 
     virtual BOOL OnInitDialog();
 
@@ -124,4 +144,10 @@ protected:
 
     afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
     afx_msg void OnApply();
+    afx_msg void OnPageTreeSelChanged(NMHDR* pNMHDR, LRESULT* pResult);
+    LRESULT OnDpiChanged(WPARAM wParam, LPARAM lParam);
+
+    virtual TreePropSheet::CPropPageFrame* CreatePageFrame();
+public:
+    afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 };

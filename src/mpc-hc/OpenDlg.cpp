@@ -29,9 +29,9 @@
 
 // COpenDlg dialog
 
-//IMPLEMENT_DYNAMIC(COpenDlg, CResizableDialog)
+//IMPLEMENT_DYNAMIC(COpenDlg, CMPCThemeResizableDialog)
 COpenDlg::COpenDlg(CWnd* pParent /*=nullptr*/)
-    : CResizableDialog(COpenDlg::IDD, pParent)
+    : CMPCThemeResizableDialog(COpenDlg::IDD, pParent)
     , m_bAppendToPlaylist(FALSE)
     , m_bMultipleFiles(false)
 {
@@ -51,10 +51,11 @@ void COpenDlg::DoDataExchange(CDataExchange* pDX)
     DDX_CBString(pDX, IDC_COMBO2, m_pathDub);
     DDX_Control(pDX, IDC_STATIC1, m_labelDub);
     DDX_Check(pDX, IDC_CHECK1, m_bAppendToPlaylist);
+    fulfillThemeReqs();
 }
 
 
-BEGIN_MESSAGE_MAP(COpenDlg, CResizableDialog)
+BEGIN_MESSAGE_MAP(COpenDlg, CMPCThemeResizableDialog)
     ON_BN_CLICKED(IDC_BUTTON1, OnBrowseFile)
     ON_BN_CLICKED(IDC_BUTTON2, OnBrowseDubFile)
     ON_BN_CLICKED(IDOK, OnOk)
@@ -71,16 +72,16 @@ BOOL COpenDlg::OnInitDialog()
 {
     __super::OnInitDialog();
 
-    m_icon.SetIcon((HICON)LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
+    LoadStaticIcon(IDR_MAINFRAME, MAKEINTRESOURCE(IDR_MAINFRAME), false);
 
     CAppSettings& s = AfxGetAppSettings();
 
-    CRecentFileList& MRU = s.MRU;
-    MRU.ReadList();
+    auto& MRU = s.MRU;
+    MRU.ReadMediaHistory();
     m_cbMRU.ResetContent();
     for (int i = 0; i < MRU.GetSize(); i++) {
-        if (!MRU[i].IsEmpty()) {
-            m_cbMRU.AddString(MRU[i]);
+        if (MRU[i].fns.GetCount() >0 && !MRU[i].fns.GetHead().IsEmpty()) {
+            m_cbMRU.AddString(MRU[i].fns.GetHead());
         }
     }
     CorrectComboListWidth(m_cbMRU);
@@ -105,20 +106,9 @@ BOOL COpenDlg::OnInitDialog()
     m_bMultipleFiles = false;
     m_bAppendToPlaylist = FALSE;
 
-    AddAnchor(m_cbMRU, TOP_LEFT, TOP_RIGHT);
-    AddAnchor(m_cbMRUDub, TOP_LEFT, TOP_RIGHT);
-    AddAnchor(IDC_BUTTON1, TOP_RIGHT);
-    AddAnchor(IDC_BUTTON2, TOP_RIGHT);
-    AddAnchor(IDOK, TOP_RIGHT);
-    AddAnchor(IDCANCEL, TOP_RIGHT);
-    AddAnchor(IDC_STATIC1, TOP_LEFT, TOP_RIGHT);
+    SetupAnchors();
 
-    CRect r;
-    GetWindowRect(r);
-    CSize size = r.Size();
-    SetMinTrackSize(size);
-    size.cx = 1000;
-    SetMaxTrackSize(size);
+    fulfillThemeReqs();
 
     return TRUE;  // return TRUE unless you set the focus to a control
     // EXCEPTION: OCX Property Pages should return FALSE
@@ -135,7 +125,7 @@ void COpenDlg::OnBrowseFile()
 {
     UpdateData();
 
-    const CAppSettings& s = AfxGetAppSettings();
+    CAppSettings& s = AfxGetAppSettings();
 
     CString filter;
     CAtlArray<CString> mask;
@@ -147,32 +137,30 @@ void COpenDlg::OnBrowseFile()
     }
 
     COpenFileDlg fd(mask, true, nullptr, m_path, dwFlags, filter, this);
+    if (m_path.IsEmpty() && s.fKeepHistory && !s.lastQuickOpenPath.IsEmpty()) {
+        fd.m_ofn.lpstrInitialDir = s.lastQuickOpenPath;
+    }
     if (fd.DoModal() != IDOK) {
         return;
     }
 
     m_fns.RemoveAll();
+    FileDialogUtils::GetSelectedPaths(fd, m_fns);
 
-    POSITION pos = fd.GetStartPosition();
-    while (pos) {
-        /*
-                CString str = fd.GetNextPathName(pos);
-                POSITION insertpos = m_fns.GetTailPosition();
-                while (insertpos && GetFileName(str).CompareNoCase(GetFileName(m_fns.GetAt(insertpos))) <= 0)
-                    m_fns.GetPrev(insertpos);
-                if (!insertpos) m_fns.AddHead(str);
-                else m_fns.InsertAfter(insertpos, str);
-        */
-        m_fns.AddTail(fd.GetNextPathName(pos));
-    }
+    if (!m_fns.IsEmpty()) {
+        if (s.fKeepHistory) {
+            s.lastQuickOpenPath = PathUtils::DirName(m_fns.GetHead());
+        }
 
-    if (m_fns.GetCount() > 1
-            || m_fns.GetCount() == 1
-            && (m_fns.GetHead()[m_fns.GetHead().GetLength() - 1] == '\\'
-                || m_fns.GetHead()[m_fns.GetHead().GetLength() - 1] == '*')) {
-        m_bMultipleFiles = true;
-        EndDialog(IDOK);
-        return;
+        if (m_fns.GetCount() > 1) {
+            m_bMultipleFiles = true;
+            EndDialog(IDOK);
+            return;
+        } else if (m_fns.GetHead()[m_fns.GetHead().GetLength() - 1] == '\\' || m_fns.GetHead()[m_fns.GetHead().GetLength() - 1] == '*') {
+            m_bMultipleFiles = true;
+            EndDialog(IDOK);
+            return;
+        }
     }
 
     m_cbMRU.SetWindowText(fd.GetPathName());
@@ -194,7 +182,9 @@ void COpenDlg::OnBrowseDubFile()
     }
 
     COpenFileDlg fd(mask, false, nullptr, m_pathDub, dwFlags, filter, this);
-
+    if (m_pathDub.IsEmpty() && s.fKeepHistory && !s.lastQuickOpenPath.IsEmpty()) {
+        fd.m_ofn.lpstrInitialDir = s.lastQuickOpenPath;
+    }
     if (fd.DoModal() != IDOK) {
         return;
     }
@@ -208,7 +198,7 @@ void COpenDlg::OnOk()
 
     m_fns.RemoveAll();
     m_fns.AddTail(PathUtils::Unquote(m_path));
-    if (m_cbMRUDub.IsWindowEnabled()) {
+    if (m_cbMRUDub.IsWindowEnabled() && !m_pathDub.IsEmpty()) {
         m_fns.AddTail(PathUtils::Unquote(m_pathDub));
     }
 
@@ -227,4 +217,23 @@ void COpenDlg::OnUpdateOk(CCmdUI* pCmdUI)
 {
     UpdateData();
     pCmdUI->Enable(!m_path.IsEmpty() || !m_pathDub.IsEmpty());
+}
+
+void COpenDlg::SetupAnchors()
+{
+    AddAnchor(m_cbMRU, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(m_cbMRUDub, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_BUTTON1, TOP_RIGHT);
+    AddAnchor(IDC_BUTTON2, TOP_RIGHT);
+    AddAnchor(IDOK, TOP_RIGHT);
+    AddAnchor(IDCANCEL, TOP_RIGHT);
+    AddAnchor(IDC_STATIC1, TOP_LEFT, TOP_RIGHT);
+}
+
+TrackSizeConstraints COpenDlg::GetTrackSizeConstraints() const
+{
+    TrackSizeConstraints constraints;
+    constraints.max.enabled = true;
+    constraints.max.xMultiplier = 2.0;
+    return constraints;
 }

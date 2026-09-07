@@ -93,13 +93,16 @@ HRESULT CDXRAllocatorPresenter::SetDevice(IDirect3DDevice9* pD3DDev)
     }
 
     const CRenderersSettings& r = GetRenderersSettings();
-    InitMaxSubtitleTextureSize(r.subPicQueueSettings.nMaxRes, m_ScreenSize);
+    CSize largestScreen = GetLargestScreenSize(CSize(2560, 1440));
+    InitMaxSubtitleTextureSize(r.subPicQueueSettings.nMaxResX, r.subPicQueueSettings.nMaxResY, largestScreen);
 
     if (m_pAllocator) {
         m_pAllocator->ChangeDevice(pD3DDev);
     } else {
         m_pAllocator = DEBUG_NEW CDX9SubPicAllocator(pD3DDev, m_maxSubtitleTextureSize, true);
-        m_condAllocatorReady.notify_one();
+        if (!m_pAllocator) {
+            return E_FAIL;
+        }
     }
 
     {
@@ -184,6 +187,8 @@ STDMETHODIMP_(void) CDXRAllocatorPresenter::SetPosition(RECT w, RECT v)
     if (CComQIPtr<IVideoWindow> pVW = m_pDXR) {
         pVW->SetWindowPosition(w.left, w.top, w.right - w.left, w.bottom - w.top);
     }
+
+    SetVideoSize(GetVideoSize(false), GetVideoSize(true));
 }
 
 STDMETHODIMP_(SIZE) CDXRAllocatorPresenter::GetVideoSize(bool bCorrectAR) const

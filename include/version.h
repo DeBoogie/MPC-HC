@@ -1,6 +1,6 @@
 #ifndef ISPP_INVOKED
 /*
- * (C) 2010-2013, 2015-2017 see Authors.txt
+ * (C) 2010-2026 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -40,15 +40,15 @@
 #endif
 #endif
 
-#ifndef NO_VERSION_REV_NEEDED
+#ifdef NO_VERSION_REV_NEEDED
+#define MPC_VERSION_REV 0
+#else
 #include "../build/version_rev.h"
 #endif
 
-#define MPC_VERSION_MAJOR       1
-#define MPC_VERSION_MINOR       7
-#define MPC_VERSION_PATCH       13
-
-#ifndef NO_VERSION_REV_NEEDED
+#define MPC_VERSION_MAJOR       2
+#define MPC_VERSION_MINOR       8
+#define MPC_VERSION_PATCH       1
 
 #if MPC_VERSION_REV > 0
 #define MPC_NIGHTLY_RELEASE     1
@@ -56,10 +56,8 @@
 #define MPC_NIGHTLY_RELEASE     0
 #endif
 
-#endif // NO_VERSION_REV_NEEDED
-
 #define MPC_COMP_NAME_STR       _T("MPC-HC Team")
-#define MPC_COPYRIGHT_STR       _T("Copyright © 2002-2017 all contributors, see Authors.txt")
+#define MPC_COPYRIGHT_STR       _T("Copyright 2002-2026 clsid2 and others")
 #define MPC_VERSION_COMMENTS    WEBSITE_URL
 
 

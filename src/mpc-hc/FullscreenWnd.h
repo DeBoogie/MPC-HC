@@ -21,19 +21,23 @@
 
 #pragma once
 
-#include "MouseTouch.h"
+#include "MouseWndWithArtView.h"
 
 class CMainFrame;
 
-class CFullscreenWnd final : public CMouseWnd
+class CFullscreenWnd final : public CMouseWndWithArtView
 {
     DECLARE_DYNAMIC(CFullscreenWnd)
 
     explicit CFullscreenWnd(CMainFrame* pMainFrame);
     bool IsWindow() const;
+    void SetCursor(LPCWSTR lpCursorName);
 
 private:
     CMainFrame* m_pMainFrame;
+    HCURSOR		m_hCursor;
+    bool		m_bCursorVisible = false;
+    bool		m_bTrackingMouseLeave = false;
 
 protected:
     BOOL PreCreateWindow(CREATESTRUCT& cs) override;

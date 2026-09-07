@@ -19,8 +19,10 @@
  */
 
 #pragma once
+#include "CMPCThemeUtil.h"
 
 class CSaveImageDialog : public CFileDialog
+    , public CMPCThemeUtil
 {
     DECLARE_DYNAMIC(CSaveImageDialog)
 
@@ -28,14 +30,16 @@ public:
     CSaveImageDialog(
         int nJpegQuality,
         LPCTSTR lpszDefExt = nullptr, LPCTSTR lpszFileName = nullptr,
-        LPCTSTR lpszFilter = nullptr, CWnd* pParentWnd = nullptr);
+        LPCTSTR lpszFilter = nullptr, CWnd* pParentWnd = nullptr, bool subtitleOptionSupported = false);
     virtual ~CSaveImageDialog();
+    virtual INT_PTR DoModal();
 
     int m_nJpegQuality;
 
 protected:
     CSpinButtonCtrl m_jpegQualitySpin;
     CEdit m_jpegQualityEdit;
+    bool bSubtitleOptionSupported;
 
     DECLARE_MESSAGE_MAP()
     virtual BOOL OnInitDialog();

@@ -33,7 +33,7 @@
 #endif
 #include "moreuuids.h"
 
-#define NORMALIZATION_REGAIN_STEP      0.06 // +6%/s
+#define NORMALIZATION_REGAIN_STEP      0.05
 #define NORMALIZATION_REGAIN_THRESHOLD 0.75
 
 #ifdef STANDALONE_FILTER
@@ -84,7 +84,6 @@ CFilterApp theApp;
 CAudioSwitcherFilter::CAudioSwitcherFilter(LPUNKNOWN lpunk, HRESULT* phr)
     : CStreamSwitcherFilter(lpunk, phr, __uuidof(this))
     , m_fCustomChannelMapping(false)
-    , m_fDownSampleTo441(false)
     , m_rtAudioTimeShift(0)
     , m_fNormalize(false)
     , m_fNormalizeRecover(false)
@@ -93,6 +92,7 @@ CAudioSwitcherFilter::CAudioSwitcherFilter(LPUNKNOWN lpunk, HRESULT* phr)
     , m_normalizeFactor(m_nMaxNormFactor)
     , m_rtNextStart(0)
     , m_rtNextStop(1)
+    , m_rtSegmentStart(0)
 {
     ZeroMemory(m_pSpeakerToChannelMap, sizeof(m_pSpeakerToChannelMap));
 
@@ -114,24 +114,24 @@ STDMETHODIMP CAudioSwitcherFilter::NonDelegatingQueryInterface(REFIID riid, void
 
 HRESULT CAudioSwitcherFilter::CheckMediaType(const CMediaType* pmt)
 {
-    if (pmt->formattype == FORMAT_WaveFormatEx
-            && ((WAVEFORMATEX*)pmt->pbFormat)->nChannels > 2
-            && ((WAVEFORMATEX*)pmt->pbFormat)->wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
-        return VFW_E_INVALIDMEDIATYPE;    // stupid iviaudio tries to fool us
+    if (pmt->majortype == MEDIATYPE_Audio && pmt->formattype == FORMAT_WaveFormatEx && pmt->pbFormat) {
+        WAVEFORMATEX* wfe = (WAVEFORMATEX*)pmt->pbFormat;
+        WORD wBitsPerSample = wfe->wBitsPerSample;
+        WORD wFormatTag = wfe->wFormatTag;
+        if (wfe->nChannels > 2 && wFormatTag != WAVE_FORMAT_EXTENSIBLE) {
+            return VFW_E_INVALIDMEDIATYPE; // iviaudio tries to fool us
+        }
+        if (wfe->nSamplesPerSec == 0) {
+            ASSERT(false);
+            return VFW_E_INVALIDMEDIATYPE;
+        }
+        if (wBitsPerSample == 8 || wBitsPerSample == 16 || wBitsPerSample == 24 || wBitsPerSample == 32) {
+            if (wFormatTag == WAVE_FORMAT_PCM || wFormatTag == WAVE_FORMAT_IEEE_FLOAT || wFormatTag == WAVE_FORMAT_DOLBY_AC3_SPDIF || wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
+                return S_OK;
+            }
+        }
     }
-
-    return (pmt->majortype == MEDIATYPE_Audio
-            && pmt->formattype == FORMAT_WaveFormatEx
-            && (((WAVEFORMATEX*)pmt->pbFormat)->wBitsPerSample == 8
-                || ((WAVEFORMATEX*)pmt->pbFormat)->wBitsPerSample == 16
-                || ((WAVEFORMATEX*)pmt->pbFormat)->wBitsPerSample == 24
-                || ((WAVEFORMATEX*)pmt->pbFormat)->wBitsPerSample == 32)
-            && (((WAVEFORMATEX*)pmt->pbFormat)->wFormatTag == WAVE_FORMAT_PCM
-                || ((WAVEFORMATEX*)pmt->pbFormat)->wFormatTag == WAVE_FORMAT_IEEE_FLOAT
-                || ((WAVEFORMATEX*)pmt->pbFormat)->wFormatTag == WAVE_FORMAT_DOLBY_AC3_SPDIF
-                || ((WAVEFORMATEX*)pmt->pbFormat)->wFormatTag == WAVE_FORMAT_EXTENSIBLE))
-           ? S_OK
-           : VFW_E_TYPE_NOT_ACCEPTED;
+    return VFW_E_TYPE_NOT_ACCEPTED;
 }
 
 template<class T, class U, int Umin, int Umax>
@@ -232,7 +232,9 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
     int bps = wfe->wBitsPerSample >> 3;
 
     int len = pIn->GetActualDataLength() / (bps * wfe->nChannels);
-    int lenout = (UINT64)len * wfeout->nSamplesPerSec / wfe->nSamplesPerSec;
+    if (len < 0 || wfe->nSamplesPerSec == 0 || !wfeout) {
+        return S_FALSE;
+    }
 
     REFERENCE_TIME rtStart, rtStop;
     if (SUCCEEDED(pIn->GetTime(&rtStart, &rtStop))) {
@@ -251,8 +253,8 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
     m_rtNextStart += rtDur;
     m_rtNextStop += rtDur;
 
-    if (pIn->IsDiscontinuity() == S_OK) {
-        m_normalizeFactor = m_nMaxNormFactor;
+    if (m_normalizeFactor < 1.0 && pIn->IsDiscontinuity() == S_OK) {
+        m_normalizeFactor = std::max(1.0, m_nMaxNormFactor * 0.5);
     }
 
     WORD tag = wfe->wFormatTag;
@@ -261,6 +263,13 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
     if (!fPCM && !fFloat) {
         return __super::Transform(pIn, pOut);
     }
+
+    // len = 0 doesn't mean it's failed, return S_OK otherwise might screw the sound
+    if (len == 0) {
+        pOut->SetActualDataLength(0);
+        return S_OK;
+    }
+    int lenout = (UINT64)len * wfeout->nSamplesPerSec / wfe->nSamplesPerSec;
 
     BYTE* pDataIn = nullptr;
     BYTE* pDataOut = nullptr;
@@ -273,25 +282,8 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
         return hr;
     }
 
-    if (!pDataIn || !pDataOut || len < 0 || lenout < 0) {
+    if (!pDataIn || !pDataOut) {
         return S_FALSE;
-    }
-    // len = 0 doesn't mean it's failed, return S_OK otherwise might screw the sound
-    if (len == 0) {
-        pOut->SetActualDataLength(0);
-        return S_OK;
-    }
-
-    bool bDownSampleTo441 = (m_fDownSampleTo441
-                             && wfe->nSamplesPerSec > 44100 && wfeout->nSamplesPerSec == 44100
-                             && wfe->wBitsPerSample <= 16 && fPCM);
-
-    BYTE* pTmp = nullptr;
-    BYTE* pDst = nullptr;
-    if (bDownSampleTo441 && m_fCustomChannelMapping && wfe->nChannels <= AS_MAX_CHANNELS) {
-        pDst = pTmp = DEBUG_NEW BYTE[size_t(len) * size_t(bps) * wfeout->nChannels];
-    } else {
-        pDst = pDataOut;
     }
 
     if (m_fCustomChannelMapping && wfe->nChannels <= AS_MAX_CHANNELS) {
@@ -307,7 +299,7 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
                 DWORD mask = m_chs[wfe->nChannels - 1][i].Channel;
 
                 BYTE* src = pDataIn;
-                BYTE* dst = &pDst[bps * i];
+                BYTE* dst = &pDataOut[bps * i];
 
                 if (fPCM) {
                     if (wfe->wBitsPerSample == 8) {
@@ -355,31 +347,10 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
         }
     }
 
-    if (bDownSampleTo441) {
-        if (BYTE* buff = DEBUG_NEW BYTE[len * bps]) {
-            for (int ch = 0; ch < wfeout->nChannels; ch++) {
-                ZeroMemory(buff, len * bps);
-
-                for (int i = 0; i < len; i++) {
-                    memcpy(buff + i * bps, (char*)pDst + (ch + i * wfeout->nChannels)*bps, bps);
-                }
-
-                m_pResamplers[ch]->Downsample(buff, len, buff, lenout);
-
-                for (int i = 0; i < lenout; i++) {
-                    memcpy((char*)pDataOut + (ch + i * wfeout->nChannels)*bps, buff + i * bps, bps);
-                }
-            }
-
-            delete [] buff;
-        }
-
-        delete [] pTmp;
-    }
-
     if (m_fNormalize || m_boostFactor > 1) {
         size_t samples = size_t(lenout) * wfeout->nChannels;
         double sample_mul = 1.0;
+        ASSERT((wfe->wBitsPerSample == 24 ? samples * 4 : samples * wfe->wBitsPerSample / 8) <= pOut->GetSize());
 
         if (m_fNormalize) {
             double sample_max = 0.0;
@@ -389,7 +360,7 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
                 int32_t maxpeak = 0;
                 if (wfe->wBitsPerSample == 8) {
                     for (size_t i = 0; i < samples; i++) {
-                        int32_t peak = abs((int8_t)(pDataOut[i] ^ 0x80));
+                        int32_t peak = (int8_t)(pDataOut[i] ^ 0x80);
                         if (peak > maxpeak) {
                             maxpeak = peak;
                         }
@@ -397,7 +368,7 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
                     sample_max = (double)maxpeak / INT8_MAX;
                 } else if (wfe->wBitsPerSample == 16) {
                     for (size_t i = 0; i < samples; i++) {
-                        int32_t peak = abs(((int16_t*)pDataOut)[i]);
+                        int32_t peak = ((int16_t*)pDataOut)[i];
                         if (peak > maxpeak) {
                             maxpeak = peak;
                         }
@@ -410,7 +381,7 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
                         p[1] = pDataOut[i * 3];
                         p[2] = pDataOut[i * 3 + 1];
                         p[3] = pDataOut[i * 3 + 2];
-                        peak = abs(peak);
+                        peak = peak;
                         if (peak > maxpeak) {
                             maxpeak = peak;
                         }
@@ -418,7 +389,7 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
                     sample_max = (double)maxpeak / INT32_MAX;
                 } else if (wfe->wBitsPerSample == 32) {
                     for (size_t i = 0; i < samples; i++) {
-                        int32_t peak = abs(((int32_t*)pDataOut)[i]);
+                        int32_t peak = ((int32_t*)pDataOut)[i];
                         if (peak > maxpeak) {
                             maxpeak = peak;
                         }
@@ -428,14 +399,14 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
             } else if (fFloat) {
                 if (wfe->wBitsPerSample == 32) {
                     for (size_t i = 0; i < samples; i++) {
-                        double sample = (double)abs(((float*)pDataOut)[i]);
+                        double sample = ((float*)pDataOut)[i];
                         if (sample > sample_max) {
                             sample_max = sample;
                         }
                     }
                 } else if (wfe->wBitsPerSample == 64) {
                     for (size_t i = 0; i < samples; i++) {
-                        double sample = (double)abs(((double*)pDataOut)[i]);
+                        double sample = ((double*)pDataOut)[i];
                         if (sample > sample_max) {
                             sample_max = sample;
                         }
@@ -443,19 +414,35 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
                 }
             }
 
-            double normFact = 1.0 / sample_max;
-            if (m_normalizeFactor > normFact) {
-                m_normalizeFactor = normFact;
-            } else if (m_fNormalizeRecover
-                       && sample_max * m_normalizeFactor < NORMALIZATION_REGAIN_THRESHOLD) { // we don't regain if we are too close of the maximum
-                m_normalizeFactor += NORMALIZATION_REGAIN_STEP * rtDur / 10000000; // the step is per second so we weight it with the duration
+            if (sample_max < 0.98) {
+                double normFact = sample_max < 0.1 ? 10.0 : 0.98 / sample_max;
+                if (m_normalizeFactor > normFact) {
+                    m_normalizeFactor = normFact;
+                } else {
+                    if (m_fNormalizeRecover) {
+                        // we don't regain if we are too close of the maximum
+                        if (sample_max * m_normalizeFactor < NORMALIZATION_REGAIN_THRESHOLD) {
+                            m_normalizeFactor += NORMALIZATION_REGAIN_STEP * rtDur / 10000000; // the step is per second so we weight it with the duration
+                        }
+                    }
+                }
+                if (m_normalizeFactor > m_nMaxNormFactor) {
+                    m_normalizeFactor = m_nMaxNormFactor;
+                }
+                sample_mul = m_normalizeFactor;
+                //TRACE(L"apply normalize, sample_max = %f, normalizeFactor = %f\n", sample_max, m_normalizeFactor);
+            } else {
+                if (m_normalizeFactor > 1.5) {
+                    m_normalizeFactor = std::min(1.5, m_nMaxNormFactor);
+                } else if (m_normalizeFactor > 1.0) {
+                    double step = NORMALIZATION_REGAIN_STEP * rtDur / 10000000;
+                    m_normalizeFactor -= step;
+                    if (m_normalizeFactor < 1.0) {
+                        m_normalizeFactor = 1.0;
+                    }
+                }
+                //TRACE(L"Skipping normalize, sample_max = %f, normalizeFactor = %f\n", sample_max, m_normalizeFactor);
             }
-
-            if (m_normalizeFactor > m_nMaxNormFactor) {
-                m_normalizeFactor = m_nMaxNormFactor;
-            }
-
-            sample_mul = m_normalizeFactor;
         }
 
         if (m_boostFactor > 1.0) {
@@ -533,14 +520,6 @@ CMediaType CAudioSwitcherFilter::CreateNewOutputMediaType(CMediaType mt, long& c
     }
 
     WAVEFORMATEX* wfeout = (WAVEFORMATEX*)mt.pbFormat;
-
-    if (m_fDownSampleTo441) {
-        if (wfeout->nSamplesPerSec > 44100 && wfeout->wBitsPerSample <= 16) {
-            wfeout->nSamplesPerSec = 44100;
-            wfeout->nAvgBytesPerSec = wfeout->nBlockAlign * wfeout->nSamplesPerSec;
-        }
-    }
-
     int bps = wfe->wBitsPerSample >> 3;
     int len = cbBuffer / (bps * wfe->nChannels);
     int lenout = (UINT64)len * wfeout->nSamplesPerSec / wfe->nSamplesPerSec;
@@ -557,13 +536,6 @@ void CAudioSwitcherFilter::OnNewOutputMediaType(const CMediaType& mtIn, const CM
     const WAVEFORMATEX* wfe = (WAVEFORMATEX*)mtIn.pbFormat;
     const WAVEFORMATEX* wfeout = (WAVEFORMATEX*)mtOut.pbFormat;
 
-    m_pResamplers.RemoveAll();
-    for (int i = 0; i < wfeout->nChannels; i++) {
-        CAutoPtr<AudioStreamResampler> pResampler;
-        pResampler.Attach(DEBUG_NEW AudioStreamResampler(wfeout->wBitsPerSample >> 3, wfe->nSamplesPerSec, wfeout->nSamplesPerSec, true));
-        m_pResamplers.Add(pResampler);
-    }
-
     TRACE(_T("CAudioSwitcherFilter::OnNewOutputMediaType\n"));
     m_normalizeFactor = m_nMaxNormFactor;
 }
@@ -571,14 +543,22 @@ void CAudioSwitcherFilter::OnNewOutputMediaType(const CMediaType& mtIn, const CM
 HRESULT CAudioSwitcherFilter::DeliverEndFlush()
 {
     TRACE(_T("CAudioSwitcherFilter::DeliverEndFlush\n"));
-    m_normalizeFactor = m_nMaxNormFactor;
+
     return __super::DeliverEndFlush();
 }
 
 HRESULT CAudioSwitcherFilter::DeliverNewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
 {
     TRACE(_T("CAudioSwitcherFilter::DeliverNewSegment\n"));
-    m_normalizeFactor = m_nMaxNormFactor;
+
+    if (m_fNormalizeRecover && m_normalizeFactor < m_nMaxNormFactor) {
+        // regain after large jump
+        if (tStart == 0LL || std::abs(tStart - m_rtSegmentStart - m_rtNextStart) >= 600000000LL) {
+            m_normalizeFactor = std::max(m_normalizeFactor, std::max(1.0, m_nMaxNormFactor * 0.5));
+        }
+    }
+    m_rtSegmentStart = tStart;
+
     return __super::DeliverNewSegment(tStart, tStop, dRate);
 }
 
@@ -642,23 +622,13 @@ STDMETHODIMP CAudioSwitcherFilter::SetSpeakerConfig(bool fCustomChannelMapping, 
 STDMETHODIMP_(int) CAudioSwitcherFilter::GetNumberOfInputChannels()
 {
     CStreamSwitcherInputPin* pInPin = GetInputPin();
-    return pInPin ? ((WAVEFORMATEX*)pInPin->CurrentMediaType().pbFormat)->nChannels : 0;
-}
-
-STDMETHODIMP_(bool) CAudioSwitcherFilter::IsDownSamplingTo441Enabled()
-{
-    return m_fDownSampleTo441;
-}
-
-STDMETHODIMP CAudioSwitcherFilter::EnableDownSamplingTo441(bool fEnable)
-{
-    if (m_fDownSampleTo441 != fEnable) {
-        PauseGraph;
-        m_fDownSampleTo441 = fEnable;
-        ResumeGraph;
+    if (pInPin) {
+        WAVEFORMATEX* wfex = (WAVEFORMATEX*)pInPin->CurrentMediaType().pbFormat;
+        if (wfex) {
+            return wfex->nChannels;
+        }
     }
-
-    return S_OK;
+    return 0;
 }
 
 STDMETHODIMP_(REFERENCE_TIME) CAudioSwitcherFilter::GetAudioTimeShift()

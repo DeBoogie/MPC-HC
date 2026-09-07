@@ -24,21 +24,22 @@
 #include <afxwin.h>
 #include <afxcmn.h>
 #include "DSMPropertyBag.h"
-#include "PPageBase.h"
+#include "CMPCThemeResizablePropertyPage.h"
+#include "CMPCThemePlayerListCtrl.h"
 
 
 // CPPageFileInfoRes dialog
 
-class CPPageFileInfoRes : public CPPageBase
+class CPPageFileInfoRes : public CMPCThemeResizablePropertyPage
 {
     DECLARE_DYNAMIC(CPPageFileInfoRes)
 
 private:
     HICON m_hIcon;
     CStatic m_icon;
-    CListCtrl m_list;
+    CMPCThemePlayerListCtrl m_list;
 
-    CString m_fn;
+    CString m_fn, m_displayFn;
     std::vector<CDSMResource> m_res;
 
 public:

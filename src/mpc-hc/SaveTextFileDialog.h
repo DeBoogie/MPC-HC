@@ -22,11 +22,12 @@
 #pragma once
 
 #include "../Subtitles/TextFile.h"
-
+#include "CMPCThemeUtil.h"
 
 // CSaveTextFileDialog
 
 class CSaveTextFileDialog : public CFileDialog
+    , public CMPCThemeUtil
 {
 protected:
     CTextFile::enc m_e;
@@ -40,6 +41,7 @@ public:
         LPCTSTR lpszDefExt = nullptr, LPCTSTR lpszFileName = nullptr,
         LPCTSTR lpszFilter = nullptr, CWnd* pParentWnd = nullptr);
     virtual ~CSaveTextFileDialog();
+    virtual INT_PTR DoModal();
 
     CTextFile::enc GetEncoding() { return m_e; }
 

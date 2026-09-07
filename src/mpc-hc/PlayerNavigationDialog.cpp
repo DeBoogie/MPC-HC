@@ -20,15 +20,16 @@
 
 #include "stdafx.h"
 #include "PlayerNavigationDialog.h"
+#include "PlayerBar.h"
 #include "DSUtil.h"
 #include "mplayerc.h"
 #include "MainFrm.h"
 
 // CPlayerNavigationDialog dialog
 
-// IMPLEMENT_DYNAMIC(CPlayerNavigationDialog, CResizableDialog)
+// IMPLEMENT_DYNAMIC(CPlayerNavigationDialog, CMPCThemeResizableDialog)
 CPlayerNavigationDialog::CPlayerNavigationDialog(CMainFrame* pMainFrame)
-    : CResizableDialog(CPlayerNavigationDialog::IDD, nullptr)
+    : CMPCThemeResizableDialog(CPlayerNavigationDialog::IDD, nullptr)
     , m_pMainFrame(pMainFrame)
     , m_bChannelInfoAvailable(false)
     , m_bTVStations(true)
@@ -55,6 +56,7 @@ void CPlayerNavigationDialog::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_LISTCHANNELS, m_channelList);
     DDX_Control(pDX, IDC_NAVIGATION_INFO, m_buttonInfo);
     DDX_Control(pDX, IDC_NAVIGATION_FILTERSTATIONS, m_buttonFilterStations);
+    fulfillThemeReqs();
 }
 
 BOOL CPlayerNavigationDialog::PreTranslateMessage(MSG* pMsg)
@@ -70,7 +72,7 @@ BOOL CPlayerNavigationDialog::PreTranslateMessage(MSG* pMsg)
     return __super::PreTranslateMessage(pMsg);
 }
 
-BEGIN_MESSAGE_MAP(CPlayerNavigationDialog, CResizableDialog)
+BEGIN_MESSAGE_MAP(CPlayerNavigationDialog, CMPCThemeResizableDialog)
     ON_WM_DESTROY()
     ON_WM_CONTEXTMENU()
     ON_LBN_SELCHANGE(IDC_LISTCHANNELS, OnChangeChannel)
@@ -78,6 +80,7 @@ BEGIN_MESSAGE_MAP(CPlayerNavigationDialog, CResizableDialog)
     ON_UPDATE_COMMAND_UI(IDC_NAVIGATION_INFO, OnUpdateShowChannelInfoButton)
     ON_BN_CLICKED(IDC_NAVIGATION_SCAN, OnTunerScan)
     ON_BN_CLICKED(IDC_NAVIGATION_FILTERSTATIONS, OnTvRadioStations)
+    ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 
@@ -203,7 +206,7 @@ void CPlayerNavigationDialog::OnContextMenu(CWnd* pWnd, CPoint point)
         nItem = (int)m_channelList.ItemFromPoint(clientPoint, bOutside);
     }
 
-    CMenu m;
+    CMPCThemeMenu m;
     m.CreatePopupMenu();
 
     enum {
@@ -215,9 +218,9 @@ void CPlayerNavigationDialog::OnContextMenu(CWnd* pWnd, CPoint point)
         M_REMOVE_ALL
     };
 
-    auto findChannelByItemNumber = [this](std::vector<CDVBChannel>& c, int nItem) {
+    auto findChannelByItemNumber = [this](std::vector<CBDAChannel>& c, int nItem) {
         int nPrefNumber = (int)m_channelList.GetItemData(nItem);
-        return find_if(c.begin(), c.end(), [&](CDVBChannel const & channel) {
+        return find_if(c.begin(), c.end(), [&](CBDAChannel const & channel) {
             return channel.GetPrefNumber() == nPrefNumber;
         });
     };
@@ -254,7 +257,19 @@ void CPlayerNavigationDialog::OnContextMenu(CWnd* pWnd, CPoint point)
     }
     m.AppendMenu(MF_STRING | (channelCount > 0 ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)), M_REMOVE_ALL, ResStr(IDS_NAVIGATION_REMOVE_ALL));
 
+    if (AppNeedsThemedControls()) {
+        m.fulfillThemeReqs();
+    }
+    //this dialog is the menu owner, which bypasses CPlayerBar::OnEnterMenuLoop,
+    //so we set the flag on the owning bar directly to keep it from autohiding
+    CPlayerBar* pBar = DYNAMIC_DOWNCAST(CPlayerBar, GetParent());
+    if (pBar) {
+        pBar->SetHasActivePopup(true);
+    }
     int nID = (int)m.TrackPopupMenu(TPM_LEFTBUTTON | TPM_RETURNCMD, point.x, point.y, this);
+    if (pBar) {
+        pBar->SetHasActivePopup(false);
+    }
 
     try {
         switch (nID) {
@@ -290,7 +305,7 @@ void CPlayerNavigationDialog::OnContextMenu(CWnd* pWnd, CPoint point)
                 const int nRemovedPrefNumber = it->GetPrefNumber();
                 s.m_DVBChannels.erase(it);
                 // Update channels pref number
-                for (CDVBChannel& channel : s.m_DVBChannels) {
+                for (CBDAChannel& channel : s.m_DVBChannels) {
                     const int nPrefNumber = channel.GetPrefNumber();
                     ASSERT(nPrefNumber != nRemovedPrefNumber);
                     if (nPrefNumber > nRemovedPrefNumber) {
@@ -337,3 +352,10 @@ void CPlayerNavigationDialog::OnContextMenu(CWnd* pWnd, CPoint point)
     }
 }
 
+void CPlayerNavigationDialog::OnSize(UINT nType, int cx, int cy) {
+    CMPCThemeResizableDialog::OnSize(nType, cx, cy);
+    if (m_channelList.m_hWnd) {
+        int nItem = m_channelList.GetCurSel();
+        m_channelList.EnsureVisible(nItem);
+    }
+}

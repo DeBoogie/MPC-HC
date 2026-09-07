@@ -2,14 +2,16 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# abuyop <abuyop@gmail.com>, 2014-2016
+# MPC HC <adiposegithub@gmail.com>, 2020
+# abuyop <abuyop@gmail.com>, 2020
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2016-01-17 21:31:34+0000\n"
-"PO-Revision-Date: 2017-08-13 20:50+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Malay (Malaysia) (http://www.transifex.com/mpc-hc/mpc-hc/language/ms_MY/)\n"
+"POT-Creation-Date: 2021-02-15 14:52:58+0000\n"
+"PO-Revision-Date: 2020-01-02 07:46+0000\n"
+"Last-Translator: abuyop <abuyop@gmail.com>, 2020\n"
+"Language-Team: Malay (Malaysia) (https://www.transifex.com/mpchc/teams/106126/ms_MY/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -25,7 +27,7 @@ msgid "&Quick Open File..."
 msgstr "&Buka Fail Pantas..."
 
 msgctxt "ID_FILE_OPENMEDIA"
-msgid "&Open File..."
+msgid "&Open File/URL..."
 msgstr "B&uka Fail..."
 
 msgctxt "ID_FILE_OPENDVDBD"
@@ -80,13 +82,13 @@ msgctxt "ID_FILE_SUBTITLES_DOWNLOAD"
 msgid "&Download Subtitles..."
 msgstr "Muat &Turun Sarikata..."
 
-msgctxt "ID_FILE_SUBTITLES_UPLOAD"
-msgid "&Upload Subtitles..."
-msgstr "Muat &Naik Sarikata..."
-
 msgctxt "ID_FILE_PROPERTIES"
 msgid "P&roperties"
 msgstr "Si&fat"
+
+msgctxt "ID_FILE_OPEN_LOCATION"
+msgid "Open File &Location"
+msgstr ""
 
 msgctxt "ID_FILE_EXIT"
 msgid "E&xit"
@@ -136,10 +138,6 @@ msgctxt "ID_VIEW_NAVIGATION"
 msgid "Na&vigation"
 msgstr "Na&vigasi"
 
-msgctxt "ID_VIEW_DEBUGSHADERS"
-msgid "&Debug Shaders"
-msgstr "N&yahpepijat Pelorek"
-
 msgctxt "POPUP"
 msgid "&Presets..."
 msgstr "&Praset..."
@@ -156,6 +154,10 @@ msgctxt "ID_VIEW_PRESETS_NORMAL"
 msgid "&Normal"
 msgstr "&Biasa"
 
+msgctxt "ID_VIEW_PRESETS_CUSTOM"
+msgid "C&ustom"
+msgstr ""
+
 msgctxt "ID_VIEW_FULLSCREEN"
 msgid "F&ull Screen"
 msgstr "S&krin Penuh"
@@ -163,6 +165,10 @@ msgstr "S&krin Penuh"
 msgctxt "POPUP"
 msgid "&Zoom"
 msgstr "&Zum"
+
+msgctxt "ID_VIEW_ZOOM_25"
+msgid "&25%"
+msgstr ""
 
 msgctxt "ID_VIEW_ZOOM_50"
 msgid "&50%"
@@ -179,10 +185,6 @@ msgstr "&200%"
 msgctxt "ID_VIEW_ZOOM_AUTOFIT"
 msgid "Auto &Fit"
 msgstr "Suai Mu&at Auto"
-
-msgctxt "ID_VIEW_ZOOM_AUTOFIT_LARGER"
-msgid "Auto Fit (&Larger Only)"
-msgstr "Suai Muat Automatik (&Lebih Besar Sahaja)"
 
 msgctxt "POPUP"
 msgid "R&enderer Settings"
@@ -356,17 +358,9 @@ msgctxt "ID_VIEW_FLUSHGPU_WAIT"
 msgid "&Wait for flushes"
 msgstr "&Tunggu untuk dikosongkan"
 
-msgctxt "POPUP"
-msgid "R&eset"
-msgstr "T&etap Semula"
-
 msgctxt "ID_VIEW_RESET_DEFAULT"
 msgid "Reset to &default renderer settings"
 msgstr "Tetap semula ke tetapan penerap &lalai"
-
-msgctxt "ID_VIEW_RESET_OPTIMAL"
-msgid "Reset to &optimal renderer settings"
-msgstr "Tetap semula ke tetapan penerap &optimum"
 
 msgctxt "POPUP"
 msgid "Video &Frame"
@@ -441,8 +435,8 @@ msgid "&Correct Monitor/Desktop AR Diff"
 msgstr "Be&tul Perbezaan AR Desktop/Monitor"
 
 msgctxt "POPUP"
-msgid "Pa&n && Scan"
-msgstr "La&ta&&Imbas"
+msgid "P&nS Frame Adjust"
+msgstr ""
 
 msgctxt "ID_VIEW_INCSIZE"
 msgid "&Increase Size"
@@ -487,6 +481,22 @@ msgstr "Alih &Bawah"
 msgctxt "ID_PANSCAN_CENTER"
 msgid "Cen&ter"
 msgstr "Ten&gah"
+
+msgctxt "ID_PANSCAN_ROTATEZM"
+msgid "Rotate Cloc&kwise"
+msgstr ""
+
+msgctxt "ID_PANSCAN_ROTATEZ270"
+msgid "Rotate Counter-Clock&wise"
+msgstr ""
+
+msgctxt "ID_PANSCAN_ROTATEXM"
+msgid "&Flip Vertically"
+msgstr ""
+
+msgctxt "ID_PANSCAN_ROTATEYM"
+msgid "&Mirror"
+msgstr ""
 
 msgctxt "ID_VIEW_RESET"
 msgid "Re&set"
@@ -548,6 +558,94 @@ msgctxt "ID_PLAY_REPEAT_WHOLEPLAYLIST"
 msgid "&Playlist"
 msgstr "&Senarai Main"
 
+msgctxt "ID_PLAY_REPEAT_AB"
+msgid "A-B (&Reset)"
+msgstr ""
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_A"
+msgid "A-B (Mark &A)"
+msgstr ""
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_B"
+msgid "A-B (Mark &B)"
+msgstr ""
+
+msgctxt "POPUP"
+msgid "&Playback Rate"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_025"
+msgid "0.25 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_050"
+msgid "0.50 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_075"
+msgid "0.75 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_090"
+msgid "0.90 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_100"
+msgid "1.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_110"
+msgid "1.10 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_125"
+msgid "1.25 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_150"
+msgid "1.50 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_175"
+msgid "1.75 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_200"
+msgid "2.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_300"
+msgid "3.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_400"
+msgid "4.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_600"
+msgid "6.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_800"
+msgid "8.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS23"
+msgid "23.976 fps"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS24"
+msgid "24 fps"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS25"
+msgid "25 fps"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS59"
+msgid "59.94 fps"
+msgstr ""
+
 msgctxt "ID_PLAY_DECRATE"
 msgid "&Decrease Rate"
 msgstr "K&urangkan Kadar"
@@ -564,6 +662,10 @@ msgctxt "ID_FILTERS"
 msgid "&Filters"
 msgstr "Pe&napis"
 
+msgctxt "ID_COLOR_CONTROLS"
+msgid "&Color controls..."
+msgstr ""
+
 msgctxt "ID_SHADERS"
 msgid "S&haders"
 msgstr "Pe&lorek"
@@ -575,6 +677,10 @@ msgstr "Trek &Audio"
 msgctxt "ID_SUBTITLES"
 msgid "Su&btitle Track"
 msgstr "Trek Sa&rikata"
+
+msgctxt "ID_SUBTITLES_SECONDARY"
+msgid "Secondary Subtitle Track"
+msgstr ""
 
 msgctxt "ID_VIDEO_STREAMS"
 msgid "Vide&o Track"
@@ -707,4 +813,3 @@ msgstr "&Derma"
 msgctxt "ID_HELP_ABOUT"
 msgid "&About..."
 msgstr "Perih&al..."
-

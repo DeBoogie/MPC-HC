@@ -2,15 +2,17 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# Level ASMer <zx132435@naver.com>, 2014
-# limeburst <me@limeburst.net>, 2014
+# MPC HC <adiposegithub@gmail.com>, 2020
+# Hack茶ん, 2026
+# Transifex sync (Studio), 2026
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2017-08-01 20:44:32+0000\n"
-"PO-Revision-Date: 2017-08-01 20:56+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Korean (http://www.transifex.com/mpc-hc/mpc-hc/language/ko/)\n"
+"POT-Creation-Date: 2026-06-14 23:03:06+0000\n"
+"PO-Revision-Date: 2026-08-31 14:37+0000\n"
+"Last-Translator: Transifex sync (Studio)\n"
+"Language-Team: Korean (https://app.transifex.com/mpchc/teams/106126/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -23,7 +25,7 @@ msgstr "위치"
 
 msgctxt "IDS_INFOBAR_VIDEO"
 msgid "Video"
-msgstr "비디오"
+msgstr "영상"
 
 msgctxt "IDS_INFOBAR_AUDIO"
 msgid "Audio"
@@ -39,11 +41,11 @@ msgstr "챕터"
 
 msgctxt "IDS_CONTROLS_COMPLETING"
 msgid "Completing..."
-msgstr "완료중..."
+msgstr "완료 중..."
 
 msgctxt "IDS_AUTOPLAY_PLAYVIDEO"
 msgid "Play Video"
-msgstr "비디오 재생"
+msgstr "영상 재생"
 
 msgctxt "IDS_AUTOPLAY_PLAYMUSIC"
 msgid "Play Music"
@@ -59,19 +61,23 @@ msgstr "DVD 영화 재생"
 
 msgctxt "IDS_PROPSHEET_PROPERTIES"
 msgid "Properties"
-msgstr "등록 정보"
+msgstr "속성"
 
 msgctxt "IDS_PLAY_LOOPMODE_FILE"
 msgid "File"
-msgstr ""
+msgstr "파일"
 
-msgctxt "IDS_SUBTITLES_DEFAULT_STYLE"
-msgid "&Default Style"
-msgstr "기본 스타일(&D)"
+msgctxt "IDS_SUB_OVERRIDE_DEFAULT_STYLE"
+msgid "Override Default Style"
+msgstr "기본 스타일 덮어쓰기"
+
+msgctxt "IDS_SUB_OVERRIDE_ALL_STYLES"
+msgid "Override All Styles"
+msgstr "모든 스타일 덮어쓰기"
 
 msgctxt "IDS_PLAY_LOOPMODE_PLAYLIST"
 msgid "Playlist"
-msgstr ""
+msgstr "재생 목록"
 
 msgctxt "IDS_FAVFILES"
 msgid "Files"
@@ -81,21 +87,53 @@ msgctxt "IDS_FAVDVDS"
 msgid "DVDs"
 msgstr "DVD"
 
+msgctxt "IDS_PLAYLOOPMODE_AB"
+msgid "A-B Repeat: Reset Positions"
+msgstr "구간 반복 : 지점 초기화"
+
+msgctxt "IDS_PLAY_LOOPMODE_AB"
+msgid "A-B"
+msgstr "구간"
+
+msgctxt "IDS_PLAYLOOPMODE_AB_MARK_A"
+msgid "A-B Repeat: Mark A Position"
+msgstr "구간 반복 : 시작 지점 지정"
+
+msgctxt "IDS_PLAYLOOPMODE_AB_MARK_B"
+msgid "A-B Repeat: Mark B Position"
+msgstr "구간 반복 : 끝 지점 지정"
+
+msgctxt "IDS_SCREENSHOT_SUBTITLES"
+msgid "Include Subtitles"
+msgstr "자막 포함"
+
+msgctxt "IDS_THEMEMODE_DARK"
+msgid "Dark"
+msgstr "다크"
+
+msgctxt "IDS_THEMEMODE_LIGHT"
+msgid "Light"
+msgstr "라이트"
+
+msgctxt "IDS_THEMEMODE_WINDOWS"
+msgid "Windows Default"
+msgstr "윈도 기본값"
+
 msgctxt "IDS_INFOBAR_CHANNEL"
 msgid "Channel"
 msgstr "채널"
 
 msgctxt "IDS_INFOBAR_TIME"
 msgid "Time"
-msgstr "시간:"
+msgstr "시간"
 
 msgctxt "IDS_STATSBAR_SYNC_OFFSET"
 msgid "Sync Offset"
-msgstr "싱크 오프셋"
+msgstr "동기화 오프셋"
 
 msgctxt "IDS_STATSBAR_SYNC_OFFSET_FORMAT"
 msgid "avg: %d ms, dev: %d ms"
-msgstr ""
+msgstr "평균 : %d 밀리초, 편차 : %d 밀리초"
 
 msgctxt "IDS_STATSBAR_JITTER"
 msgid "Jitter"
@@ -103,11 +141,11 @@ msgstr "지터"
 
 msgctxt "IDS_STATSBAR_BITRATE"
 msgid "Bitrate"
-msgstr "비트레이트"
+msgstr "비트 전송률"
 
 msgctxt "IDS_STATSBAR_BITRATE_AVG_CUR"
 msgid "(avg/cur)"
-msgstr ""
+msgstr "(avg/cur)"
 
 msgctxt "IDS_STATSBAR_SIGNAL"
 msgid "Signal"
@@ -115,75 +153,80 @@ msgstr "신호"
 
 msgctxt "IDS_STATSBAR_SIGNAL_FORMAT"
 msgid "Strength: %d dB, Quality: %ld%%"
-msgstr "세기: %d dB, 품질: %ld%%"
+msgstr "세기 : %d dB, 품질 : %ld%%"
 
 msgctxt "IDS_SUBTITLES_STYLES_CAPTION"
 msgid "Styles"
 msgstr "스타일"
 
 msgctxt "IDS_TEXT_SUB_RENDERING_TARGET"
-msgid "If the rendering target is left undefined, SSA/ASS subtitles will be rendered relative to the video frame while all other text subtitles will be rendered relative to the window."
+msgid ""
+"If the rendering target is left undefined, SSA/ASS subtitles will be "
+"rendered relative to the video frame while all other text subtitles will be "
+"rendered relative to the window."
 msgstr ""
+"렌더링 대상이 정의되지 않은 경우 SSA/ASS 자막은 영상 프레임을 기준으로 렌더링되고 다른 모든 텍스트 자막은 창을 기준으로 "
+"렌더링됩니다."
 
 msgctxt "IDS_PLAYLOOPMODE_PLAYLIST"
 msgid "Repeat Mode: Playlist"
-msgstr ""
+msgstr "반복 모드 : 재생 목록"
 
 msgctxt "IDS_PLAYLOOPMODE_FILE"
 msgid "Repeat Mode: File"
-msgstr ""
+msgstr "반복 모드 : 파일"
 
 msgctxt "IDS_PLAYLOOP_FOREVER_ON"
 msgid "Repeat Forever: On"
-msgstr ""
+msgstr "무한 반복 : 켬"
 
 msgctxt "IDS_PLAYLOOP_FOREVER_OFF"
 msgid "Repeat Forever: Off"
-msgstr ""
+msgstr "무한 반복 : 끔"
 
 msgctxt "IDS_PLAYLOOP_FOREVER"
 msgid "Repeat Forever"
-msgstr ""
+msgstr "무한 반복"
 
 msgctxt "IDS_PPAGE_CAPTURE_FG0"
-msgid "Never (fastest approach)"
-msgstr ""
+msgid "Never"
+msgstr "없음"
 
 msgctxt "IDS_PPAGE_CAPTURE_FG1"
-msgid "Only when switching different video types (default)"
-msgstr ""
+msgid "Only when switching different video types"
+msgstr "다른 영상 유형을 전환할 때만"
 
 msgctxt "IDS_PPAGE_CAPTURE_FG2"
-msgid "Always (slowest option)"
-msgstr "항상 (느린 옵션)"
+msgid "Always (default)"
+msgstr "항상 (기본값)"
 
 msgctxt "IDS_PPAGE_CAPTURE_FGDESC0"
-msgid "Not supported by some devices. Two video decoders always present in the filter graph."
-msgstr ""
+msgid ""
+"Not supported by some devices. Two video decoders always present in the "
+"filter graph."
+msgstr "일부 장치는 지원하지 않을 수 있습니다. 필터 그래프에는 항상 2개의 영상 디코더가 있습니다."
 
 msgctxt "IDS_PPAGE_CAPTURE_FGDESC1"
-msgid "Fast except when switching between different video streams. Only one video decoder present in the filter graph."
-msgstr ""
-
-msgctxt "IDS_PPAGE_CAPTURE_FGDESC2"
-msgid "Not recommended. Only for testing purposes."
-msgstr ""
+msgid ""
+"Fast except when switching between different video streams. Only one video "
+"decoder present in the filter graph."
+msgstr "다른 영상 스트림 간에 전환할 때 외에는 빠릅니다. 필터 그래프에는 하나의 영상 디코더만 있습니다."
 
 msgctxt "IDS_PPAGE_CAPTURE_SFG0"
 msgid "Never if possible (fastest, but not supported by most filters)"
-msgstr ""
+msgstr "가능하면 사용 안 함(가장 빠르지만 대부분 필터가 지원 안됨)"
 
 msgctxt "IDS_PPAGE_CAPTURE_SFG1"
-msgid "Only when switching different video types (default)"
-msgstr ""
+msgid "Only when switching different video types"
+msgstr "다른 영상 유형을 전환할 때만"
 
 msgctxt "IDS_PPAGE_CAPTURE_SFG2"
 msgid "Always (may be required by some devices)"
-msgstr ""
+msgstr "항상(일부 장치가 요구될 수 있음)"
 
 msgctxt "IDS_INFOBAR_PARENTAL_RATING"
 msgid "Parental rating"
-msgstr ""
+msgstr "자녀 보호 등급"
 
 msgctxt "IDS_PARENTAL_RATING"
 msgid "%d+"
@@ -191,11 +234,11 @@ msgstr "%d+"
 
 msgctxt "IDS_NO_PARENTAL_RATING"
 msgid "Not rated"
-msgstr ""
+msgstr "평가 없음"
 
 msgctxt "IDS_INFOBAR_CONTENT"
 msgid "Content"
-msgstr ""
+msgstr "컨텐츠"
 
 msgctxt "IDS_CONTENT_MOVIE_DRAMA"
 msgid "Movie/Drama"
@@ -203,7 +246,7 @@ msgstr "영화/드라마"
 
 msgctxt "IDS_CONTENT_NEWS_CURRENTAFFAIRS"
 msgid "News/Current affairs"
-msgstr ""
+msgstr "뉴스/시사"
 
 msgctxt "IDS_SPEED_UNIT_G"
 msgid "GB/s"
@@ -211,7 +254,7 @@ msgstr "GB/s"
 
 msgctxt "IDS_FILE_FAV_ADDED"
 msgid "File added to favorites"
-msgstr ""
+msgstr "파일을 즐겨찾기에 추가"
 
 msgctxt "IDS_DVD_FAV_ADDED"
 msgid "DVD added to favorites"
@@ -219,15 +262,15 @@ msgstr "DVD를 즐겨찾기에 추가"
 
 msgctxt "IDS_CAPTURE_SETTINGS"
 msgid "Capture Settings"
-msgstr "캡쳐 설정"
+msgstr "녹화 설정"
 
 msgctxt "IDS_NAVIGATION_BAR"
 msgid "Navigation Bar"
-msgstr "내비게이션 바"
+msgstr "탐색 표시줄"
 
 msgctxt "IDS_SUBRESYNC_CAPTION"
 msgid "Subresync"
-msgstr "자막 재동기화"
+msgstr "자막 동기화"
 
 msgctxt "IDS_SUBRESYNC_CLN_TIME"
 msgid "Time"
@@ -239,19 +282,19 @@ msgstr "끝"
 
 msgctxt "IDS_SUBRESYNC_CLN_PREVIEW"
 msgid "Preview"
-msgstr "미리보기"
+msgstr "미리 보기"
 
 msgctxt "IDS_SUBRESYNC_CLN_VOB_ID"
 msgid "Vob ID"
-msgstr ""
+msgstr "Vob ID"
 
 msgctxt "IDS_SUBRESYNC_CLN_CELL_ID"
 msgid "Cell ID"
-msgstr ""
+msgstr "Cell ID"
 
 msgctxt "IDS_SUBRESYNC_CLN_FORCED"
 msgid "Forced"
-msgstr ""
+msgstr "강제"
 
 msgctxt "IDS_SUBRESYNC_CLN_TEXT"
 msgid "Text"
@@ -267,43 +310,49 @@ msgstr "글꼴"
 
 msgctxt "IDS_DVD_NAV_SOME_PINS_ERROR"
 msgid "Failed to render some of the pins of the DVD Navigator filter"
-msgstr ""
+msgstr "DVD 네비게이터 필터의 일부 핀을 렌더링에 실패"
 
 msgctxt "IDS_DVD_INTERFACES_ERROR"
 msgid "Failed to query the needed interfaces for DVD playback"
-msgstr ""
+msgstr "DVD 재생에 필요한 인터페이스를 쿼리하는 데 실패"
 
 msgctxt "IDS_CAPTURE_LIVE"
 msgid "Live"
-msgstr ""
+msgstr "라이브"
 
 msgctxt "IDS_CAPTURE_ERROR_VID_FILTER"
 msgid "Can't add video capture filter to the graph"
-msgstr ""
+msgstr "그래프에 영상 캡처 필터를 추가할 수 없음"
 
 msgctxt "IDS_CAPTURE_ERROR_AUD_FILTER"
 msgid "Can't add audio capture filter to the graph"
-msgstr ""
+msgstr "그래프에 오디오 캡처 필터를 추가할 수 없음"
 
 msgctxt "IDS_CAPTURE_ERROR_DEVICE"
 msgid "Could not open capture device."
-msgstr ""
+msgstr "캡처 장치를 열 수 없습니다."
 
 msgctxt "IDS_INVALID_PARAMS_ERROR"
 msgid "Can't open, invalid input parameters"
-msgstr ""
+msgstr "열 수 없음, 잘못된 입력 매개변수"
 
 msgctxt "IDS_EDIT_LIST_EDITOR"
 msgid "Edit List Editor"
-msgstr ""
+msgstr "편집 목록 편집기"
 
 msgctxt "IDS_GOTO_ERROR_INVALID_TIME"
 msgid "The entered time is greater than the file duration."
-msgstr ""
+msgstr "입력된 시간이 파일 재생 시간보다 큽니다."
 
 msgctxt "IDS_MISSING_ICONS_LIB"
-msgid "The icons library \"mpciconlib.dll\" is missing.\nThe player's default icon will be used for file associations.\nPlease, reinstall MPC-HC to get \"mpciconlib.dll\"."
+msgid ""
+"The icons library \"mpciconlib.dll\" is missing.\n"
+"The player's default icon will be used for file associations.\n"
+"Please, reinstall MPC-HC to get \"mpciconlib.dll\"."
 msgstr ""
+"아이콘 라이브러리 \"mpciconlib.dll\"이 없습니다.\n"
+"재생기의 기본 아이콘은 파일 연결에 사용됩니다.\n"
+"\"mpciconlib.dll\"을 가져오려면 MPC-HC를 다시 설치하십시오."
 
 msgctxt "IDS_SUBDL_DLG_FILENAME_COL"
 msgid "File"
@@ -327,7 +376,7 @@ msgstr "타이틀"
 
 msgctxt "IDS_SUBRESYNC_CLN_CHARSET"
 msgid "CharSet"
-msgstr "문자셋"
+msgstr "문자 세트"
 
 msgctxt "IDS_SUBRESYNC_CLN_UNICODE"
 msgid "Unicode"
@@ -339,7 +388,7 @@ msgstr "레이어"
 
 msgctxt "IDS_SUBRESYNC_CLN_ACTOR"
 msgid "Actor"
-msgstr ""
+msgstr "액터"
 
 msgctxt "IDS_SUBRESYNC_CLN_EFFECT"
 msgid "Effect"
@@ -347,7 +396,7 @@ msgstr "효과"
 
 msgctxt "IDS_PLAYLIST_CAPTION"
 msgid "Playlist"
-msgstr "재생목록"
+msgstr "재생 목록"
 
 msgctxt "IDS_PPAGE_FS_CLN_ON_OFF"
 msgid "On/Off"
@@ -355,15 +404,15 @@ msgstr "켬/끔"
 
 msgctxt "IDS_PPAGE_FS_CLN_FROM_FPS"
 msgid "From (FPS)"
-msgstr ""
+msgstr "(초당 프레임)부터"
 
 msgctxt "IDS_PPAGE_FS_CLN_TO_FPS"
 msgid "To (FPS)"
-msgstr ""
+msgstr "(초당 프레임)까지"
 
 msgctxt "IDS_PPAGE_FS_CLN_DISPLAY_MODE"
 msgid "Display mode (Hz)"
-msgstr "출력모드 (Hz)"
+msgstr "디스플레이 모드(Hz)"
 
 msgctxt "IDS_PPAGE_FS_DEFAULT"
 msgid "Default"
@@ -371,7 +420,7 @@ msgstr "기본값"
 
 msgctxt "IDS_PPAGE_FS_OTHER"
 msgid "Other"
-msgstr "그외"
+msgstr "그 외"
 
 msgctxt "IDS_PPAGE_OUTPUT_SYS_DEF"
 msgid "System Default"
@@ -379,15 +428,15 @@ msgstr "시스템 기본값"
 
 msgctxt "IDS_GRAPH_INTERFACES_ERROR"
 msgid "Failed to query the needed interfaces for playback"
-msgstr ""
+msgstr "재생에 필요한 인터페이스를 쿼리하는 데 실패"
 
 msgctxt "IDS_GRAPH_TARGET_WND_ERROR"
 msgid "Could not set target window for graph notification"
-msgstr ""
+msgstr "그래프 알림의 대상 창을 설정 불가"
 
 msgctxt "IDS_DVD_NAV_ALL_PINS_ERROR"
 msgid "Failed to render all pins of the DVD Navigator filter"
-msgstr ""
+msgstr "DVD 네비게이터 필터의 모든 핀을 렌더링에 실패"
 
 msgctxt "IDS_PLAYLIST_OPEN"
 msgid "&Open"
@@ -403,15 +452,19 @@ msgstr "제거(&R)"
 
 msgctxt "IDS_PLAYLIST_CLEAR"
 msgid "C&lear"
-msgstr "모두 삭제(&L)"
+msgstr "지우기(&L)"
 
 msgctxt "IDS_PLAYLIST_COPYTOCLIPBOARD"
 msgid "&Copy to clipboard"
 msgstr "클립보드에 복사(&C)"
 
+msgctxt "IDS_PLAYLIST_SAVE"
+msgid "Sa&ve"
+msgstr "저장(&V)"
+
 msgctxt "IDS_PLAYLIST_SAVEAS"
 msgid "&Save As..."
-msgstr "저장(&S)..."
+msgstr "다른 이름으로 저장(&S)..."
 
 msgctxt "IDS_PLAYLIST_SORTBYLABEL"
 msgid "Sort by &label"
@@ -421,17 +474,29 @@ msgctxt "IDS_PLAYLIST_SORTBYPATH"
 msgid "Sort by &path"
 msgstr "경로순 정렬(&P)"
 
+msgctxt "IDS_PLAYLIST_SORTBYDATE_NEWEST"
+msgid "Sort by date (&newest first)"
+msgstr "날짜순으로 정렬 (최신순)"
+
+msgctxt "IDS_PLAYLIST_SORTBYDATE_OLDEST"
+msgid "Sort by date (&oldest first)"
+msgstr "날짜순으로 정렬 (오래된 순)"
+
 msgctxt "IDS_PLAYLIST_RANDOMIZE"
 msgid "R&andomize"
 msgstr "무작위(&A)"
 
 msgctxt "IDS_PLAYLIST_RESTORE"
 msgid "R&estore"
-msgstr "복구(&E)"
+msgstr "되돌리기(&E)"
+
+msgctxt "IDS_PLAYLIST_SORT"
+msgid "&Sort"
+msgstr "정렬(&S)"
 
 msgctxt "IDS_SUBRESYNC_SEPARATOR"
 msgid "&Separator"
-msgstr "구분기호(&S)"
+msgstr "구분 기호(&S)"
 
 msgctxt "IDS_SUBRESYNC_DELETE"
 msgid "&Delete"
@@ -444,466 +509,6 @@ msgstr "복제(&U)"
 msgctxt "IDS_SUBRESYNC_RESET"
 msgid "&Reset"
 msgstr "초기화(&R)"
-
-msgctxt "IDS_MPLAYERC_104"
-msgid "Subtitle Delay -"
-msgstr "자막 싱크 당기기 -"
-
-msgctxt "IDS_MPLAYERC_105"
-msgid "Subtitle Delay +"
-msgstr "자막 싱크 밀기 +"
-
-msgctxt "IDS_FILE_SAVE_THUMBNAILS"
-msgid "Save thumbnails"
-msgstr "썸네일 저장"
-
-msgctxt "IDD_PPAGEPLAYBACK"
-msgid "Playback"
-msgstr "재생"
-
-msgctxt "IDD_PPAGEPLAYER"
-msgid "Player"
-msgstr "플레이어"
-
-msgctxt "IDD_PPAGEDVD"
-msgid "Playback::DVD/OGM"
-msgstr "재생::DVD/OGM"
-
-msgctxt "IDD_PPAGESUBTITLES"
-msgid "Subtitles"
-msgstr "자막"
-
-msgctxt "IDD_PPAGEFORMATS"
-msgid "Player::Formats"
-msgstr "플레이어::형식"
-
-msgctxt "IDD_PPAGETWEAKS"
-msgid "Tweaks"
-msgstr "시스템 설정"
-
-msgctxt "IDD_PPAGEAUDIOSWITCHER"
-msgid "Internal Filters::Audio Switcher"
-msgstr "내장 필터::오디오 스위처"
-
-msgctxt "IDD_PPAGEEXTERNALFILTERS"
-msgid "External Filters"
-msgstr "외장 필터"
-
-msgctxt "IDD_PPAGESHADERS"
-msgid "Playback::Shaders"
-msgstr "재생::Shaders"
-
-msgctxt "IDD_FILEPROPRES"
-msgid "Resources"
-msgstr "리소스"
-
-msgctxt "IDD_PPAGEMISC"
-msgid "Miscellaneous"
-msgstr "기타"
-
-msgctxt "IDD_FILEMEDIAINFO"
-msgid "MediaInfo"
-msgstr "미디어 정보"
-
-msgctxt "IDD_PPAGECAPTURE"
-msgid "Playback::Capture"
-msgstr "재생::캡쳐장치"
-
-msgctxt "IDD_PPAGESYNC"
-msgid "Playback::Sync Renderer Settings"
-msgstr "재생::Sync Renderer Settings"
-
-msgctxt "IDD_PPAGEFULLSCREEN"
-msgid "Playback::Fullscreen"
-msgstr "재생::전체화면"
-
-msgctxt "IDD_PPAGEAUDIORENDERER"
-msgid "Internal Filters::Audio Renderer"
-msgstr ""
-
-msgctxt "IDS_AUDIOSWITCHER"
-msgid "Audio Switcher"
-msgstr "오디오 스위처"
-
-msgctxt "IDS_ICONS_REASSOC_DLG_TITLE"
-msgid "New version of the icon library"
-msgstr ""
-
-msgctxt "IDS_ICONS_REASSOC_DLG_INSTR"
-msgid "Do you want to reassociate the icons?"
-msgstr ""
-
-msgctxt "IDS_ICONS_REASSOC_DLG_CONTENT"
-msgid "This will fix the icons being incorrectly displayed after an update of the icon library.\nThe file associations will not be modified, only the corresponding icons will be refreshed."
-msgstr ""
-
-msgctxt "IDS_PPAGE_OUTPUT_OLDRENDERER"
-msgid "Old Video Renderer"
-msgstr "오래된 비디오 렌더러"
-
-msgctxt "IDS_PPAGE_OUTPUT_OVERLAYMIXER"
-msgid "Overlay Mixer Renderer"
-msgstr "오버레이 믹서 렌더러"
-
-msgctxt "IDS_PPAGE_OUTPUT_VMR9WINDOWED"
-msgid "Video Mixing Renderer 9 (windowed)"
-msgstr "비디오 믹싱 렌더러 9 (윈도우)"
-
-msgctxt "IDS_PPAGE_OUTPUT_VMR9RENDERLESS"
-msgid "Video Mixing Renderer 9 (renderless)"
-msgstr "비디오 믹싱 렌더러 9 (렌더 적게)"
-
-msgctxt "IDS_PPAGE_OUTPUT_EVR"
-msgid "Enhanced Video Renderer"
-msgstr ""
-
-msgctxt "IDS_PPAGE_OUTPUT_EVR_CUSTOM"
-msgid "Enhanced Video Renderer (custom presenter)"
-msgstr ""
-
-msgctxt "IDS_PPAGE_OUTPUT_DXR"
-msgid "Haali Video Renderer"
-msgstr ""
-
-msgctxt "IDS_PPAGE_OUTPUT_NULL_COMP"
-msgid "Null (anything)"
-msgstr ""
-
-msgctxt "IDS_PPAGE_OUTPUT_NULL_UNCOMP"
-msgid "Null (uncompressed)"
-msgstr "Null (무압축)"
-
-msgctxt "IDS_PPAGE_OUTPUT_MADVR"
-msgid "madVR"
-msgstr ""
-
-msgctxt "IDD_PPAGEACCELTBL"
-msgid "Player::Keys"
-msgstr "플레이어::단축키"
-
-msgctxt "IDD_PPAGESUBSTYLE"
-msgid "Subtitles::Default Style"
-msgstr "자막::스타일"
-
-msgctxt "IDD_PPAGEINTERNALFILTERS"
-msgid "Internal Filters"
-msgstr "내장 필터"
-
-msgctxt "IDD_PPAGELOGO"
-msgid "Player::Logo"
-msgstr "플레이어::로고"
-
-msgctxt "IDD_PPAGEOUTPUT"
-msgid "Playback::Output"
-msgstr "재생::출력"
-
-msgctxt "IDD_PPAGEWEBSERVER"
-msgid "Player::Web Interface"
-msgstr "플레이어::웹 인터페이스"
-
-msgctxt "IDD_FILEPROPDETAILS"
-msgid "Details"
-msgstr "자세히"
-
-msgctxt "IDD_FILEPROPCLIP"
-msgid "Clip"
-msgstr "클립"
-
-msgctxt "IDC_DSSYSDEF"
-msgid "Default video renderer filter for DirectShow. Others will fall back to this one when they can't be loaded for some reason."
-msgstr ""
-
-msgctxt "IDC_DSOLD"
-msgid "This is the default renderer of Windows 9x/me/2k. Depending on the visibility of the video window and your video card's abilities, it will switch between GDI, DirectDraw, Overlay rendering modes dynamically."
-msgstr "이것은 윈도우 9x/ME/2000 에서 사용하는 렌더러입니다. 그래픽카드의 상태와 기능에 따라 GDI, DirectDraw, 오버레이렌더링 모드 중 하나를 자동으로 선택해서 사용하는 렌더러입니다."
-
-msgctxt "IDC_DSOVERLAYMIXER"
-msgid "Always renders in overlay. Generally only YUV formats are allowed, but they are presented directly without any color conversion to RGB. This is the fastest rendering method of all and the only where you can be sure about fullscreen video mirroring to tv-out activating."
-msgstr "항상 비디오를 오버레이상태로 렌더링합니다. 일반적으로 YUV의 색공간만을 허용하고, RGB색상변환을 하지않고 그대로 표현하게 됩니다. 다른 모드들과 비교해서 가장 빠른속도를 가졌지만 TV-OUT 기능을 활성화했을때만 전체화면 미러링이 작동합니다."
-
-msgctxt "IDC_DSVMR9WIN"
-msgid "Only available if you have DirectX 9 installed. Very stable but it will never use Overlay rendering and because of this it may be a little slower than Overlay mixer."
-msgstr ""
-
-msgctxt "IDC_DSVMR9REN"
-msgid "Same as the VMR-9 (windowed), but with the Allocator-Presenter plugin of MPC-HC for subtitling. Overlay video mirroring MIGHT work. \"True Color\" desktop color space recommended."
-msgstr ""
-
-msgctxt "IDC_DSDXR"
-msgid "Same as the VMR-9 (renderless), but uses a true two-pass bicubic resizer."
-msgstr ""
-
-msgctxt "IDC_DSNULL_COMP"
-msgid "Connects to any video-like media type and will send the incoming samples to nowhere. Use it when you don't need the video display and want to save the CPU from working unnecessarily."
-msgstr "모든 비디오형식의 샘플을 출력하지 않습니다. 비디오를 출력하지않으면서 CPU가 작동하도록 하려할때 사용합니다."
-
-msgctxt "IDC_DSNULL_UNCOMP"
-msgid "Same as the normal Null renderer, but this will only connect to uncompressed types."
-msgstr "일반적인 Null 렌더러와 같지만 압축되지않은 형식만을 연결합니다."
-
-msgctxt "IDC_DSEVR_CUSTOM"
-msgid "Same as the EVR, but with the Allocator-Presenter of MPC-HC for subtitling and postprocessing. Recommended."
-msgstr ""
-
-msgctxt "IDC_DSMADVR"
-msgid "High-quality renderer, requires a GPU that supports D3D9 or later."
-msgstr ""
-
-msgctxt "IDC_DSSYNC"
-msgid "Same as the EVR (CP), but offers several options to synchronize the video frame rate with the display refresh rate to eliminate skipped or duplicated video frames."
-msgstr ""
-
-msgctxt "IDC_RMSYSDEF"
-msgid "Real's own renderer. SMIL scripts will work, but interaction not likely. Uses DirectDraw and runs in Overlay when it can."
-msgstr "리얼미디어의 고유렌더러입니다. SMIL형식은 작동하지만 안정적이지는 않습니다. 오버레이상태에서 실행될때 DirectDraw를 사용합니다."
-
-msgctxt "IDC_RMDX9"
-msgid "The output of Real's engine rendered by the DX9-based Allocator-Presenter of VMR-9 (renderless)."
-msgstr "리얼미디어의 엔진을 이용해서 DX9기반의 VMR-9 (렌더리스)모드에서 렌더링합니다."
-
-msgctxt "IDC_QTSYSDEF"
-msgid "QuickTime's own renderer. Gets a little slow when its video area is resized or partially covered by another window. When Overlay is not available it likes to fall back to GDI."
-msgstr "퀵타임의 고유렌더러입니다. 비디오화면을 조절할때 화면갱신속도가 느려질수 있고 다른 창의 뒤로 가려질수도 있습니다. 오버레이를 사용하지 못할 경우 GDI를 사용하게 됩니다."
-
-msgctxt "IDC_QTDX9"
-msgid "The output of QuickTime's engine rendered by the DX9-based Allocator-Presenter of VMR-9 (renderless)."
-msgstr "퀵타임의 엔진을 이용해서 DX9기반의 VMR-9 (렌더리스)모드에서 렌더링합니다."
-
-msgctxt "IDC_REGULARSURF"
-msgid "Video surface will be allocated as a regular offscreen surface."
-msgstr "재생하는 비디오 표면을 표준 오프스크린으로 위치시킵니다."
-
-msgctxt "IDS_PPAGE_OUTPUT_SYNC"
-msgid "Sync Renderer"
-msgstr "싱크 렌더러"
-
-msgctxt "IDS_PPAGE_OUTPUT_SURF_OFFSCREEN"
-msgid "Regular offscreen plain surface"
-msgstr ""
-
-msgctxt "IDS_PPAGE_OUTPUT_SURF_2D"
-msgid "2D surfaces"
-msgstr "2D 표면"
-
-msgctxt "IDS_PPAGE_OUTPUT_SURF_3D"
-msgid "3D surfaces (recommended)"
-msgstr "3D 표면 (권장)"
-
-msgctxt "IDS_PPAGE_OUTPUT_RESIZE_NN"
-msgid "Nearest neighbor"
-msgstr ""
-
-msgctxt "IDS_PPAGE_OUTPUT_RESIZER_BILIN"
-msgid "Bilinear"
-msgstr ""
-
-msgctxt "IDS_PPAGE_OUTPUT_RESIZER_BIL_PS"
-msgid "Bilinear (PS 2.0)"
-msgstr ""
-
-msgctxt "IDS_PPAGE_OUTPUT_RESIZER_BICUB1"
-msgid "Bicubic A=-0.60 (PS 2.0)"
-msgstr ""
-
-msgctxt "IDS_PPAGE_OUTPUT_RESIZER_BICUB2"
-msgid "Bicubic A=-0.75 (PS 2.0)"
-msgstr ""
-
-msgctxt "IDS_PPAGE_OUTPUT_RESIZER_BICUB3"
-msgid "Bicubic A=-1.00 (PS 2.0)"
-msgstr ""
-
-msgctxt "IDS_PPAGE_OUTPUT_UNAVAILABLE"
-msgid "**unavailable**"
-msgstr "**비활성화**"
-
-msgctxt "IDS_PPAGE_OUTPUT_UNAVAILABLEMSG"
-msgid "The selected renderer is not installed."
-msgstr "선택된 렌더러가 설치 되지 않았습니다."
-
-msgctxt "IDS_PPAGE_OUTPUT_AUD_NULL_COMP"
-msgid "Null (anything)"
-msgstr ""
-
-msgctxt "IDS_PPAGE_OUTPUT_AUD_NULL_UNCOMP"
-msgid "Null (uncompressed)"
-msgstr "Null (무압축)"
-
-msgctxt "IDS_PPAGE_OUTPUT_AUD_INTERNAL_REND"
-msgid "Internal Audio Renderer"
-msgstr ""
-
-msgctxt "IDS_EMB_RESOURCES_VIEWER_NAME"
-msgid "Name"
-msgstr "이름"
-
-msgctxt "IDS_EMB_RESOURCES_VIEWER_TYPE"
-msgid "MIME Type"
-msgstr ""
-
-msgctxt "IDS_EMB_RESOURCES_VIEWER_INFO"
-msgid "In order to view an embedded resource in your browser you have to enable the web interface.\n\nUse the \"Save As\" button if you only want to save the information."
-msgstr ""
-
-msgctxt "IDS_SUBTITLES_DOWNLOAD"
-msgid "Download Subtitles..."
-msgstr ""
-
-msgctxt "IDS_SUBTITLES_UPLOAD"
-msgid "Upload Subtitles..."
-msgstr ""
-
-msgctxt "IDS_SUBFILE_DELAY"
-msgid "Delay (ms):"
-msgstr ""
-
-msgctxt "IDS_SPEEDSTEP_AUTO"
-msgid "Auto"
-msgstr "자동"
-
-msgctxt "IDS_EXPORT_SETTINGS_NO_KEYS"
-msgid "There are no customized keys to export."
-msgstr ""
-
-msgctxt "IDS_RFS_NO_FILES"
-msgid "No media files found in the archive"
-msgstr ""
-
-msgctxt "IDS_RFS_COMPRESSED"
-msgid "Compressed files are not supported"
-msgstr "압축 된 파일이 지원되지 않습니다"
-
-msgctxt "IDS_RFS_ENCRYPTED"
-msgid "Encrypted files are not supported"
-msgstr ""
-
-msgctxt "IDS_RFS_MISSING_VOLS"
-msgid "Couldn't find all archive volumes"
-msgstr ""
-
-msgctxt "IDC_TEXTURESURF2D"
-msgid "Video surface will be allocated as a texture but still the 2d functions will be used to copy and stretch it onto the backbuffer. Requires a video card which can allocate 32-bit, RGBA, non-power-of-two sized textures and at least in the resolution of the video."
-msgstr "비디오 표면을 텍스쳐처럼 처리하고 2D모드의 버퍼가 가득찰때까지 복사/늘이기를 반복합니다. 이 모드를 사용하기 위해서는 그래픽카드에서 \"32비트, RGBA, 비디오 해상도 크기의 텍스쳐\" 를 2가지 이상 동시에 처리할수 있어야 합니다."
-
-msgctxt "IDC_TEXTURESURF3D"
-msgid "Video surface will be allocated as a texture and drawn as two triangles in 3d. Antialiasing turned on at the display settings may have a bad effect on the rendering speed."
-msgstr "비디오 표면을 텍스쳐처럼 처리하고 3D상태에서 두개의 삼각형을 렌더링합니다. 안티-앨리어싱이 활성화되었을 경우 속도가 느려집니다."
-
-msgctxt "IDC_DX9RESIZER_COMBO"
-msgid "If there is no Pixel Shader 2.0 support, simple bilinear is used automatically."
-msgstr "그래픽카드에서 픽셸셰이더 2.0 (Pixel Shader 2.0) 를 지원하지 않으면 simple bilinear가 자동으로 선택됩니다."
-
-msgctxt "IDC_DSVMR9LOADMIXER"
-msgid "Puts VMR-9 (renderless) into mixer mode, this means most of the controls on its property page will work and it will use a separate worker thread to renderer frames."
-msgstr "VMR-9 (렌더리스) 출력모드에서 VMR-9혼합모드에 체크하면 대부분의 컨트롤에서 속성페이지를 표시하기위해 프레임을 렌더링할때 작업자쓰레드를 별도로 분리시켜 작동하게 됩니다."
-
-msgctxt "IDC_FULLSCREEN_MONITOR_CHECK"
-msgid "Reduces tearing but prevents the toolbar from being shown."
-msgstr ""
-
-msgctxt "IDC_DSVMR9ALTERNATIVEVSYNC"
-msgid "Reduces tearing by bypassing the default VSync built into D3D."
-msgstr ""
-
-msgctxt "IDS_NAVIGATE_TUNERSCAN"
-msgid "Tuner scan"
-msgstr "튜너 검색"
-
-msgctxt "IDS_SUBTITLES_ERROR"
-msgid "Subtitles are not loaded or unsupported renderer."
-msgstr "자막이 로드되지않았거나 지원되지않는 렌더러입니다."
-
-msgctxt "IDC_CACHESHADERS"
-msgid "Stores compiled shaders in local AppData to speed up load time."
-msgstr ""
-
-msgctxt "IDS_SRC_VTS"
-msgid "Open VTS_xx_0.ifo to load VTS_xx_x.vob files in one piece"
-msgstr "VTS_xx_0.ifo 파일에 속해있는 VTS_xx_x.vob 파일을 로드합니다."
-
-msgctxt "IDS_SRC_RFS"
-msgid "Based on RARFileSource, doesn't support compressed files"
-msgstr ""
-
-msgctxt "IDS_INTERNAL_LAVF"
-msgid "Uses LAV Filters"
-msgstr "LAV 필터 사용"
-
-msgctxt "IDS_INTERNAL_LAVF_WMV"
-msgid "Uses LAV Filters. Disabled by default since Microsoft filters are usually more stable for those formats.\nIf you choose to use the internal filters, enable them for both source and decoding to have a better playback experience."
-msgstr ""
-
-msgctxt "IDS_AG_TOGGLE_NAVIGATION"
-msgid "Toggle Navigation Bar"
-msgstr ""
-
-msgctxt "IDS_AG_VSYNCACCURATE"
-msgid "Accurate VSync"
-msgstr "정확한 VSync"
-
-msgctxt "IDC_CHECK_RELATIVETO"
-msgid "If the rendering target is left undefined, it will be inherited from the default style."
-msgstr ""
-
-msgctxt "IDC_CHECK_NO_SUB_ANIM"
-msgid "Disallow subtitle animation. Enabling this option will lower CPU usage. You can use it if you experience flashing subtitles."
-msgstr ""
-
-msgctxt "IDC_SUBPIC_TO_BUFFER"
-msgid "Increasing the number of buffered subpictures should in general improve the rendering performance at the cost of a higher video RAM usage on the GPU."
-msgstr ""
-
-msgctxt "IDC_BUTTON_EXT_SET"
-msgid "After clicking this button, the checked state of the format group will reflect the actual file association for MPC-HC. A newly added extension will usually make it grayed, so don't forget to check it again before closing this dialog!"
-msgstr "이 버튼을 클릭하면 파일 형식 그룹이 MPC-HC 실제 파일에 연결됩니다. 새로 추가된 확장자는 보통 회색으로 표시되므로 이 대화상자를 닫기전에 확인하십시오."
-
-msgctxt "IDC_CHECK_ALLOW_DROPPING_SUBPIC"
-msgid "Disabling this option will prevent the subtitles from blinking but it may cause the video renderer to skip some video frames."
-msgstr ""
-
-msgctxt "ID_PLAY_PLAY"
-msgid "Play\nPlay"
-msgstr "재생\n재생"
-
-msgctxt "ID_PLAY_PAUSE"
-msgid "Pause\nPause"
-msgstr "잠깐멈춤\n잠깐멈춤"
-
-msgctxt "ID_PLAY_STOP"
-msgid "Stop\nStop"
-msgstr "멈춤\n멈춤"
-
-msgctxt "ID_PLAY_FRAMESTEP"
-msgid "Step\nStep"
-msgstr "한 프레임씩 재생\n한 프레임씩 재생"
-
-msgctxt "ID_PLAY_DECRATE"
-msgid "Decrease speed\nDecrease speed"
-msgstr "재생속도 감소\n재생속도 감소"
-
-msgctxt "ID_PLAY_INCRATE"
-msgid "Increase speed\nIncrease speed"
-msgstr "재생속도 증가\n재생속도 증가"
-
-msgctxt "ID_VOLUME_MUTE"
-msgid "Mute"
-msgstr "음소거"
-
-msgctxt "ID_VOLUME_MUTE_OFF"
-msgid "Unmute"
-msgstr "음복원"
-
-msgctxt "ID_VOLUME_MUTE_DISABLED"
-msgid "No audio"
-msgstr "오디오 없음"
-
-msgctxt "ID_NAVIGATE_SKIPBACK"
-msgid "Skip back\nSkip back"
-msgstr "뒤로 이동\n뒤로 이동"
-
-msgctxt "ID_NAVIGATE_SKIPFORWARD"
-msgid "Skip forward\nSkip forward"
-msgstr "앞으로 이동\n앞으로 이동"
 
 msgctxt "IDS_SUBRESYNC_ORIGINAL"
 msgid "&Original"
@@ -919,11 +524,11 @@ msgstr "편집(&E)"
 
 msgctxt "IDS_SUBRESYNC_YES"
 msgid "&Yes"
-msgstr "확인(&Y)"
+msgstr "예(&Y)"
 
 msgctxt "IDS_SUBRESYNC_NO"
 msgid "&No"
-msgstr "취소(&N)"
+msgstr "아니오(&N)"
 
 msgctxt "IDS_SUBRESYNC_DECREASE"
 msgid "&Decrease"
@@ -945,33 +550,810 @@ msgctxt "IDS_SHADERS_DEBUG"
 msgid "&Debug Shaders..."
 msgstr "셰이더 디버그(&D)..."
 
+msgctxt "IDS_MPLAYERC_104"
+msgid "Subtitle Delay -"
+msgstr "자막 싱크 빠르게"
+
+msgctxt "IDS_MPLAYERC_105"
+msgid "Subtitle Delay +"
+msgstr "자막 싱크 느리게"
+
+msgctxt "IDS_FILE_SAVE_THUMBNAILS"
+msgid "Save thumbnails"
+msgstr "썸네일 저장"
+
+msgctxt "IDS_SUB_POS_DOWN"
+msgid "Move subtitle down"
+msgstr "자막을 아래로"
+
+msgctxt "IDS_SUB_POS_UP"
+msgid "Move subtitle up"
+msgstr "자막을 위로"
+
+msgctxt "IDS_SUB_FONT_SIZE_DEC"
+msgid "Decrease subtitle text size"
+msgstr "자막 글자 크기 축소"
+
+msgctxt "IDS_SUB_FONT_SIZE_INC"
+msgid "Increase subtitle text size"
+msgstr "자막 글자 크기 확대"
+
+msgctxt "IDD_PPAGEPLAYBACK"
+msgid "Playback::General"
+msgstr "재생::일반"
+
+msgctxt "IDD_PPAGEPLAYER"
+msgid "Player::General"
+msgstr "재생기::일반"
+
+msgctxt "IDD_PPAGEDVD"
+msgid "Playback::DVD"
+msgstr "재생::DVD"
+
+msgctxt "IDD_PPAGESUBTITLES"
+msgid "Subtitles::General"
+msgstr "자막::일반"
+
+msgctxt "IDD_PPAGEFORMATS"
+msgid "Player::Formats"
+msgstr "재생기::형식"
+
+msgctxt "IDD_PPAGETWEAKS"
+msgid "Tweaks"
+msgstr "조정"
+
+msgctxt "IDD_PPAGEAUDIOSWITCHER"
+msgid "Internal Filters::Audio Switcher"
+msgstr "내부 필터::오디오 스위처"
+
+msgctxt "IDD_PPAGEEXTERNALFILTERS"
+msgid "External Filters"
+msgstr "외장 필터"
+
+msgctxt "IDD_PPAGESHADERS"
+msgid "Playback::Shaders"
+msgstr "재생::셰이더"
+
+msgctxt "IDD_PPAGETOOLBAR"
+msgid "Player::Toolbar"
+msgstr "재생기::도구 모음"
+
+msgctxt "IDD_PPAGETOOLBARLAYOUT"
+msgid "Player::Toolbar Layout"
+msgstr "재생기::도구 모음 레이아웃"
+
+msgctxt "IDS_PPAGE_TOOLBAR_AVAIL_BUTTONS"
+msgid "Available Buttons"
+msgstr "사용 가능한 버튼"
+
+msgctxt "IDS_PPAGE_TOOLBAR_CUR_BUTTONS"
+msgid "Current Buttons"
+msgstr "현재 버튼"
+
+msgctxt "IDD_FILEPROPRES"
+msgid "Resources"
+msgstr "리소스"
+
+msgctxt "IDD_PPAGEMISC"
+msgid "Miscellaneous"
+msgstr "기타"
+
+msgctxt "IDD_FILEMEDIAINFO"
+msgid "MediaInfo"
+msgstr "미디어 정보"
+
+msgctxt "IDD_PPAGECAPTURE"
+msgid "Playback::Capture"
+msgstr "재생::캡쳐"
+
+msgctxt "IDD_PPAGEFULLSCREEN"
+msgid "Playback::Fullscreen"
+msgstr "재생::전체화면"
+
+msgctxt "IDS_AUDIOSWITCHER"
+msgid "Audio Switcher"
+msgstr "오디오 전환기"
+
+msgctxt "IDS_ICONS_REASSOC_DLG_TITLE"
+msgid "New version of the icon library"
+msgstr "아이콘 라이브러리의 새 버전"
+
+msgctxt "IDS_ICONS_REASSOC_DLG_INSTR"
+msgid "Do you want to reassociate the icons?"
+msgstr "아이콘을 다시 연결하시겠습니까?"
+
+msgctxt "IDS_ICONS_REASSOC_DLG_CONTENT"
+msgid ""
+"This will fix the icons being incorrectly displayed after an update of the icon library.\n"
+"The file associations will not be modified, only the corresponding icons will be refreshed."
+msgstr ""
+"아이콘 라이브러리 업데이트 후 아이콘이 표시되지 않는 문제가 해결됩니다.\n"
+"파일 연결은 변경 없이 해당 아이콘만 업데이트 됩니다."
+
+msgctxt "IDS_PPAGE_OUTPUT_OVERLAYMIXER"
+msgid "Overlay Mixer Renderer"
+msgstr "오버레이 믹서 렌더러"
+
+msgctxt "IDS_ZOOM_25"
+msgid "25%"
+msgstr "25%"
+
+msgctxt "IDS_PPAGE_OUTPUT_VMR9WINDOWED"
+msgid "Video Mixing Renderer 9 (windowed)"
+msgstr "영상 혼합 렌더러 9(윈도)"
+
+msgctxt "IDS_PPAGE_OUTPUT_VMR9RENDERLESS"
+msgid "Video Mixing Renderer 9 (renderless)"
+msgstr "영상 혼합 렌더러 9(렌더리스)"
+
+msgctxt "IDS_PPAGE_OUTPUT_EVR"
+msgid "Enhanced Video Renderer"
+msgstr "향상된 영상 렌더러"
+
+msgctxt "IDS_PPAGE_OUTPUT_EVR_CUSTOM"
+msgid "Enhanced Video Renderer (custom presenter)"
+msgstr "향상된 영상 렌더러(맞춤 프레젠터)"
+
+msgctxt "IDS_PPAGE_OUTPUT_DXR"
+msgid "Haali Video Renderer"
+msgstr "Haali 영상 렌더러"
+
+msgctxt "IDS_PPAGE_OUTPUT_NULL_COMP"
+msgid "Null (anything)"
+msgstr "Null(전부)"
+
+msgctxt "IDS_PPAGE_OUTPUT_NULL_UNCOMP"
+msgid "Null (uncompressed)"
+msgstr "Null(무압축)"
+
+msgctxt "IDS_PPAGE_OUTPUT_MADVR"
+msgid "madVR"
+msgstr "madVR"
+
+msgctxt "IDS_LANG_PREF_EXAMPLE"
+msgid ""
+"Enter your preferred languages here.\n"
+"Use three letter ISO 639-2 languages codes.\n"
+"For example: eng spa ger fre rus pob jpn chi"
+msgstr ""
+"여기에 원하는 언어를 입력하세요.\n"
+"3글자 ISO 639-2 언어 코드를 사용하세요.\n"
+"예 : eng spa ger fre rus pob jpn chi"
+
+msgctxt "IDS_OVERRIDE_EXT_SPLITTER_CHOICE"
+msgid ""
+"External splitters can have their own language preference options thus MPC-HC default behavior is not to change their initial choice.\n"
+"Enable this option if you want MPC-HC to control external splitters."
+msgstr ""
+"외부 스플리터는 자체 언어 기본 설정 옵션을 가질 수 있으므로 MPC-HC 기본 동작은 초기 선택을 변경하지 않습니다.\n"
+"MPC-HC가 외부 분배기를 제어하도록 하려면 이 옵션을 활성화하세요."
+
+msgctxt "IDS_NAVIGATE_BD_PLAYLISTS"
+msgid "&Blu-Ray playlists"
+msgstr "블루레이 재생 목록(&B)"
+
+msgctxt "IDS_NAVIGATE_PLAYLIST"
+msgid "&Playlist"
+msgstr "재생 목록(&P)"
+
+msgctxt "IDS_NAVIGATE_CHAPTERS"
+msgid "&Chapters"
+msgstr "챕터(&C)"
+
+msgctxt "IDS_NAVIGATE_TITLES"
+msgid "&Titles"
+msgstr "제목(&T)"
+
+msgctxt "IDS_NAVIGATE_CHANNELS"
+msgid "&Channels"
+msgstr "채널(&C)"
+
+msgctxt "IDS_PPAGE_OUTPUT_MPCVR"
+msgid "MPC Video Renderer"
+msgstr "MPC 영상 렌더러"
+
+msgctxt "IDS_PPAGE_OUTPUT_VMR7"
+msgid "Video Mixing Renderer 7"
+msgstr "영상 혼합 렌더러 7"
+
+msgctxt "IDD_PPAGEACCELTBL"
+msgid "Player::Keys"
+msgstr "재생기::단축키"
+
+msgctxt "IDD_PPAGEMOUSE"
+msgid "Player::Mouse"
+msgstr "재생기::마우스"
+
+msgctxt "IDD_PPAGESUBSTYLE"
+msgid "Subtitles::Default Style"
+msgstr "자막::기본 스타일"
+
+msgctxt "IDD_PPAGEINTERNALFILTERS"
+msgid "Internal Filters::General"
+msgstr "내부 필터::일반"
+
+msgctxt "IDD_PPAGELOGO"
+msgid "Player::Logo"
+msgstr "재생기::로고"
+
+msgctxt "IDD_PPAGETHEME"
+msgid "Player::User Interface"
+msgstr "재생기::사용자 인터페이스"
+
+msgctxt "IDD_PPAGEOUTPUT"
+msgid "Playback::Output"
+msgstr "재생::출력"
+
+msgctxt "IDD_PPAGEWEBSERVER"
+msgid "Player::Web Interface"
+msgstr "재생기::웹 인터페이스"
+
+msgctxt "IDD_FILEPROPDETAILS"
+msgid "Details"
+msgstr "자세히"
+
+msgctxt "IDD_FILEPROPCLIP"
+msgid "Clip"
+msgstr "클립"
+
+msgctxt "IDC_DSVMR7"
+msgid ""
+"Very old VMR-7 renderer from Windows. Has limited functionality.\n"
+"Not compatible with internal subtitle renderer, pixelshaders, and rotation.\n"
+"Does not support HDR video."
+msgstr ""
+"윈도용 VMR-7 렌더러로 매우 오래된 버전입니다. 기능이 제한적입니다.\n"
+"내장 자막 렌더러, 픽셀 셰이더 및 회전 기능과 호환되지 않습니다.\n"
+"HDR 영상을 지원하지 않습니다."
+
+msgctxt "IDC_DSOVERLAYMIXER"
+msgid ""
+"Very old renderer from Windows. Has limited functionality.\n"
+"Not compatible with internal subtitle renderer, pixelshaders, and rotation.\n"
+"Always renders in overlay. Generally only YUV formats are allowed, but they are presented directly without any color conversion to RGB. This is the fastest rendering method of all and the only where you can be sure about fullscreen video mirroring to tv-out activating.\n"
+"Does not support HDR video."
+msgstr ""
+"윈도에 있던 아주 오래된 렌더러입니다. 기능이 제한적입니다.\n"
+"내장 자막 렌더러, 픽셀 셰이더 및 회전 기능과 호환되지 않습니다.\n"
+"항상 오버레이 모드로 표시됩니다. 일반적으로 YUV 형식만 허용되지만, RGB로 색상 변환 없이 직접 표시됩니다. 이는 모든 렌더링 방식 중 가장 빠르며, 전체 화면 영상을 TV 출력으로 미러링하는 기능을 확실하게 사용할 수 있는 유일한 방식입니다.\n"
+"HDR 영상은 지원하지 않습니다."
+
+msgctxt "IDC_DSVMR9WIN"
+msgid ""
+"Old VMR-9 renderer from Windows. Has limited functionality.\n"
+"Not compatible with internal subtitle renderer, pixelshaders, and rotation.\n"
+"Does not support HDR video."
+msgstr ""
+"윈도용 구형 VMR-9 렌더러입니다. 기능이 제한적입니다.\n"
+"내장 자막 렌더러, 픽셀 셰이더 및 회전 기능과 호환되지 않습니다.\n"
+"HDR 영상을 지원하지 않습니다."
+
+msgctxt "IDC_DSVMR9REN"
+msgid ""
+"Old VMR-9 renderer from Windows. Modified to be compatible with all player functionality.\n"
+"Does not support HDR video.\n"
+"Pixelshaders and rotation require the 3D surface setting."
+msgstr ""
+"윈도용 구형 VMR-9 렌더러를 재생기의 모든 기능과 호환되도록 수정했습니다.\n"
+"HDR 영상을 지원하지 않습니다.\n"
+"픽셀 셰이더 및 회전 기능을 사용하려면 3D 표면 설정이 필요합니다."
+
+msgctxt "IDC_DSDXR"
+msgid ""
+"Old custom video renderer implementation by Haali.\n"
+"Does not fully support all player functionality.\n"
+"Does not support HDR video.\n"
+"Suitable for old hardware."
+msgstr ""
+"Haali가 구현한 오래된 사용자 지정 영상 렌더러입니다.\n"
+"재생기의 모든 기능을 완벽하게 지원하지는 않습니다.\n"
+"HDR 영상을 지원하지 않습니다.\n"
+"구형 하드웨어에 적합합니다."
+
+msgctxt "IDC_DSNULL_COMP"
+msgid ""
+"Connects to any video-like media type and will send the incoming samples to "
+"nowhere. Use it when you don't need the video display and want to save the "
+"CPU from working unnecessarily."
+msgstr ""
+"모든 영상 형식의 샘플을 출력하지 않습니다. 영상 표시가 필요하지 않아 CPU에 쓸데없는 동작을 시키고 싶지 않은 경우에 사용하세요."
+
+msgctxt "IDC_DSNULL_UNCOMP"
+msgid ""
+"Same as the normal Null renderer, but this will only connect to uncompressed"
+" types."
+msgstr "일반적인 Null 렌더러와 같지만 압축되지 않은 형식 만을 연결합니다."
+
+msgctxt "IDC_DSEVR_CUSTOM"
+msgid ""
+"The standard video renderer of Windows. Modified to be compatible with all player functionality.\n"
+"This is the recommended choice for old hardware.\n"
+"Does not support HDR video."
+msgstr ""
+"윈도의 기본 영상 렌더러입니다. 재생기의 모든 기능과 호환되도록 수정되었습니다.\n"
+"구형 하드웨어에 권장되는 선택 사항입니다.\n"
+"HDR 영상을 지원하지 않습니다."
+
+msgctxt "IDC_DSEVR"
+msgid ""
+"The standard video renderer of Windows. Has limited functionality.\n"
+"Not compatible with internal subtitle renderer, pixelshaders, and rotation.\n"
+"If you wish to use EVR, the custom presenter variant is preferred for more functionality.\n"
+"Does not support HDR video."
+msgstr ""
+"윈도의 기본 영상 렌더러입니다. 기능이 제한적입니다.\n"
+"내장 자막 렌더러, 픽셀 셰이더 및 회전 기능과 호환되지 않습니다.\n"
+"EVR을 사용하려면 더 많은 기능을 제공하는 맞춤 프레젠터 버전을 사용하는 것이 좋습니다.\n"
+"HDR 영상을 지원하지 않습니다."
+
+msgctxt "IDC_DSMADVR"
+msgid ""
+"Advanced high quality video renderer.\n"
+"Provides advanced upscaling and HDR tonemapping settings. Is difficult to configure, so not recommended for novice users.\n"
+"Supports HDR video.\n"
+"Supports all player functionality such as subtitles, pixelshaders and rotation."
+msgstr ""
+"고급 고화질 영상 렌더러입니다.\n"
+"고급 업스케일링 및 HDR 톤매핑 설정을 제공합니다. 설정이 복잡하므로 초보 사용자에게는 권장하지 않습니다.\n"
+"HDR 영상을 지원합니다.\n"
+"자막, 픽셀 셰이더, 회전 등 재생기의 모든 기능을 지원합니다."
+
+msgctxt "IDC_DSSYNC"
+msgid ""
+"Same as the EVR (CP), but offers several options to synchronize the video "
+"frame rate with the display refresh rate to eliminate skipped or duplicated "
+"video frames."
+msgstr ""
+"EVR (CP)와 같지만, 스킵되거나 중복된 영상 프레임을 제거하기 위한 화면 표시 장치 주사율과 영상 프레임율을 동기화해주는 여러 옵션"
+" 제공합니다."
+
+msgctxt "IDC_REGULARSURF"
+msgid "Video surface will be allocated as a regular offscreen surface."
+msgstr "재생할 영상 표면을 표준 오프스크린으로 위치시킵니다."
+
+msgctxt "IDC_TEXTURESURF2D"
+msgid ""
+"Video surface will be allocated as a texture but still the 2d functions will"
+" be used to copy and stretch it onto the backbuffer. Requires a video card "
+"which can allocate 32-bit, RGBA, non-power-of-two sized textures and at "
+"least in the resolution of the video."
+msgstr ""
+"영상 표면은 텍스처로 할당되지만 여전히 2D 함수를 사용하여 백 버퍼에 복사하고 늘립니다. 32비트, RGBA, 2의 제곱이 아닌 크기 "
+"텍스처 및 최소한 영상 해상도를 할당할 수 있는 비디오 카드가 요구됩니다."
+
+msgctxt "IDC_TEXTURESURF3D"
+msgid ""
+"Video surface will be allocated as a texture and drawn as two triangles in "
+"3d. Antialiasing turned on at the display settings may have a bad effect on "
+"the rendering speed."
+msgstr ""
+"영상 표면은 텍스처로 할당되고 3D에서 두 개의 삼각형으로 그려집니다. 화면 표시 장치 설정에서 앤티 앨리어싱을 켜면 렌더링 속도에 좋지"
+" 않은 영향을 미칠 수 있습니다."
+
+msgctxt "IDC_DX9RESIZER_COMBO"
+msgid ""
+"If there is no Pixel Shader 2.0 support, simple bilinear is used "
+"automatically."
+msgstr "픽셀 셰이더 2.0 지원이 없는 경우, 단순 쌍선형이 자동으로 사용됩니다."
+
+msgctxt "IDC_DSVMR9LOADMIXER"
+msgid ""
+"Puts VMR-9 (renderless) into mixer mode, this means most of the controls on "
+"its property page will work and it will use a separate worker thread to "
+"renderer frames."
+msgstr ""
+"VMR-9(렌더리스)를 혼합 모드로 전환하면 속성 페이지의 대부분의 컨트롤이 작동하며 별도의 작업자 스레드를 사용하여 프레임을 "
+"렌더링합니다."
+
+msgctxt "IDC_DSMPCVR"
+msgid ""
+"Advanced high quality video renderer. This is our recommended choice.\n"
+"Supports HDR video.\n"
+"Supports Dolby Vision input and can convert it to SDR or HDR output.\n"
+"Supports all player functionality such as subtitles, pixelshaders and rotation.\n"
+"Can utilize either D3D9 or D3D11."
+msgstr ""
+"고급 고화질 영상 렌더러입니다. 추천합니다.\n"
+"HDR 영상을 지원합니다.\n"
+"돌비 비전 입력을 지원하며, 이를 SDR 또는 HDR 출력으로 변환할 수 있습니다.\n"
+"자막, 픽셀 셰이더, 회전 등 재생기의 모든 기능을 지원합니다.\n"
+"Direct3D 9 또는 Direct3D 11을 사용할 수 있습니다."
+
+msgctxt "IDS_PPAGE_OUTPUT_SYNC"
+msgid "Sync Renderer"
+msgstr "동기화 렌더러"
+
+msgctxt "IDS_PPAGE_OUTPUT_AUD_MPC_REND"
+msgid "MPC Audio Renderer"
+msgstr "MPC 음향 렌더러"
+
+msgctxt "IDS_PPAGE_OUTPUT_SURF_OFFSCREEN"
+msgid "Regular offscreen plain surface"
+msgstr "일반 오프스크린 일반 표면"
+
+msgctxt "IDS_PPAGE_OUTPUT_SURF_2D"
+msgid "2D surfaces"
+msgstr "2D 표면"
+
+msgctxt "IDS_PPAGE_OUTPUT_SURF_3D"
+msgid "3D surfaces (recommended)"
+msgstr "3D 표면(권장)"
+
+msgctxt "IDS_PPAGE_OUTPUT_RESIZE_NN"
+msgid "Nearest neighbor"
+msgstr "최근린"
+
+msgctxt "IDS_PPAGE_OUTPUT_RESIZER_BILIN"
+msgid "Bilinear"
+msgstr "쌍선형"
+
+msgctxt "IDS_PPAGE_OUTPUT_RESIZER_BIL_PS"
+msgid "Bilinear (PS 2.0)"
+msgstr "쌍선형 (PS 2.0)"
+
+msgctxt "IDS_PPAGE_OUTPUT_RESIZER_BICUB1"
+msgid "Bicubic A=-0.60 (PS 2.0)"
+msgstr "고등 차수 보간 A=-0.60 (PS 2.0)"
+
+msgctxt "IDS_PPAGE_OUTPUT_RESIZER_BICUB2"
+msgid "Bicubic A=-0.75 (PS 2.0)"
+msgstr "고등 차수 보간 A=-0.75 (PS 2.0)"
+
+msgctxt "IDS_PPAGE_OUTPUT_RESIZER_BICUB3"
+msgid "Bicubic A=-1.00 (PS 2.0)"
+msgstr "고등 차수 보간 A=-1.00 (PS 2.0)"
+
+msgctxt "IDS_PPAGE_OUTPUT_UNAVAILABLE"
+msgid "**unavailable**"
+msgstr "**비활성화**"
+
+msgctxt "IDS_PPAGE_OUTPUT_UNAVAILABLEMSG"
+msgid "The selected renderer is not installed."
+msgstr "선택한 렌더러는 설치돼 있지 않습니다."
+
+msgctxt "IDS_PPAGE_OUTPUT_SUPPORT_ALL_HDR"
+msgid "Supports all player functionality, including HDR video."
+msgstr "HDR 영상을 포함한 재생기의 모든 기능을 지원합니다."
+
+msgctxt "IDS_PPAGE_OUTPUT_SUPPORT_NO_HDR"
+msgid "Supports all player functionality, except HDR video."
+msgstr "HDR 영상을 제외한 재생기의 모든 기능을 지원합니다."
+
+msgctxt "IDS_PPAGE_OUTPUT_SUPPORT_LIMITED"
+msgid "Does not support all player functionality."
+msgstr "재생기의 모든 기능을 지원하지 않습니다."
+
+msgctxt "IDS_PPAGE_OUTPUT_AUD_NULL_COMP"
+msgid "Null (anything)"
+msgstr "Null(전부)"
+
+msgctxt "IDS_PPAGE_OUTPUT_AUD_NULL_UNCOMP"
+msgid "Null (uncompressed)"
+msgstr "Null(무압축)"
+
+msgctxt "IDS_PPAGE_OUTPUT_AUD_INTERNAL_REND"
+msgid "SaneAR Audio Renderer"
+msgstr "SaneAR 음향 렌더러"
+
+msgctxt "IDS_EMB_RESOURCES_VIEWER_NAME"
+msgid "Name"
+msgstr "이름"
+
+msgctxt "IDS_EMB_RESOURCES_VIEWER_TYPE"
+msgid "MIME Type"
+msgstr "MIME 유형"
+
+msgctxt "IDS_EMB_RESOURCES_VIEWER_INFO"
+msgid ""
+"In order to view an embedded resource in your browser you have to enable the web interface.\n"
+"\n"
+"Use the \"Save As\" button if you only want to save the information."
+msgstr ""
+"브라우저에서 포함된 리소스를 보려면 웹 인터페이스를 활성화해야 합니다.\n"
+"\n"
+"정보만 저장하려면 \"다른 이름으로 저장\" 버튼을 사용하세요."
+
+msgctxt "IDS_SUBTITLES_DOWNLOAD"
+msgid "Download Subtitles..."
+msgstr "자막 내려받기..."
+
+msgctxt "IDS_SUBFILE_DELAY"
+msgid "Delay (ms):"
+msgstr "지연(밀리초) :"
+
+msgctxt "IDS_SPEEDSTEP_AUTO"
+msgid "Auto"
+msgstr "자동"
+
+msgctxt "IDS_EXPORT_SETTINGS_NO_KEYS"
+msgid "There are no customized keys to export."
+msgstr "내보낼 사용자 지정 키가 없습니다."
+
+msgctxt "IDS_RFS_NO_FILES"
+msgid "No media files found in the archive"
+msgstr "아카이브에서 미디어 파일을 찾지 못함"
+
+msgctxt "IDS_RFS_COMPRESSED"
+msgid "Compressed files are not supported"
+msgstr "압축 파일 미지원"
+
+msgctxt "IDS_RFS_ENCRYPTED"
+msgid "Encrypted files are not supported"
+msgstr "암호화된 파일 미지원"
+
+msgctxt "IDS_RFS_MISSING_VOLS"
+msgid "Couldn't find all archive volumes"
+msgstr "모든 아카이브 음량을 찾지 못함"
+
+msgctxt "IDC_FULLSCREEN_MONITOR_CHECK"
+msgid "Reduces tearing but prevents the toolbar from being shown."
+msgstr "잘림 현상이 줄어들지만 도구 모음이 표시되지 않습니다."
+
+msgctxt "IDC_DSVMR9ALTERNATIVEVSYNC"
+msgid "Reduces tearing by bypassing the default VSync built into D3D."
+msgstr "D3D에 내장된 기본 수직 동기화를 우회하여 티어링을 줄입니다."
+
+msgctxt "IDS_NAVIGATE_TUNERSCAN"
+msgid "Tuner scan"
+msgstr "튜너 검색"
+
+msgctxt "IDS_SUBTITLES_ERROR"
+msgid "Subtitles are not loaded or unsupported renderer."
+msgstr "자막을 불러오지 않았거나 지원하지 않는 렌더러입니다."
+
+msgctxt "IDC_CACHESHADERS"
+msgid "Stores compiled shaders in local AppData to speed up load time."
+msgstr "로드 시간을 단축하기 위해 로컬 AppData에 컴파일된 셰이더를 저장합니다."
+
+msgctxt "IDS_SRC_VTS"
+msgid "Open VTS_xx_0.ifo to load VTS_xx_x.vob files in one piece"
+msgstr "VTS_xx_0.ifo 파일에 속해있는 VTS_xx_x.vob 파일을 불러옵니다."
+
+msgctxt "IDS_SRC_RFS"
+msgid "Based on RARFileSource, doesn't support compressed files"
+msgstr "RAR 기반 압축 파일 미지원"
+
+msgctxt "IDS_INTERNAL_LAVF"
+msgid "Uses LAV Filters"
+msgstr "LAV 필터 사용"
+
+msgctxt "IDS_INTERNAL_LAVF_WMV"
+msgid ""
+"Uses LAV Filters. Disabled by default since Microsoft filters are usually more stable for those formats.\n"
+"If you choose to use the internal filters, enable them for both source and decoding to have a better playback experience."
+msgstr ""
+"LAV 필터를 사용합니다. 마이크로소프트 필터는 일반적으로 해당 형식에 더 안정적이므로 기본적으로 비활성화됩니다.\n"
+"내부 필터 사용을 선택한 경우 더 나은 재생 환경을 위해 소스 및 디코딩 모두 내부 필터를 활성화하세요."
+
+msgctxt "IDS_AG_OPEN_FILE_LOCATION"
+msgid "Open File Location"
+msgstr "파일 위치 열기"
+
+msgctxt "IDS_AG_OPENDIRECTORY"
+msgid "Open Directory"
+msgstr "디렉터리 열기"
+
+msgctxt "IDS_AG_TOGGLE_NAVIGATION"
+msgid "Toggle Navigation Bar"
+msgstr "탐색 모음 전환"
+
+msgctxt "IDS_AG_VSYNCACCURATE"
+msgid "Accurate VSync"
+msgstr "정밀 수직 동기화"
+
+msgctxt "IDC_CHECK_RELATIVETO"
+msgid ""
+"If the rendering target is left undefined, it will be inherited from the "
+"default style."
+msgstr "렌더링 대상이 정의되지 않은 경우 기본 스타일에서 상속됩니다."
+
+msgctxt "IDC_CHECK_NO_SUB_ANIM"
+msgid ""
+"Disallow subtitle animation. Enabling this option will lower CPU usage. You "
+"can use it if you experience flashing subtitles."
+msgstr ""
+"자막 애니메이션을 허용하지 않습니다. 이 옵션을 활성화하면 CPU 사용량이 낮아집니다. 자막이 깜박이는 경우 사용하실 수 있습니다."
+
+msgctxt "IDC_SUBPIC_TO_BUFFER"
+msgid ""
+"Increasing the number of buffered subpictures should in general improve the "
+"rendering performance at the cost of a higher video RAM usage on the GPU."
+msgstr "버퍼링된 하위 사진의 수를 늘리면 일반적으로 GPU에서 VRAM 사용량이 높아지는 대신 렌더링 성능이 향상됩니다."
+
+msgctxt "IDC_BUTTON_EXT_SET"
+msgid ""
+"After clicking this button, the checked state of the format group will "
+"reflect the actual file association for MPC-HC. A newly added extension will"
+" usually make it grayed, so don't forget to check it again before closing "
+"this dialog!"
+msgstr ""
+"이 버튼을 클릭하면 형식 그룹이 MPC-HC에 대한 실제 파일 연결이 반영합니다. 새 확장자를 추가하면 일반적으로 확인란이 회색으로 "
+"표시되므로 이 대화 상자를 닫기 전에 다시 확인하십시오."
+
+msgctxt "IDC_CHECK_ALLOW_DROPPING_SUBPIC"
+msgid ""
+"Disabling this option will prevent the subtitles from blinking but it may "
+"cause the video renderer to skip some video frames."
+msgstr "이 옵션을 비활성화하면 자막이 깜박이지 않지만 영상 렌더러가 일부 영상 프레임을 건너뛸 수 있습니다."
+
+msgctxt "ID_PLAY_PLAY"
+msgid ""
+"Play\n"
+"Play"
+msgstr ""
+"재생\n"
+"재생"
+
+msgctxt "ID_PLAY_PAUSE"
+msgid ""
+"Pause\n"
+"Pause"
+msgstr ""
+"일시 중지\n"
+"일시 중지"
+
+msgctxt "ID_PLAY_STOP"
+msgid ""
+"Stop\n"
+"Stop"
+msgstr ""
+"중지\n"
+"중지"
+
+msgctxt "ID_PLAY_FRAMESTEP"
+msgid ""
+"Step\n"
+"Step"
+msgstr ""
+"한 프레임씩\n"
+"한 프레임씩"
+
+msgctxt "ID_PLAY_DECRATE"
+msgid ""
+"Decrease speed\n"
+"Decrease speed"
+msgstr ""
+"재생 속도 감소\n"
+"재생 속도 감소"
+
+msgctxt "ID_PLAY_INCRATE"
+msgid ""
+"Increase speed\n"
+"Increase speed"
+msgstr ""
+"재생 속도 증가\n"
+"재생 속도 증가"
+
+msgctxt "ID_VOLUME_MUTE"
+msgid "Mute"
+msgstr "음 소거"
+
+msgctxt "ID_VOLUME_MUTE_OFF"
+msgid "Unmute"
+msgstr "음 소거 해제"
+
+msgctxt "ID_VOLUME_MUTE_DISABLED"
+msgid "No audio"
+msgstr "오디오 없음"
+
+msgctxt "ID_NAVIGATE_SKIPBACK"
+msgid ""
+"Skip back\n"
+"Skip back"
+msgstr ""
+"뒤로 이동\n"
+"뒤로 이동"
+
+msgctxt "ID_NAVIGATE_SKIPFORWARD"
+msgid ""
+"Skip forward\n"
+"Skip forward"
+msgstr ""
+"앞으로 이동\n"
+"앞으로 이동"
+
 msgctxt "IDS_FAVORITES_ADD"
 msgid "&Add to Favorites..."
 msgstr "즐겨찾기에 추가(&A)..."
 
 msgctxt "IDS_FAVORITES_ORGANIZE"
-msgid "&Organize Favorites..."
-msgstr "즐겨찾기 구성(&O)..."
+msgid "Organize Favorites..."
+msgstr "즐겨찾기 구성..."
 
 msgctxt "IDS_PLAYLIST_SHUFFLE"
 msgid "Sh&uffle"
-msgstr "순서 섞기"
+msgstr "순서 섞기(&U)"
 
 msgctxt "IDS_PLAYLIST_SHOWFOLDER"
 msgid "Ope&n file location"
-msgstr ""
+msgstr "파일 위치 열기(&N)"
 
 msgctxt "IDS_CONTROLS_CLOSING"
 msgid "Closing..."
-msgstr "닫는중..."
+msgstr "닫는 중..."
 
 msgctxt "IDS_CONTROLS_PLAYING"
 msgid "Playing"
-msgstr "재생중"
+msgstr "재생 중"
 
 msgctxt "IDS_CONTROLS_PAUSED"
 msgid "Paused"
-msgstr "일시정지"
+msgstr "일시 중지"
+
+msgctxt "IDS_SUBTITLE_RENDERER_NONE"
+msgid "None"
+msgstr "없음"
+
+msgctxt "IDS_PPAGEADVANCED_MOUSE_LEFTUP_DELAY"
+msgid ""
+"Maximum delay in milliseconds of mouse LeftUp event when clicking on the "
+"video."
+msgstr "영상을 클릭할 때 마우스 왼쪽 클릭 이벤트의 최대 지연 시간(밀리초)."
+
+msgctxt "IDS_PPAGEADVANCED_USE_FREETYPE"
+msgid ""
+"Use FreeType for subtitle rendering.  Enables support for per-language "
+"glyphs."
+msgstr "자막 렌더링에는 FreeType을 사용하세요. 언어별 문자 모양에 대한 지원을 활성화합니다."
+
+msgctxt "IDS_PPAGEADVANCED_USE_MEDIAINFO_LOAD_FILE_DURATION"
+msgid ""
+"Load file duration when adding items to playlist (uses MediaInfo and results"
+" may vary)"
+msgstr "재생 목록에 항목을 추가할 때 파일 길이 불러오기(MediaInfo 사용 결과와는 다를 수 있음)"
+
+msgctxt "IDS_TIMER_SHOW_PERCENTAGE"
+msgid "Show percentage"
+msgstr "비율 표시"
+
+msgctxt "IDS_SUBDL_DLG_FAILED_DL"
+msgid "Subtitle download failed."
+msgstr "자막을 내려받지 못했습니다."
+
+msgctxt "IDS_PPAGEADVANCED_FILEPOS_PLAYLIST"
+msgid "Remember playback position in local M3U and MPCPL playlist files."
+msgstr "로컬 M3U 및 MPCPL 재생 목록 파일의 재생 위치를 기억합니다."
+
+msgctxt "IDS_PPAGEADVANCED_FILEPOS_TRACK_SELECTION"
+msgid ""
+"Remember the selected audio and subtitle track (when file history is "
+"enabled)."
+msgstr "(파일 기록이 활성화된 경우) 선택한 오디오 및 자막 트랙을 기억합니다."
+
+msgctxt "IDS_PPAGEADVANCED_YDL_AUDIO_FORMAT"
+msgid ""
+"Preferred audio format for stream that is selected from Youtube-DL results. Only applies if audio stream is separate from video stream.\n"
+"0: Automatic\n"
+"1: AAC\n"
+"2: OPUS"
+msgstr ""
+"Youtube-DL 결과에서 선택한 스트림의 기본 음향 형식입니다. 음향 스트림이 영상 스트림과 분리된 경우에만 적용됩니다.\n"
+"0 : 자동\n"
+"1 : AAC\n"
+"2 : OPUS"
+
+msgctxt "IDS_PPAGEADVANCED_PREVENT_DISPLAY_SLEEP"
+msgid "Disable screen saver and monitor sleep mode during video playback."
+msgstr "영상 재생 중 화면 보호기 및 모니터 절전 모드 전환 비활성화합니다."
+
+msgctxt "IDS_PPAGEADVANCED_STILL_VIDEO_DURATION"
+msgid ""
+"Display duration in seconds for images rendered by \"Generate Still Video\" "
+"and \"MPC Image Source\" filters. Use 0 for infinite."
+msgstr ""
+"'정지 영상 생성' 및 'MPC 이미지 소스' 필터로 렌더링한 이미지의 지속 시간을 초 단위로 표시합니다. 무한대에는 0을 사용합니다."
+
+msgctxt "IDS_PPAGEADVANCED_CAPTURE_DEINTERLACE"
+msgid "Insert deinterlace filter (blend) in capture mode"
+msgstr "캡처 모드에서 인터레이스 제거 필터(블렌드) 삽입"
+
+msgctxt "IDS_PLAYLIST_TOGGLE_SHUFFLE"
+msgid "Toggle Playlist Shuffle"
+msgstr "재생 목록 섞기 전환"
+
+msgctxt "IDS_AUDIOSHIFT_ONOFF"
+msgid "Toggle Audio Delay"
+msgstr "음향 지연 전환"
 
 msgctxt "IDS_AG_EDL_NEW_CLIP"
 msgid "EDL new clip"
@@ -979,11 +1361,11 @@ msgstr "EDL 새로운 클립"
 
 msgctxt "IDS_RECENT_FILES_CLEAR"
 msgid "&Clear list"
-msgstr "목록 지우기"
+msgstr "목록 비우기(&C)"
 
 msgctxt "IDS_RECENT_FILES_QUESTION"
 msgid "Are you sure that you want to delete recent files list?"
-msgstr "최근 파일 목록을 지우시겠습니까?"
+msgstr "최근 파일 목록을 삭제하시겠습니까?"
 
 msgctxt "IDS_AG_EDL_SAVE"
 msgid "EDL save"
@@ -991,39 +1373,43 @@ msgstr "EDL 저장"
 
 msgctxt "IDS_AG_ENABLEFRAMETIMECORRECTION"
 msgid "Enable Frame Time Correction"
-msgstr "프레임시간수정 사용"
+msgstr "프레임 시간 수정 사용"
 
 msgctxt "IDS_AG_TOGGLE_EDITLISTEDITOR"
 msgid "Toggle EDL window"
-msgstr "EDL 윈도우 토글"
+msgstr "EDL 창 토글"
 
 msgctxt "IDS_AG_EDL_IN"
 msgid "EDL set In"
-msgstr "EDL In 으로 설정"
+msgstr "EDL 시작점 설정"
 
 msgctxt "IDS_AG_EDL_OUT"
 msgid "EDL set Out"
-msgstr "EDL Out 으로 설정"
+msgstr "EDL 종점 설정"
 
 msgctxt "IDS_AG_PNS_ROTATEX_M"
-msgid "PnS Rotate X-"
-msgstr "PnS 회전 X-"
+msgid "Video Frame Rotate X-"
+msgstr "영상 프레임 회전 X-"
 
 msgctxt "IDS_AG_PNS_ROTATEY_P"
-msgid "PnS Rotate Y+"
-msgstr "PnS 회전 Y+"
+msgid "Video Frame Rotate Y+"
+msgstr "영상 프레임 회전 Y+"
 
 msgctxt "IDS_AG_PNS_ROTATEY_M"
-msgid "PnS Rotate Y-"
-msgstr "PnS 회전 Y-"
+msgid "Video Frame Rotate Y-"
+msgstr "영상 프레임 회전 Y-"
 
 msgctxt "IDS_AG_PNS_ROTATEZ_P"
-msgid "PnS Rotate Z+"
-msgstr "PnS 회전 Z+"
+msgid "Video Frame Rotate Z+"
+msgstr "영상 프레임 회전 Z+"
+
+msgctxt "IDS_AG_PNS_ROTATEZ_P2"
+msgid "Video Frame Rotate Z+ (2 degrees)"
+msgstr "영상 프레임 회전 Z+ (2도)"
 
 msgctxt "IDS_AG_PNS_ROTATEZ_M"
-msgid "PnS Rotate Z-"
-msgstr "PnS 회전 Z-"
+msgid "Video Frame Rotate Z-"
+msgstr "영상 프레임 회전 Z-"
 
 msgctxt "IDS_AG_TEARING_TEST"
 msgid "Tearing Test"
@@ -1031,7 +1417,7 @@ msgstr "티어링 테스트"
 
 msgctxt "IDS_SCALE_16_9"
 msgid "Scale to 16:9 TV,%.3f,%.3f,%.3f,%.3f"
-msgstr "16:9 TV 스케일,%.3f,%.3f,%.3f,%.3f"
+msgstr "16:9 TV로 크기 조정,%.3f,%.3f,%.3f,%.3f"
 
 msgctxt "IDS_SCALE_WIDESCREEN"
 msgid "Zoom to Widescreen,%.3f,%.3f,%.3f,%.3f"
@@ -1039,15 +1425,45 @@ msgstr "와이드스크린으로 확대,%.3f,%.3f,%.3f,%.3f"
 
 msgctxt "IDS_SCALE_ULTRAWIDE"
 msgid "Zoom to Ultra-Widescreen,%.3f,%.3f,%.3f,%.3f"
-msgstr "울트라-와이드스크린으로 확대,%.3f,%.3f,%.3f,%.3f"
+msgstr "울트라와이드스크린으로 확대,%.3f,%.3f,%.3f,%.3f"
 
 msgctxt "IDS_PLAYLIST_HIDEFS"
 msgid "&Hide on Fullscreen"
-msgstr "전체화면에서 숨기기"
+msgstr "전체 화면에서 숨기기(&H)"
+
+msgctxt "IDS_PLAYLIST_POSITION"
+msgid "&Position"
+msgstr "위치(&P)"
+
+msgctxt "IDS_PLAYLIST_POSITION_LEFT"
+msgid "&Left"
+msgstr "좌측(&L)"
+
+msgctxt "IDS_PLAYLIST_POSITION_TOP"
+msgid "&Top"
+msgstr "상단(&T)"
+
+msgctxt "IDS_PLAYLIST_POSITION_RIGHT"
+msgid "&Right"
+msgstr "우측(&R)"
+
+msgctxt "IDS_PLAYLIST_POSITION_BOTTOM"
+msgid "&Bottom"
+msgstr "하단(&B)"
+
+msgctxt "IDS_PLAYLIST_POSITION_FLOAT"
+msgid "&Floating"
+msgstr "유동적(&F)"
+
+msgctxt "IDS_SETTINGS_KEEP_REGISTRY_COPY"
+msgid ""
+"Keep a copy of the settings in the Registry? This is useful as backup, and "
+"recommended if you want to use multiple copies of MPC-HC."
+msgstr "레지스트리에 설정값을 저장해 두시겠습니까? 이는 백업용으로 유용하며, MPC-HC를 여러 개 사용하려는 경우 권장됩니다."
 
 msgctxt "IDS_CONTROLS_STOPPED"
 msgid "Stopped"
-msgstr "정지됨"
+msgstr "중지됨"
 
 msgctxt "IDS_CONTROLS_BUFFERING"
 msgid "Buffering... (%d%%)"
@@ -1055,15 +1471,15 @@ msgstr "버퍼링... (%d%%)"
 
 msgctxt "IDS_CONTROLS_CAPTURING"
 msgid "Capturing..."
-msgstr "캡쳐중..."
+msgstr "캡쳐 중..."
 
 msgctxt "IDS_CONTROLS_OPENING"
 msgid "Opening..."
-msgstr "여는중..."
+msgstr "여는 중..."
 
 msgctxt "IDS_CONTROLS_CLOSED"
 msgid "Closed"
-msgstr "닫음"
+msgstr "닫힘"
 
 msgctxt "IDS_SUBTITLES_OPTIONS"
 msgid "&Options..."
@@ -1075,15 +1491,15 @@ msgstr "스타일(&S)..."
 
 msgctxt "IDS_SUBTITLES_RELOAD"
 msgid "&Reload"
-msgstr "다시 열기(&R)"
+msgstr "다시 불러오기(&R)"
 
-msgctxt "IDS_SUBTITLES_ENABLE"
-msgid "&Enable"
-msgstr "자막활성화(&E)"
+msgctxt "IDS_SUBTITLES_HIDE"
+msgid "&Hide Subtitles"
+msgstr "자막 숨기기(&H)"
 
 msgctxt "IDS_PANSCAN_EDIT"
 msgid "&Edit..."
-msgstr "편집..."
+msgstr "편집(&E)..."
 
 msgctxt "IDS_INFOBAR_TITLE"
 msgid "Title"
@@ -1091,7 +1507,7 @@ msgstr "제목"
 
 msgctxt "IDS_INFOBAR_AUTHOR"
 msgid "Author"
-msgstr "만든이"
+msgstr "저작자"
 
 msgctxt "IDS_INFOBAR_COPYRIGHT"
 msgid "Copyright"
@@ -1126,16 +1542,16 @@ msgid "Key"
 msgstr "키"
 
 msgctxt "IDS_AG_MOUSE"
-msgid "Mouse Windowed"
-msgstr "창화면 마우스"
-
-msgctxt "IDS_AG_MOUSE_FS"
-msgid "Mouse Fullscreen"
-msgstr "전체화면 마우스"
+msgid "Mouse"
+msgstr "마우스"
 
 msgctxt "IDS_AG_APP_COMMAND"
 msgid "App Command"
 msgstr "명령 추가"
+
+msgctxt "IDS_AG_BUILTIN_TOOLBAR"
+msgid "Built-in Toolbar"
+msgstr "내장된 도구 모음"
 
 msgctxt "IDS_AG_MEDIAFILES"
 msgid "Media files (all types)"
@@ -1143,11 +1559,11 @@ msgstr "미디어 파일 (모든 형식)"
 
 msgctxt "IDS_AG_ALLFILES"
 msgid "All files (*.*)|*.*|"
-msgstr "모든 파일 (*.*)|*.*|"
+msgstr "모든 파일(*.*)|*.*|"
 
 msgctxt "IDS_AG_AUDIOFILES"
 msgid "Audio files (all types)"
-msgstr "오디오 파일 (모든 형식)"
+msgstr "오디오 파일(모든 형식)"
 
 msgctxt "IDS_AG_NOT_KNOWN"
 msgid "Not known"
@@ -1158,44 +1574,48 @@ msgid "Quick Open File"
 msgstr "빠른 파일 열기"
 
 msgctxt "IDS_AG_OPEN_FILE"
-msgid "Open File"
-msgstr "파일 열기"
+msgid "Open File/URL"
+msgstr "파일/URL 열기"
 
 msgctxt "IDS_AG_OPEN_DVD"
 msgid "Open DVD/BD"
-msgstr "DVD/BD 열기"
+msgstr "DVD/블루레이 열기"
 
 msgctxt "IDS_MAINFRM_POST_SHADERS_FAILED"
 msgid "Failed to set post-resize shaders"
-msgstr ""
+msgstr "크기 조정 후 셰이더 설정 실패"
 
 msgctxt "IDS_MAINFRM_BOTH_SHADERS_FAILED"
 msgid "Failed to set both pre-resize and post-resize shaders"
-msgstr ""
+msgstr "크기 조정 전 셰이더와 크기 조정 후 셰이더를 모두 설정하는 데 실패"
 
 msgctxt "IDS_DEBUGSHADERS_FIRSTRUN_MSG"
-msgid "Shaders are recompiled automatically when the corresponding files are modified."
-msgstr ""
+msgid ""
+"Shaders are recompiled automatically when the corresponding files are "
+"modified."
+msgstr "셰이더는 해당 파일이 수정되면 자동으로 다시 컴파일됩니다."
 
 msgctxt "IDS_SHADER_DLL_ERR_0"
 msgid "Cannot load %s, pixel shaders will not work."
-msgstr ""
+msgstr "%s을(를) 불러올 수 없습니다. 픽셀 셰이더가 작동하지 않습니다."
 
 msgctxt "IDS_SHADER_DLL_ERR_1"
-msgid "Cannot find necessary function entry points in %s, pixel shaders will not work."
-msgstr ""
+msgid ""
+"Cannot find necessary function entry points in %s, pixel shaders will not "
+"work."
+msgstr " %s에서 필요한 함수 진입점을 찾을 수 없습니다. 픽셀 셰이더가 작동하지 않습니다."
 
 msgctxt "IDS_OSD_SHADERS_PRESET"
 msgid "Shader preset: %s"
-msgstr ""
+msgstr "셰이더 프리셋 : %s"
 
 msgctxt "IDS_AG_SHADERS_PRESET_NEXT"
 msgid "Next Shader Preset"
-msgstr ""
+msgstr "다음 셰이더 프리셋"
 
 msgctxt "IDS_AG_SHADERS_PRESET_PREV"
 msgid "Prev Shader Preset"
-msgstr ""
+msgstr "이전 셰이더 프리셋"
 
 msgctxt "IDS_STRING_COLON"
 msgid "%s:"
@@ -1207,11 +1627,11 @@ msgstr "녹화"
 
 msgctxt "IDS_RECORD_STOP"
 msgid "Stop"
-msgstr "정지"
+msgstr "중지"
 
 msgctxt "IDS_BALANCE"
 msgid "L = R"
-msgstr "L = R"
+msgstr "L=R"
 
 msgctxt "IDS_BALANCE_L"
 msgid "L +%d%%"
@@ -1227,11 +1647,11 @@ msgstr "%d%%"
 
 msgctxt "IDS_BOOST"
 msgid "+%d%%"
-msgstr ""
+msgstr "+%d%%"
 
 msgctxt "IDS_PLAYLIST_ADDFOLDER"
 msgid "Add containing &folder"
-msgstr ""
+msgstr "포함 폴더 추가(&F)"
 
 msgctxt "IDS_HW_INDICATOR"
 msgid "[H/W]"
@@ -1243,19 +1663,19 @@ msgstr "소프트웨어 디코딩"
 
 msgctxt "IDS_STATSBAR_PLAYBACK_RATE"
 msgid "Playback rate"
-msgstr ""
+msgstr "재생 속도"
 
 msgctxt "IDS_FILTERS_COPY_TO_CLIPBOARD"
 msgid "&Copy filters list to clipboard"
-msgstr ""
+msgstr "클립보드에 필터 목록 복사(&C)"
 
 msgctxt "IDS_CREDENTIALS_SERVER"
 msgid "Enter server credentials"
-msgstr ""
+msgstr "서버 자격 증명 입력"
 
 msgctxt "IDS_CREDENTIALS_CONNECT"
 msgid "Enter your credentials to connect"
-msgstr ""
+msgstr "연결하려면 자격 증명을 입력"
 
 msgctxt "IDS_SUB_SAVE_EXTERNAL_STYLE_FILE"
 msgid "Save custom style"
@@ -1263,15 +1683,16 @@ msgstr "사용자 정의 스타일 저장"
 
 msgctxt "IDS_CONTENT_EDUCATION_SCIENCE"
 msgid "Education/Science/Factual topics"
-msgstr ""
+msgstr "교육/과학/실제 주제"
 
 msgctxt "IDS_PPAGEADVANCED_HIDE_WINDOWED"
 msgid "Hides controls and panels also in windowed mode."
-msgstr ""
+msgstr "창 모드에서도 컨트롤과 패널을 숨깁니다."
 
 msgctxt "IDS_PPAGEADVANCED_BLOCK_VSFILTER"
-msgid "Prevent external subtitle renderer to be loaded when internal is in use."
-msgstr ""
+msgid ""
+"Prevent external subtitle renderer to be loaded when internal is in use."
+msgstr "내부가 사용 중일 때 외부 자막 렌더러가 로드되지 않도록 합니다."
 
 msgctxt "IDS_PPAGEADVANCED_COL_NAME"
 msgid "Name"
@@ -1282,28 +1703,30 @@ msgid "Value"
 msgstr "값"
 
 msgctxt "IDS_PPAGEADVANCED_RECENT_FILES_NUMBER"
-msgid "Maximum number of files shown in the \"Recent files\" menu and for which the position is potentially saved."
-msgstr ""
+msgid ""
+"Maximum number of files shown in the \"Recent files\" menu and for which the"
+" position is potentially saved."
+msgstr "\"최근 파일\" 메뉴에 표시되고 잠재적으로 위치가 저장되는 최대 파일 수입니다."
 
 msgctxt "IDS_PPAGEADVANCED_FILE_POS_LONGER"
 msgid "Remember file position only for files longer than N minutes."
-msgstr ""
+msgstr "N분보다 긴 파일에 대해서만 파일 위치를 기억하십시오."
 
 msgctxt "IDS_PPAGEADVANCED_FILE_POS_AUDIO"
 msgid "Remember file position also for audio files."
-msgstr ""
+msgstr "오디오 파일의 경우에도 파일 위치를 기억하십시오."
 
 msgctxt "IDS_AFTER_PLAYBACK_DO_NOTHING"
 msgid "Do Nothing"
-msgstr "아무것도 하지않음"
+msgstr "아무 것도 안 함"
 
 msgctxt "IDS_AFTER_PLAYBACK_PLAY_NEXT"
 msgid "Play next file in the folder"
-msgstr ""
+msgstr "폴더의 다음 파일 재생"
 
 msgctxt "IDS_AFTER_PLAYBACK_REWIND"
 msgid "Rewind current file"
-msgstr ""
+msgstr "현재 파일 되감기"
 
 msgctxt "IDS_AFTER_PLAYBACK_CLOSE"
 msgid "Close"
@@ -1315,7 +1738,7 @@ msgstr "종료"
 
 msgctxt "IDS_AFTER_PLAYBACK_MONITOROFF"
 msgid "Turn off the monitor"
-msgstr "모니터를 끄기"
+msgstr "모니터 끄기"
 
 msgctxt "IDS_IMAGE_JPEG_QUALITY"
 msgid "JPEG Image"
@@ -1323,19 +1746,21 @@ msgstr "JPEG 이미지"
 
 msgctxt "IDS_IMAGE_QUALITY"
 msgid "Quality (%):"
-msgstr "품질 (%):"
+msgstr "품질(%) :"
 
 msgctxt "IDS_PPAGEADVANCED_COVER_SIZE_LIMIT"
 msgid "Maximum size (NxNpx) of a cover-art loaded in the audio only mode."
-msgstr ""
+msgstr "오디오 전용 모드에서 불러온 커버 아트의 최대 크기(NxNpx)."
 
 msgctxt "IDS_SUBTITLE_DELAY_STEP_TOOLTIP"
-msgid "The subtitle delay will be decreased/increased by this value each time the corresponding hotkeys are used (%s/%s)."
-msgstr ""
+msgid ""
+"The subtitle delay will be decreased/increased by this value each time the "
+"corresponding hotkeys are used (%s/%s)."
+msgstr "자막 지연은 해당 핫키를 사용할 때마다 (%s/%s)이 값만큼 증/감합니다."
 
 msgctxt "IDS_HOTKEY_NOT_DEFINED"
 msgid "<not defined>"
-msgstr ""
+msgstr "<not defined>"
 
 msgctxt "IDS_NAVIGATION_WATCH"
 msgid "Watch"
@@ -1343,15 +1768,15 @@ msgstr "보기"
 
 msgctxt "IDS_NAVIGATION_MOVE_UP"
 msgid "Move Up"
-msgstr "위로"
+msgstr "위로 이동"
 
 msgctxt "IDS_NAVIGATION_MOVE_DOWN"
 msgid "Move Down"
-msgstr "아래로"
+msgstr "아래로 이동"
 
 msgctxt "IDS_NAVIGATION_SORT"
 msgid "Sort by LCN"
-msgstr "LCN순 정렬"
+msgstr "LCN으로 정렬"
 
 msgctxt "IDS_NAVIGATION_REMOVE_ALL"
 msgid "Remove all"
@@ -1359,59 +1784,73 @@ msgstr "모두 제거"
 
 msgctxt "IDS_REMOVE_CHANNELS_QUESTION"
 msgid "Are you sure you want to remove all channels from the list?"
-msgstr ""
+msgstr "목록에서 모든 채널을 제거하시겠습니까?"
 
 msgctxt "IDS_MEDIAINFO_NO_INFO_AVAILABLE"
 msgid "No information available"
-msgstr ""
+msgstr "사용 가능한 정보 없음"
 
 msgctxt "IDS_MEDIAINFO_ANALYSIS_IN_PROGRESS"
 msgid "Please wait, analysis in progress..."
-msgstr "기다려 주세요, 분석 진행 중 입니다."
+msgstr "잠시만 기다려 주십시오. 분석이 진행 중입니다..."
 
 msgctxt "IDS_ASPECT_RATIO_FMT"
 msgid "AR %d:%d"
-msgstr ""
+msgstr "AR %d:%d"
 
 msgctxt "IDS_PPAGEADVANCED_LOGGER"
-msgid "Enables logging to file (requires restart)"
+msgid ""
+"Enables logging to file (requires restart).\n"
+"This only logs a few very specific things, such as DVB scanning, subtitle search, and yt-dlp data parsing.\n"
+"Do not enable this during normal use!"
 msgstr ""
+"파일에 로그 기록을 활성화합니다.(다시 시작 필요)\n"
+"여기에는 DVB 스캐닝, 자막 검색, YT-DLP 데이터 구문 분석 등 매우 구체적인 몇 가지 사항만 기록됩니다.\n"
+"일반적인 사용 중에는 이 기능을 활성화하지 마세요!"
 
 msgctxt "IDS_TIMER_REMAINING_TIME"
 msgid "Remaining time"
-msgstr ""
+msgstr "남은 시간"
 
 msgctxt "IDS_TIMER_HIGH_PRECISION"
 msgid "High precision"
-msgstr ""
+msgstr "밀리초 표시"
 
 msgctxt "IDS_AFTERPLAYBACK_REWIND"
 msgid "After Playback: Rewind current file"
-msgstr ""
+msgstr "재생 후 : 현재 파일 되감기"
 
 msgctxt "IDS_AFTERPLAYBACK_CLOSE"
 msgid "After Playback: Close"
-msgstr ""
+msgstr "재생 후 : 닫기"
 
 msgctxt "IDS_FRAME_INIT_FAILED"
-msgid "MPC-HC encountered a problem during initialization. With your help we might be able to fix the issue.\n\nDo you want to report it?"
-msgstr ""
+msgid "MPC-HC encountered a problem during initialization."
+msgstr "초기화 중에 MPC-HC에 문제가 발생했습니다."
 
 msgctxt "IDS_TIME_SHIFT_TOOLTIP"
-msgid "Enter a positive value if the audio is early, a negative value if it is late."
-msgstr ""
+msgid ""
+"Enter a positive value if the audio is early, a negative value if it is "
+"late."
+msgstr "오디오가 빠르면 양수 값을 입력하고 늦으면 음수 값을 입력합니다."
 
 msgctxt "IDS_WEBUI_DISABLED_PREVIEW_MSG"
 msgid "Preview is currently disabled. You can enable it in MPC-HC's options."
-msgstr ""
+msgstr "현재 미리 보기가 비활성화되어 있습니다. MPC-HC의 옵션에서 활성화할 수 있습니다."
 
 msgctxt "IDS_WEBUI_PREVIEW_WARNING"
-msgid "This option can be used to preview media files from remote location. Use it only on a properly secured private network.\n\nDo you really want to enable this option?"
+msgid ""
+"This option can be used to preview media files from remote location. Use it only on a properly secured private network.\n"
+"\n"
+"Do you really want to enable this option?"
 msgstr ""
+"이 옵션은 원격 위치에서 미디어 파일을 미리 보는 데 사용할 수 있습니다. 적절하게 보안이 설정된 사설망에서만 사용하십시오.\n"
+"\n"
+"이 옵션을 사용하시겠습니까?"
 
 msgctxt "IDS_SUBTITLE_RENDERER_INTERNAL"
 msgid "Internal Subtitle Renderer"
-msgstr ""
+msgstr "내장 자막 렌더러"
 
 msgctxt "IDS_AG_OPEN_DEVICE"
 msgid "Open Device"
@@ -1427,7 +1866,7 @@ msgstr "이미지 저장"
 
 msgctxt "IDS_MPLAYERC_6"
 msgid "Save Image (auto)"
-msgstr ""
+msgstr "이미지 저장 (자동)"
 
 msgctxt "IDS_OSD_IMAGE_SAVED"
 msgid "Image saved successfully"
@@ -1435,15 +1874,15 @@ msgstr "이미지가 성공적으로 저장되었습니다."
 
 msgctxt "IDS_AG_LOAD_SUBTITLES"
 msgid "Load Subtitles..."
-msgstr ""
+msgstr "자막 불러오기..."
 
 msgctxt "IDS_AG_SAVE_SUBTITLES"
 msgid "Save Subtitles..."
-msgstr ""
+msgstr "자막 저장하기..."
 
 msgctxt "IDS_AG_PROPERTIES"
 msgid "Properties"
-msgstr "등록정보"
+msgstr "속성"
 
 msgctxt "IDS_AG_EXIT"
 msgid "Exit"
@@ -1451,7 +1890,7 @@ msgstr "종료"
 
 msgctxt "IDS_AG_PLAYPAUSE"
 msgid "Play/Pause"
-msgstr "재생/일시정지"
+msgstr "재생/일시 중지"
 
 msgctxt "IDS_AG_PLAY"
 msgid "Play"
@@ -1459,7 +1898,7 @@ msgstr "재생"
 
 msgctxt "IDS_AG_STOP"
 msgid "Stop"
-msgstr "정지"
+msgstr "중지"
 
 msgctxt "IDS_AG_FRAMESTEP"
 msgid "Frame-step"
@@ -1467,7 +1906,7 @@ msgstr "프레임 재생"
 
 msgctxt "IDS_MPLAYERC_16"
 msgid "Frame-step back"
-msgstr "프레임 재생"
+msgstr "프레임 역재생"
 
 msgctxt "IDS_AG_GO_TO"
 msgid "Go To"
@@ -1475,11 +1914,11 @@ msgstr "이동"
 
 msgctxt "IDS_AG_INCREASE_RATE"
 msgid "Increase Rate"
-msgstr "속도증가"
+msgstr "속도 증가"
 
 msgctxt "IDS_CONTENT_SHOW_GAMESHOW"
 msgid "Show/Game show"
-msgstr ""
+msgstr "쇼/게임 쇼"
 
 msgctxt "IDS_CONTENT_SPORTS"
 msgid "Sports"
@@ -1487,11 +1926,11 @@ msgstr "스포츠"
 
 msgctxt "IDS_CONTENT_CHILDREN_YOUTH_PROG"
 msgid "Children's/Youth programmes"
-msgstr "어린이/청소년 프로그램들"
+msgstr "아동/청소년 프로그램"
 
 msgctxt "IDS_CONTENT_MUSIC_BALLET_DANCE"
 msgid "Music/Ballet/Dance"
-msgstr ""
+msgstr "음악/발레/댄스"
 
 msgctxt "IDS_CONTENT_MUSIC_ART_CULTURE"
 msgid "Arts/Culture"
@@ -1499,11 +1938,11 @@ msgstr "예술/문화"
 
 msgctxt "IDS_CONTENT_SOCIAL_POLITICAL_ECO"
 msgid "Social/Political issues/Economics"
-msgstr ""
+msgstr "사회/정치 이슈/경제"
 
 msgctxt "IDS_CONTENT_LEISURE"
 msgid "Leisure hobbies"
-msgstr ""
+msgstr "취미 여가"
 
 msgctxt "IDS_FILE_RECYCLE"
 msgid "Move to Recycle Bin"
@@ -1511,95 +1950,111 @@ msgstr "휴지통으로 이동"
 
 msgctxt "IDS_AG_SAVE_COPY"
 msgid "Save a Copy"
-msgstr "다른 이름으로 저장"
+msgstr "사본 저장"
 
 msgctxt "IDS_FASTSEEK_LATEST"
 msgid "Latest keyframe"
-msgstr ""
+msgstr "최신 키 프레임"
 
 msgctxt "IDS_FASTSEEK_NEAREST"
 msgid "Nearest keyframe"
-msgstr ""
+msgstr "근린 키 프레임"
 
 msgctxt "IDS_HOOKS_FAILED"
-msgid "MPC-HC encountered a problem during initialization. DVD playback may not work correctly. This might be caused by some incompatibilities with certain security tools.\n\nDo you want to report this issue?"
+msgid ""
+"MPC-HC encountered a problem during initialization. DVD playback may not "
+"work correctly. This problem might be caused by an incompatibility with "
+"certain security software."
 msgstr ""
+"초기화 중에 MPC-HC에 문제가 발생했습니다. DVD 재생이 되지 않을 수 있습니다. 이 문제는 특정 보안 소프트웨어와의 호환성 문제로"
+" 발생할 수 있습니다."
 
 msgctxt "IDS_PPAGEFULLSCREEN_SHOWNEVER"
 msgid "Never show"
-msgstr "보여주지 않음"
+msgstr "표시 안 함"
 
 msgctxt "IDS_PPAGEFULLSCREEN_SHOWMOVED"
 msgid "Show when moving the cursor, hide after:"
-msgstr ""
+msgstr "커서를 이동할 때 표시하고 이 후 숨김 :"
 
 msgctxt "IDS_PPAGEFULLSCREEN_SHOHHOVERED"
 msgid "Show when hovering control, hide after:"
-msgstr ""
+msgstr "컨트롤을 가리킬 때 표시하고 이 후 숨김 :"
 
 msgctxt "IDS_MAINFRM_PRE_SHADERS_FAILED"
 msgid "Failed to set pre-resize shaders"
-msgstr ""
+msgstr "사전 크기 조정 셰이더 설정 실패"
 
 msgctxt "IDS_OSD_RS_FT_CORRECTION_ON"
 msgid "Frame Time Correction: On"
-msgstr "프레임 시간 수정: 켜짐"
+msgstr "프레임 시간 수정 : 켬"
 
 msgctxt "IDS_OSD_RS_FT_CORRECTION_OFF"
 msgid "Frame Time Correction: Off"
-msgstr "프레임 시간 수정: 꺼짐"
+msgstr "프레임 시간 수정 : 끔"
 
 msgctxt "IDS_OSD_RS_TARGET_VSYNC_OFFSET"
 msgid "Target VSync Offset: %.1f"
-msgstr "목표 VSync 오프셋: %.1f"
+msgstr "목표 수직 동기화 오프셋 : %.1f"
 
 msgctxt "IDS_OSD_RS_VSYNC_OFFSET"
 msgid "VSync Offset: %d"
-msgstr "VSync 오프셋: %d"
+msgstr "수직 동기화 오프셋 : %d"
 
 msgctxt "IDS_OSD_SPEED"
 msgid "Speed: %.2lfx"
-msgstr "속도: %.2lfx"
+msgstr "속도 : %.2lfx"
 
 msgctxt "IDS_OSD_THUMBS_SAVED"
 msgid "Thumbnails saved successfully"
-msgstr "썸네일이 성공적으로 저장되었습니다."
+msgstr "썸네일 저장 성공"
 
 msgctxt "IDS_MENU_VIDEO_STREAM"
 msgid "Vide&o Track"
-msgstr "비디오 트랙"
+msgstr "비디오 트랙(&O)"
 
 msgctxt "IDS_MENU_VIDEO_ANGLE"
 msgid "Video Ang&le"
-msgstr "비디오 앵글(&L)"
+msgstr "영상 앵글(&L)"
 
 msgctxt "IDS_RESET_SETTINGS"
 msgid "Reset settings"
 msgstr "설정 초기화"
 
 msgctxt "IDS_RESET_SETTINGS_WARNING"
-msgid "Are you sure you want to restore MPC-HC to its default settings?\nBe warned that ALL your current settings will be lost!"
-msgstr "MPC-HC 초기 설정으로 복원하시겠습니까?\n현재 설정들은 모두 지워집니다!"
+msgid ""
+"Are you sure you want to restore MPC-HC to its default settings?\n"
+"Be warned that ALL your current settings will be lost!"
+msgstr ""
+"MPC-HC를 기본 설정으로 되돌리시겠습니까?\n"
+"현재 설정이 모두 손실된다는 점을 유의하세요!"
 
 msgctxt "IDS_RESET_SETTINGS_MUTEX"
-msgid "Please close all instances of MPC-HC so that the default settings can be restored."
-msgstr "초기 설정이 복원될 수 있도록 모든 MPC-HC 플레이어를 종료해주십시오."
+msgid ""
+"Please close all instances of MPC-HC so that the default settings can be "
+"restored."
+msgstr "기본 설정을 복원할 수 있도록 MPC-HC의 모든 인스턴스를 닫으십시오."
 
 msgctxt "IDS_EXPORT_SETTINGS"
 msgid "Export settings"
 msgstr "내보내기 설정"
 
 msgctxt "IDS_EXPORT_SETTINGS_WARNING"
-msgid "Some changes have not been saved yet.\nDo you want to save them before exporting?"
-msgstr "몇몇 변경사항이 아직 저장되지 않았습니다.\n내보내기를 하기전에 변경사항들을 저장하시겠습니까?"
+msgid ""
+"Some changes have not been saved yet.\n"
+"Do you want to save them before exporting?"
+msgstr ""
+"일부 변경 사항이 아직 저장되지 않았습니다.\n"
+"내보내기 전에 저장하시겠습니까?"
 
 msgctxt "IDS_EXPORT_SETTINGS_SUCCESS"
 msgid "The settings have been successfully exported."
-msgstr "설정들이 정상적으로 내보내기되었습니다."
+msgstr "설정 내보내기를 성공했습니다."
 
 msgctxt "IDS_EXPORT_SETTINGS_FAILED"
-msgid "The export failed! This can happen when you don't have the correct rights."
-msgstr "내보내기 실패! 올바른 권한을 가지고 있는지 확인하십시오."
+msgid ""
+"The export failed! This can happen when you don't have the correct rights."
+msgstr "내보내기에 실패했습니다! 이는 올바른 권한이 없을 때 발생할 수 있습니다."
 
 msgctxt "IDS_BDA_ERROR"
 msgid "BDA Error"
@@ -1607,51 +2062,51 @@ msgstr "BDA 오류"
 
 msgctxt "IDS_AG_DECREASE_RATE"
 msgid "Decrease Rate"
-msgstr "속도감소"
+msgstr "속도 감소"
 
 msgctxt "IDS_AG_RESET_RATE"
 msgid "Reset Rate"
-msgstr "초기화"
+msgstr "초기화 속도"
 
 msgctxt "IDS_MPLAYERC_21"
 msgid "Audio Delay +10 ms"
-msgstr "오디오 딜레이 +10ms"
+msgstr "오디오 0.01초 느리게"
 
 msgctxt "IDS_MPLAYERC_22"
 msgid "Audio Delay -10 ms"
-msgstr "오디오 딜레이 -10ms"
+msgstr "오디오 0.01초 빠르게"
 
 msgctxt "IDS_MPLAYERC_23"
 msgid "Jump Forward (small)"
-msgstr "앞으로 이동 (조금)"
+msgstr "앞으로 이동(조금)"
 
 msgctxt "IDS_MPLAYERC_24"
 msgid "Jump Backward (small)"
-msgstr "뒤로 이동 (조금)"
+msgstr "뒤로 이동(조금)"
 
 msgctxt "IDS_MPLAYERC_25"
 msgid "Jump Forward (medium)"
-msgstr "앞으로 이동 (중간)"
+msgstr "앞으로 이동(중간)"
 
 msgctxt "IDS_MPLAYERC_26"
 msgid "Jump Backward (medium)"
-msgstr "뒤로 이동 (중간)"
+msgstr "뒤로 이동(중간)"
 
 msgctxt "IDS_MPLAYERC_27"
 msgid "Jump Forward (large)"
-msgstr "앞으로 이동 (많이)"
+msgstr "앞으로 이동(많이)"
 
 msgctxt "IDS_MPLAYERC_28"
 msgid "Jump Backward (large)"
-msgstr "뒤로 이동 (많이)"
+msgstr "뒤로 이동(많이)"
 
 msgctxt "IDS_MPLAYERC_29"
 msgid "Jump Forward (keyframe)"
-msgstr "앞으로 이동 (키프레임)"
+msgstr "앞으로 이동 (키 프레임)"
 
 msgctxt "IDS_MPLAYERC_30"
 msgid "Jump Backward (keyframe)"
-msgstr "뒤로 이동 (키프레임)"
+msgstr "뒤로 이동(키프레임)"
 
 msgctxt "IDS_AG_NEXT"
 msgid "Next"
@@ -1671,23 +2126,23 @@ msgstr "이전 파일"
 
 msgctxt "IDS_MPLAYERC_99"
 msgid "Toggle Direct3D fullscreen"
-msgstr "Direct3D 전체화면 토글"
+msgstr "Direct3D 전체 화면 토글"
 
 msgctxt "IDS_MPLAYERC_100"
 msgid "Goto Prev Subtitle"
-msgstr "이전 자막으로"
+msgstr "이전 자막으로 이동"
 
 msgctxt "IDS_MPLAYERC_101"
 msgid "Goto Next Subtitle"
-msgstr "다음 자막으로"
+msgstr "다음 자막으로 이동"
 
 msgctxt "IDS_MPLAYERC_102"
-msgid "Shift Subtitle Left"
-msgstr "자막 왼쪽으로"
+msgid "Subresync: shift -100ms"
+msgstr "자막 0.1초 빠르게"
 
 msgctxt "IDS_MPLAYERC_103"
-msgid "Shift Subtitle Right"
-msgstr "자막 오른쪽으로"
+msgid "Subresync: shift +100ms"
+msgstr "자막 0.1초 느리게"
 
 msgctxt "IDS_AG_SEEKSET"
 msgid "Jump to Beginning"
@@ -1695,23 +2150,23 @@ msgstr "처음으로 이동"
 
 msgctxt "IDS_OSD_SHOW_FILENAME"
 msgid "OSD: Show File Name"
-msgstr ""
+msgstr "화면 표시 : 파일 이름 표시"
 
 msgctxt "IDS_PLAY_DVD"
 msgid "Play DVD"
-msgstr ""
+msgstr "DVD 재생"
 
 msgctxt "IDS_PLAY_BD"
 msgid "Play BD"
-msgstr ""
+msgstr "블루레이 재생"
 
 msgctxt "IDS_OSD_DISPLAY_RENDERER_STATS"
 msgid "OSD: Display Renderer Statistics"
-msgstr ""
+msgstr "화면 표시 : 렌더러 통계 표시"
 
 msgctxt "IDS_OSD_RESET_RENDERER_STATS"
 msgid "OSD: Reset Renderer Statistics"
-msgstr ""
+msgstr "화면 표시 : 렌더러 통계 초기화"
 
 msgctxt "IDD_PPAGESUBMISC"
 msgid "Subtitles::Misc"
@@ -1723,15 +2178,15 @@ msgstr "외곽선 숨기기"
 
 msgctxt "IDS_VIEW_FRAMEONLY"
 msgid "Fra&me Only"
-msgstr "창 프레임만"
+msgstr "프레임만(&M)"
 
 msgctxt "IDS_VIEW_CAPTIONMENU"
 msgid "Sho&w Caption&&Menu"
-msgstr "제목표시줄과 메뉴 보이기"
+msgstr "제목 표시줄과 메뉴 보이기"
 
 msgctxt "IDS_VIEW_HIDEMENU"
 msgid "Hide &Menu"
-msgstr "메뉴 숨기기"
+msgstr "메뉴 숨기기(&M)"
 
 msgctxt "IDD_PPAGEADVANCED"
 msgid "Advanced"
@@ -1747,79 +2202,89 @@ msgstr "간단히 보기"
 
 msgctxt "IDS_AG_VIEW_NORMAL"
 msgid "View Normal"
-msgstr "표준 보기"
+msgstr "기본 보기"
+
+msgctxt "IDS_AG_VIEW_CUSTOM"
+msgid "View Custom"
+msgstr "사용자 지정 보기"
 
 msgctxt "IDS_AG_FULLSCREEN"
 msgid "Fullscreen"
-msgstr "전체화면"
+msgstr "전체 화면"
 
 msgctxt "IDS_MPLAYERC_39"
 msgid "Fullscreen (w/o res.change)"
-msgstr "전체화면 (해상도 변경)"
+msgstr "전체 화면(무보정)"
 
 msgctxt "IDS_AG_ZOOM_AUTO_FIT"
 msgid "Zoom Auto Fit"
-msgstr "자동맞춤 확대"
+msgstr "자동 맞춤 확대"
 
 msgctxt "IDS_AG_VIDFRM_HALF"
-msgid "VidFrm Half"
-msgstr "VidFrm 절반"
+msgid "Video Frame Half Size"
+msgstr "영상 프레임 절반 크기"
 
 msgctxt "IDS_AG_VIDFRM_NORMAL"
-msgid "VidFrm Normal"
-msgstr "VidFrm 보통"
+msgid "Video Frame Normal Size"
+msgstr "영상 프레임 일반 크기"
 
 msgctxt "IDS_AG_VIDFRM_DOUBLE"
-msgid "VidFrm Double"
-msgstr "VidFrm 두배"
+msgid "Video Frame Double Size"
+msgstr "영상 프레임 2배 크기"
 
 msgctxt "IDS_AG_ALWAYS_ON_TOP"
 msgid "Always On Top"
 msgstr "항상 위에"
 
 msgctxt "IDS_AG_PNS_INC_SIZE"
-msgid "PnS Inc Size"
-msgstr "PnS Inc 크기"
+msgid "Video Frame Inc Size"
+msgstr "영상 프레임 포함 크기"
 
 msgctxt "IDS_AG_PNS_INC_WIDTH"
-msgid "PnS Inc Width"
-msgstr "PnS Inc 가로"
+msgid "Video Frame Inc Width"
+msgstr "영상 프레임 포함 너비"
 
 msgctxt "IDS_MPLAYERC_47"
-msgid "PnS Inc Height"
-msgstr "PnS Inc 세로"
+msgid "Video Frame Inc Height"
+msgstr "영상 프레임 포함 높이"
 
 msgctxt "IDS_AG_PNS_DEC_SIZE"
-msgid "PnS Dec Size"
-msgstr "PnS Dec 크기"
+msgid "Video Frame Dec Size"
+msgstr "영상 프레임 디코딩 크기"
 
 msgctxt "IDS_AG_PNS_DEC_WIDTH"
-msgid "PnS Dec Width"
-msgstr "PnS Dec 가로"
+msgid "Video Frame Dec Width"
+msgstr "영상 프레임 디코딩 너비"
 
 msgctxt "IDS_MPLAYERC_50"
-msgid "PnS Dec Height"
-msgstr "PnS Dec 세로"
+msgid "Video Frame Dec Height"
+msgstr "영상 프레임 디코딩 높이"
 
 msgctxt "IDS_SUBDL_DLG_DOWNLOADING"
 msgid "Downloading [%s] \"%s\""
-msgstr ""
+msgstr "[%s] \"%s\" 내려받는 중"
 
 msgctxt "IDS_SUBDL_DLG_PARSING"
 msgid "Parsing list..."
-msgstr "목록을 읽고 있습니다..."
+msgstr "구문 분석 목록..."
 
 msgctxt "IDS_SUBDL_DLG_NOT_FOUND"
 msgid "No subtitles found."
-msgstr "자막 파일이 없습니다."
+msgstr "자막을 찾을 수 없습니다."
 
 msgctxt "IDS_SUBDL_DLG_SUBS_AVAIL"
 msgid "%d subtitle(s) available."
-msgstr "%d 자막 사용가능."
+msgstr "%d 자막을 사용할 수 있습니다."
 
 msgctxt "IDS_UPDATE_CONFIG_AUTO_CHECK"
-msgid "Do you want to check periodically for MPC-HC updates?\n\nThis feature can be disabled later from the Miscellaneous options page."
-msgstr "MPC-HC 업데이트를 정기적으로 확인하시겠습니까?\n\n이 기능은 기타 옵션 페이지에서 나중에 비활성화 할 수 있습니다."
+msgid ""
+"Do you want to check periodically for MPC-HC updates?\n"
+"\n"
+"This feature can be disabled later from the Miscellaneous options page."
+msgstr ""
+"MPC-HC 업데이트를 정기적으로 확인하시겠습니까?\n"
+"\n"
+"이 기능은 기타 옵션 페이지에서 추후에 비활성화 할 수 있습니다."
 
 msgctxt "IDS_ZOOM_50"
 msgid "50%"
@@ -1835,83 +2300,79 @@ msgstr "200%"
 
 msgctxt "IDS_ZOOM_AUTOFIT"
 msgid "Auto Fit"
-msgstr ""
-
-msgctxt "IDS_ZOOM_AUTOFIT_LARGER"
-msgid "Auto Fit (Larger Only)"
-msgstr ""
+msgstr "자동 맞춤"
 
 msgctxt "IDS_AG_ZOOM_AUTO_FIT_LARGER"
 msgid "Zoom Auto Fit (Larger Only)"
-msgstr ""
+msgstr "줌 자동 맞춤(크게만)"
 
 msgctxt "IDS_OSD_ZOOM_AUTO_LARGER"
 msgid "Zoom: Auto (Larger Only)"
-msgstr ""
+msgstr "확대 : 자동(크게만)"
 
 msgctxt "IDS_TOOLTIP_EXPLORE_TO_FILE"
 msgid "Double click to open file location"
-msgstr ""
+msgstr "파일 위치를 열려면 더블 클릭"
 
 msgctxt "IDS_TOOLTIP_REMAINING_TIME"
 msgid "Toggle between elapsed and remaining time"
-msgstr ""
+msgstr "경과 시간과 남은 시간 간 전환"
 
 msgctxt "IDS_UPDATE_DELAY_ERROR_TITLE"
 msgid "Invalid delay"
-msgstr ""
+msgstr "유효하지 않은 지연"
 
 msgctxt "IDS_UPDATE_DELAY_ERROR_MSG"
 msgid "Please enter a number between 1 and 365."
-msgstr ""
+msgstr "1~365 사이의 숫자를 입력하세요."
 
 msgctxt "IDS_AG_PNS_CENTER"
-msgid "PnS Center"
-msgstr "PnS 가운데"
+msgid "Video Frame Center"
+msgstr "영상 프레임 중앙"
 
 msgctxt "IDS_AG_PNS_LEFT"
-msgid "PnS Left"
-msgstr "PnS 왼쪽"
+msgid "Video Frame Left"
+msgstr "영상 프레임 좌측"
 
 msgctxt "IDS_AG_PNS_RIGHT"
-msgid "PnS Right"
-msgstr "PnS 오른쪽"
+msgid "Video Frame Right"
+msgstr "영상 프레임 우측"
 
 msgctxt "IDS_AG_PNS_UP"
-msgid "PnS Up"
-msgstr "PnS 위로"
+msgid "Video Frame Up"
+msgstr "영상 프레임 상단"
 
 msgctxt "IDS_AG_PNS_DOWN"
-msgid "PnS Down"
-msgstr "PnS 아래로"
+msgid "Video Frame Down"
+msgstr "영상 프레임 하단"
 
 msgctxt "IDS_AG_PNS_UPLEFT"
-msgid "PnS Up/Left"
-msgstr "PnS 위로/왼쪽"
+msgid "Video Frame Up/Left"
+msgstr "영상 프레임 좌측상단"
 
 msgctxt "IDS_AG_PNS_UPRIGHT"
-msgid "PnS Up/Right"
-msgstr "PnS 위로/오른쪽"
+msgid "Video Frame Up/Right"
+msgstr "영상 프레임 우측상단"
 
 msgctxt "IDS_AG_PNS_DOWNLEFT"
-msgid "PnS Down/Left"
-msgstr "PnS 아래로/왼쪽"
+msgid "Video Frame Down/Left"
+msgstr "영상 프레임 좌측하단"
 
 msgctxt "IDS_MPLAYERC_59"
-msgid "PnS Down/Right"
-msgstr "PnS 아래로/오른쪽"
+msgid "Video Frame Down/Right"
+msgstr "영상 프레임 우측하단"
 
 msgctxt "IDS_AG_VOLUME_UP"
 msgid "Volume Up"
-msgstr "볼륨 크게"
+msgstr "음량 크게"
 
 msgctxt "IDS_AG_VOLUME_DOWN"
 msgid "Volume Down"
-msgstr "볼륨 작게"
+msgstr "음량 작게"
 
 msgctxt "IDS_AG_VOLUME_MUTE"
 msgid "Volume Mute"
-msgstr "음소거"
+msgstr "음 소거"
 
 msgctxt "IDS_MPLAYERC_63"
 msgid "DVD Title Menu"
@@ -1967,15 +2428,15 @@ msgstr "DVD 메뉴 끝내기"
 
 msgctxt "IDS_AG_BOSS_KEY"
 msgid "Boss key"
-msgstr "Boss 키"
+msgstr "엄마 왔다!(감추기)"
 
 msgctxt "IDS_MPLAYERC_77"
 msgid "Player Menu"
-msgstr ""
+msgstr "재생기 메뉴"
 
 msgctxt "IDS_MPLAYERC_78"
 msgid "Player Menu (full)"
-msgstr ""
+msgstr "재생기 메뉴(전체)"
 
 msgctxt "IDS_AG_FILTERS_MENU"
 msgid "Filters Menu"
@@ -1987,71 +2448,75 @@ msgstr "옵션"
 
 msgctxt "IDS_AG_NEXT_AUDIO"
 msgid "Next Audio Track"
-msgstr ""
+msgstr "다음 오디오 트랙"
 
 msgctxt "IDS_AG_PREV_AUDIO"
 msgid "Prev Audio Track"
-msgstr ""
+msgstr "이전 오디오 트랙"
 
 msgctxt "IDS_AG_NEXT_SUBTITLE"
 msgid "Next Subtitle Track"
-msgstr ""
+msgstr "다음 자막 트랙"
 
 msgctxt "IDS_AG_PREV_SUBTITLE"
 msgid "Prev Subtitle Track"
-msgstr ""
+msgstr "이전 자막 트랙"
+
+msgctxt "IDS_AG_AUTOCOPY_SUBTITLE"
+msgid "Auto-Copy Subtitle to Clipboard"
+msgstr "자막을 클립보드에 자동 복사"
 
 msgctxt "IDS_MPLAYERC_85"
 msgid "On/Off Subtitle"
-msgstr "자막 표시/표시안함"
+msgstr "자막 켬/끔"
 
 msgctxt "IDS_MPLAYERC_86"
 msgid "Reload Subtitles"
-msgstr "자막 다시 로드"
+msgstr "자막 다시 불러오기"
 
 msgctxt "IDS_MPLAYERC_91"
 msgid "Next Angle (DVD)"
-msgstr "다음 앵글 (DVD)"
+msgstr "다음 앵글(DVD)"
 
 msgctxt "IDS_MPLAYERC_92"
 msgid "Prev Angle (DVD)"
-msgstr "이전 앵글 (DVD)"
+msgstr "이전 앵글(DVD)"
 
 msgctxt "IDS_MPLAYERC_93"
 msgid "Next Audio Track (DVD)"
-msgstr ""
+msgstr "다음 오디오 트랙(DVD)"
 
 msgctxt "IDS_MPLAYERC_94"
 msgid "Prev Audio Track (DVD)"
-msgstr ""
+msgstr "이전 오디오 트랙(DVD)"
 
 msgctxt "IDS_MPLAYERC_95"
 msgid "Next Subtitle Track (DVD)"
-msgstr ""
+msgstr "다음 자막 트랙(DVD)"
 
 msgctxt "IDS_MPLAYERC_96"
 msgid "Prev Subtitle Track (DVD)"
-msgstr ""
+msgstr "이전 자막 트랙(DVD)"
 
 msgctxt "IDS_MPLAYERC_97"
 msgid "On/Off Subtitle (DVD)"
-msgstr "자막 표시/표시안함 (DVD)"
+msgstr "자막 켬/끔(DVD)"
 
 msgctxt "IDS_OSD_DISPLAY_CURRENT_TIME"
 msgid "OSD: Display Current Time"
-msgstr ""
+msgstr "화면 표시 : 현재 시간 표시"
 
 msgctxt "IDS_PPAGEWEBSERVER_0"
 msgid "Select the directory"
-msgstr "디렉토리 선택"
+msgstr "디렉터리 선택"
 
 msgctxt "IDS_FAVORITES_QUICKADDFAVORITE"
 msgid "Quick add favorite"
-msgstr "즐겨찾기에 빠른 추가"
+msgstr "빠른 즐겨찾기 추가"
 
 msgctxt "IDS_DVB_CHANNEL_NUMBER"
 msgid "N"
-msgstr ""
+msgstr "N"
 
 msgctxt "IDS_DVB_CHANNEL_NAME"
 msgid "Name"
@@ -2059,7 +2524,7 @@ msgstr "이름"
 
 msgctxt "IDS_DVB_CHANNEL_FREQUENCY"
 msgid "Frequency"
-msgstr "주파수"
+msgstr "주사율"
 
 msgctxt "IDS_DVB_CHANNEL_ENCRYPTION"
 msgid "Encrypted"
@@ -2079,7 +2544,7 @@ msgstr "시작"
 
 msgctxt "IDS_DVB_CHANNEL_STOP_SCAN"
 msgid "Stop"
-msgstr "정지"
+msgstr "중지"
 
 msgctxt "IDS_DVB_TVNAV_SEERADIO"
 msgid "Radio stations"
@@ -2095,7 +2560,7 @@ msgstr "포맷"
 
 msgctxt "IDS_MAINFRM_2"
 msgid "Focus lost to: %s - %s"
-msgstr "포커스 손실: %s - %s"
+msgstr "포커스 손실 : %s - %s"
 
 msgctxt "IDS_AG_SUBTITLES_SAVED"
 msgid "Subtitles saved"
@@ -2111,7 +2576,7 @@ msgstr "프레임률"
 
 msgctxt "IDS_MAINFRM_6"
 msgid "drawn: %d, dropped: %d"
-msgstr "떨어짐: %d, 떨어짐: %d"
+msgstr "재생 : %d, 하락 : %d"
 
 msgctxt "IDS_AG_FRAMES"
 msgid "Frames"
@@ -2123,31 +2588,38 @@ msgstr "버퍼"
 
 msgctxt "IDS_MAINFRM_9"
 msgid "Volume: %02lu/%02lu, Title: %02lu/%02lu, Chapter: %02lu/%02lu"
-msgstr "볼륨: %02lu/%02lu, 타이틀: %02lu/%02lu, 챕터: %02lu/%02lu"
+msgstr "음량 : %02lu/%02lu, 타이틀 : %02lu/%02lu, 챕터 : %02lu/%02lu"
 
 msgctxt "IDS_MAINFRM_10"
 msgid "Angle: %02lu/%02lu, %lux%lu %lu Hz %lu:%lu"
-msgstr "앵글: %02lu/%02lu, %lux%lu %luHz %lu:%lu"
+msgstr "앵글 : %02lu/%02lu, %lux%lu %luHz %lu:%lu"
 
 msgctxt "IDS_MAINFRM_11"
 msgid "%s, %s %u Hz %d bits %d %s"
-msgstr ""
+msgstr "%s, %s %u Hz %d비트 %d %s"
 
 msgctxt "IDS_ADD_TO_PLAYLIST"
 msgid "Add to MPC-HC Playlist"
-msgstr "MPC-HC 재생목록에 추가"
+msgstr "MPC-HC 재생 목록에 추가"
 
 msgctxt "IDS_OPEN_WITH_MPC"
 msgid "Play with MPC-HC"
-msgstr "MPC-HC 으로 재생"
+msgstr "MPC-HC로 재생"
 
 msgctxt "IDS_CANNOT_CHANGE_FORMAT"
-msgid "MPC-HC has not enough privileges to change files formats associations. Please click on the \"Run as administrator\" button."
-msgstr ""
+msgid ""
+"MPC-HC does not have sufficient privileges to change file associations. "
+"Please click on the \"Run as administrator\" button."
+msgstr "MPC-HC에는 파일 연결을 변경할 수 있는 충분한 권한이 없습니다. \"관리자 권한으로 실행\" 버튼을 클릭해주세요."
 
 msgctxt "IDS_APP_DESCRIPTION"
-msgid "MPC-HC is an extremely light-weight, open source media player for Windows. It supports all common video and audio file formats available for playback. We are 100% spyware free, there are no advertisements or toolbars."
+msgid ""
+"MPC-HC is an extremely light-weight, open source media player for Windows. "
+"It supports all common video and audio file formats available for playback. "
+"We are 100% spyware free, there are no advertisements or toolbars."
 msgstr ""
+"MPC-HC는 매우 가벼운 윈도용 오픈 소스 미디어 재생기 입니다. 재생할 수 있는 모든 일반적인 영상 및 음향 파일 형식을 지원합니다."
+" 저희는 100% 스파이웨어가 없으며 광고나 도구 모음이 없습니다."
 
 msgctxt "IDS_MAINFRM_12"
 msgid "channel"
@@ -2163,59 +2635,65 @@ msgstr "타이틀 %u"
 
 msgctxt "IDS_MAINFRM_16"
 msgid "DVD: Unexpected error"
-msgstr "DVD: 예상치못한 에러"
+msgstr "DVD : 예기치 않은 오류"
 
 msgctxt "IDS_MAINFRM_17"
 msgid "DVD: Copy-Protect Fail"
-msgstr "DVD: 복사방지 에러"
+msgstr "DVD : 복사 방지 오류"
 
 msgctxt "IDS_MAINFRM_18"
 msgid "DVD: Invalid DVD 1.x Disc"
-msgstr "DVD: 사용가능하지않은 DVD 1.x 디스크"
+msgstr "DVD : 유효하지 않은 DVD 1.x 디스크"
 
 msgctxt "IDS_MAINFRM_19"
 msgid "DVD: Invalid Disc Region"
-msgstr "DVD: 사용가능하지않은 지역 디스크"
+msgstr "DVD : 사용 불가 지역 디스크"
 
 msgctxt "IDS_MAINFRM_20"
 msgid "DVD: Low Parental Level"
-msgstr "DVD: 낮은 허가 레벨"
+msgstr "DVD : 낮은 허가 레벨"
 
 msgctxt "IDS_MAINFRM_21"
 msgid "DVD: Macrovision Fail"
-msgstr "DVD: 매크로비전 실패"
+msgstr "DVD : 매크로비전 실패"
 
 msgctxt "IDS_MAINFRM_22"
 msgid "DVD: Incompatible System And Decoder Regions"
-msgstr "DVD: 호환성이 없는 시스템 및 디코더 지역"
+msgstr "DVD : 호환되지 않는 시스템 및 디코더 영역"
 
 msgctxt "IDS_MAINFRM_23"
 msgid "DVD: Incompatible Disc And Decoder Regions"
-msgstr "DVD: 호환성이 없는 디스크 및 디코더 지역"
+msgstr "DVD : 호환되지 않는 디스크 및 디코더 영역"
 
 msgctxt "IDS_D3DFS_WARNING"
-msgid "This option is designed to avoid tearing. However, it will also prevent MPC-HC from displaying the context menu and any dialog box during playback.\n\nDo you really want to activate this option?"
-msgstr "이 옵션은 티어링을 회피하기 위해 고안되었습니다. 하지만, 재생하는 동안 플레이어의 메뉴나 대화상자가 표시되는데에 문제가 발생 할 수 있습니다.\n\n이 옵션을 활성화하시겠습니까?"
+msgid ""
+"This option is designed to avoid tearing. However, it will also prevent MPC-HC from displaying the context menu and any dialog box during playback.\n"
+"\n"
+"Do you really want to activate this option?"
+msgstr ""
+"이 옵션은 티어링을 피하고자 고안되었습니다. 하지만 재생하는 동안 재생기의 메뉴나 대화 상자가 표시되는데 문제가 발생할 수 있습니다.\n"
+"\n"
+"이 옵션을 활성화하시겠습니까?"
 
 msgctxt "IDS_MAINFRM_139"
 msgid "Sub delay: %ld ms"
-msgstr "자막 딜레이: %ld 밀리초"
+msgstr "자막 지연 : %ld밀리초"
 
 msgctxt "IDS_AG_TITLE2"
 msgid "Title: %02d/%02d"
-msgstr "타이틀: %02d/%02d"
+msgstr "타이틀 : %02d/%02d"
 
 msgctxt "IDS_REALVIDEO_INCOMPATIBLE"
 msgid "Filename contains unsupported characters (use only A-Z, 0-9)"
-msgstr "파일이름에 지원되지않는 문자가 포함되어있습니다.(A-Z, 0-9 만 가능)"
+msgstr "파일 이름에 지원되지 않는 문자가 포함되어 있습니다(A-Z, 0-9만 사용)."
 
 msgctxt "IDS_THUMB_ROWNUMBER"
 msgid "Rows:"
-msgstr "열:"
+msgstr "열 :"
 
 msgctxt "IDS_THUMB_COLNUMBER"
 msgid "Columns:"
-msgstr "행:"
+msgstr "행 :"
 
 msgctxt "IDS_THUMB_IMAGE_WIDTH"
 msgid "Image width"
@@ -2223,31 +2701,31 @@ msgstr "이미지 너비"
 
 msgctxt "IDS_AG_ASPECT_RATIO"
 msgid "Aspect Ratio"
-msgstr "화면 비율"
+msgstr "종횡비비"
 
 msgctxt "IDS_MAINFRM_37"
 msgid ", Total: %ld, Dropped: %ld"
-msgstr ", 총: %ld, 실패: %ld"
+msgstr ", 합계 : %ld, 누락 : %ld"
 
 msgctxt "IDS_MAINFRM_38"
 msgid ", Size: %I64d KB"
-msgstr ", 크기: %I64dKB"
+msgstr ", 크기 : %I64dKB"
 
 msgctxt "IDS_MAINFRM_39"
 msgid ", Size: %I64d MB"
-msgstr ", 크기: %I64dMB"
+msgstr ", 크기 : %I64dMB"
 
 msgctxt "IDS_MAINFRM_40"
 msgid ", Free: %I64d KB"
-msgstr ", 여유: %I64dKB"
+msgstr ", 여유 : %I64dKB"
 
 msgctxt "IDS_MAINFRM_41"
 msgid ", Free: %I64d MB"
-msgstr ", 여유: %I64dMB"
+msgstr ", 여유 : %I64dMB"
 
 msgctxt "IDS_MAINFRM_42"
 msgid ", Free V/A Buffers: %03d/%03d"
-msgstr ", 여유 V/A 버퍼: %03d/%03d"
+msgstr ", 여유 V/A 버퍼 : %03d/%03d"
 
 msgctxt "IDS_AG_ERROR"
 msgid "Error"
@@ -2255,15 +2733,15 @@ msgstr "오류"
 
 msgctxt "IDS_SUBTITLE_STREAM_OFF"
 msgid "Subtitle: off"
-msgstr "자막: 끄기"
+msgstr "자막 : 끔"
 
 msgctxt "IDS_SUBTITLE_STREAM"
 msgid "Subtitle: %s"
-msgstr "자막: %s"
+msgstr "자막 : %s"
 
 msgctxt "IDS_MAINFRM_46"
 msgid "Select the path for the DVD/BD:"
-msgstr "DVD/BD의 경로를 선택:"
+msgstr "DVD/블루레이 경로 선택 :"
 
 msgctxt "IDS_SUB_LOADED_SUCCESS"
 msgid " loaded successfully"
@@ -2271,15 +2749,15 @@ msgstr " 성공적으로 불러옴"
 
 msgctxt "IDS_ALL_FILES_FILTER"
 msgid "All files (*.*)|*.*||"
-msgstr "모든 파일 (*.*)|*.*||"
+msgstr "모든 파일(*.*)|*.*||"
 
 msgctxt "IDS_GETDIB_FAILED"
 msgid "GetDIB failed, hr = %08x"
-msgstr "DIB 얻기 실패, hr = %08x"
+msgstr "DIB 가져오기 실패, 시간=%08x"
 
 msgctxt "IDS_GETCURRENTIMAGE_FAILED"
 msgid "GetCurrentImage failed, hr = %08x"
-msgstr "현재 이미지 얻기 실패, hr = %08x"
+msgstr "현재 이미지 가져오기 실패, 시간=%08x"
 
 msgctxt "IDS_SCREENSHOT_ERROR"
 msgid "Cannot create file"
@@ -2287,35 +2765,49 @@ msgstr "파일을 만들수 없음"
 
 msgctxt "IDS_THUMBNAILS_NO_DURATION"
 msgid "Cannot create thumbnails for files with no duration"
-msgstr "썸네일을 만들수 없음"
+msgstr "기간이 없는 파일의 섬네일을 만들 수 없음"
 
 msgctxt "IDS_THUMBNAILS_NO_FRAME_SIZE"
 msgid "Failed to get video frame size"
-msgstr "비디오 프레임 사이즈 얻기 실패"
+msgstr "영상 프레임 크기 가져오기 실패"
 
 msgctxt "IDS_OUT_OF_MEMORY"
 msgid "Out of memory, go buy some more!"
-msgstr "메모리 없음!"
+msgstr "메모리가 부족하면 더 사러 가세요!"
 
 msgctxt "IDS_THUMBNAILS_INVALID_FORMAT"
 msgid "Invalid image format, cannot create thumbnails out of %d bpp dibs."
-msgstr "사용가능하지않은 이미지 포맷, %d bpp dibs 썸네일을 만들수 없음."
+msgstr "잘못된 이미지 형식입니다. %d bpp dibs에서 썸네일을 만들 수 없습니다."
 
 msgctxt "IDS_THUMBNAILS_INFO_FILESIZE"
 msgid "File Size: %s (%s bytes)\\N"
-msgstr "파일 크기: %s (%s 바이트)\\N"
+msgstr "파일 크기 : %s (%s 바이트)\\N"
 
 msgctxt "IDS_THUMBNAILS_INFO_HEADER"
-msgid "{\\an7\\1c&H000000&\\fs16\\b0\\bord0\\shad0}File Name: %s\\N%sResolution: %dx%d %s\\NDuration: %02d:%02d:%02d"
-msgstr "{\\an7\\1c&H000000&\\fs16\\b0\\bord0\\shad0}파일 이름: %s\\N%s해상도: %dx%d %s\\N기간: %02d:%02d:%02d"
+msgid ""
+"{\\an7\\1c&H000000&\\fs%d\\b0\\bord0\\shad0}File Name: %s\\N%sResolution: "
+"%dx%d %s\\NDuration: %02d:%02d:%02d"
+msgstr ""
+"{\\an7\\1c&H000000&\\fs%d\\b0\\bord0\\shad0}파일 이름 : %s\\N%s해상도 : %dx%d "
+"%s\\N시간 : %02d:%02d:%02d"
 
 msgctxt "IDS_THUMBNAIL_TOO_SMALL"
-msgid "The thumbnails would be too small, impossible to create the file.\n\nTry lowering the number of thumbnails or increasing the total size."
+msgid ""
+"The thumbnails would be too small, impossible to create the file.\n"
+"\n"
+"Try lowering the number of thumbnails or increasing the total size."
 msgstr ""
+"썸네일이 너무 작아서 파일을 만들 수 없습니다.\n"
+"\n"
+"썸네일 수를 줄이거나 전체 크기를 늘려 보세요."
 
 msgctxt "IDS_CANNOT_LOAD_SUB"
-msgid "To load subtitles you have to change the video renderer type and reopen the file.\n- DirectShow: VMR-9 (renderless), EVR (CP), Sync, madVR or Haali\n- RealMedia: Special renderer for RealMedia, or open it through DirectShow\n- QuickTime: DX7 or DX9 renderer for QuickTime\n- ShockWave: n/a"
+msgid ""
+"To load subtitles you have to change the video renderer type and reopen the file.\n"
+"- DirectShow: EVR (Custom Presenter), Sync, VMR-9 (renderless), madVR, MPC VR, or Haali VR"
 msgstr ""
+"자막을 불러오려면 영상 렌더러 유형을 변경하고 파일을 다시 열어야 합니다.\n"
+"- DirectShow : EVR(맞춤 프리젠터), Sync, VMR-9(렌더리스), madVR, MPC VR 또는 Haali VR"
 
 msgctxt "IDS_SUBTITLE_FILES_FILTER"
 msgid "Subtitle files"
@@ -2323,15 +2815,15 @@ msgstr "자막 파일"
 
 msgctxt "IDS_MAINFRM_68"
 msgid "Aspect Ratio: %ld:%ld"
-msgstr "화면 비율: %ld:%ld"
+msgstr "종횡비 : %ld:%ld"
 
 msgctxt "IDS_MAINFRM_69"
 msgid "Aspect Ratio: Default (DAR)"
-msgstr ""
+msgstr "종횡비 : 기본값(DAR)"
 
 msgctxt "IDS_MAINFRM_70"
 msgid "Audio delay: %I64d ms"
-msgstr "오디오 지연: %I64dms"
+msgstr "오디오 지연 : %I64d밀리초"
 
 msgctxt "IDS_AG_CHAPTER"
 msgid "Chapter %d"
@@ -2339,47 +2831,43 @@ msgstr "챕터 %d"
 
 msgctxt "IDS_AG_OUT_OF_MEMORY"
 msgid "Out of memory"
-msgstr "메모리 없음"
+msgstr "메모리 부족"
 
 msgctxt "IDS_MAINFRM_77"
-msgid "Error: Adobe Flash Player for Internet Explorer is required"
-msgstr "에러: IE를 위한 Flash 기능이 필요합니다."
-
-msgctxt "IDS_MAINFRM_78"
-msgid "QuickTime not yet supported for X64 (apple library not available)"
-msgstr "QuickTime은 아직 X64를 지원하지 않습니다."
+msgid "Error: Requires Adobe Flash Player for IE with killswitch patch"
+msgstr "오류 : 킬 스위치 패치가 적용된 인터넷 익스플로러용 어도비 플래시 플레이어가 요구됩니다."
 
 msgctxt "IDS_MAINFRM_80"
 msgid "Failed to create the filter graph object"
-msgstr "필터 그래프 오브젝트를 생성하는데 실패함"
+msgstr "필터 그래프 개체 생성 실패"
 
 msgctxt "IDS_MAINFRM_81"
 msgid "Invalid argument"
-msgstr "사용가능하지않은 인수"
+msgstr "잘못된 인수"
 
 msgctxt "IDS_MAINFRM_82"
 msgid "Opening aborted"
-msgstr "열기 취소"
+msgstr "열기 중단됨"
 
 msgctxt "IDS_MAINFRM_83"
 msgid "Failed to render the file"
-msgstr "파일을 렌더하는데 실패"
+msgstr "파일 렌더링 실패"
 
 msgctxt "IDS_AG_CHAPTER2"
 msgid "Chapter: "
-msgstr "챕터: "
+msgstr "챕터 : "
 
 msgctxt "IDS_VOLUME_OSD"
 msgid "Vol: %d%%"
-msgstr "볼륨: %d%%"
+msgstr "음량 : %d%%"
 
 msgctxt "IDS_BOOST_OSD"
 msgid "Boost: +%u%%"
-msgstr "증폭: +%u%%"
+msgstr "증폭 : +%u%%"
 
 msgctxt "IDS_BALANCE_OSD"
 msgid "Balance: %s"
-msgstr "균형: %s"
+msgstr "균형 : %s"
 
 msgctxt "IDS_FULLSCREENMONITOR_CURRENT"
 msgid "Current"
@@ -2387,43 +2875,43 @@ msgstr "현재"
 
 msgctxt "IDS_MAINFRM_DIR_TITLE"
 msgid "Select Directory"
-msgstr "폴더 선택"
+msgstr "디렉터리 선택"
 
 msgctxt "IDS_MAINFRM_DIR_CHECK"
 msgid "Include subdirectories"
-msgstr "하위 폴더 포함"
+msgstr "하위 디렉터리 포함"
 
 msgctxt "IDS_AG_PAUSE"
 msgid "Pause"
-msgstr "일시정지"
+msgstr "일시 중지"
 
 msgctxt "IDS_AG_TOGGLE_CAPTION"
 msgid "Toggle Caption&Menu"
-msgstr "제목표시줄&메뉴 토글"
+msgstr "제목 표시줄 & 메뉴 표시"
 
 msgctxt "IDS_AG_TOGGLE_SEEKER"
-msgid "Toggle Seek Bar"
-msgstr "탐색바 토글"
+msgid "Toggle Seekbar"
+msgstr "탐색 막대 토글"
 
 msgctxt "IDS_AG_TOGGLE_CONTROLS"
 msgid "Toggle Controls"
-msgstr "컨트롤 토글"
+msgstr "제어 표시"
 
 msgctxt "IDS_MAINFRM_84"
 msgid "Invalid file name"
-msgstr "사용가능하지않은 파일 이름"
+msgstr "유효하지 않은 파일명"
 
 msgctxt "IDS_MAINFRM_86"
 msgid "Cannot connect the filters"
-msgstr "필터를 연결할수 없음"
+msgstr "필터 연결 불가"
 
 msgctxt "IDS_MAINFRM_87"
 msgid "Cannot load any source filter"
-msgstr "어떤 소스 필터도 로드할수 없음"
+msgstr "어떤 소스 필터도 로드할 수 없음"
 
 msgctxt "IDS_MAINFRM_88"
 msgid "Cannot render the file"
-msgstr "파일을 렌더할수 없음"
+msgstr "파일을 렌더링할 수 없음"
 
 msgctxt "IDS_MAINFRM_89"
 msgid "Invalid file format"
@@ -2431,11 +2919,11 @@ msgstr "잘못된 파일 형식"
 
 msgctxt "IDS_MAINFRM_90"
 msgid "File not found"
-msgstr "파일을 찾을수 없음"
+msgstr "파일을 찾을 수 없음"
 
 msgctxt "IDS_MAINFRM_91"
 msgid "Unknown file type"
-msgstr "알려지지않은 파일 형식"
+msgstr "알 수 없는 파일 형식"
 
 msgctxt "IDS_MAINFRM_92"
 msgid "Unsupported stream"
@@ -2443,11 +2931,11 @@ msgstr "지원되지 않는 스트림"
 
 msgctxt "IDS_MAINFRM_93"
 msgid "Cannot find DVD directory"
-msgstr "DVD 디렉토리를 찾을수 없음"
+msgstr "DVD 디렉터리를 찾을 수 없음"
 
 msgctxt "IDS_MAINFRM_94"
 msgid "Can't create the DVD Navigator filter"
-msgstr "DVD 네비게이터 필터를 만들수 없음"
+msgstr "DVD 네비게이터 필터를 만들 수 없음"
 
 msgctxt "IDS_AG_FAILED"
 msgid "Failed"
@@ -2455,59 +2943,77 @@ msgstr "실패"
 
 msgctxt "IDS_MAINFRM_96"
 msgid "Can't create video capture filter"
-msgstr "비디오 캡쳐 필터를 만들수 없음"
+msgstr "영상 캡쳐 필터 생성 불가"
 
 msgctxt "IDS_MAINFRM_98"
 msgid "No capture filters"
-msgstr "캡쳐 필터가 없음"
+msgstr "캡쳐 필터 없음"
 
 msgctxt "IDS_MAINFRM_99"
 msgid "Can't create capture graph builder object"
-msgstr "캡쳐 그래프 빌더 오브젝트를 생성할수 없음"
+msgstr "캡처 그래프 작성기 개체 생성 불가"
+
+msgctxt "IDS_MAINFRM_RENDERFAIL_DLL"
+msgid ""
+"Cannot render the file. Failure loading internal filter. Could be caused by "
+"a missing DLL."
+msgstr ""
+
+msgctxt "IDS_MAINFRM_RENDERFAIL_DLL_SAC"
+msgid ""
+"Cannot render the file. Failure loading internal filter. Could be caused by "
+"\"Smart App Control\"."
+msgstr ""
+
+msgctxt "IDS_MAINFRM_RENDERFAIL_CORRUPT"
+msgid ""
+"Cannot render the file. File might be damaged or incomplete. Send file to "
+"developers for analysis."
+msgstr ""
 
 msgctxt "IDS_MAINFRM_108"
 msgid "Couldn't open any device"
-msgstr "어떤 장치도 열수 없음"
+msgstr "장치를 열 수 없음"
 
 msgctxt "IDS_AG_SOUND"
 msgid "Sound"
-msgstr "사운드"
+msgstr "음성"
 
 msgctxt "IDS_MAINFRM_114"
 msgid "%s was not found, please insert media containing this file."
-msgstr "%s 은(는) 찾을수 없습니다, 이 파일을 포함한 미디어를 삽입하세요."
+msgstr "%s이(가) 없습니다. 이 파일이 포함된 미디어를 삽입하십시오."
 
 msgctxt "IDS_AG_ABORTED"
 msgid "Aborted"
-msgstr "취소됨"
+msgstr "중단됨"
 
 msgctxt "IDS_MAINFRM_116"
 msgid "&Properties..."
-msgstr "등록정보(&P)..."
+msgstr "속성(&P)..."
 
 msgctxt "IDS_MAINFRM_117"
 msgid " (pin) properties..."
-msgstr " (pin) 등록정보..."
+msgstr " (핀) 속성..."
 
 msgctxt "IDS_AG_UNKNOWN_STREAM"
 msgid "Unknown Stream"
-msgstr "알려지지않은 스트림"
+msgstr "알 수 없는 스트림"
 
 msgctxt "IDS_AG_UNKNOWN"
 msgid "Unknown %u"
-msgstr "알려지지않은 %u"
+msgstr "알 수 없는 %u"
 
 msgctxt "IDS_AG_VSYNC"
 msgid "VSync"
-msgstr "V싱크"
+msgstr "수직 동기화"
 
 msgctxt "IDS_MAINFRM_121"
 msgid " (Director Comments 1)"
-msgstr " (음성 해설 1)"
+msgstr " (감독 코멘트 1)"
 
 msgctxt "IDS_MAINFRM_122"
 msgid " (Director Comments 2)"
-msgstr " (음성 해설 2)"
+msgstr " (감독코멘트 2)"
 
 msgctxt "IDS_DVD_SUBTITLES_ENABLE"
 msgid "Enable DVD subtitles"
@@ -2519,19 +3025,19 @@ msgstr "앵글 %u"
 
 msgctxt "IDS_AG_VSYNCOFFSET_INCREASE"
 msgid "Increase VSync Offset"
-msgstr "V싱크 오프셋 증가"
+msgstr "수직 동기화 오프셋 증가"
 
 msgctxt "IDS_AG_DISABLED"
 msgid "Disabled"
-msgstr "사용하지않음"
+msgstr "비활성화"
 
 msgctxt "IDS_AG_VSYNCOFFSET_DECREASE"
 msgid "Decrease VSync Offset"
-msgstr "V싱크 오프셋 감소"
+msgstr "수직 동기화 오프셋 감소"
 
 msgctxt "IDS_MAINFRM_136"
 msgid "MPC-HC D3D Fullscreen"
-msgstr "MPC-HC D3D 전체화면"
+msgstr "MPC-HC D3D 전체 화면"
 
 msgctxt "IDS_MAINFRM_137"
 msgid "Unknown format"
@@ -2539,211 +3045,111 @@ msgstr "알 수 없는 형식"
 
 msgctxt "IDS_MAINFRM_138"
 msgid "Sub shift: %ld ms"
-msgstr "자막 싱크 : %ld"
+msgstr "보조 작업 : %ld"
 
 msgctxt "IDS_VOLUME_BOOST_INC"
 msgid "Volume boost increase"
-msgstr "볼륨 부스트 증가"
+msgstr "음량 증폭 증가"
 
 msgctxt "IDS_VOLUME_BOOST_DEC"
 msgid "Volume boost decrease"
-msgstr "볼륨 부스트 감소"
+msgstr "음량 증폭 감소"
 
 msgctxt "IDS_VOLUME_BOOST_MIN"
 msgid "Volume boost Min"
-msgstr "볼륨 부스트 최소"
+msgstr "음량 증폭 최소"
 
 msgctxt "IDS_VOLUME_BOOST_MAX"
 msgid "Volume boost Max"
-msgstr "볼륨 부스트 최대"
+msgstr "음량 증폭 최대"
 
 msgctxt "IDS_USAGE"
 msgid "Usage: mpc-hc.exe \"pathname\" [switches]"
-msgstr ""
+msgstr "사용법 : mpc-hc.exe \"경로 이름\" [switches]"
 
 msgctxt "IDS_UNKNOWN_SWITCH"
-msgid "Unrecognized switch(es) found in command line string: \n\n"
-msgstr "인식 불가능한 스위치가 사용됨: \n\n"
+msgid ""
+"Unrecognized switch(es) found in command line string: \n"
+"\n"
+msgstr ""
+"명령줄 문자열에서 인식할 수 없는 스위치 발견 :\n"
+"\n"
 
 msgctxt "IDS_AG_TOGGLE_INFO"
 msgid "Toggle Information"
-msgstr "파일 정보 토글"
+msgstr "파일 정보 표시"
 
 msgctxt "IDS_AG_TOGGLE_STATS"
 msgid "Toggle Statistics"
-msgstr "통계 토글"
+msgstr "통계 정보 표시"
 
 msgctxt "IDS_AG_TOGGLE_STATUS"
 msgid "Toggle Status"
-msgstr "상태표시줄 토글"
+msgstr "상태 표시줄 표시"
 
 msgctxt "IDS_AG_TOGGLE_SUBRESYNC"
 msgid "Toggle Subresync Bar"
-msgstr "자막싱크조절 토글"
+msgstr "자막 조정바 표시"
 
 msgctxt "IDS_AG_TOGGLE_PLAYLIST"
 msgid "Toggle Playlist Bar"
-msgstr "재생목록 토글"
+msgstr "재생 목록 바 표시"
 
 msgctxt "IDS_AG_TOGGLE_CAPTURE"
 msgid "Toggle Capture Bar"
-msgstr "캡쳐 토글"
+msgstr "캡쳐바 표시"
 
 msgctxt "IDS_AG_TOGGLE_DEBUGSHADERS"
 msgid "Toggle Debug Shaders"
-msgstr "셰이더 디버그 토글"
+msgstr "셰이더 디버그 표시"
 
 msgctxt "IDS_AG_ZOOM_50"
 msgid "Zoom 50%"
-msgstr "50% 축소"
+msgstr "확대/축소 50%"
 
 msgctxt "IDS_AG_ZOOM_100"
 msgid "Zoom 100%"
-msgstr "100% 확대"
+msgstr "확대/축소 100%"
 
 msgctxt "IDS_AG_ZOOM_200"
 msgid "Zoom 200%"
-msgstr "200% 확대"
+msgstr "확대/축소 200%"
 
 msgctxt "IDS_AG_NEXT_AR_PRESET"
 msgid "Next AR Preset"
 msgstr "다음 AR 프리셋"
 
 msgctxt "IDS_AG_VIDFRM_STRETCH"
-msgid "VidFrm Stretch"
-msgstr "비디오폼 늘이기"
+msgid "Video Frame Stretch"
+msgstr "영상 프레임 늘이기"
 
 msgctxt "IDS_AG_VIDFRM_INSIDE"
-msgid "VidFrm Inside"
-msgstr "비디오폼 안쪽"
+msgid "Video Frame Inside"
+msgstr "영상 프레임 내부"
 
 msgctxt "IDS_AG_VIDFRM_OUTSIDE"
-msgid "VidFrm Outside"
-msgstr "비디오폼 바깥쪽"
+msgid "Video Frame Outside"
+msgstr "영상 프레임 외부"
 
 msgctxt "IDS_AG_PNS_RESET"
-msgid "PnS Reset"
-msgstr "PnS 초기화"
+msgid "Video Frame Reset"
+msgstr "영상 프레임 초기화"
 
 msgctxt "IDS_AG_PNS_ROTATEX_P"
-msgid "PnS Rotate X+"
-msgstr "PnS 회전 X+"
-
-msgctxt "IDS_AG_VIDFRM_ZOOM1"
-msgid "VidFrm Zoom 1"
-msgstr ""
-
-msgctxt "IDS_AG_VIDFRM_ZOOM2"
-msgid "VidFrm Zoom 2"
-msgstr ""
-
-msgctxt "IDS_AG_VIDFRM_SWITCHZOOM"
-msgid "VidFrm Switch Zoom"
-msgstr ""
-
-msgctxt "IDS_ENABLE_ALL_FILTERS"
-msgid "&Enable all filters"
-msgstr "모든 필터 사용(&E)"
-
-msgctxt "IDS_LOGO_AUTHOR"
-msgid "Author unknown. Contact us if you made this logo!"
-msgstr "만든이 알수없음. 이 로고를 당신이 만들었다면 나에게 연락해주세요!"
-
-msgctxt "IDS_NO_MORE_MEDIA"
-msgid "No more media in the current folder."
-msgstr "현재 폴더에 더 이상의 미디어파일이 존재하지않습니다."
-
-msgctxt "IDS_FIRST_IN_FOLDER"
-msgid "The first file of the folder is already loaded."
-msgstr ""
-
-msgctxt "IDS_LAST_IN_FOLDER"
-msgid "The last file of the folder is already loaded."
-msgstr ""
-
-msgctxt "IDS_FRONT_LEFT"
-msgid "Front Left"
-msgstr "전면 좌측"
-
-msgctxt "IDS_FRONT_RIGHT"
-msgid "Front Right"
-msgstr "전면 우측"
-
-msgctxt "IDS_FRONT_CENTER"
-msgid "Front Center"
-msgstr "전면 센터"
-
-msgctxt "IDS_LOW_FREQUENCY"
-msgid "Low Frequency"
-msgstr "저주파"
-
-msgctxt "IDS_BACK_LEFT"
-msgid "Back Left"
-msgstr "후면 좌측"
-
-msgctxt "IDS_BACK_RIGHT"
-msgid "Back Right"
-msgstr "후면 우측"
-
-msgctxt "IDS_FRONT_LEFT_OF_CENTER"
-msgid "Front Left of Center"
-msgstr "센터의 전면 좌측"
-
-msgctxt "IDS_FRONT_RIGHT_OF_CENTER"
-msgid "Front Right of Center"
-msgstr "센터의 전면 우측"
-
-msgctxt "IDS_BACK_CENTER"
-msgid "Back Center"
-msgstr "후면 센터"
-
-msgctxt "IDS_SIDE_LEFT"
-msgid "Side Left"
-msgstr "사이드 좌측"
-
-msgctxt "IDS_SIDE_RIGHT"
-msgid "Side Right"
-msgstr "사이드 우측"
-
-msgctxt "IDS_TOP_CENTER"
-msgid "Top Center"
-msgstr "위쪽 센터"
-
-msgctxt "IDS_TOP_FRONT_LEFT"
-msgid "Top Front Left"
-msgstr "위쪽 전면 좌측"
-
-msgctxt "IDS_TOP_FRONT_CENTER"
-msgid "Top Front Center"
-msgstr "위쪽 전면 센터"
-
-msgctxt "IDS_TOP_FRONT_RIGHT"
-msgid "Top Front Right"
-msgstr "위쪽 전면 우측"
-
-msgctxt "IDS_TOP_BACK_LEFT"
-msgid "Top Back Left"
-msgstr "위쪽 후면 좌측"
-
-msgctxt "IDS_TOP_BACK_CENTER"
-msgid "Top Back Center"
-msgstr "위쪽 후면 센터"
-
-msgctxt "IDS_TOP_BACK_RIGHT"
-msgid "Top Back Right"
-msgstr "위쪽 후면 우측"
+msgid "Video Frame Rotate X+"
+msgstr "영상 프레임 회전 X+"
 
 msgctxt "IDS_TIME_TOOLTIP_ABOVE"
-msgid "Above seek bar"
-msgstr "탐색바 위에"
+msgid "Above seekbar"
+msgstr "탐색 막대 위"
 
 msgctxt "IDS_TIME_TOOLTIP_BELOW"
-msgid "Below seek bar"
-msgstr "탐색바 아래에"
+msgid "Below seekbar"
+msgstr "탐색 막대 아래"
 
 msgctxt "IDS_VIDEO_STREAM"
 msgid "Video: %s"
-msgstr "비디오: %s"
+msgstr "영상 : %s"
 
 msgctxt "IDS_APPLY"
 msgid "Apply"
@@ -2763,15 +3169,143 @@ msgstr "배치"
 
 msgctxt "IDS_THUMB_PIXELS"
 msgid "Pixels:"
-msgstr "픽셀:"
+msgstr "픽셀 :"
 
 msgctxt "IDS_TEXTFILE_ENC"
 msgid "Encoding:"
-msgstr "인코딩:"
+msgstr "인코딩 :"
+
+msgctxt "IDS_AG_ZOOM_25"
+msgid "Zoom 25%"
+msgstr "확대 25%"
+
+msgctxt "IDS_AG_MOUSE_MODIFIER"
+msgid "Mouse Modifier"
+msgstr "마우스 수식키"
+
+msgctxt "IDS_AG_ZOOM_ADD"
+msgid "Zoom Window +"
+msgstr "확대/축소 창 +"
+
+msgctxt "IDS_AG_ZOOM_SUB"
+msgid "Zoom Window -"
+msgstr "확대/축소 창 -"
+
+msgctxt "IDS_SEEKBAR_HOVER_PREVIEW"
+msgid "Video Preview"
+msgstr "영상 미리 보기"
+
+msgctxt "IDS_SEEKBAR_HOVER_TOOLTIP"
+msgid "Seek Time"
+msgstr "탐색 시간"
+
+msgctxt "IDS_AG_VIDFRM_ZOOM1"
+msgid "Video Frame Zoom 1"
+msgstr "영상 프레임 확대/축소 1"
+
+msgctxt "IDS_AG_VIDFRM_ZOOM2"
+msgid "Video Frame Zoom 2"
+msgstr "영상 프레임 확대/축소 2"
+
+msgctxt "IDS_AG_VIDFRM_SWITCHZOOM"
+msgid "Video Frame Switch Zoom"
+msgstr "영상 프레임 전환 확대/축소"
+
+msgctxt "IDS_ENABLE_ALL_FILTERS"
+msgid "&Enable all filters"
+msgstr "모든 필터 활성화(&E)"
+
+msgctxt "IDS_LOGO_AUTHOR"
+msgid "Author unknown. Contact us if you made this logo!"
+msgstr "저자 불명. 이 로고를 만들었다면 저희에게 연락주세요!"
+
+msgctxt "IDS_NO_MORE_MEDIA"
+msgid "No more media in the current folder."
+msgstr "현재 폴더에 더 이상 미디어가 없습니다."
+
+msgctxt "IDS_FIRST_IN_FOLDER"
+msgid "The first file of the folder is already loaded."
+msgstr "폴더의 1번째 파일이 이미 로드돼 있습니다."
+
+msgctxt "IDS_LAST_IN_FOLDER"
+msgid "The last file of the folder is already loaded."
+msgstr "폴더의 마지막 파일이 이미 로드돼 있습니다."
+
+msgctxt "IDS_FRONT_LEFT"
+msgid "Front Left"
+msgstr "전면 좌측"
+
+msgctxt "IDS_FRONT_RIGHT"
+msgid "Front Right"
+msgstr "전면 우측"
+
+msgctxt "IDS_FRONT_CENTER"
+msgid "Front Center"
+msgstr "전면 중앙"
+
+msgctxt "IDS_LOW_FREQUENCY"
+msgid "Low Frequency"
+msgstr "저주사율"
+
+msgctxt "IDS_BACK_LEFT"
+msgid "Back Left"
+msgstr "후면 좌측"
+
+msgctxt "IDS_BACK_RIGHT"
+msgid "Back Right"
+msgstr "후면 우측"
+
+msgctxt "IDS_FRONT_LEFT_OF_CENTER"
+msgid "Front Left of Center"
+msgstr "센터의 전면 좌측"
+
+msgctxt "IDS_FRONT_RIGHT_OF_CENTER"
+msgid "Front Right of Center"
+msgstr "센터의 전면 우측"
+
+msgctxt "IDS_BACK_CENTER"
+msgid "Back Center"
+msgstr "후면 상단"
+
+msgctxt "IDS_SIDE_LEFT"
+msgid "Side Left"
+msgstr "사이드 좌측"
+
+msgctxt "IDS_SIDE_RIGHT"
+msgid "Side Right"
+msgstr "사이드 우측"
+
+msgctxt "IDS_TOP_CENTER"
+msgid "Top Center"
+msgstr "상단 중앙"
+
+msgctxt "IDS_TOP_FRONT_LEFT"
+msgid "Top Front Left"
+msgstr "상단 전면 좌측"
+
+msgctxt "IDS_TOP_FRONT_CENTER"
+msgid "Top Front Center"
+msgstr "상단 전면 중앙"
+
+msgctxt "IDS_TOP_FRONT_RIGHT"
+msgid "Top Front Right"
+msgstr "상단 전면 우측"
+
+msgctxt "IDS_TOP_BACK_LEFT"
+msgid "Top Back Left"
+msgstr "상단 후면 좌측"
+
+msgctxt "IDS_TOP_BACK_CENTER"
+msgid "Top Back Center"
+msgstr "상단 후면 센터"
+
+msgctxt "IDS_TOP_BACK_RIGHT"
+msgid "Top Back Right"
+msgstr "상단 후면 우측"
 
 msgctxt "IDS_DISABLE_ALL_FILTERS"
 msgid "&Disable all filters"
-msgstr "모든 필터 사용안함(&D)"
+msgstr "모든 필터 비활성화(&D)"
 
 msgctxt "IDS_ENABLE_AUDIO_FILTERS"
 msgid "Enable all audio decoders"
@@ -2779,15 +3313,15 @@ msgstr "모든 오디오 디코더 사용"
 
 msgctxt "IDS_DISABLE_AUDIO_FILTERS"
 msgid "Disable all audio decoders"
-msgstr "모든 디코더 사용안함"
+msgstr "모든 디코더 사용 안 함"
 
 msgctxt "IDS_ENABLE_VIDEO_FILTERS"
 msgid "Enable all video decoders"
-msgstr "모든 비디오 디코더 사용"
+msgstr "모든 영상 디코더 사용"
 
 msgctxt "IDS_DISABLE_VIDEO_FILTERS"
 msgid "Disable all video decoders"
-msgstr "모든 비디오 디코더 사용안함"
+msgstr "모든 영상 디코더 사용 안 함"
 
 msgctxt "IDS_STRETCH_TO_WINDOW"
 msgid "Stretch To Window"
@@ -2795,27 +3329,27 @@ msgstr "창에 맞추기"
 
 msgctxt "IDS_TOUCH_WINDOW_FROM_INSIDE"
 msgid "Touch Window From Inside"
-msgstr "안쪽 윈도우창에서"
+msgstr "안쪽 윈도 창에서"
 
 msgctxt "IDS_ZOOM1"
 msgid "Zoom 1"
-msgstr "줌 1"
+msgstr "확대/축소 1"
 
 msgctxt "IDS_ZOOM2"
 msgid "Zoom 2"
-msgstr "줌 2"
+msgstr "확대/축소 2"
 
 msgctxt "IDS_TOUCH_WINDOW_FROM_OUTSIDE"
 msgid "Touch Window From Outside"
-msgstr "바깥쪽 윈도우창에서"
+msgstr "바깥쪽 창에서"
 
 msgctxt "IDS_AUDIO_STREAM"
 msgid "Audio: %s"
-msgstr "오디오: %s"
+msgstr "오디오 : %s"
 
 msgctxt "IDS_AG_REOPEN"
 msgid "Reopen File"
-msgstr "파일 다시열기"
+msgstr "파일 다시 열기"
 
 msgctxt "IDS_MFMT_AVI"
 msgid "AVI"
@@ -2831,11 +3365,11 @@ msgstr "MPEG-TS"
 
 msgctxt "IDS_MFMT_DVDVIDEO"
 msgid "DVD-Video"
-msgstr "DVD-Video"
+msgstr "DVD 영상"
 
 msgctxt "IDS_MFMT_MKV"
 msgid "Matroska"
-msgstr "Matroska"
+msgstr "마트로스카(MKV)"
 
 msgctxt "IDS_MFMT_WEBM"
 msgid "WebM"
@@ -2847,51 +3381,51 @@ msgstr "MP4"
 
 msgctxt "IDS_MFMT_MOV"
 msgid "QuickTime Movie"
-msgstr "QuickTime Movie"
+msgstr "퀵타임 무비"
 
 msgctxt "IDS_MFMT_3GP"
 msgid "3GP"
 msgstr "3GP"
 
-msgctxt "IDS_MFMT_3G2"
-msgid "3G2"
-msgstr "3G2"
+msgctxt "IDS_MFMT_3GA"
+msgid "3GA"
+msgstr "3GA"
 
 msgctxt "IDS_MFMT_FLV"
 msgid "Flash Video"
-msgstr "Flash Video"
+msgstr "플래시 영상"
 
 msgctxt "IDS_MFMT_OGM"
 msgid "Ogg Media"
-msgstr "Ogg Media"
+msgstr "Ogg 미디어"
 
 msgctxt "IDS_MFMT_RM"
 msgid "Real Media"
-msgstr "Real Media"
-
-msgctxt "IDS_MFMT_RT"
-msgid "Real Script"
-msgstr "Real Media"
+msgstr "리얼 미디어"
 
 msgctxt "IDS_MFMT_WMV"
 msgid "Windows Media Video"
-msgstr "Windows Media Video"
+msgstr "윈도 미디어 영상"
 
 msgctxt "IDS_MFMT_BINK"
 msgid "Smacker/Bink Video"
-msgstr "Smacker/Bink Video"
+msgstr "Smacker/Bink 영상"
 
 msgctxt "IDS_MFMT_FLIC"
 msgid "FLIC Animation"
-msgstr "FLIC Animation"
+msgstr "FLIC 애니메이션"
 
 msgctxt "IDS_MFMT_DSM"
 msgid "DirectShow Media"
-msgstr "DirectShow Media"
+msgstr "DirectShow 미디어"
 
 msgctxt "IDS_MFMT_IVF"
 msgid "Indeo Video Format"
-msgstr "Indeo Video Format"
+msgstr "인디오 영상 형식"
+
+msgctxt "IDS_MFMT_AVS"
+msgid "AviSynth Script"
+msgstr "AviSynth 스크립트"
 
 msgctxt "IDS_MFMT_OTHER"
 msgid "Other"
@@ -2899,7 +3433,7 @@ msgstr "기타"
 
 msgctxt "IDS_MFMT_SWF"
 msgid "Shockwave Flash"
-msgstr "Shockwave Flash"
+msgstr "어도비 플래시"
 
 msgctxt "IDS_MFMT_OTHER_AUDIO"
 msgid "Other Audio"
@@ -2907,7 +3441,7 @@ msgstr "기타 오디오"
 
 msgctxt "IDS_MFMT_AC3"
 msgid "AC-3"
-msgstr ""
+msgstr "AC-3"
 
 msgctxt "IDS_MFMT_AIFF"
 msgid "AIFF"
@@ -2915,7 +3449,7 @@ msgstr "AIFF"
 
 msgctxt "IDS_MFMT_ALAC"
 msgid "Apple Lossless"
-msgstr "Apple Lossless"
+msgstr "애플 무손실"
 
 msgctxt "IDS_MFMT_WAV"
 msgid "WAV"
@@ -2923,7 +3457,7 @@ msgstr "WAV"
 
 msgctxt "IDS_MFMT_WMA"
 msgid "Windows Media Audio"
-msgstr "Windows Media Audio"
+msgstr "윈도 미디어 오디오"
 
 msgctxt "IDS_MFMT_WV"
 msgid "WavPack"
@@ -2931,11 +3465,11 @@ msgstr "WavPack"
 
 msgctxt "IDS_MFMT_OPUS"
 msgid "Opus Audio Codec"
-msgstr "Opus Audio Codec"
+msgstr "Opus 오디오 코덱"
 
 msgctxt "IDS_MFMT_DTS"
 msgid "DTS/DTS-HD"
-msgstr ""
+msgstr "DTS/DTS-HD"
 
 msgctxt "IDS_MFMT_AMR"
 msgid "AMR"
@@ -2943,7 +3477,7 @@ msgstr "AMR"
 
 msgctxt "IDS_MFMT_APE"
 msgid "Monkey's Audio"
-msgstr "Monkey's Audio"
+msgstr "몽키스 오디오"
 
 msgctxt "IDS_MFMT_AU"
 msgid "AU/SND"
@@ -2959,7 +3493,7 @@ msgstr "FLAC"
 
 msgctxt "IDS_MFMT_M4A"
 msgid "MPEG-4 Audio"
-msgstr "MPEG-4 Audio"
+msgstr "MPEG-4 오디오"
 
 msgctxt "IDS_MFMT_MIDI"
 msgid "MIDI"
@@ -2967,7 +3501,7 @@ msgstr "MIDI"
 
 msgctxt "IDS_MFMT_MKA"
 msgid "Matroska audio"
-msgstr "Matroska audio"
+msgstr "마트로스카 오디오(MKA)"
 
 msgctxt "IDS_MFMT_MP3"
 msgid "MP3"
@@ -2975,11 +3509,11 @@ msgstr "MP3"
 
 msgctxt "IDS_MFMT_MPA"
 msgid "MPEG audio"
-msgstr "MPEG audio"
+msgstr "MPEG 오디오"
 
 msgctxt "IDS_MFMT_MPC"
 msgid "Musepack"
-msgstr "Musepack"
+msgstr " 뮤즈팩"
 
 msgctxt "IDS_MFMT_OFR"
 msgid "OptimFROG"
@@ -2987,11 +3521,11 @@ msgstr "OptimFROG"
 
 msgctxt "IDS_MFMT_OGG"
 msgid "Ogg Vorbis"
-msgstr "Ogg Vorbis"
+msgstr "오그 보비스"
 
 msgctxt "IDS_MFMT_RA"
 msgid "Real Audio"
-msgstr "Real Audio"
+msgstr "리얼 오디오"
 
 msgctxt "IDS_MFMT_TAK"
 msgid "TAK"
@@ -2999,7 +3533,7 @@ msgstr "TAK"
 
 msgctxt "IDS_MFMT_TTA"
 msgid "True Audio"
-msgstr "True Audio"
+msgstr "트루 오디오"
 
 msgctxt "IDS_MFMT_PLS"
 msgid "Playlist"
@@ -3015,7 +3549,7 @@ msgstr "RAR 아카이브"
 
 msgctxt "IDS_DVB_CHANNEL_FPS"
 msgid "FPS"
-msgstr "FPS"
+msgstr "초당 프레임"
 
 msgctxt "IDS_DVB_CHANNEL_RESOLUTION"
 msgid "Resolution"
@@ -3023,199 +3557,195 @@ msgstr "해상도"
 
 msgctxt "IDS_DVB_CHANNEL_ASPECT_RATIO"
 msgid "Aspect Ratio"
-msgstr "화면비율"
+msgstr "종횡비"
 
 msgctxt "IDS_OSD_RS_VSYNC_ON"
 msgid "VSync: On"
-msgstr "VSync: 켜짐"
+msgstr "수직 동기화 : 켬"
 
 msgctxt "IDS_OSD_RS_VSYNC_OFF"
 msgid "VSync: Off"
-msgstr "VSync: 꺼짐"
+msgstr "수직 동기화 : 끔"
 
 msgctxt "IDS_OSD_RS_ACCURATE_VSYNC_ON"
 msgid "Accurate VSync: On"
-msgstr "정확한 VSync: 켜짐"
+msgstr "정밀 수직 동기화 : 켬"
 
 msgctxt "IDS_OSD_RS_ACCURATE_VSYNC_OFF"
 msgid "Accurate VSync: Off"
-msgstr "정확한 VSync: 꺼짐"
+msgstr "정밀 수직 동기화 : 끔"
 
 msgctxt "IDS_OSD_RS_SYNC_TO_DISPLAY_ON"
 msgid "Synchronize Video to Display: On"
-msgstr "비디오를 디스플레이에 싱크: 켜짐"
+msgstr "화면 표시 장치에 영상 동기화 : 켬"
 
 msgctxt "IDS_OSD_RS_SYNC_TO_DISPLAY_OFF"
 msgid "Synchronize Video to Display: Off"
-msgstr "비디오를 디스플레이에 싱크: 꺼짐"
+msgstr "화면 표시 장치에 영상 동기화 : 끔"
 
 msgctxt "IDS_OSD_RS_SYNC_TO_VIDEO_ON"
 msgid "Synchronize Display to Video: On"
-msgstr "디스플레이를 비디오에 싱크: 켜짐"
+msgstr "화면 표시 장치를 영상에 동기화 : 켬"
 
 msgctxt "IDS_OSD_RS_SYNC_TO_VIDEO_OFF"
 msgid "Synchronize Display to Video: Off"
-msgstr "디스플레이를 비디오에 싱크: 꺼짐"
+msgstr "화면 표시 장치를 영상에 동기화 : 끔"
 
 msgctxt "IDS_OSD_RS_PRESENT_NEAREST_ON"
 msgid "Present at Nearest VSync: On"
-msgstr "근접한 VSync 출력: 켜짐"
+msgstr "근린 수직 동기화 출력 : 켬"
 
 msgctxt "IDS_OSD_RS_PRESENT_NEAREST_OFF"
 msgid "Present at Nearest VSync: Off"
-msgstr "근접한 VSync 출력: 꺼짐"
+msgstr "근린 수직 동기화 출력 : 끔"
 
 msgctxt "IDS_OSD_RS_COLOR_MANAGEMENT_ON"
 msgid "Color Management: On"
-msgstr "색 관리: 켜짐"
+msgstr "색 관리 : 켬"
 
 msgctxt "IDS_OSD_RS_COLOR_MANAGEMENT_OFF"
 msgid "Color Management: Off"
-msgstr "색 관리: 꺼짐"
+msgstr "색 관리 : 끔"
 
 msgctxt "IDS_OSD_RS_INPUT_TYPE_AUTO"
 msgid "Input Type: Auto-Detect"
-msgstr "입력 타입: 자동 감지"
+msgstr "입력 타입 : 자동 감지"
 
 msgctxt "IDS_OSD_RS_INPUT_TYPE_HDTV"
 msgid "Input Type: HDTV"
-msgstr "입력 타입: HDTV"
+msgstr "입력 타입 : HDTV"
 
 msgctxt "IDS_OSD_RS_INPUT_TYPE_SD_NTSC"
 msgid "Input Type: SDTV NTSC"
-msgstr "입력 타입: SDTV NTSC"
+msgstr "입력 타입 : SDTV NTSC"
 
 msgctxt "IDS_OSD_RS_INPUT_TYPE_SD_PAL"
 msgid "Input Type: SDTV PAL"
-msgstr "입력 타입: SDTV PAL"
+msgstr "입력 타입 : SDTV PAL"
 
 msgctxt "IDS_OSD_RS_AMBIENT_LIGHT_BRIGHT"
 msgid "Ambient Light: Bright (2.2 Gamma)"
-msgstr "주변 광: 밝음 (2.2 감마)"
+msgstr "주변광 : 밝게(2.2 감마)"
 
 msgctxt "IDS_OSD_RS_AMBIENT_LIGHT_DIM"
 msgid "Ambient Light: Dim (2.35 Gamma)"
-msgstr "주변 광: 중간 (2.35 감마)"
+msgstr "주변광 : 조금 어둡게(2.35 감마)"
 
 msgctxt "IDS_OSD_RS_AMBIENT_LIGHT_DARK"
 msgid "Ambient Light: Dark (2.4 Gamma)"
-msgstr "주변 광: 어두움 (2.4 감마)"
+msgstr "주변광 : 어둡게(2.4 감마)"
 
 msgctxt "IDS_OSD_RS_REND_INTENT_PERCEPT"
 msgid "Rendering Intent: Perceptual"
-msgstr "렌더링 의도: 가시범위"
+msgstr "렌더링 의도 : 가시 범위"
 
 msgctxt "IDS_OSD_RS_REND_INTENT_RELATIVE"
 msgid "Rendering Intent: Relative Colorimetric"
-msgstr "렌더링 의도: 상대 색도계"
+msgstr "렌더링 의도 : 상대 색상 행렬"
 
 msgctxt "IDS_OSD_RS_REND_INTENT_SATUR"
 msgid "Rendering Intent: Saturation"
-msgstr "렌더링 의도: 채도"
+msgstr "렌더링 의도 : 채도"
 
 msgctxt "IDS_OSD_RS_REND_INTENT_ABSOLUTE"
 msgid "Rendering Intent: Absolute Colorimetric"
-msgstr "렌더링 의도: 절대 색도계"
+msgstr "렌더링 의도 : 절대 색상 행렬"
 
 msgctxt "IDS_OSD_RS_OUTPUT_RANGE"
 msgid "Output Range: %s"
-msgstr "출력 범위: %s"
+msgstr "출력 범위 : %s"
 
 msgctxt "IDS_OSD_RS_FLUSH_BEF_VSYNC_ON"
 msgid "Flush GPU before VSync: On"
-msgstr "VSync 전에 GPU 플러싱: 켜짐"
+msgstr "수직 동기화 전, GPU 플러싱 : 켬"
 
 msgctxt "IDS_OSD_RS_FLUSH_BEF_VSYNC_OFF"
 msgid "Flush GPU before VSync: Off"
-msgstr "VSync 전에 GPU 플러싱: 꺼짐"
+msgstr "수직 동기화 전, GPU 플러싱 : 끔"
 
 msgctxt "IDS_OSD_RS_FLUSH_AFT_PRES_ON"
 msgid "Flush GPU after Present: On"
-msgstr "출력 후 GPU 플러싱: 켜짐"
+msgstr "출력 후, GPU 플러싱 : 켬"
 
 msgctxt "IDS_OSD_RS_FLUSH_AFT_PRES_OFF"
 msgid "Flush GPU after Present: Off"
-msgstr "출력 후 GPU 플러싱: 꺼짐"
+msgstr "출력 후, GPU 플러싱 : 끔"
 
 msgctxt "IDS_OSD_RS_WAIT_ON"
 msgid "Wait for GPU Flush: On"
-msgstr "GPU 플러싱 대기: 켜짐"
+msgstr "GPU 플러싱 대기 : 켬"
 
 msgctxt "IDS_OSD_RS_WAIT_OFF"
 msgid "Wait for GPU Flush: Off"
-msgstr "GPU 플러싱 대기: 꺼짐"
+msgstr "GPU 플러싱 대기 : 끔"
 
 msgctxt "IDS_OSD_RS_D3D_FULLSCREEN_ON"
 msgid "D3D Fullscreen: On"
-msgstr "D3D 전체화면: 켜짐"
+msgstr "D3D 전체 화면 : 켬"
 
 msgctxt "IDS_OSD_RS_D3D_FULLSCREEN_OFF"
 msgid "D3D Fullscreen: Off"
-msgstr "D3D 전체화면: 꺼짐"
+msgstr "D3D 전체 화면 : 끔"
 
 msgctxt "IDS_OSD_RS_NO_DESKTOP_COMP_ON"
 msgid "Disable desktop composition: On"
-msgstr "데스크톱 합성 사용안함: 켜짐"
+msgstr "바탕 화면 구성 비활성화 : 켬"
 
 msgctxt "IDS_OSD_RS_NO_DESKTOP_COMP_OFF"
 msgid "Disable desktop composition: Off"
-msgstr "데스크톱 합성 사용안함: 꺼짐"
+msgstr "바탕 화면 구성 비활성화 : 끔"
 
 msgctxt "IDS_OSD_RS_ALT_VSYNC_ON"
 msgid "Alternative VSync: On"
-msgstr "대체 VSync: 켜짐"
+msgstr "대체 수직 동기화 : 켬"
 
 msgctxt "IDS_OSD_RS_ALT_VSYNC_OFF"
 msgid "Alternative VSync: Off"
-msgstr "대체 VSync: 꺼짐"
+msgstr "대체 수직 동기화 : 끔"
 
 msgctxt "IDS_OSD_RS_RESET_DEFAULT"
 msgid "Renderer settings reset to default"
-msgstr "렌더러 설정 기본값으로"
-
-msgctxt "IDS_OSD_RS_RESET_OPTIMAL"
-msgid "Renderer settings reset to optimal"
-msgstr "렌더러 설정 최적값으로"
+msgstr "렌더러 설정을 기본값으로 다시 설정"
 
 msgctxt "IDS_OSD_RS_D3D_FS_GUI_SUPP_ON"
 msgid "D3D Fullscreen GUI Support: On"
-msgstr "D3D 전체화면 GUI 지원: 켜짐"
+msgstr "D3D 전체 화면 GUI 지원 : 켬"
 
 msgctxt "IDS_OSD_RS_D3D_FS_GUI_SUPP_OFF"
 msgid "D3D Fullscreen GUI Support: Off"
-msgstr "D3D 전체화면 GUI 지원: 꺼짐"
+msgstr "D3D 전체 화면 GUI 지원 : 끔"
 
 msgctxt "IDS_OSD_RS_10BIT_RBG_OUT_ON"
 msgid "10-bit RGB Output: On"
-msgstr "10비트 RGB 출력: 켜짐"
+msgstr "10비트 RGB 출력 : 켬"
 
 msgctxt "IDS_OSD_RS_10BIT_RBG_OUT_OFF"
 msgid "10-bit RGB Output: Off"
-msgstr "10비트 RGB 출력: 꺼짐"
+msgstr "10비트 RGB 출력 : 끔"
 
 msgctxt "IDS_OSD_RS_10BIT_RBG_IN_ON"
 msgid "Force 10-bit RGB Input: On"
-msgstr "강제 10비트 RGB 입력: 켜짐"
+msgstr "강제 10비트 RGB 입력 : 켬"
 
 msgctxt "IDS_OSD_RS_10BIT_RBG_IN_OFF"
 msgid "Force 10-bit RGB Input: Off"
-msgstr "강제 10비트 RGB 입력: 꺼짐"
+msgstr "강제 10비트 RGB 입력 : 끔"
 
 msgctxt "IDS_OSD_RS_FULL_FP_PROCESS_ON"
 msgid "Full Floating Point Processing: On"
-msgstr "전체 부동소수점 연산: 켜짐"
+msgstr "전체 부동소수점 연산 : 켬"
 
 msgctxt "IDS_OSD_RS_FULL_FP_PROCESS_OFF"
 msgid "Full Floating Point Processing: Off"
-msgstr "전체 부동소수점 연산: 꺼짐"
+msgstr "전체 부동소수점 연산 : 끔"
 
 msgctxt "IDS_OSD_RS_HALF_FP_PROCESS_ON"
 msgid "Half Floating Point Processing: On"
-msgstr "절반 부동소수점 연산: 켜짐"
+msgstr "절반 부동소수점 연산 : 켬"
 
 msgctxt "IDS_OSD_RS_HALF_FP_PROCESS_OFF"
 msgid "Half Floating Point Processing: Off"
-msgstr "절반 부동소수점 연산: 꺼짐"
+msgstr "절반 부동소수점 연산 : 끔"
 
 msgctxt "IDS_BRIGHTNESS_DEC"
 msgid "Brightness decrease"
@@ -3231,11 +3761,11 @@ msgstr "명암 감소"
 
 msgctxt "IDS_HUE_INC"
 msgid "Hue increase"
-msgstr ""
+msgstr "색조 증가"
 
 msgctxt "IDS_HUE_DEC"
 msgid "Hue decrease"
-msgstr ""
+msgstr "색조 감소"
 
 msgctxt "IDS_SATURATION_INC"
 msgid "Saturation increase"
@@ -3247,75 +3777,97 @@ msgstr "채도 감소"
 
 msgctxt "IDS_RESET_COLOR"
 msgid "Reset color settings"
-msgstr "컬러 설정 초기화"
+msgstr "색 설정 초기화"
 
 msgctxt "IDS_USING_LATEST_STABLE"
-msgid "\nYou are already using the latest stable version."
-msgstr "\n이미 최신 안정버젼 사용중입니다."
+msgid ""
+"\n"
+"You are already using the latest stable version."
+msgstr ""
+"\n"
+"이미 최신 정식 버전을 사용하고 있습니다."
 
 msgctxt "IDS_USING_NEWER_VERSION"
-msgid "Your current version is v%s.\n\nThe latest stable version is v%s."
-msgstr "현재 버젼은 v%s.\n\n최신 안정버젼은 v%s."
+msgid ""
+"Your current version is v%s.\n"
+"\n"
+"The latest stable version is v%s."
+msgstr ""
+"현재 사용중이신 버젼은 v%s이며,\n"
+"\n"
+"최신 정식 버젼은 v%s 입니다."
 
 msgctxt "IDS_NEW_UPDATE_AVAILABLE"
-msgid "MPC-HC v%s is now available. You are using v%s.\n\nDo you want to visit MPC-HC's website to download it?"
+msgid ""
+"MPC-HC v%s is now available. You are using v%s.\n"
+"\n"
+"Do you want to visit MPC-HC's website to download it?"
 msgstr ""
+"MPC-HC v%s은(는) 현재 사용 가능합니다. v%s을(를) 사용하고 있습니다.\n"
+"\n"
+"MPC-HC 웹사이트를 방문하여 내려받으시겠습니까?"
 
 msgctxt "IDS_UPDATE_ERROR"
-msgid "Update server not found.\n\nPlease check your internet connection or try again later."
-msgstr "업데이트 서버 못찾음.\n\n인터넷 연결을 확인하거나 나중에 다시 시도하세요."
+msgid ""
+"Update server not found.\n"
+"\n"
+"Please check your internet connection or try again later."
+msgstr ""
+"업데이트 서버를 찾을 수 없습니다.\n"
+"\n"
+"인터넷 연결을 확인하거나 나중에 다시 시도하십시오."
 
 msgctxt "IDS_UPDATE_CLOSE"
 msgid "&Close"
-msgstr "종료(&C)"
+msgstr "닫기(&C)"
 
 msgctxt "IDS_OSD_ZOOM"
 msgid "Zoom: %.0lf%%"
-msgstr ""
+msgstr " 확대/축소 : %.0lf%%"
 
 msgctxt "IDS_OSD_ZOOM_AUTO"
 msgid "Zoom: Auto"
-msgstr "확대: 자동"
+msgstr "확대/축소 : 자동"
 
 msgctxt "IDS_CUSTOM_CHANNEL_MAPPING"
 msgid "Toggle custom channel mapping"
-msgstr ""
+msgstr "맞춤 채널 매핑 전환"
 
 msgctxt "IDS_OSD_CUSTOM_CH_MAPPING_ON"
 msgid "Custom channel mapping: On"
-msgstr ""
+msgstr "맞춤 채널 매핑 : 켬"
 
 msgctxt "IDS_OSD_CUSTOM_CH_MAPPING_OFF"
 msgid "Custom channel mapping: Off"
-msgstr ""
+msgstr "맞춤 채널 매핑 : 끔"
 
 msgctxt "IDS_NORMALIZE"
 msgid "Toggle normalization"
-msgstr ""
+msgstr "정규화 전환"
 
 msgctxt "IDS_OSD_NORMALIZE_ON"
 msgid "Normalization: On"
-msgstr ""
+msgstr "정규화 : 켬"
 
 msgctxt "IDS_OSD_NORMALIZE_OFF"
 msgid "Normalization: Off"
-msgstr ""
+msgstr "정규화 : 끔"
 
 msgctxt "IDS_REGAIN_VOLUME"
 msgid "Toggle regain volume"
-msgstr "볼륨복원 토글"
+msgstr "음량 복구 전환"
 
 msgctxt "IDS_OSD_REGAIN_VOLUME_ON"
 msgid "Regain volume: On"
-msgstr ""
+msgstr "음량 복구 : 켬"
 
 msgctxt "IDS_OSD_REGAIN_VOLUME_OFF"
 msgid "Regain volume: Off"
-msgstr ""
+msgstr "음량 복구 : 끔"
 
 msgctxt "IDS_SIZE_UNIT_BYTES"
 msgid "bytes"
-msgstr ""
+msgstr "바이트"
 
 msgctxt "IDS_SIZE_UNIT_K"
 msgid "KB"
@@ -3339,19 +3891,19 @@ msgstr "MB/s"
 
 msgctxt "IDS_BDA_ERROR_CREATE_TUNER"
 msgid "Could not create the tuner."
-msgstr "튜너를 만들 수 없습니다."
+msgstr "튜너를 생성하지 못했습니다."
 
 msgctxt "IDS_BDA_ERROR_CREATE_RECEIVER"
 msgid "Could not create the receiver."
-msgstr "리시버를 만들 수 없습니다."
+msgstr "리시버를 생성하지 못했습니다."
 
 msgctxt "IDS_BDA_ERROR_CONNECT_NW_TUNER"
 msgid "Could not connect the network and the tuner."
-msgstr "네트워크와 튜너에 연결할 수 없습니다."
+msgstr "네트워크 및 튜너를 연결할 수 없습니다."
 
 msgctxt "IDS_BDA_ERROR_CONNECT_TUNER_REC"
 msgid "Could not connect the tuner and the receiver."
-msgstr "튜너와 리시버에 연결할 수 없습니다."
+msgstr "튜너 및 수신기를 연결할 수 없습니다."
 
 msgctxt "IDS_BDA_ERROR_CONNECT_TUNER"
 msgid "Could not connect the tuner."
@@ -3359,39 +3911,37 @@ msgstr "튜너에 연결할 수 없습니다."
 
 msgctxt "IDS_BDA_ERROR_DEMULTIPLEXER"
 msgid "Could not create the demultiplexer."
-msgstr "디멀티플렉서를 만들 수 없습니다."
+msgstr "역다중화기를 생성하지 못했습니다."
 
 msgctxt "IDS_GOTO_ERROR_PARSING_TIME"
 msgid "Error parsing the entered time!"
-msgstr "시간을 파싱하는데에 오류가 발생했습니다!"
+msgstr "입력한 시간을 구문 분석하는 중 오류가 발생했습니다!"
 
 msgctxt "IDS_GOTO_ERROR_PARSING_TEXT"
 msgid "Error parsing the entered text!"
-msgstr "텍스트를 파싱하는데에 오류가 발생했습니다!"
+msgstr "입력한 텍스트를 구문 분석하는 중 오류가 발생했습니다!"
 
 msgctxt "IDS_GOTO_ERROR_PARSING_FPS"
 msgid "Error parsing the entered frame rate!"
-msgstr "프레임 레이트를 파싱하는데에 오류가 발생했습니다!"
+msgstr "입력한 프레임 속도를 분석하는 중 오류가 발생했습니다!"
 
 msgctxt "IDS_FRAME_STEP_ERROR_RENDERER"
 msgid "Cannot frame-step, try a different video renderer."
-msgstr "프레임 단위 이동에 문제가 있으면, 다른 비디오 렌더러를 사용해보세요."
-
-msgctxt "IDS_SCREENSHOT_ERROR_REAL"
-msgid "The \"Save Image\" and \"Save Thumbnails\" functions do not work with the default video renderer for RealMedia.\nSelect one of the DirectX renderers for RealMedia in MPC-HC's output options and reopen the file."
-msgstr "'이미지 저장' 과 '썸넴일 저장' 은 비디오 렌더러가 RealMedia 기본렌더러로 설정되어있을 때는 작동하지 않습니다.\n'출력' 옵션에서 RealMedia를 위한 DirectX 렌더러로 변경한 후에 파일을 다시 여십시오."
-
-msgctxt "IDS_SCREENSHOT_ERROR_QT"
-msgid "The \"Save Image\" and \"Save Thumbnails\" functions do not work with the default video renderer for QuickTime.\nSelect one of the DirectX renderers for QuickTime in MPC-HC's output options and reopen the file."
-msgstr "'이미지 저장' 과 '썸넴일 저장' 은 비디오 렌더러가 QuickTime 기본렌더러로 설정되어있을 때는 작동하지 않습니다.\n'출력' 옵션에서 QuickTime을 위한 DirectX 렌더러로 변경한 후에 파일을 다시 여십시오."
+msgstr "프레임 단위 이동에 문제가 있으면, 다른 영상 렌더러를 사용해 보세요."
 
 msgctxt "IDS_SCREENSHOT_ERROR_SHOCKWAVE"
-msgid "The \"Save Image\" and \"Save Thumbnails\" functions do not work for Shockwave files."
-msgstr "'이미지 저장' 과 '썸넴일 저장' 은 Shockwave 파일에 대해서는 동작하지 않습니다."
+msgid ""
+"The \"Save Image\" and \"Save Thumbnails\" functions do not work for "
+"Shockwave files."
+msgstr "\"이미지 저장\"과 \"썸넴일 저장\"은 Shockwave 파일에 대해서는 동작하지 않습니다."
 
 msgctxt "IDS_SCREENSHOT_ERROR_OVERLAY"
-msgid "The \"Save Image\" and \"Save Thumbnails\" functions do not work with the Overlay Mixer video renderer.\nChange the video renderer in MPC's output options and reopen the file."
-msgstr "'이미지 저장' 과 '썸넴일 저장' 은 비디오 렌더러가 오버레이 믹서로 설정되어있을 때는 작동하지 않습니다.\n'출력' 옵션에서 비디오 렌더러를 변경한 후에 파일을 다시 여십시오."
+msgid ""
+"The \"Save Image\" and \"Save Thumbnails\" functions do not work with the Overlay Mixer video renderer.\n"
+"Change the video renderer in MPC's output options and reopen the file."
+msgstr ""
+"\"이미지 저장\"과 \"썸넴일 저장\"은 영상 렌더러가 혼합 오버레이로 설정돼 있을 때는 작동하지 않습니다.\n"
+"MPC의 출력 옵션에서 영상 렌더러를 변경하고 파일을 다시 여십시오."
 
 msgctxt "IDS_MB_SHOW_EDL_EDITOR"
 msgid "Do you want to activate the EDL editor?"
@@ -3399,11 +3949,11 @@ msgstr "EDL 편집기를 활성화하시겠습니까?"
 
 msgctxt "IDS_CAPTURE_ERROR"
 msgid "Capture Error"
-msgstr "캡쳐 에러"
+msgstr "캡쳐 오류"
 
 msgctxt "IDS_CAPTURE_ERROR_VIDEO"
 msgid "video"
-msgstr "비디오"
+msgstr "영상"
 
 msgctxt "IDS_CAPTURE_ERROR_AUDIO"
 msgid "audio"
@@ -3435,7 +3985,7 @@ msgstr "%s 스트림을 멀티플렉서 필터에 연결할 수 없습니다."
 
 msgctxt "IDS_CAPTURE_ERROR_VID_CAPT_PIN"
 msgid "No video capture pin was found."
-msgstr "비디오 캡쳐 핀을 찾을 수 없습니다."
+msgstr "영상 캡쳐 핀을 찾을 수 없습니다."
 
 msgctxt "IDS_CAPTURE_ERROR_AUD_CAPT_PIN"
 msgid "No audio capture pin was found."
@@ -3463,115 +4013,91 @@ msgstr "설정들을 테스트해보려면 설정들을 적용시켜야 합니�
 
 msgctxt "IDS_AFTERPLAYBACK_EXIT"
 msgid "After Playback: Exit"
-msgstr "재생이 끝나면: 종료"
+msgstr "재생이 끝나면 : 종료"
 
 msgctxt "IDS_AFTERPLAYBACK_STANDBY"
 msgid "After Playback: Stand By"
-msgstr "재생이 끝나면: 기다림"
+msgstr "재생이 끝나면 : 대기"
 
 msgctxt "IDS_AFTERPLAYBACK_HIBERNATE"
 msgid "After Playback: Hibernate"
-msgstr "재생이 끝나면: 컴퓨터 대기모드"
+msgstr "재생이 끝나면 : 절전 모드"
 
 msgctxt "IDS_AFTERPLAYBACK_SHUTDOWN"
 msgid "After Playback: Shutdown"
-msgstr "재생이 끝나면: 컴퓨터 종료"
+msgstr "재생이 끝나면 : 시스템 종료"
 
 msgctxt "IDS_AFTERPLAYBACK_LOGOFF"
 msgid "After Playback: Log Off"
-msgstr "재생이 끝나면: 사용자 로그 오프"
+msgstr "재생이 끝나면 : 로그 오프"
 
 msgctxt "IDS_AFTERPLAYBACK_LOCK"
 msgid "After Playback: Lock"
-msgstr "재생이 끝나면: 컴퓨터 잠금모드"
+msgstr "재생이 끝나면 : 잠금 모드"
 
 msgctxt "IDS_AFTERPLAYBACK_MONITOROFF"
 msgid "After Playback: Turn off the monitor"
-msgstr "재생이 끝나면: 모니터를 끄기"
+msgstr "재생이 끝나면 : 모니터 끄기"
 
 msgctxt "IDS_AFTERPLAYBACK_PLAYNEXT"
 msgid "After Playback: Play next file in the folder"
-msgstr ""
+msgstr "재생 후 : 폴더의 다음 파일 재생"
 
 msgctxt "IDS_AFTERPLAYBACK_DONOTHING"
 msgid "After Playback: Do nothing"
-msgstr ""
+msgstr "재생 후 : 아무 것도 안 함"
 
 msgctxt "IDS_OSD_BRIGHTNESS"
 msgid "Brightness: %s"
-msgstr "밝기: %s"
+msgstr "밝기 : %s"
 
 msgctxt "IDS_OSD_CONTRAST"
 msgid "Contrast: %s"
-msgstr "명암: %s"
+msgstr "명암 : %s"
 
 msgctxt "IDS_OSD_HUE"
 msgid "Hue: %s°"
-msgstr "색조: %s°"
+msgstr "색조 : %s°"
 
 msgctxt "IDS_OSD_SATURATION"
 msgid "Saturation: %s"
-msgstr "채도: %s"
+msgstr "채도 : %s"
 
 msgctxt "IDS_OSD_RESET_COLOR"
 msgid "Color settings restored"
-msgstr "컬러 설정이 복원되었습니다."
+msgstr "색 설정 복원"
 
 msgctxt "IDS_OSD_NO_COLORCONTROL"
 msgid "Color control is not supported"
-msgstr "컬러 컨트롤이 지원되지않습니다."
+msgstr "색 제어 미지원"
 
 msgctxt "IDS_BRIGHTNESS_INC"
 msgid "Brightness increase"
 msgstr "밝기 증가"
 
-msgctxt "IDS_LANG_PREF_EXAMPLE"
-msgid "Enter your preferred languages here.\nFor example, type: \"eng jap swe\""
-msgstr ""
-
-msgctxt "IDS_OVERRIDE_EXT_SPLITTER_CHOICE"
-msgid "External splitters can have their own language preference options thus MPC-HC default behavior is not to change their initial choice.\nEnable this option if you want MPC-HC to control external splitters."
-msgstr ""
-
-msgctxt "IDS_NAVIGATE_BD_PLAYLISTS"
-msgid "&Blu-Ray playlists"
-msgstr "블루레이 재생 목록(&B)"
-
-msgctxt "IDS_NAVIGATE_PLAYLIST"
-msgid "&Playlist"
-msgstr "재생 목록( &P)"
-
-msgctxt "IDS_NAVIGATE_CHAPTERS"
-msgid "&Chapters"
-msgstr "챕터(&C)"
-
-msgctxt "IDS_NAVIGATE_TITLES"
-msgid "&Titles"
-msgstr "타이틀(&T)"
-
-msgctxt "IDS_NAVIGATE_CHANNELS"
-msgid "&Channels"
-msgstr "채널(&C)"
-
 msgctxt "IDC_FASTSEEK_CHECK"
-msgid "If \"latest keyframe\" is selected, seek to the first keyframe before the actual seek point.\nIf \"nearest keyframe\" is selected, seek to the first keyframe before or after the seek point depending on which is the closest."
+msgid ""
+"If \"latest keyframe\" is selected, seek to the first keyframe before the actual seek point.\n"
+"If \"nearest keyframe\" is selected, seek to the first keyframe before or after the seek point depending on which is the closest."
 msgstr ""
+"\"최신 키 프레임\"을 선택한 경우 실제 검색 지점 이전의 첫 번째 키 프레임을 검색합니다.\n"
+"\"근린 키 프레임\"을 선택한 경우 가장 가까운 것이 무엇인지에 따라 검색 지점 앞 또는 뒤의 첫 번째 키 프레임을 찾습니다."
 
 msgctxt "IDC_ASSOCIATE_ALL_FORMATS"
 msgid "Associate with all formats"
-msgstr ""
+msgstr "모든 미디어 연결"
 
 msgctxt "IDC_ASSOCIATE_VIDEO_FORMATS"
 msgid "Associate with video formats only"
-msgstr ""
+msgstr "영상 파일만 연결"
 
 msgctxt "IDC_ASSOCIATE_AUDIO_FORMATS"
 msgid "Associate with audio formats only"
-msgstr ""
+msgstr "오디오 파일만 연결"
 
 msgctxt "IDC_CLEAR_ALL_ASSOCIATIONS"
 msgid "Clear all associations"
-msgstr ""
+msgstr "모든 연결 삭제"
 
 msgctxt "IDS_FILTER_SETTINGS_CAPTION"
 msgid "Settings"
@@ -3579,119 +4105,183 @@ msgstr "설정"
 
 msgctxt "IDS_SUBTITLE_RENDERER_VS_FILTER"
 msgid "VSFilter / DirectVobSub"
-msgstr ""
+msgstr "VSFilter / DirectVobSub"
 
 msgctxt "IDS_SUBTITLE_RENDERER_XY_SUB_FILTER"
 msgid "XySubFilter"
-msgstr ""
-
-msgctxt "IDS_SUBTITLE_RENDERER_ASS_FILTER"
-msgid "AssFilter"
-msgstr ""
+msgstr "XySubFilter"
 
 msgctxt "IDS_SUBDL_DLG_PROVIDER_COL"
 msgid "Provider"
-msgstr ""
+msgstr "공급자"
 
 msgctxt "IDS_SUBDL_DLG_HI_COL"
 msgid "Hearing Impaired"
-msgstr ""
+msgstr "청각 장애"
 
 msgctxt "IDS_SUBDL_DLG_DOWNLOADS_COL"
 msgid "Downloads"
-msgstr ""
+msgstr "내려받기"
 
 msgctxt "IDS_SUBDL_DLG_SCORE_COL"
 msgid "Score"
-msgstr ""
+msgstr "스코어"
 
 msgctxt "IDS_SUBDL_DLG_FAILED"
 msgid "Online subtitles search failed."
-msgstr ""
+msgstr "온라인 자막 검색에 실패했습니다."
 
 msgctxt "IDS_SUBDL_DLG_ABORTED"
 msgid "Online subtitles search aborted."
-msgstr ""
+msgstr "온라인 자막 검색이 중단됐습니다."
 
 msgctxt "IDS_SUBDL_DLG_FOUND"
 msgid "Online subtitles search completed, %d subtitles found."
-msgstr ""
+msgstr "온라인 자막 검색 완료, %d 자막을 찾았습니다."
 
 msgctxt "IDS_SUBDL_DLG_NOTFOUND"
 msgid "Online subtitles search completed, no subtitles found."
-msgstr ""
+msgstr "온라인 자막 검색 완료, 자막을 찾을 수 없습니다."
 
 msgctxt "IDS_SUBDL_DLG_TITLE"
 msgid "Download subtitles"
-msgstr "자막 다운로드"
+msgstr "자막 내려받기"
 
 msgctxt "IDS_SUBDL_DLG_SEARCHING"
 msgid "Searching for subtitles online, please wait..."
-msgstr ""
+msgstr "온라인에서 자막을 검색하는 중입니다. 잠시만 기다려 주십시오..."
 
 msgctxt "IDS_SUBDL_DLG_ABORTING"
 msgid "Online subtitles search aborting..."
-msgstr ""
+msgstr "온라인 자막 검색 중단 중..."
 
 msgctxt "IDS_SUBUL_DLG_USERNAME_COL"
 msgid "Username"
-msgstr ""
+msgstr "아이디"
 
 msgctxt "IDS_SUBUL_DLG_STATUS_COL"
 msgid "Status"
-msgstr ""
+msgstr "상태"
 
 msgctxt "IDS_SUBUL_DLG_STATUS_READY"
 msgid "Ready..."
+msgstr "준비 완료..."
+
+msgctxt "IDS_CMD_PNS"
+msgid "/pns \"name\"\tSpecify PnS Frame Adjust Preset to use (for example: /pns \"%s\")"
+msgstr "/pns “이름”\t사용할 PnS 프레임 조정 사전 설정을 지정 (예 : /pns “%s”)"
+
+msgctxt "IDS_CMD_PNS_VALUES"
+msgid ""
+"/pns \"px,py,zx,zy\"\tSpecify direct position and zoom values in the format "
+"\"px,py,zx,zy\""
+msgstr "/pns \"px,py,zx,zy\"직접 위치 및 확대/축소 값을 \"px,py,zx,zy\" 형식으로 지정"
+
+msgctxt "IDS_CMD_ICONASSOC"
+msgid "/iconsassoc\tReassociate format icons"
+msgstr "/iconsassoc\t형식 아이콘을 다시 연결"
+
+msgctxt "IDS_CMD_NOFOCUS"
+msgid "/nofocus\t\tOpen MPC-HC in background"
+msgstr "/nofocus\t\t백그라운드에서 MPC-HC 열기"
+
+msgctxt "IDS_CMD_WEBPORT"
+msgid "/webport N\tStart web interface on specified port"
+msgstr "/webport N\t지정된 포트에서 웹 인터페이스 시작"
+
+msgctxt "IDS_CMD_DEBUG"
+msgid "/debug\t\tShow debug information in OSD"
+msgstr "/debug\t\t화면 표시에 디버그 정보 표시"
+
+msgctxt "IDS_CMD_NOCRASHREPORTER"
+msgid "/nocrashreporter\tDisable the crash reporter"
+msgstr "/nocrashreporter\t크래시 리포터 비활성화"
+
+msgctxt "IDS_CMD_SLAVE"
+msgid "/slave \"hWnd\"\tUse MPC-HC as slave"
+msgstr "/slave \"hWnd\"\tMPC-HC를 슬레이브로 사용"
+
+msgctxt "IDS_CMD_HWGPU"
+msgid ""
+"/hwgpu \"index\"\tSet the index of the GPU used for hardware decoding.\n"
+"\t\tOnly available for CUVID and DXVA2 (copy-back)"
 msgstr ""
+"/hwgpu \"index\"\t하드웨어 디코딩에 사용되는 GPU의 색인을 설정합니다.\n"
+"\t\tCUVID 및 DXVA2(카피백)에만 사용 가능"
+
+msgctxt "IDS_CMD_RESET"
+msgid "/reset\t\tRestore default settings"
+msgstr "/reset\t\t기본 설정으로 복구"
+
+msgctxt "IDS_CMD_HELP"
+msgid "/help /h /?\tShow help about command line switches"
+msgstr "/help /h /?\t명령줄 스위치에 대한 도움말 표시"
+
+msgctxt "IDS_PPAGEADVANCED_SCORE"
+msgid ""
+"Threshold value for subtitles score which are going to be automatically "
+"downloaded. Higher values means that more accurately matched subtitles will "
+"be loaded, lower values could result in incorrect subtitles being loaded, "
+"but there is no one perfect value. Pick one that works best for you."
+msgstr ""
+"자동으로 내려받 자막 점수의 임계값입니다. 값이 클수록 더 정확하게 일치하는 자막이고, 값이 낮을수록 다른 자막일 수 있지만 확인이 "
+"필요합니다. 가장 적합한 것을 선택하십시오."
+
+msgctxt "IDS_PPAGE_FS_CLN_AUDIO_DELAY"
+msgid "Audio Delay (ms)"
+msgstr "오디오 지연(밀리초)"
+
+msgctxt "IDS_SUBMENU_COPYURL"
+msgid "Copy URL"
+msgstr "URL 복사"
 
 msgctxt "IDS_SUBUL_DLG_STATUS_NOTIMPLEMENTED"
 msgid "Not implemented."
-msgstr ""
+msgstr "미구현."
 
 msgctxt "IDS_SUBUL_DLG_STATUS_UPLOADING"
 msgid "Uploading..."
-msgstr ""
+msgstr "업로드 중..."
 
 msgctxt "IDS_SUBUL_DLG_STATUS_UPLOADED"
 msgid "Subtitles uploaded successfully."
-msgstr ""
+msgstr "자막이 성공적으로 업로드되었습니다."
 
 msgctxt "IDS_SUBUL_DLG_STATUS_FAILED"
 msgid "Subtitles upload failed."
-msgstr ""
+msgstr "자막 업로드에 실패했습니다."
 
 msgctxt "IDS_SUBUL_DLG_STATUS_ABORTED"
 msgid "Subtitles upload aborted."
-msgstr ""
+msgstr "자막 업로드가 중단됐습니다."
 
 msgctxt "IDS_SUBUL_DLG_STATUS_ALREADYEXISTS"
 msgid "Subtitles already exist."
-msgstr ""
+msgstr "자막이 이미 존재합니다."
 
 msgctxt "IDS_SUBUL_DLG_UPLOADING"
 msgid "Uploading subtitles, please wait..."
-msgstr ""
+msgstr "자막을 업로드 중입니다. 잠시만 기다려 주세요..."
 
 msgctxt "IDS_SUBUL_DLG_UPLOADED"
 msgid "Upload finished."
-msgstr ""
+msgstr "업로드가 완료되었습니다."
 
 msgctxt "IDS_SUBUL_DLG_ABORTED"
 msgid "Upload aborted."
-msgstr ""
+msgstr "업로드가 중단됐습니다."
 
 msgctxt "IDS_SUBUL_DLG_FAILED"
 msgid "Upload failed."
-msgstr ""
+msgstr "업로드에 실패했습니다."
 
 msgctxt "IDS_SUBMENU_DOWNLOAD"
 msgid "Download && Open"
-msgstr "다운로드 && 열기"
+msgstr "내려받고 열기"
 
 msgctxt "IDS_SUBMENU_SETUP"
 msgid "Setup"
-msgstr ""
+msgstr "설정"
 
 msgctxt "IDS_SUBMENU_RESET"
 msgid "Reset"
@@ -3699,39 +4289,39 @@ msgstr "초기화"
 
 msgctxt "IDS_SUBMENU_MOVEUP"
 msgid "Move Up"
-msgstr "위로"
+msgstr "위로 이동"
 
 msgctxt "IDS_SUBMENU_MOVEDOWN"
 msgid "Move Down"
-msgstr "아래로"
+msgstr "아래로 이동"
 
 msgctxt "IDS_SUBMENU_OPENURL"
 msgid "Open URL"
-msgstr ""
+msgstr "URL 열기"
 
 msgctxt "IDS_SUBPP_DLG_LANGUAGES_COL"
 msgid "Languages"
-msgstr ""
+msgstr "언어"
 
 msgctxt "IDS_SUBPP_DLG_LANGUAGES_ERROR"
 msgid "ERROR: Internet connection could not be established."
-msgstr ""
+msgstr "오류 : 인터넷에 연결할 수 없습니다."
 
 msgctxt "IDS_SUB_CREDENTIALS_TITLE"
 msgid "Enter website credentials"
-msgstr ""
+msgstr "웹사이트 자격 증명 입력"
 
 msgctxt "IDS_SUB_CREDENTIALS_MSG"
 msgid "Enter your credentials to connect to: "
-msgstr ""
+msgstr "연결할 자격 증명을 입력 :"
 
 msgctxt "IDS_ASPECT_RATIO_SAR"
 msgid "Aspect Ratio: Assume square pixels (SAR)"
-msgstr ""
+msgstr "종횡비 : 정사각형 픽셀 가정(SAR)"
 
 msgctxt "IDS_SUBDL_DLG_DOWNLOADED"
 msgid "Downloaded [%s] \"%s\""
-msgstr ""
+msgstr "내려받기 [%s] \"%s\" 완료"
 
 msgctxt "IDS_SUBUL_DLG_TITLE"
 msgid "Upload subtitles"
@@ -3739,237 +4329,897 @@ msgstr "자막 업로드"
 
 msgctxt "IDS_SUBUL_DLG_CONFIRM"
 msgid "Are you sure you want to upload the subtitle file \"%s\"?"
-msgstr ""
+msgstr "정말로 자막 파일 \"%s\"을(를) 업로드하시겠습니까?"
 
 msgctxt "IDS_SUBPP_DLG_FETCHING_LANGUAGES"
 msgid "Fetching supported languages..."
-msgstr ""
+msgstr "지원 언어를 불러오는 중..."
 
-msgctxt "IDS_SUB_CREDENTIALS_ERROR"
-msgid "Failed to log in on \"%S\" with username \"%S\".\n\nPlease enter the correct username and password or reset the credentials to log in as anonymous user."
+msgctxt "IDS_OPENSUBTITLES_LOGIN_ERROR"
+msgid ""
+"Failed to log into opensubtitles.com with username \"%1\".\n"
+"\n"
+"Username or password is incorrect.\n"
+"\n"
+"Do not use account from old .org website."
 msgstr ""
+"아이디 \"%1\"로 opensubtitles.com에 로그인하는 데 실패했습니다.\n"
+"\n"
+"아이디 또는 비밀번호가 잘못되었습니다.\n"
+"\n"
+"이전 .org 웹사이트의 계정을 사용하지 마십시오."
 
 msgctxt "IDS_SUB_AUTODL_IGNORE_TOOLTIP"
-msgid "Automatic search and download will be disabled for all media files whose path contains any of the patterns entered here.\nFor example, type: \"private dir\\videos|work\\\"."
+msgid ""
+"Automatic search and download will be disabled for all media files whose path contains any of the patterns entered here.\n"
+"For example, type: \"private dir\\videos|work\\\"."
 msgstr ""
+"경로에 여기에 입력된 패턴이 포함된 모든 미디어 파일에 대해 자동 검색하여 내려받기가 비활성화됩니다.\n"
+"예를 들어 \"private dir\\videos|work\\\"를 입력합니다."
 
 msgctxt "IDS_CMD_PATHNAME"
-msgid "\"pathname\"\tThe main file or directory to be loaded\n\t\t(wildcards allowed, \"-\" denotes standard input)"
+msgid ""
+"\"pathname\"\tThe main file or directory to be loaded\n"
+"\t\t(wildcards allowed, \"-\" denotes standard input)"
 msgstr ""
+"\"경로명\"\t불러올 기본 파일 또는 디렉터리\n"
+"\t\t(와일드카드 허용, \"-\"는 표준 입력을 나타냄)"
 
 msgctxt "IDS_CMD_DUB"
 msgid "/dub \"dubname\"\tLoad an additional audio file"
-msgstr ""
+msgstr "/dub \"더빙명\"\t추가 오디오 파일 불러오기"
 
 msgctxt "IDS_CMD_DUBDELAY"
-msgid "/dubdelay \"file\"\tLoad an additional audio file shifted with XXms\n\t\t(if the file contains \"...DELAY XXms...\")"
+msgid ""
+"/dubdelay \"file\"\tLoad an additional audio file shifted with XXms\n"
+"\t\t(if the file contains \"...DELAY XXms...\")"
 msgstr ""
+"/dubdelay \"파일\"\tXXms로 이동된 추가 오디오 파일 로드\n"
+"\t\t(파일에 \"...DELAY XXms...\"가 포함된 경우)"
 
 msgctxt "IDS_CMD_D3DFS"
 msgid "/d3dfs\t\tStart rendering in D3D fullscreen mode"
-msgstr ""
+msgstr "/d3dfs\t\tD3D 전체 화면 모드에서 렌더링 시작"
 
 msgctxt "IDS_CMD_SUB"
 msgid "/sub \"subname\"\tLoad an additional subtitle file"
-msgstr ""
+msgstr "/sub \"자막명\"\t추가 자막 파일 불러오기"
 
 msgctxt "IDS_CMD_FILTER"
-msgid "/filter \"filtername\"\tLoad DirectShow filters from a dynamic link library (wildcards allowed)"
-msgstr ""
+msgid ""
+"/filter \"filtername\"\tLoad DirectShow filters from a dynamic link library "
+"(wildcards allowed)"
+msgstr "/filter \"필터명\"\t동적 링크 라이브러리에서 DirectShow 필터 불러오기(와일드카드 허용)"
 
 msgctxt "IDS_CMD_DVD"
 msgid "/dvd\t\tRun in DVD mode, \"pathname\" means the DVD folder (optional)"
-msgstr ""
+msgstr "/dvd\t\tDVD 모드에서 실행, \"경로명\"은 DVD 폴더를 뜻함(선택 사항)"
 
 msgctxt "IDS_CMD_DVDPOS_TC"
 msgid "/dvdpos T#C\tStart playback at title T, chapter C"
-msgstr ""
+msgstr "/dvdpos T#C\t타이틀 T, 챕터 C에서 재생 시작"
 
 msgctxt "IDS_CMD_DVDPOS_TIME"
 msgid "/dvdpos T#P\tStart playback at title T, position P (hh:mm:ss)"
-msgstr ""
+msgstr "/dvdpos T#P\t타이틀 T, 위치 P에서 재생 시작 (hh:mm:ss)"
 
 msgctxt "IDS_CMD_CD"
-msgid "/cd\t\tLoad all the tracks of an Audio CD or (S)VCD,\n\t\t\"pathname\" means the drive path (optional)"
+msgid ""
+"/cd\t\tLoad all the tracks of an Audio CD or (S)VCD,\n"
+"\t\t\"pathname\" means the drive path (optional)"
 msgstr ""
+"/cd\t\t오디오 CD 또는 (S)VCD의 모든 트랙 불러오기,\n"
+"\t\t\"경로명\"은 드라이브 경로를 의미(선택 사항)"
 
 msgctxt "IDS_CMD_DEVICE"
 msgid "/device\t\tOpen the default video device"
-msgstr ""
+msgstr "/device\t\t기본 영상 장치 열기"
 
 msgctxt "IDS_CMD_OPEN"
 msgid "/open\t\tOpen the file, don't automatically start playback"
-msgstr ""
+msgstr "/open\t\t파일을 열면 자동으로 재생 시작 안 함"
 
 msgctxt "IDS_CMD_PLAY"
 msgid "/play\t\tStart playing the file as soon the player is launched"
-msgstr ""
+msgstr "/play\t\t재생기가 실행되는 즉시 파일 재생 시작"
 
 msgctxt "IDS_CMD_CLOSE"
-msgid "/close\t\tClose the player after playback (only works when used with /play)"
-msgstr ""
+msgid ""
+"/close\t\tClose the player after playback (only works when used with /play)"
+msgstr "/close\t\t재생 후, 재생기 닫기(/play와 함께 사용할 때만)"
 
 msgctxt "IDS_CMD_SHUTDOWN"
 msgid "/shutdown\tShutdown the operating system after playback"
-msgstr ""
+msgstr "/shutdown\t재생 후, 시스템 종료"
 
 msgctxt "IDS_CMD_STANDBY"
 msgid "/standby\t\tPut the operating system in standby mode after playback"
-msgstr ""
+msgstr "/standby\t\t재생 후, 대기 모드로 전환"
 
 msgctxt "IDS_CMD_HIBERNATE"
-msgid "/hibernate\tHibernate operating system after playback"
-msgstr ""
+msgid "/hibernate\t\tHibernate operating system after playback"
+msgstr "/hibernate\t\t재생 후, 운영체제를 최대 절전 모드로 전환"
 
 msgctxt "IDS_CMD_LOGOFF"
 msgid "/logoff\t\tLog off after playback"
-msgstr ""
+msgstr "/logoff\t\t재생 후, 로그 오프"
 
 msgctxt "IDS_CMD_LOCK"
 msgid "/lock\t\tLock workstation after playback"
-msgstr ""
+msgstr "/lock\t\t재생 후, 워크스테이션 잠금"
 
 msgctxt "IDS_CMD_MONITOROFF"
 msgid "/monitoroff\tTurn off the monitor after playback"
-msgstr ""
+msgstr "/monitoroff\t재생 후, 모니터 끄기"
 
 msgctxt "IDS_CMD_PLAYNEXT"
 msgid "/playnext\t\tOpen next file in the folder after playback"
+msgstr "/playnext\t\t재생 후, 폴더의 다음 파일 열기"
+
+msgctxt "IDS_CMD_VIEWPRESET"
+msgid ""
+"/viewpreset N\tStart with a specific preset,\n"
+"\t\twhere N is one of \"1\" Minimal, \"2\" Compact, \"3\" Normal, or \"4\" Custom"
 msgstr ""
+"/viewpreset N\t특정 사전 설정으로 시작.\n"
+"\t\t여기서 N은 \"1\"(최소), \"2\"(간소화), \"3\"(일반) 또는 \"4\"(사용자 지정) 중 하나"
 
 msgctxt "IDS_CMD_MUTE"
 msgid "/mute\t\tMute the audio"
-msgstr ""
-
-msgctxt "IDS_CMD_FULLSCREEN"
-msgid "/fullscreen\tStart in fullscreen mode"
-msgstr ""
-
-msgctxt "IDS_CMD_VIEWPRESET"
-msgid "/viewpreset N\tStart with specific preset,\n\t\twhere N is either \"1\" Minimal, \"2\" Compact or \"3\" Normal"
-msgstr ""
-
-msgctxt "IDS_CMD_MINIMIZED"
-msgid "/minimized\tStart in minimized mode"
-msgstr ""
-
-msgctxt "IDS_CMD_NEW"
-msgid "/new\t\tUse a new instance of the player"
-msgstr ""
-
-msgctxt "IDS_CMD_ADD"
-msgid "/add\t\tAdd \"pathname\" to playlist, can be combined with /open and /play"
-msgstr ""
-
-msgctxt "IDS_CMD_RANDOMIZE"
-msgid "/randomize\tRandomize the playlist"
-msgstr ""
+msgstr "/mute\t\t음 소거"
 
 msgctxt "IDS_CMD_VOLUME"
 msgid "/volume N\tSet Volume, where N is a range from 0 to 100"
+msgstr "/volume N\t음량 설정, 여기서 N은 0에서 100까지의 범위입니다."
+
+msgctxt "IDS_YOUTUBEDL_NOT_FOUND"
+msgid ""
+"Youtube-DL failed to launch. Make sure yt-dlp.exe or youtube-dl.exe is "
+"located in MPC-HC folder or in PATH."
 msgstr ""
+"Youtube-DL을 실행하지 못했습니다. yt-dlp.exe 또는 youtube-dl.exe가 MPC-HC 폴더나 경로에 있는지 "
+"확인하세요."
+
+msgctxt "IDS_CONTROLS_YOUTUBEDL"
+msgid "Calling yt-dlp/youtube-dl..."
+msgstr "yt-dlp/youtube-dl 호출하기..."
+
+msgctxt "IDS_VERTICAL_ALIGN_VIDEO_TOP"
+msgid "Align Top"
+msgstr "상단에 배치"
+
+msgctxt "IDS_VERTICAL_ALIGN_VIDEO_MIDDLE"
+msgid "Align Middle"
+msgstr "중앙에 배치"
+
+msgctxt "IDS_VERTICAL_ALIGN_VIDEO_BOTTOM"
+msgid "Align Bottom"
+msgstr "하단에 배치"
+
+msgctxt "IDS_PPAGEADVANCED_USE_YDL"
+msgid ""
+"Process HTTP(s) URLs with Youtube-DL (if available). There is an internal "
+"whitelist/blacklist for URLs that are always/never processed."
+msgstr ""
+"Youtube-DL로 HTTP URL을 처리합니다(사용 가능한 경우). 항상 처리되거나 전혀 처리되지 않는 URL에 대한 내부 "
+"화이트리스트/블랙리스트가 있습니다."
+
+msgctxt "IDS_PPAGEADVANCED_YDL_MAX_HEIGHT"
+msgid ""
+"Can be used to limit the video resolution that is chosen by Youtube-DL by "
+"the given height. Value 0 means it will choose the highest resolution "
+"available."
+msgstr ""
+"Youtube-DL에서 선택한 영상 해상도를 주어진 높이로 제한하는 데 사용할 수 있습니다. 값 0은 사용 가능한 가장 높은 해상도를 "
+"선택함을 의미합니다."
+
+msgctxt "IDS_PPAGEADVANCED_YDL_VIDEO_FORMAT"
+msgid ""
+"Preferred video format for stream that is selected from Youtube-DL results.\n"
+"0: Automatic\n"
+"1: H.264 30fps\n"
+"2: H.264 60fps\n"
+"3: VP9 30fps\n"
+"4: VP9 60fps\n"
+"5: VP9 Profile2 30fps\n"
+"6: VP9 Profile2 60fps\n"
+"7: AV1 30fps\n"
+"8: AV1 60fps"
+msgstr ""
+"Youtube-DL 결과에서 선택한 스트림의 기본 영상 형식입니다.\n"
+"0 : 자동\n"
+"1:  H.264 초당 30프레임\n"
+"2 : H.264 초당 60프레임\n"
+"3 : VP9 초당 30프레임\n"
+"4 : VP9 초당 60프레임\n"
+"5 : VP9 프로파일2 초당 30프레임\n"
+"6 : VP9 프로파일2 초당 60프레임\n"
+"7 : AV1 초당 30프레임\n"
+"8 : AV1 초당 60프레임"
+
+msgctxt "IDS_PPAGEADVANCED_YDL_AUDIO_ONLY"
+msgid "Instructs Youtube-DL to prefer an audio-only stream (if available)"
+msgstr "오디오 전용 스트림을 선호하도록 Youtube-DL에 지시합니다(사용 가능한 경우)."
+
+msgctxt "IDS_PPAGEADVANCED_YDL_COMMAND_LINE"
+msgid ""
+"Command line parameters for downloading (\"save a copy\") with yt-dlp.exe (or youtube-dl.exe)\n"
+"Examples:\n"
+"-f best[height<=1080]\n"
+"-f bestvideo+bestaudio\n"
+"-o \"C:\\downloads\\%(title)s.%(ext)s"
+msgstr ""
+"yt-dlp.exe(또는 youtube-dl.exe)를 사용하여 내려받기(\"사본 저장\") 위한 명령줄 매개변수\n"
+"예 :\n"
+"-f best[height<=1080]\n"
+"-f bestvideo+bestaudio\n"
+"-o \"C:\\downloads\\%(title)s.%(ext)s"
+
+msgctxt "IDS_PPAGEADVANCED_SAVEIMAGE_POSITION"
+msgid "Include video position in filename"
+msgstr "파일 이름에 영상 위치 포함"
+
+msgctxt "IDS_PPAGEADVANCED_SAVEIMAGE_CURRENTTIME"
+msgid "Include current time in filename"
+msgstr "파일 이름에 현재 시간 포함"
+
+msgctxt "IDS_PPAGEADVANCED_ALLOW_INACCURATE_FASTSEEK"
+msgid ""
+"When enabled, fast seek (to keyframe) has a maximum inaccuracy of 20 "
+"seconds. When disabled, a smaller inaccuracy is allowed when deciding "
+"between a fast and a normal seek. For example 30% of jump size."
+msgstr ""
+"활성화된 경우 빠른 탐색(키 프레임으로)의 최대 부정확성은 20초입니다. 비활성화되면 빠른 탐색과 일반 탐색 사이를 결정할 때 더 작은 "
+"부정확성이 허용됩니다. 예를 들어 점프 크기의 30%."
+
+msgctxt "IDS_CMD_FULLSCREEN"
+msgid "/fullscreen\tStart in fullscreen mode"
+msgstr "/fullscreen\t전체 화면 모드로 시작"
+
+msgctxt "IDS_CMD_MINIMIZED"
+msgid "/minimized\tStart in minimized mode"
+msgstr "/minimized\t최소화 모드로 시작"
+
+msgctxt "IDS_CMD_NEW"
+msgid "/new\t\tUse a new instance of the player"
+msgstr "/new\t\t재생기의 새 인스턴스 사용"
+
+msgctxt "IDS_CMD_ADD"
+msgid "/add\t\tAdd \"pathname\" to playlist, can be combined with /open and /play"
+msgstr "/add\t\t재생 목록에 \"경로명\" 추가, /open 및 /play와 결합 가능"
+
+msgctxt "IDS_CMD_RANDOMIZE"
+msgid "/randomize\tRandomize the playlist"
+msgstr "/randomize\t재생 목록 섞기"
 
 msgctxt "IDS_CMD_REGVID"
 msgid "/regvid\t\tCreate file associations for video files"
-msgstr ""
+msgstr "/regvid\t\t영상 파일에 대한 파일 연결 생성"
 
 msgctxt "IDS_CMD_REGAUD"
 msgid "/regaud\t\tCreate file associations for audio files"
-msgstr ""
+msgstr "/regaud\t\t오디오 파일에 대한 파일 연결 생성"
 
 msgctxt "IDS_CMD_REGPL"
 msgid "/regpl\t\tCreate file associations for playlist files"
-msgstr ""
+msgstr "/regpl\t\t재생 목록에 대한 파일 연결 생성"
 
 msgctxt "IDS_CMD_REGALL"
 msgid "/regall\t\tCreate file associations for all supported file types"
-msgstr ""
+msgstr "/regall\t\t지원되는 모든 파일 형식에 대한 파일 연결 생성"
 
 msgctxt "IDS_CMD_UNREGALL"
 msgid "/unregall\t\tRemove all file associations"
-msgstr ""
+msgstr "/unregall\t\t모든 파일 연결 끊기"
 
 msgctxt "IDS_CMD_START"
 msgid "/start ms\t\tStart playing at \"ms\" (= milliseconds)"
-msgstr ""
+msgstr "/start ms\t\t\"ms(밀리초)\"에서 재생 시작"
 
 msgctxt "IDS_CMD_STARTPOS"
 msgid "/startpos hh:mm:ss\tStart playing at position hh:mm:ss"
-msgstr ""
+msgstr "/startpos hh:mm:ss\thh:mm:ss 위치에서 재생 시작"
+
+msgctxt "IDS_CMD_AB_START"
+msgid "/ab_start hh:mm:ss\tA-B repeat start position"
+msgstr "/ab_start hh:mm:ss\tA-B 반복 시작 위치"
+
+msgctxt "IDS_CMD_AB_END"
+msgid "/ab_end hh:mm:ss\tA-B repeat end position"
+msgstr "/ab_end hh:mm:ss\tA-B 반복 종료 위치"
 
 msgctxt "IDS_CMD_FIXEDSIZE"
-msgid "/fixedsize w,h\tSet a fixed window size"
-msgstr ""
+msgid ""
+"/fixedsize w,h[,x,y]\tSet a fixed window size; optionally specificy upper-"
+"left window position"
+msgstr "/fixedsize w,h[,x,y]\t고정 창 크기 설정; 선택적으로 왼쪽 상단 창 위치 지정"
 
 msgctxt "IDS_CMD_MONITOR"
 msgid "/monitor N\tStart player on monitor N, where N starts from 1"
-msgstr ""
+msgstr "/monitor N\t모니터 N에서 재생기 시작. 여기서 N은 1부터 시작"
 
 msgctxt "IDS_CMD_AUDIORENDERER"
-msgid "/audiorenderer N\tStart using audiorenderer N, where N starts from 1 (see \"Output\" settings)"
-msgstr ""
+msgid ""
+"/audiorenderer N\tStart using audiorenderer N, where N starts from 1 (see "
+"\"Output\" settings)"
+msgstr "/audiorenderer N\t음향 렌더러 N을 사용하여 시작. 여기서 N은 1부터 시작(\"출력\" 설정 참조)"
 
 msgctxt "IDS_CMD_SHADERPRESET"
 msgid "/shaderpreset \"Pr\"\tStart using \"Pr\" shader preset"
-msgstr ""
+msgstr "/shaderpreset \"Pr\"\t\"Pr\" 셰이더 프리셋 사용 시작"
 
-msgctxt "IDS_CMD_PNS"
-msgid "/pns \"name\"\tSpecify Pan & Scan preset name to use"
-msgstr ""
+msgctxt "IDS_TOOLBAR_ALIGNMENT_LEFT"
+msgid "Left"
+msgstr "좌"
 
-msgctxt "IDS_CMD_ICONASSOC"
-msgid "/iconsassoc\tReassociate format icons"
-msgstr ""
+msgctxt "IDS_TOOLBAR_ALIGNMENT_CENTER"
+msgid "Center"
+msgstr "중"
 
-msgctxt "IDS_CMD_NOFOCUS"
-msgid "/nofocus\t\tOpen MPC-HC in background"
-msgstr ""
+msgctxt "IDS_TOOLBAR_ALIGNMENT_RIGHT"
+msgid "Right"
+msgstr "우"
 
-msgctxt "IDS_CMD_WEBPORT"
-msgid "/webport N\tStart web interface on specified port"
-msgstr ""
+msgctxt "IDS_OSD_AUTOCOPY_SUBTITLE_ON"
+msgid "Auto-Copy Subtitle to Clipboard: On"
+msgstr "클립보드에 자막 자동 복사 : 켬"
 
-msgctxt "IDS_CMD_DEBUG"
-msgid "/debug\t\tShow debug information in OSD"
-msgstr ""
+msgctxt "IDS_OSD_AUTOCOPY_SUBTITLE_OFF"
+msgid "Auto-Copy Subtitle to Clipboard: Off"
+msgstr "클립보드에 자막 자동 복사 : 끔"
 
-msgctxt "IDS_CMD_NOCRASHREPORTER"
-msgid "/nocrashreporter\tDisable the crash reporter"
-msgstr ""
+msgctxt "IDS_SUBTITLES_SECONDARY_BAD_FORMAT"
+msgid ""
+"This subtitle format cannot be used as a secondary subtitle track. Only "
+"simple text formats such as SRT are supported."
+msgstr "이 자막 형식은 보조 자막 트랙으로 사용할 수 없습니다. SRT와 같은 간단한 텍스트 형식만 지원합니다."
 
-msgctxt "IDS_CMD_SLAVE"
-msgid "/slave \"hWnd\"\tUse MPC-HC as slave"
-msgstr ""
+msgctxt "IDS_MESSAGEBOX_CANCEL"
+msgid "Cancel"
+msgstr "취소"
 
-msgctxt "IDS_CMD_HWGPU"
-msgid "/hwgpu \"index\"\tSet the index of the GPU used for hardware decoding.\n\t\tOnly available for CUVID and DXVA2 (copy-back)"
-msgstr ""
+msgctxt "IDS_MESSAGEBOX_ABORT"
+msgid "&Abort"
+msgstr "중단(&A)"
 
-msgctxt "IDS_CMD_RESET"
-msgid "/reset\t\tRestore default settings"
-msgstr ""
+msgctxt "IDS_MESSAGEBOX_RETRY"
+msgid "&Retry"
+msgstr "다시 시도(&R)"
 
-msgctxt "IDS_CMD_HELP"
-msgid "/help /h /?\tShow help about command line switches"
-msgstr ""
+msgctxt "IDS_MESSAGEBOX_IGNORE"
+msgid "&Ignore"
+msgstr "무시(&I)"
 
-msgctxt "IDS_PPAGEADVANCED_SCORE"
-msgid "Threshold value for subtitles score which are going to be automatically downloaded. Higher values means that more accurately matched subtitles will be loaded, lower values could result in incorrect subtitles being loaded, but there is no one perfect value. Pick one that works best for you."
-msgstr ""
+msgctxt "IDS_MESSAGEBOX_OK"
+msgid "OK"
+msgstr "확인"
 
-msgctxt "IDS_PPAGE_FS_CLN_AUDIO_DELAY"
-msgid "Audio Delay (ms)"
-msgstr ""
+msgctxt "IDS_MOUSE_CLICK_MIDDLE"
+msgid "Middle click"
+msgstr "가운데 클릭"
 
-msgctxt "IDS_PPAGEADVANCED_DEFAULTTOOLBARSIZE"
-msgid "Size in pixels of the default toolbar."
-msgstr ""
+msgctxt "IDS_MOUSE_CLICK_X1"
+msgid "X1 click"
+msgstr "한 번 클릭"
 
-msgctxt "IDS_PPAGEADVANCED_USE_LEGACY_TOOLBAR"
-msgid "Use legacy toolbar instead of new vectorized one."
-msgstr ""
+msgctxt "IDS_MOUSE_CLICK_X2"
+msgid "X2 click"
+msgstr "두 번 클릭"
 
-msgctxt "IDS_SUBMENU_COPYURL"
-msgid "Copy URL"
-msgstr ""
+msgctxt "IDS_MOUSE_WHEEL_UP"
+msgid "Wheel Up"
+msgstr "휠 ↑"
 
+msgctxt "IDS_MOUSE_WHEEL_DOWN"
+msgid "Wheel Down"
+msgstr "휠 ↓"
+
+msgctxt "IDS_MOUSE_WHEEL_LEFT"
+msgid "Wheel Left"
+msgstr "휠 ←"
+
+msgctxt "IDS_MOUSE_WHEEL_RIGHT"
+msgid "Wheel Right"
+msgstr "휠 →"
+
+msgctxt "IDS_MOUSE_ACTION"
+msgid "Action"
+msgstr "액션"
+
+msgctxt "IDS_MOUSE_COMMAND"
+msgid "Command"
+msgstr "명령"
+
+msgctxt "IDS_MOUSE_RIGHT_BUTTON"
+msgid "Right button"
+msgstr "우측 버튼"
+
+msgctxt "IDS_MESSAGEBOX_CONTINUE"
+msgid "&Continue"
+msgstr "계속(&C)"
+
+msgctxt "IDS_AG_TOGGLE_DEFAULT_SUBTITLE_STYLE"
+msgid "Toggle Override Default Style"
+msgstr "기본 스타일 덮어쓰기 전환"
+
+msgctxt "IDS_AG_TOGGLE_OVERRIDE_SUBTITLE_STYLES"
+msgid "Toggle Override All Styles"
+msgstr "모든 스타일 덮어쓰기 전환"
+
+msgctxt "IDS_PPAGEADVANCED_LOOP_FOLDER_NEXT_FILE"
+msgid "Loop back to first file in folder after playing the last file."
+msgstr "마지막 파일을 재생한 후, 폴더의 2번째 파일로 루프백합니다."
+
+msgctxt "IDS_PPAGEADVANCED_FULLSCREEN_DELAY"
+msgid "Delay before showing fullscreen video, to prevent visual glitches."
+msgstr "시각적 결함을 방지하기 위해 전체 화면 영상을 표시하기 전에 지연됩니다."
+
+msgctxt "IDS_PPAGEADVANCED_SCREENSHOTSUBTITLES"
+msgid "Render subtitles onto screenshots"
+msgstr "스크린샷에 자막 렌더링"
+
+msgctxt "IDS_PPAGEADVANCED_SCREENSHOTKEEPVIDEOEXTENSION"
+msgid ""
+"Keep video file extension as part of screenshot filenames (e.g., "
+"file.mkv.png)"
+msgstr "스크린샷 파일 이름에 영상 파일 확장자를 포함(예 : file.mkv.png)"
+
+msgctxt "IDS_PRESIZE_SHADERS_ENABLED"
+msgid "Pre-Resize Pixel Shaders: on"
+msgstr "픽셀 셰이더 크기 조정 전 : 켬"
+
+msgctxt "IDS_PRESIZE_SHADERS_DISABLED"
+msgid "Pre-Resize Pixel Shaders: off"
+msgstr "픽셀 셰이더 크기 조정 전 : 끔"
+
+msgctxt "IDS_PRESIZE_SHADERS_TOGGLE"
+msgid "Enable Pre-Resize Pixel Shaders"
+msgstr "크기 조정 전, 픽셀 셰이더 활성화"
+
+msgctxt "IDS_POSTSIZE_SHADERS_ENABLED"
+msgid "Post-Resize Pixel Shaders: on"
+msgstr "크기 조정 후, 픽셀 셰이더 : 켬"
+
+msgctxt "IDS_POSTSIZE_SHADERS_DISABLED"
+msgid "Post-Resize Pixel Shaders: off"
+msgstr "크기 조정 후, 픽셀 셰이더 : 끔"
+
+msgctxt "IDS_POSTSIZE_SHADERS_TOGGLE"
+msgid "Enable Post-Resize Pixel Shaders"
+msgstr "크기 조정 후, 픽셀 셰이더 활성화"
+
+msgctxt "IDS_PPAGEADVANCED_TIME_REFRESH_INTERVAL"
+msgid "Refresh interval (in milliseconds) of time in status bar"
+msgstr "상태 표시줄의 새로 고침 간격(밀리초)"
+
+msgctxt "IDS_PPAGEADVANCED_SHOW_VOLUME_PERCENTAGE"
+msgid "Show percentage value on volume slider (in modern theme)"
+msgstr "볼륨 슬라이더에 백분율 값 표시(모던 테마에서)"
+
+msgctxt "IDS_TIME_ON_SEEKBAR_NEVER"
+msgid "Never"
+msgstr "없음"
+
+msgctxt "IDS_TIME_ON_SEEKBAR_ALWAYS"
+msgid "Always"
+msgstr "항상"
+
+msgctxt "IDS_TIME_ON_SEEKBAR_WHEN_STATUSBAR_HIDDEN"
+msgid "When status bar is hidden"
+msgstr "상태 표시줄이 숨겨져 있을 때"
+
+msgctxt "IDS_PPAGEADVANCED_STARTUP_PRESET"
+msgid "View preset to apply at startup"
+msgstr "시작 시, 적용할 사전 설정 보기"
+
+msgctxt "IDS_STARTUP_PRESET_REMEMBER"
+msgid "Remember last"
+msgstr "지난 기억"
+
+msgctxt "IDS_PPAGEADVANCED_TIME_ON_SEEKBAR_LEFT"
+msgid ""
+"Show the time on the left side of the seekbar instead of the right side"
+msgstr "탐색 막대의 오른쪽이 아닌 왼쪽에 시간 표시"
+
+msgctxt "IDS_PPAGEADVANCED_SHOW_LANG_STATUSBAR"
+msgid "Display current audio and subtitle language in status bar"
+msgstr "상태 표시줄에 현재 오디오 및 자막 언어 표시"
+
+msgctxt "IDS_PPAGEADVANCED_SHOW_FPS_STATUSBAR"
+msgid "Display current fps and rate in status bar"
+msgstr "상태 표시줄에 현재 초당 프레임 및 속도 표시"
+
+msgctxt "IDS_PPAGEADVANCED_ADD_LANGCODE_WHEN_SAVE_SUBTITLES"
+msgid ""
+"When save the subtitles file, the language code (if available) text will be "
+"added to suggested file name by default."
+msgstr "자막 파일을 저장할 때, 언어 코드(사용 가능한 경우) 텍스트가 기본적으로 제안된 파일 이름에 추가됩니다."
+
+msgctxt "IDS_PPAGEADVANCED_USE_TITLE_IN_RECENT_FILE_LIST"
+msgid "Use title in recent file list."
+msgstr "최근 파일 목록의 제목을 사용합니다."
+
+msgctxt "IDS_PPAGEADVANCED_SHOW_ABMARKS_STATUSBAR"
+msgid "Display current A-B repeat marks in status bar."
+msgstr "상태 표시줄에 현재 구간 반복 재생 표기합니다."
+
+msgctxt "IDS_PPAGEADVANCED_SHOW_VIDEOINFO_STATUSBAR"
+msgid "Display video info (codec name, resolution) in status bar."
+msgstr "상태 표시줄에 영상 정보(코덱 이름, 해상도)를 표시합니다."
+
+msgctxt "IDS_PPAGEADVANCED_PAUSE_WHILE_DRAGGING_SEEKBAR"
+msgid "Pause playback while dragging the seekbar."
+msgstr "탐색 막대를 끄는 동안 재생을 일시 중지합니다."
+
+msgctxt "IDS_PPAGEADVANCED_CONFIRM_FILE_DELETE"
+msgid "Show confirmation prompt before deleting file"
+msgstr "파일을 삭제하기 전에 확인 메시지 표시"
+
+msgctxt "IDS_PPAGEADVANCED_LIBASS_FOR_SRT"
+msgid ""
+"Use libass (instead of standard renderer) for SRT subtitles. NOT "
+"recommended."
+msgstr "SRT 자막에는 (표준 렌더러 대신)libass를 사용합니다. 추천하지 않습니다."
+
+msgctxt "IDS_PPAGEADVANCED_OPEN_REC_PANEL_WHEN_OPENING_DEVICE"
+msgid ""
+"Show the recording settings dialog automatically when opening a device."
+msgstr "장치를 열 때, 자동으로 녹음 설정 대화 상자를 표시합니다."
+
+msgctxt "IDS_PPAGEADVANCED_ALWAYS_USE_SHORT_MENU"
+msgid ""
+"Player Menu shortcuts and right-click show compact menu -- even when main "
+"menu is hidden."
+msgstr "재생기 메뉴 바로 가기 및 마우스 오른쪽 버튼을 클릭하면 기본 메뉴가 숨겨져 있어도 간단한 메뉴가 표시됩니다."
+
+msgctxt "IDS_PPAGEADVANCED_FULLSCREEN_SEPARATE_CONTROLS"
+msgid ""
+"Keep main window controls visible on current monitor when going fullscreen "
+"on another monitor."
+msgstr "다른 모니터에서 전체 화면으로 전환할 때, 기본 창 컨트롤이 현재 모니터에 계속 표시되도록 합니다."
+
+msgctxt "IDS_PPAGEADVANCED_BLOCKRDP"
+msgid "Block use of RDP Redirection Filter"
+msgstr "RDP 리디렉션 필터 사용 차단"
+
+msgctxt "IDS_PPAGEADVANCED_YDL_EXEPATH"
+msgid ""
+"Full path of the yt-dlp (or youtube-dl) executable.\n"
+"Just the filename is enough in case it is located in same folder as MPC-HC.\n"
+"Leave empty to use default filename: yt-dlp.exe"
+msgstr ""
+"yt-dlp(혹은 youtube-dl) 실행 파일의 전체 경로입니다.\n"
+"MPC-HC와 같은 폴더에 있는 경우 파일 이름만으로 충분합니다.\n"
+"기본 파일명을 사용하려면 비워둠 : yt-dlp.exe"
+
+msgctxt "IDS_PPAGEADVANCED_YDL_SUBS_PREFERENCE"
+msgid ""
+"The language preference for loading subtitle streams extracted by Youtube-DL.\n"
+"If empty, no subtitles are loaded.\n"
+"Use ISO639-1 two letter language code(s).\n"
+"Example: en de es pl zh ja nl"
+msgstr ""
+"Youtube-DL에서 추출한 자막 스트림을 로드하기 위한 언어 기본 설정입니다.\n"
+"비어 있으면 자막이 로드되지 않습니다.\n"
+"ISO639-1 두 글자 언어 코드를 사용하십시오.\n"
+"예 : en de es pl zh ja nl"
+
+msgctxt "IDS_PPAGEADVANCED_USE_AUTOMATIC_CAPTIONS"
+msgid ""
+"Use automatic generated captions from Youtube. Note: this can cause a small "
+"delay when loading the stream."
+msgstr "Youtube에서 자동으로 생성된 자막을 사용하세요. 참고 : 스트림을 로드할 때, 다소 지연이 발생할 수 있습니다."
+
+msgctxt "IDS_PPAGEADVANCED_USE_SMTC"
+msgid ""
+"Allow control of the player through System Media Transport Controls in "
+"Windows 8.1/10/11."
+msgstr "윈도 8.1/10/11에서 시스템 미디어 전송 제어를 통해 재생기 제어를 허용합니다."
+
+msgctxt "IDS_PPAGEADVANCED_LOCK_NOPAUSE"
+msgid "Do not pause playback when locking the screen."
+msgstr "화면 잠금 시, 재생을 일시 중지하지 마세요."
+
+msgctxt "IDS_PPAGEADVANCED_RELOAD_AFTER_LONG_PAUSE"
+msgid ""
+"Reload video file before resuming playback if it was paused for more than X "
+"minutes. Use 0 to disable automatic file reload after pause. Use -1 to also "
+"disable reload after hibernate/sleep."
+msgstr ""
+"X분 이상 일시 정지된 경우 재생을 재개하기 전, 비디오 파일을 다시 불러오기 하세요. 일시 정지 후 자동 파일 다시 볼러오기를 "
+"비활성화하려면 0을 사용하십시오. 최대 절전 모드/절전 모드 후 다시 불러오기를 비활성화하려면 -1을 사용하십시오."
+
+msgctxt "IDS_PPAGEADVANCED_REDIRECT_OPEN_TO_APPEND_THRESHOLD"
+msgid ""
+"If a file is opened within this amount of milliseconds after a previous "
+"file, then it will be appended to playlist instead of replacing that "
+"previous file. This redirection is required for properly handling opening of"
+" a selection of files in Explorer. A too short threshold can result in only "
+"a part of your selection being added to playlist."
+msgstr ""
+"이전 파일 이후 이 밀리초 내에 파일이 열리면 이전 파일을 교체하는 대신 재생 목록에 추가됩니다. 이 리디렉션은 탐색기에서 선택한 파일 "
+"열기를 올바르게 처리하는 데 필요합니다. 임계값이 너무 짧으면 선택 항목의 일부만 재생 목록에 추가될 수 있습니다."
+
+msgctxt "IDS_FILTER_RESET_SETTINGS"
+msgid "Reset"
+msgstr "초기화"
+
+msgctxt "IDS_ARS_WASAPI_MODE"
+msgid "WASAPI mode:"
+msgstr "WASAPI 모드 :"
+
+msgctxt "IDS_ARS_EXCLUSIVE"
+msgid "Exclusive"
+msgstr "배타적"
+
+msgctxt "IDS_ARS_SHARED"
+msgid "Shared"
+msgstr "공유"
+
+msgctxt "IDS_ARS_WASAPI_METHOD"
+msgid "WASAPI method:"
+msgstr "WASAPI 메소드 :"
+
+msgctxt "IDS_ARS_BITEXACT_OUTPUT"
+msgid "Allow bit-exact output"
+msgstr "정확한 비트 출력 허용"
+
+msgctxt "IDS_ARS_SYSTEM_LAYOUT_CHANNELS"
+msgid "Use system layout channels"
+msgstr "시스템 레이아웃 채널 사용"
+
+msgctxt "IDS_ARS_ALT_CHECK_FORMAT"
+msgid "Alternative check of supported format"
+msgstr "지원되는 형식에 대한 대안"
+
+msgctxt "IDS_ARS_SOUND_DEVICE"
+msgid "Sound Device:"
+msgstr "음향 장치 :"
+
+msgctxt "IDS_ARS_RELEASE_DEVICE_IDLE"
+msgid "Release device when idle"
+msgstr "유휴 상태일 때 장치 해제"
+
+msgctxt "IDS_ARS_CROSSFEED"
+msgid "Enable stereo crossfeed (for headphones)"
+msgstr "스테레오 교차 공급 활성화(헤드폰용)"
+
+msgctxt "IDS_ARS_DUMMY_CHANNELS"
+msgid "Don't fill channels when upmixing"
+msgstr "업믹싱 시, 채널을 채우지 않음"
+
+msgctxt "IDS_ARS_DEVICE_PERIOD"
+msgid "Device buffer:"
+msgstr "장치 버퍼 :"
+
+msgctxt "IDS_ARS_STATUS"
+msgid "Status"
+msgstr "상태"
+
+msgctxt "IDS_ARS_DEVICE"
+msgid "Device:"
+msgstr "장치 :"
+
+msgctxt "IDS_ARS_MODE"
+msgid "Mode:"
+msgstr "모드 :"
+
+msgctxt "IDS_ARS_INPUT"
+msgid "Input"
+msgstr "입력"
+
+msgctxt "IDS_ARS_OUTPUT"
+msgid "Output"
+msgstr "출력"
+
+msgctxt "IDS_ARS_FORMAT"
+msgid "Format:"
+msgstr "형식 :"
+
+msgctxt "IDS_ARS_SAMPLERATE"
+msgid "Sample rate:"
+msgstr "표본화 :"
+
+msgctxt "IDS_ARS_CHANNELS"
+msgid "Channels"
+msgstr "채널"
+
+msgctxt "IDS_AG_DEFAULT"
+msgid "Default"
+msgstr "기본값"
+
+msgctxt "IDS_ARS_PAUSE_KEEP_ACTIVE"
+msgid "Keep audio device active when paused"
+msgstr "일시 중지 시, 음향 장치 활성 상태 유지"
+
+msgctxt "IDS_ARS_TIP_BITEXACT_OUTPUT"
+msgid ""
+"If possible, the audio will be sent out in its original format.\n"
+"Otherwise, the format specified in the system settings will be used."
+msgstr ""
+"가능한 경우 오디오는 원본 형식으로 전송됩니다.\n"
+"그렇지 않으면 시스템 설정에 지정된 형식이 사용됩니다."
+
+msgctxt "IDS_ARS_TIP_ALT_CHECK_FORMAT"
+msgid "The renderer will try to initialize the device skipping some checks."
+msgstr "렌더러는 일부 검사를 건너뛰고 장치 초기화를 시도합니다."
+
+msgctxt "IDS_ARS_TIP_PAUSE_KEEP_ACTIVE"
+msgid "The renderer will send inaudible noise to the device."
+msgstr "렌더러는 기기에 비가역 소음을 보냅니다."
+
+msgctxt "IDS_CMD_THUMBNAILS"
+msgid "/thumbnails\tCreate thumbnails"
+msgstr "/thumbnails\t썸네일 만들기"
+
+msgctxt "IDS_CUSTOM_ACTION1"
+msgid "Custom Action 1"
+msgstr "사용자 정의 작업 1"
+
+msgctxt "IDS_CUSTOM_ACTION2"
+msgid "Custom Action 2"
+msgstr "사용자 정의 작업 2"
+
+msgctxt "IDS_CUSTOM_ACTION3"
+msgid "Custom Action 3"
+msgstr "사용자 정의 작업 3"
+
+msgctxt "IDS_CUSTOM_ACTION4"
+msgid "Custom Action 4"
+msgstr "사용자 정의 작업 4"
+
+msgctxt "IDS_AUDIOS"
+msgid "Audio Track"
+msgstr "오디오 트랙"
+
+msgctxt "IDS_SUBTITLES"
+msgid "Subtitle Track"
+msgstr "자막 트랙"
+
+msgctxt "IDS_FAVORITES_UNSAVED_CHANGES"
+msgid "Do you want to save changes to your favorites?"
+msgstr "변경 사항을 즐겨찾기에 저장하시겠습니까?"
+
+msgctxt "IDS_AG_EXIT_FULLSCREEN"
+msgid "Exit Fullscreen"
+msgstr "전체 화면 종료"
+
+msgctxt "IDS_AG_SHOW_PLAYLIST"
+msgid "Show Playlist"
+msgstr "재생 목록 보이기"
+
+msgctxt "IDS_AG_HIDE_PLAYLIST"
+msgid "Hide Playlist"
+msgstr "재생 목록 숨기기"
+
+msgctxt "IDS_AG_ENABLE_SHUFFLE"
+msgid "Enable Shuffle"
+msgstr "섞기 활성화"
+
+msgctxt "IDS_AG_DISABLE_SHUFFLE"
+msgid "Disable Shuffle"
+msgstr "섞기 비활성화"
+
+msgctxt "IDS_AG_ENABLE_REPEAT"
+msgid "Enable Repeat"
+msgstr "반복 재생 활성화"
+
+msgctxt "IDS_AG_DISABLE_REPEAT"
+msgid "Disable Repeat"
+msgstr "반복 재생 비활성화"
+
+msgctxt "IDS_SHUFFLE_ON"
+msgid "Shuffle: On"
+msgstr "섞기 : 켬"
+
+msgctxt "IDS_SHUFFLE_OFF"
+msgid "Shuffle: Off"
+msgstr "섞기 : 끔"
+
+msgctxt "IDS_PPAGE_OUTPUT_VIDEO_RENDERER_SETTINGS"
+msgid "Video Renderer Settings"
+msgstr "영상 렌더러 설정"
+
+msgctxt "IDS_PPAGE_OUTPUT_AUDIO_RENDERER_SETTINGS"
+msgid "Audio Renderer Settings"
+msgstr "음향 렌더러 설정"
+
+msgctxt "IDS_PPAGE_VIDEORENDERER_TITLE"
+msgid "Renderer Settings"
+msgstr "렌더러 설정"
+
+msgctxt "IDS_PPAGE_AUDIORENDERER_TITLE"
+msgid "SaneAR Audio Renderer"
+msgstr "SaneAR 음향 렌더러"
+
+msgctxt "IDS_ABOUT_COPYRIGHT"
+msgid "Copyright 2002-%s clsid2 and others"
+msgstr "Copyright 2002-%s clsid2 외"
+
+msgctxt "IDS_HISTORY_SHOW"
+msgid "&Show history..."
+msgstr "이력 보기(&S)..."
+
+msgctxt "IDS_HISTORY_PATH"
+msgid "Path"
+msgstr "경로"
+
+msgctxt "IDS_HISTORY_TITLE"
+msgid "Title"
+msgstr "제목"
+
+msgctxt "IDS_HISTORY_POSITION"
+msgid "Position"
+msgstr "위치"
+
+msgctxt "IDS_HISTORY_LAST_OPENED"
+msgid "Last opened"
+msgstr "마지막 열람"
+
+msgctxt "IDS_HISTORY_REMOVE_SELECTED"
+msgid "Remove selected"
+msgstr "선택한 항목 제거"
+
+msgctxt "IDS_HISTORY_REMOVE_MISSING"
+msgid "Remove missing files"
+msgstr "누락된 파일 제거"
+
+msgctxt "IDS_HISTORY_REMOVE_URLS"
+msgid "Remove all URLs"
+msgstr "모든 URL 제거"
+
+msgctxt "IDS_HISTORY_REMOVE_OLDER_WEEK"
+msgid "Remove entries older than one week"
+msgstr "1주일 이상 지난 항목 삭제"
+
+msgctxt "IDS_HISTORY_REMOVE_OLDER_MONTH"
+msgid "Remove entries older than one month"
+msgstr "한 달 이상 지난 항목 삭제"
+
+msgctxt "IDS_HISTORY_CLEAR"
+msgid "Clear all history"
+msgstr "모든 기록 지우기"
+
+msgctxt "IDS_HISTORY_REMOVE_QUESTION"
+msgid "Are you sure you want to remove %d selected entries from the history?"
+msgstr "기록에서 선택한 항목 %d개를 삭제하시겠습니까?"
+
+msgctxt "IDS_HISTORY_COPY_PATHS"
+msgid "Copy paths to clipboard"
+msgstr "경로를 클립보드에 복사"
+
+msgctxt "IDS_HISTORY_RESET_POSITION"
+msgid "Reset saved position"
+msgstr "저장된 위치 초기화"
+
+msgctxt "IDS_HISTORY_RESET_TRACKS"
+msgid "Reset track selection"
+msgstr "트랙 선택 초기화"
+
+msgctxt "IDS_PPAGEADVANCED_GRP_USER_INTERFACE"
+msgid "User Interface"
+msgstr "사용자 인터페이스"
+
+msgctxt "IDS_PPAGEADVANCED_GRP_PLAYBACK"
+msgid "Playback"
+msgstr "재생"
+
+msgctxt "IDS_PPAGEADVANCED_GRP_HISTORY"
+msgid "History"
+msgstr "이력"
+
+msgctxt "IDS_PPAGEADVANCED_GRP_SCREENSHOTS"
+msgid "Screenshots"
+msgstr "스크린샷"
+
+msgctxt "IDS_PPAGEADVANCED_GRP_MISC"
+msgid "Miscellaneous"
+msgstr "기타"
+
+msgctxt "IDS_AG_COLOR_CONTROLS"
+msgid "Color Controls"
+msgstr "색상 제어"
+
+msgctxt "IDC_COLOR_CONTROLS"
+msgid "You can also open Color controls from the Play menu"
+msgstr ""

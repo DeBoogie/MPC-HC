@@ -20,6 +20,7 @@
  */
 
 #pragma once
+#include "CMPCThemeToolTipCtrl.h"
 
 // CVolumeCtrl
 
@@ -40,6 +41,12 @@ public:
 
 protected:
     afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
+    void getCustomChannelRect(LPRECT rc);
+    void updateModernVolCtrl(CPoint point);
+    bool m_bDrag, m_bHover;
+    bool modernStyle;
+    bool showPercentage;
+    CMPCThemeToolTipCtrl themedToolTip;
 
     DECLARE_MESSAGE_MAP()
 
@@ -50,4 +57,11 @@ public:
     afx_msg void OnSetFocus(CWnd* pOldWnd);
     afx_msg void HScroll(UINT nSBCode, UINT nPos);
     afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint point);
+    void invalidateThumb();
+    void checkHover(CPoint point);
+    afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+    afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+    afx_msg void OnMouseLeave();
+    afx_msg void OnPaint();
+    afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 };

@@ -1,1 +1,3 @@
-*.sh    eol=lf
+*.sh text eol=lf
+*.po text eol=crlf
+src/mpc-hc/mpc-hc.rc text working-tree-encoding=UTF-16LE-BOM eol=CRLF

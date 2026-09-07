@@ -38,13 +38,7 @@
     <ClCompile Include="PixelShaderCompiler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="QT9AllocatorPresenter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="RenderersSettings.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RM9AllocatorPresenter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
@@ -72,6 +66,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PixelShaderCache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MPCVRAllocatorPresenter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -103,13 +103,7 @@
     <ClInclude Include="PixelShaderCompiler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="QT9AllocatorPresenter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="RenderersSettings.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RM9AllocatorPresenter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
@@ -146,6 +140,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PixelShaderCache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MPCVRAllocatorPresenter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Variables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

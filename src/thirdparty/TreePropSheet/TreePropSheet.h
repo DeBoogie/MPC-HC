@@ -285,6 +285,9 @@ protected:
     */
     virtual CTreeCtrl* CreatePageTreeObject();
 
+    //added for mpc-hc theming
+    virtual void SetTreeCtrlTheme(CTreeCtrl* ctrl);
+
     /**
     Will be called during creation process, to create the object, that
     is responsible for drawing the frame around the pages, drawing the
@@ -434,9 +437,11 @@ private:
     /** The tree control */
     CTreeCtrl *m_pwndPageTree;
 
+protected:
     /** The frame around the pages */
     CPropPageFrame *m_pFrame;
 
+private:
     /**
     TRUE, if a tree item selection by OnPageTreeSelChanged() is
     performed currently.

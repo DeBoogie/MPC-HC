@@ -2,21 +2,22 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# Gabrix <inactive+Gabrix@transifex.com>, 2014
-# Kiba_No_Ou <kiba.no.michi@gmail.com>, 2014
-# Luca Bisaro <lucabisaro2@gmail.com>, 2015
+# MPC HC <adiposegithub@gmail.com>, 2020
+# ThePiratePeter, 2020
+# Gianni Chedda <gianni.chedda0@gmail.com>, 2026
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2016-01-17 21:31:34+0000\n"
-"PO-Revision-Date: 2017-08-13 20:49+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Italian (http://www.transifex.com/mpc-hc/mpc-hc/language/it/)\n"
+"POT-Creation-Date: 2025-04-26 17:38:13+0000\n"
+"PO-Revision-Date: 2020-01-02 07:46+0000\n"
+"Last-Translator: Gianni Chedda <gianni.chedda0@gmail.com>, 2026\n"
+"Language-Team: Italian (https://app.transifex.com/mpchc/teams/106126/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: it\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 msgctxt "POPUP"
 msgid "&File"
@@ -27,8 +28,8 @@ msgid "&Quick Open File..."
 msgstr "&Apertura Rapida File..."
 
 msgctxt "ID_FILE_OPENMEDIA"
-msgid "&Open File..."
-msgstr "&Apri File..."
+msgid "&Open File/URL..."
+msgstr "Apri &File/URL..."
 
 msgctxt "ID_FILE_OPENDVDBD"
 msgid "Open &DVD/BD..."
@@ -72,23 +73,23 @@ msgstr "Sottotitoli"
 
 msgctxt "ID_FILE_SUBTITLES_LOAD"
 msgid "&Load Subtitles..."
-msgstr ""
+msgstr "Carica Sottotitoli..."
 
 msgctxt "ID_FILE_SUBTITLES_SAVE"
 msgid "Save S&ubtitles..."
-msgstr ""
+msgstr "Salva Sottotitoli..."
 
 msgctxt "ID_FILE_SUBTITLES_DOWNLOAD"
 msgid "&Download Subtitles..."
-msgstr ""
-
-msgctxt "ID_FILE_SUBTITLES_UPLOAD"
-msgid "&Upload Subtitles..."
-msgstr ""
+msgstr "Scarica Sottotitoli..."
 
 msgctxt "ID_FILE_PROPERTIES"
 msgid "P&roperties"
 msgstr "P&roprietà"
+
+msgctxt "ID_FILE_OPEN_LOCATION"
+msgid "Open File &Location"
+msgstr "Apri Percorso Fi&le"
 
 msgctxt "ID_FILE_EXIT"
 msgid "E&xit"
@@ -138,10 +139,6 @@ msgctxt "ID_VIEW_NAVIGATION"
 msgid "Na&vigation"
 msgstr "Navigazione"
 
-msgctxt "ID_VIEW_DEBUGSHADERS"
-msgid "&Debug Shaders"
-msgstr "&Debug Shaders"
-
 msgctxt "POPUP"
 msgid "&Presets..."
 msgstr "Interfaccia..."
@@ -158,6 +155,10 @@ msgctxt "ID_VIEW_PRESETS_NORMAL"
 msgid "&Normal"
 msgstr "Normale"
 
+msgctxt "ID_VIEW_PRESETS_CUSTOM"
+msgid "C&ustom"
+msgstr ""
+
 msgctxt "ID_VIEW_FULLSCREEN"
 msgid "F&ull Screen"
 msgstr "S&chermo intero"
@@ -165,6 +166,10 @@ msgstr "S&chermo intero"
 msgctxt "POPUP"
 msgid "&Zoom"
 msgstr "&Zoom"
+
+msgctxt "ID_VIEW_ZOOM_25"
+msgid "&25%"
+msgstr "&25%"
 
 msgctxt "ID_VIEW_ZOOM_50"
 msgid "&50%"
@@ -182,10 +187,6 @@ msgctxt "ID_VIEW_ZOOM_AUTOFIT"
 msgid "Auto &Fit"
 msgstr "Automatico"
 
-msgctxt "ID_VIEW_ZOOM_AUTOFIT_LARGER"
-msgid "Auto Fit (&Larger Only)"
-msgstr "Automatico (allarga)"
-
 msgctxt "POPUP"
 msgid "R&enderer Settings"
 msgstr "Impostazioni renderer"
@@ -196,15 +197,15 @@ msgstr "&Test effetto tearing"
 
 msgctxt "ID_VIEW_DISPLAY_RENDERER_STATS"
 msgid "&Display Statistics"
-msgstr ""
+msgstr "Visualizza Statistiche"
 
 msgctxt "ID_VIEW_OSD_DISPLAY_TIME"
 msgid "Display Current T&ime"
-msgstr ""
+msgstr "V&isualizza Tempo Corrente"
 
 msgctxt "ID_VIEW_OSD_SHOW_FILENAME"
 msgid "Show &File Name"
-msgstr ""
+msgstr "Mostra Nome &File"
 
 msgctxt "POPUP"
 msgid "&Output Range"
@@ -248,7 +249,7 @@ msgstr "Calcolo parziale a virgola mobile"
 
 msgctxt "ID_VIEW_DISABLEDESKTOPCOMPOSITION"
 msgid "Disable desktop composition (&Aero)"
-msgstr "Disabilita la composizione del desktop"
+msgstr "Disabilita la composizione del desktop (Aero)"
 
 msgctxt "ID_VIEW_ENABLEFRAMETIMECORRECTION"
 msgid "Enable Frame Time &Correction"
@@ -268,7 +269,7 @@ msgstr "Tipo input"
 
 msgctxt "ID_VIEW_CM_INPUT_AUTO"
 msgid "&Auto-Detect"
-msgstr "Autorileva"
+msgstr "Rileva automaticamente"
 
 msgctxt "ID_VIEW_CM_INPUT_HDTV"
 msgid "&HDTV"
@@ -300,7 +301,7 @@ msgstr "Scuro (Gamma 2.4)"
 
 msgctxt "POPUP"
 msgid "&Rendering Intent"
-msgstr "Tipo rendering"
+msgstr "Tipo &rendering"
 
 msgctxt "ID_VIEW_CM_INTENT_PERCEPTUAL"
 msgid "&Perceptual"
@@ -358,17 +359,9 @@ msgctxt "ID_VIEW_FLUSHGPU_WAIT"
 msgid "&Wait for flushes"
 msgstr "Attendi svuotamenti"
 
-msgctxt "POPUP"
-msgid "R&eset"
-msgstr "Ripristina impostazioni"
-
 msgctxt "ID_VIEW_RESET_DEFAULT"
 msgid "Reset to &default renderer settings"
-msgstr "Ripristina le impostazioni di default del renderer"
-
-msgctxt "ID_VIEW_RESET_OPTIMAL"
-msgid "Reset to &optimal renderer settings"
-msgstr "Ripristina le impostazioni ottimali del renderer"
+msgstr "Ripristina le impostazioni predefinite del renderer"
 
 msgctxt "POPUP"
 msgid "Video &Frame"
@@ -408,11 +401,11 @@ msgstr "Ritocca la finestra dall'&esterno"
 
 msgctxt "POPUP"
 msgid "&Aspect Ratio"
-msgstr ""
+msgstr "R&apporto d'Aspetto"
 
 msgctxt "ID_ASPECTRATIO_DAR"
 msgid "&Default (DAR)"
-msgstr ""
+msgstr "Predefinito (&DAR)"
 
 msgctxt "ID_ASPECTRATIO_4_3"
 msgid "&4:3"
@@ -436,15 +429,15 @@ msgstr "185:100"
 
 msgctxt "ID_ASPECTRATIO_SAR"
 msgid "Assume &square pixels (SAR)"
-msgstr ""
+msgstr "A&ssumi pixel quadrati (SAR)"
 
 msgctxt "ID_VIEW_VF_COMPMONDESKARDIFF"
 msgid "&Correct Monitor/Desktop AR Diff"
 msgstr "Correggi differenza proporzioni schermo/desktop"
 
 msgctxt "POPUP"
-msgid "Pa&n && Scan"
-msgstr "Pan&&S&can"
+msgid "P&nS Frame Adjust"
+msgstr "Regolazione Finestra P&nS"
 
 msgctxt "ID_VIEW_INCSIZE"
 msgid "&Increase Size"
@@ -489,6 +482,22 @@ msgstr "Sposta Giù"
 msgctxt "ID_PANSCAN_CENTER"
 msgid "Cen&ter"
 msgstr "Centra"
+
+msgctxt "ID_PANSCAN_ROTATEZM"
+msgid "Rotate Cloc&kwise"
+msgstr "Ruota in Senso Orario"
+
+msgctxt "ID_PANSCAN_ROTATEZ270"
+msgid "Rotate Counter-Clock&wise"
+msgstr "Ruota in Senso Antiorario"
+
+msgctxt "ID_PANSCAN_ROTATEXM"
+msgid "&Flip Vertically"
+msgstr "Rovescia Verticalmente"
+
+msgctxt "ID_PANSCAN_ROTATEYM"
+msgid "&Mirror"
+msgstr "Specchia"
 
 msgctxt "ID_VIEW_RESET"
 msgid "Re&set"
@@ -536,19 +545,107 @@ msgstr "&Fotogramma"
 
 msgctxt "POPUP"
 msgid "&Repeat"
-msgstr ""
+msgstr "&Ripeti"
 
 msgctxt "ID_PLAY_REPEAT_FOREVER"
 msgid "F&orever"
-msgstr ""
+msgstr "Sempre"
 
 msgctxt "ID_PLAY_REPEAT_ONEFILE"
 msgid "&File"
-msgstr ""
+msgstr "&File"
 
 msgctxt "ID_PLAY_REPEAT_WHOLEPLAYLIST"
 msgid "&Playlist"
-msgstr ""
+msgstr "&Playlist"
+
+msgctxt "ID_PLAY_REPEAT_AB"
+msgid "A-B (&Reset)"
+msgstr "A-B (&Reimposta)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_A"
+msgid "A-B (Mark &A)"
+msgstr "A-B (Marca &A)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_B"
+msgid "A-B (Mark &B)"
+msgstr "A-B (Marca &B)"
+
+msgctxt "POPUP"
+msgid "&Playback Rate"
+msgstr "Velocità di riproduzione"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_025"
+msgid "0.25 x"
+msgstr "0.25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_050"
+msgid "0.50 x"
+msgstr "0.50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_075"
+msgid "0.75 x"
+msgstr "0.75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_090"
+msgid "0.90 x"
+msgstr "0.90 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_100"
+msgid "1.00 x"
+msgstr "1.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_110"
+msgid "1.10 x"
+msgstr "1.10 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_125"
+msgid "1.25 x"
+msgstr "1.25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_150"
+msgid "1.50 x"
+msgstr "1.50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_175"
+msgid "1.75 x"
+msgstr "1.75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_200"
+msgid "2.00 x"
+msgstr "2.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_300"
+msgid "3.00 x"
+msgstr "3.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_400"
+msgid "4.00 x"
+msgstr "4.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_600"
+msgid "6.00 x"
+msgstr "6.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_800"
+msgid "8.00 x"
+msgstr "8.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS23"
+msgid "23.976 fps"
+msgstr "23.976 fps"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS24"
+msgid "24 fps"
+msgstr "24 fps"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS25"
+msgid "25 fps"
+msgstr "25 fps"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS59"
+msgid "59.94 fps"
+msgstr "59.94 fps"
 
 msgctxt "ID_PLAY_DECRATE"
 msgid "&Decrease Rate"
@@ -566,6 +663,10 @@ msgctxt "ID_FILTERS"
 msgid "&Filters"
 msgstr "&Filtri"
 
+msgctxt "ID_COLOR_CONTROLS"
+msgid "&Color controls..."
+msgstr ""
+
 msgctxt "ID_SHADERS"
 msgid "S&haders"
 msgstr "S&haders"
@@ -577,6 +678,10 @@ msgstr "&Traccia Audio"
 msgctxt "ID_SUBTITLES"
 msgid "Su&btitle Track"
 msgstr "&Traccia Sottotitolo"
+
+msgctxt "ID_SUBTITLES_SECONDARY"
+msgid "Secondary Subtitle Track"
+msgstr ""
 
 msgctxt "ID_VIDEO_STREAMS"
 msgid "Vide&o Track"
@@ -604,7 +709,7 @@ msgstr "Dopo la riproduzione"
 
 msgctxt "ID_AFTERPLAYBACK_DONOTHING"
 msgid "Do no&thing"
-msgstr ""
+msgstr "Non fare nulla"
 
 msgctxt "ID_AFTERPLAYBACK_PLAYNEXT"
 msgid "Play &next file in the folder"
@@ -624,7 +729,7 @@ msgstr "Standby"
 
 msgctxt "ID_AFTERPLAYBACK_HIBERNATE"
 msgid "&Hibernate"
-msgstr "Sospendi"
+msgstr "Iberna"
 
 msgctxt "ID_AFTERPLAYBACK_SHUTDOWN"
 msgid "Shut&down"
@@ -709,4 +814,3 @@ msgstr "Effettua una donazione"
 msgctxt "ID_HELP_ABOUT"
 msgid "&About..."
 msgstr "&Informazioni..."
-

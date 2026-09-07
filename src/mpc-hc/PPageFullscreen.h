@@ -21,26 +21,30 @@
 
 #pragma once
 
-#include "PPageBase.h"
+#include "CMPCThemePPageBase.h"
 #include "PlayerListCtrl.h"
+#include "CMPCThemeComboBox.h"
+#include "CMPCThemeSpinButtonCtrl.h"
 
 // CPPageFullscreen dialog
 
-class CPPageFullscreen : public CPPageBase
+class CPPageFullscreen : public CMPCThemePPageBase
 {
     DECLARE_DYNAMIC(CPPageFullscreen)
 
 private:
     std::vector<CString> m_monitorDisplayNames;
-    CStringW m_fullScreenMonitor;
+    std::vector<CString> m_monitorDeviceNames;
+    CStringW m_fullScreenMonitorID;
+    CStringW m_fullScreenMonitorDeviceName;
     int m_iFullScreenMonitor;
-    CComboBox m_fullScreenMonitorCtrl;
+    CMPCThemeComboBox m_fullScreenMonitorCtrl;
 
     BOOL m_bLaunchFullscreen;
     BOOL m_fExitFullScreenAtTheEnd;
 
     BOOL m_bHideFullscreenControls;
-    CComboBox m_hidePolicy;
+    CMPCThemeComboBox m_hidePolicy;
     unsigned m_uHideFullscreenControlsDelay;
     BOOL m_bHideFullscreenDockedPanels;
 
@@ -48,11 +52,13 @@ private:
     CAtlList<CString> m_displayModesString;
     size_t m_nCurrentDisplayModeIndex;
     CString m_CurrentDisplayModeString;
+    CStringW m_FullScreenSeparateControlsText;
 
     std::vector<AutoChangeMode> m_autoChangeFSModes;
     BOOL m_bAutoChangeFSModeEnabled;
     BOOL m_bAutoChangeFSModeApplyDefModeAtFSExist;
     BOOL m_bAutoChangeFSModeRestoreResAfterProgExit;
+    BOOL m_bFullScreenSeparateControls;
     unsigned m_uAutoChangeFullscrResDelay;
 
     CPlayerListCtrl m_list;
@@ -64,7 +70,7 @@ private:
         COL_AUDIO_DELAY
     };
 
-    CSpinButtonCtrl m_delaySpinner;
+    CMPCThemeSpinButtonCtrl m_delaySpinner;
 
     void ModesUpdate();
 
@@ -79,6 +85,8 @@ protected:
     virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
     virtual BOOL OnInitDialog();
     virtual BOOL OnApply();
+    inline void RenumberListItem(int nItem);
+    void RenumberListItems(int nStartItem);
 
     DECLARE_MESSAGE_MAP()
 

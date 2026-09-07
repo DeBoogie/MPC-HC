@@ -2,50 +2,69 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# Alex Luís Silva <alex.mooca@hotmail.com>, 2014
-# Alex Luís Silva <alex.mooca@hotmail.com>, 2014
-# Elio <usuariodatreta@gmail.com>, 2014
-# Everton Leite <etcholeite@gmail.com>, 2017
+# MPC HC <adiposegithub@gmail.com>, 2020
+# Felipefpl, 2021
+# Fúlvio Alves <fga.fulvio@gmail.com>, 2025
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
 "POT-Creation-Date: 2017-07-30 20:54:11+0000\n"
-"PO-Revision-Date: 2017-07-30 23:44+0000\n"
-"Last-Translator: Everton Leite <etcholeite@gmail.com>\n"
-"Language-Team: Portuguese (Brazil) (http://www.transifex.com/mpc-hc/mpc-hc/language/pt_BR/)\n"
+"PO-Revision-Date: 2020-01-02 07:46+0000\n"
+"Last-Translator: Fúlvio Alves <fga.fulvio@gmail.com>, 2025\n"
+"Language-Team: Portuguese (Brazil) (https://app.transifex.com/mpchc/teams/106126/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt_BR\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
 msgctxt "Messages_WelcomeLabel2"
-msgid "This will install [name] on your computer.\n\nIt is recommended that you close all other applications before continuing."
-msgstr "Isto instalará o [name] no seu computador.\n\nÉ recomendável que você feche todos os outros programas antes de continuar."
+msgid ""
+"This will install [name] on your computer.\n"
+"\n"
+"It is recommended that you close all other applications before continuing."
+msgstr ""
+"Isto instalará o [name] no seu computador.\n"
+"\n"
+"É recomendado que você feche todos os outros aplicativos antes de continuar."
 
 msgctxt "Messages_WinVersionTooLowError"
 msgid "[name] requires Windows Vista or newer to run."
-msgstr "[name] requer Windows Vista ou posterior para rodar."
+msgstr "O [name] requer o Windows Vista ou mais novo para funcionar."
 
 msgctxt "CustomMessages_comp_mpciconlib"
 msgid "Icon Library"
-msgstr "Biblioteca de ícones"
+msgstr "Biblioteca dos Ícones"
 
 msgctxt "CustomMessages_comp_mpcresources"
 msgid "Translations"
 msgstr "Traduções"
 
 msgctxt "CustomMessages_msg_DeleteSettings"
-msgid "Do you also want to delete MPC-HC settings?\n\nIf you plan on installing MPC-HC again then you do not have to delete them."
-msgstr "Gostaria de excluir as configurações do MPC-HC?\n\nSe planeja instalar o MPC-HC novamente, você não precisa excluí-las."
+msgid ""
+"Do you also want to delete MPC-HC settings?\n"
+"\n"
+"If you plan on installing MPC-HC again then you do not have to delete them."
+msgstr ""
+"Você também quer apagar as configurações do MPC-HC?\n"
+"\n"
+"Se você planeja instalar o MPC-HC de novo então você não tem que apagá-las."
 
 msgctxt "CustomMessages_msg_simd_sse2"
-msgid "This build of MPC-HC requires a CPU with SSE2 extension support.\n\nYour CPU does not have those capabilities."
-msgstr "Esta versão do MPC-HC necessita uma CPU com suporte a extensões SSE2.\n\nSua CPU não tem esse suporte."
+msgid ""
+"This build of MPC-HC requires a CPU with SSE2 extension support.\n"
+"\n"
+"Your CPU does not have those capabilities."
+msgstr ""
+"Este build do MPC-HC requer uma CPU com suporte pra extensão SSE2.\n"
+"\n"
+"Sua CPU não tem essas capacidades."
 
 msgctxt "CustomMessages_run_DownloadToolbarImages"
 msgid "Visit our Wiki page to download toolbar images"
-msgstr "Visite nossa página Wiki para baixar imagens de barra de ferramentas"
+msgstr ""
+"Visite nossa página do Wiki para baixar imagens da barra de ferramentas"
 
 msgctxt "CustomMessages_tsk_AllUsers"
 msgid "For all users"
@@ -53,7 +72,7 @@ msgstr "Para todos os usuários"
 
 msgctxt "CustomMessages_tsk_CurrentUser"
 msgid "For the current user only"
-msgstr "Para o usuário atual somente"
+msgstr "Só para o usuário atual"
 
 msgctxt "CustomMessages_tsk_Other"
 msgid "Other tasks:"
@@ -61,7 +80,7 @@ msgstr "Outras tarefas:"
 
 msgctxt "CustomMessages_tsk_ResetSettings"
 msgid "Reset settings"
-msgstr "Reiniciar as configurações"
+msgstr "Resetar configurações"
 
 msgctxt "CustomMessages_types_DefaultInstallation"
 msgid "Default installation"
@@ -73,5 +92,4 @@ msgstr "Instalação personalizada"
 
 msgctxt "CustomMessages_ViewChangelog"
 msgid "View Changelog"
-msgstr "Ver registro de alterações"
-
+msgstr "Visualizar Changelog"

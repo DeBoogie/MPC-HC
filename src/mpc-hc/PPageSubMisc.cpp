@@ -19,6 +19,7 @@
  */
 
 #include "stdafx.h"
+#include <WinAPIUtils.h>
 #include "mplayerc.h"
 #include "MainFrm.h"
 #include "AuthDlg.h"
@@ -27,21 +28,21 @@
 
 // CPPageSubMisc dialog
 
-IMPLEMENT_DYNAMIC(CPPageSubMisc, CPPageBase)
+IMPLEMENT_DYNAMIC(CPPageSubMisc, CMPCThemePPageBase)
 
 CPPageSubMisc::CPPageSubMisc()
-    : CPPageBase(CPPageSubMisc::IDD, CPPageSubMisc::IDD)
+    : CMPCThemePPageBase(CPPageSubMisc::IDD, CPPageSubMisc::IDD)
     , m_pSubtitlesProviders(nullptr)
     , m_fPreferDefaultForcedSubtitles(TRUE)
     , m_fPrioritizeExternalSubtitles(TRUE)
     , m_fDisableInternalSubtitles(FALSE)
     , m_bAutoDownloadSubtitles(FALSE)
     , m_strAutoDownloadSubtitlesExclude()
-    , m_bAutoUploadSubtitles(FALSE)
     , m_bPreferHearingImpairedSubtitles(FALSE)
     , m_strSubtitlesProviders()
     , m_strSubtitlesLanguageOrder()
     , m_strAutoloadPaths()
+    , m_bAutoSaveDownloadedSubtitles(FALSE)
 {
 }
 
@@ -51,17 +52,17 @@ CPPageSubMisc::~CPPageSubMisc()
 
 void CPPageSubMisc::DoDataExchange(CDataExchange* pDX)
 {
-    CPPageBase::DoDataExchange(pDX);
+    CMPCThemePPageBase::DoDataExchange(pDX);
     DDX_Check(pDX, IDC_CHECK1, m_fPreferDefaultForcedSubtitles);
     DDX_Check(pDX, IDC_CHECK2, m_fPrioritizeExternalSubtitles);
     DDX_Check(pDX, IDC_CHECK3, m_fDisableInternalSubtitles);
     DDX_Check(pDX, IDC_CHECK4, m_bAutoDownloadSubtitles);
     DDX_Check(pDX, IDC_CHECK5, m_bPreferHearingImpairedSubtitles);
-    DDX_Check(pDX, IDC_CHECK6, m_bAutoUploadSubtitles);
     DDX_Text(pDX, IDC_EDIT1, m_strAutoloadPaths);
     DDX_Text(pDX, IDC_EDIT2, m_strAutoDownloadSubtitlesExclude);
     DDX_Text(pDX, IDC_EDIT3, m_strSubtitlesLanguageOrder);
     DDX_Control(pDX, IDC_LIST1, m_list);
+    DDX_Check(pDX, IDC_CHECK_AUTOSAVE_ONLINE_SUBTITLE, m_bAutoSaveDownloadedSubtitles);
 }
 
 BOOL CPPageSubMisc::OnInitDialog()
@@ -75,8 +76,8 @@ BOOL CPPageSubMisc::OnInitDialog()
     m_fDisableInternalSubtitles = s.fDisableInternalSubtitles;
     m_strAutoloadPaths = s.strSubtitlePaths;
     m_bAutoDownloadSubtitles = s.bAutoDownloadSubtitles;
+    m_bAutoSaveDownloadedSubtitles = s.bAutoSaveDownloadedSubtitles;
     m_strAutoDownloadSubtitlesExclude = s.strAutoDownloadSubtitlesExclude;
-    m_bAutoUploadSubtitles = s.bAutoUploadSubtitles;
     m_bPreferHearingImpairedSubtitles = s.bPreferHearingImpairedSubtitles;
     m_strSubtitlesLanguageOrder = s.strSubtitlesLanguageOrder;
     m_strSubtitlesProviders = s.strSubtitlesProviders;
@@ -86,8 +87,9 @@ BOOL CPPageSubMisc::OnInitDialog()
     GetDlgItem(IDC_EDIT2)->EnableWindow(m_bAutoDownloadSubtitles);
 
     m_list.SetExtendedStyle(m_list.GetExtendedStyle()
-                            | LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT
+                            /*| LVS_EX_DOUBLEBUFFER*/ | LVS_EX_FULLROWSELECT
                             | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP);
+    m_list.setAdditionalStyles(LVS_EX_DOUBLEBUFFER);
 
     // Do not check dynamic_cast, because if it fails we cannot recover from the error anyway.
     const CMainFrame* pMainFrame = AfxGetMainFrame();
@@ -101,7 +103,7 @@ BOOL CPPageSubMisc::OnInitDialog()
     if (columnWidth.GetCount() != COL_TOTAL_COLUMNS) {
         // default sizes
         columnWidth.RemoveAll();
-        columnWidth.Add(120);
+        columnWidth.Add(130);
         columnWidth.Add(75);
         columnWidth.Add(300);
     }
@@ -115,7 +117,7 @@ BOOL CPPageSubMisc::OnInitDialog()
 
     int i = 0;
     for (const auto& iter : m_pSubtitlesProviders->Providers()) {
-        int iItem = m_list.InsertItem(i++, CString(iter->Name().c_str()), iter->GetIconIndex());
+        int iItem = m_list.InsertItem(i++, CString(iter->DisplayName().c_str()), iter->GetIconIndex());
         m_list.SetItemText(iItem, COL_USERNAME, UTF8To16(iter->UserName().c_str()));
         m_list.SetItemText(iItem, COL_LANGUAGES, ResStr(IDS_SUBPP_DLG_FETCHING_LANGUAGES));
         m_list.SetCheck(iItem, iter->Enabled(SPF_SEARCH));
@@ -133,11 +135,8 @@ BOOL CPPageSubMisc::OnInitDialog()
         PostMessage(WM_SUPPORTED_LANGUAGES_READY); // Notify the window that languages have been fetched
     });
 
-    //TODO: Remove when Auto Upload is finalised
-    CheckDlgButton(IDC_CHECK6, FALSE);
-    GetDlgItem(IDC_CHECK6)->EnableWindow(FALSE);
-
-    EnableToolTips(TRUE);
+    AdjustDynamicWidgets();
+    //    EnableToolTips(TRUE);
     CreateToolTip();
     m_wndToolTip.AddTool(GetDlgItem(IDC_EDIT2), ResStr(IDS_SUB_AUTODL_IGNORE_TOOLTIP));
     m_wndToolTip.AddTool(GetDlgItem(IDC_EDIT3), ResStr(IDS_LANG_PREF_EXAMPLE));
@@ -158,8 +157,8 @@ BOOL CPPageSubMisc::OnApply()
     s.fDisableInternalSubtitles = !!m_fDisableInternalSubtitles;
     s.strSubtitlePaths = m_strAutoloadPaths;
     s.bAutoDownloadSubtitles = !!m_bAutoDownloadSubtitles;
+    s.bAutoSaveDownloadedSubtitles = !!m_bAutoSaveDownloadedSubtitles;
     s.strAutoDownloadSubtitlesExclude = m_strAutoDownloadSubtitlesExclude;
-    s.bAutoUploadSubtitles = !!m_bAutoUploadSubtitles;
     s.bPreferHearingImpairedSubtitles = !!m_bPreferHearingImpairedSubtitles;
     s.strSubtitlesLanguageOrder = m_strSubtitlesLanguageOrder;
 
@@ -174,7 +173,7 @@ BOOL CPPageSubMisc::OnApply()
 }
 
 
-BEGIN_MESSAGE_MAP(CPPageSubMisc, CPPageBase)
+BEGIN_MESSAGE_MAP(CPPageSubMisc, CMPCThemePPageBase)
     ON_MESSAGE_VOID(WM_SUPPORTED_LANGUAGES_READY, OnSupportedLanguagesReady)
     ON_WM_DESTROY()
     ON_BN_CLICKED(IDC_BUTTON1, OnBnClickedResetSubsPath)
@@ -215,7 +214,7 @@ void CPPageSubMisc::OnRightClick(NMHDR* pNMHDR, LRESULT* pResult)
             COPY_URL
         };
 
-        CMenu m;
+        CMPCThemeMenu m;
         m.CreatePopupMenu();
         m.AppendMenu(MF_STRING | (provider.Flags(SPF_LOGIN) ? MF_ENABLED : MF_DISABLED), SET_CREDENTIALS, ResStr(IDS_SUBMENU_SETUP));
         m.AppendMenu(MF_STRING | (provider.Flags(SPF_LOGIN) && provider.UserName().length() ? MF_ENABLED : MF_DISABLED), RESET_CREDENTIALS, ResStr(IDS_SUBMENU_RESET));
@@ -229,36 +228,17 @@ void CPPageSubMisc::OnRightClick(NMHDR* pNMHDR, LRESULT* pResult)
         CPoint pt = lpnmlv->ptAction;
         ::MapWindowPoints(lpnmlv->hdr.hwndFrom, HWND_DESKTOP, &pt, 1);
 
+        if (AppNeedsThemedControls()) {
+            m.fulfillThemeReqs();
+        }
         switch (m.TrackPopupMenu(TPM_LEFTBUTTON | TPM_RETURNCMD, pt.x, pt.y, this)) {
             case OPEN_URL:
                 provider.OpenUrl();
                 break;
             case COPY_URL: {
                 if (!provider.Url().empty()) {
-                    size_t len = provider.Url().length() + 1;
-                    HGLOBAL hGlob = ::GlobalAlloc(GMEM_MOVEABLE, len * sizeof(CHAR));
-                    if (hGlob) {
-                        // Lock the handle and copy the text to the buffer
-                        LPVOID pData = ::GlobalLock(hGlob);
-                        if (pData) {
-                            ::strcpy_s((CHAR*)pData, len, (LPCSTR)provider.Url().c_str());
-                            ::GlobalUnlock(hGlob);
-
-                            if (GetParent()->OpenClipboard()) {
-                                // Place the handle on the clipboard, if the call succeeds
-                                // the system will take care of the allocated memory
-                                if (::EmptyClipboard() && ::SetClipboardData(CF_TEXT, hGlob)) {
-                                    hGlob = nullptr;
-                                }
-
-                                ::CloseClipboard();
-                            }
-                        }
-
-                        if (hGlob) {
-                            ::GlobalFree(hGlob);
-                        }
-                    }
+                    CClipboard clipboard(this);
+                    VERIFY(clipboard.SetText(provider.Url().c_str()));
                 }
                 break;
             }
@@ -272,7 +252,14 @@ void CPPageSubMisc::OnRightClick(NMHDR* pNMHDR, LRESULT* pResult)
                     provider.LogOut();
                     provider.UserName(static_cast<const char*>(UTF16To8(szUser)));
                     provider.Password(static_cast<const char*>(UTF16To8(szPass)));
-                    m_list.SetItemText(lpnmlv->iItem, 1, szUser);
+                    if (provider.LoginInternal()) {
+                        m_list.SetItemText(lpnmlv->iItem, 1, szUser);
+                    } else {
+                        // login failed
+                        provider.UserName("");
+                        provider.Password("");
+                        m_list.SetItemText(lpnmlv->iItem, 1, _T(""));
+                    }
                     SetModified();
                 }
                 break;
@@ -321,7 +308,67 @@ void CPPageSubMisc::OnBnClickedResetSubsPath()
 
 void CPPageSubMisc::OnItemChanged(NMHDR* pNMHDR, LRESULT* pResult)
 {
-    LPNMLISTVIEW pNMLV = (LPNMLISTVIEW)pNMHDR;
+    LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+
+    int provider_count = (int) m_pSubtitlesProviders->Providers().size();
+    for (int i = 0; i < provider_count; i++) {
+        if (pNMLV->iItem == i && pNMLV->uNewState == 8192) {
+            auto& subprovider = *m_pSubtitlesProviders->Providers()[i].get();
+            std::string provname = subprovider.Name();
+            if (provname.compare("OpenSubtitles") == 0 || provname.compare("OpenSubtitles2") == 0) {
+                if (subprovider.Enabled(SPF_SEARCH) == 0 && subprovider.UserName().size() == 0) {
+                    bool allow_anon = false;
+                    CString msg;
+                    if (provname.compare("OpenSubtitles") == 0) {
+                        msg = L"You must enter your OpenSubtitles login information to continue.\r\n\r\n" \
+                            "If you do not yet have an OpenSubtitles account, you can create a free account on http://www.opensubtitles.org\r\n\r\n" \
+                            "Click OK if you have an account and want to fill in your login details. Click CANCEL to disable this subtitle search provider.";
+                    } else {
+                        msg = L"You should enter your OpenSubtitles login information to continue.\r\n\r\n" \
+                            "If you do not yet have an OpenSubtitles account, you can create a free account on http://www.opensubtitles.com\r\n\r\n" \
+                            "Click OK if you have an account and want to fill in your login details.\r\n" \
+                            "Click CANCEL to use this subtitle search provider without login.\r\n\r\n" \
+                            "Important warning:\r\n" \
+                            "There is a maximum amount of daily downloads for all global anonymous users combined.\r\n" \
+                            "This quota means that downloads are very likely to fail if you do not use a login.\r\n" \
+                            "A login is also required if you wish to use this provider for automatic downloads.";
+                        allow_anon = true;
+                    }
+                    if (AfxMessageBox(msg, MB_OKCANCEL | MB_ICONINFORMATION) == IDCANCEL) {
+                        if (!allow_anon) {
+                            ListView_SetCheckState(pNMHDR->hwndFrom, i, FALSE);
+                            return;
+                        }
+                        break;
+                    }
+
+                    CString szUser(UTF8To16(subprovider.UserName().c_str()));
+                    CString szPass(UTF8To16(subprovider.Password().c_str()));
+                    CString szDomain(UTF8To16(provname.c_str()));
+                    if (ERROR_SUCCESS == PromptForCredentials(GetSafeHwnd(),
+                        ResStr(IDS_SUB_CREDENTIALS_TITLE), ResStr(IDS_SUB_CREDENTIALS_MSG) +
+                        CString(subprovider.Url().c_str()), szDomain, szUser, szPass, nullptr)) {
+                        subprovider.LogOut();
+                        subprovider.UserName(static_cast<const char*>(UTF16To8(szUser)));
+                        subprovider.Password(static_cast<const char*>(UTF16To8(szPass)));
+                        if (subprovider.LoginInternal()) {
+                            m_list.SetItemText(pNMLV->iItem, 1, szUser);
+                        } else {
+                            // login failed
+                            subprovider.UserName("");
+                            subprovider.Password("");
+                            m_list.SetItemText(pNMLV->iItem, 1, _T(""));
+                            ListView_SetCheckState(pNMHDR->hwndFrom, i, FALSE);
+                        }
+                    } else if (!allow_anon) {
+                        ListView_SetCheckState(pNMHDR->hwndFrom, i, FALSE);
+                        return;
+                    }
+                }
+                break;
+            }
+        }
+    }
 
     if (pNMLV->uOldState + pNMLV->uNewState == 0x3000) {
         SetModified();
@@ -334,4 +381,9 @@ int CALLBACK CPPageSubMisc::SortCompare(LPARAM lParam1, LPARAM lParam2, LPARAM l
     size_t left = ((SubtitlesProvider*)list.GetItemData((int)lParam1))->Index();
     size_t right = ((SubtitlesProvider*)list.GetItemData((int)lParam2))->Index();
     return int(left - right);
+}
+
+void CPPageSubMisc::AdjustDynamicWidgets() {
+    AdjustDynamicWidgetPair(this, IDC_STATIC1, IDC_EDIT2);
+    AdjustDynamicWidgetPair(this, IDC_STATIC2, IDC_EDIT3);
 }

@@ -19,6 +19,8 @@
  */
 
 #include "stdafx.h"
+#include <WinAPIFunc.h>
+#include <WinAPIUtils.h>
 #include "AboutDlg.h"
 #include "mpc-hc_config.h"
 #ifndef MPCHC_LITE
@@ -28,23 +30,27 @@
 #include "FileVersionInfo.h"
 #include "PathUtils.h"
 #include "VersionInfo.h"
-#include "WinapiFunc.h"
-#include <afxole.h>
+#include <VersionHelpers.h>
+#include "Monitors.h"
+#include "GPUInfo.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
 // CAboutDlg dialog used for App About
 
-CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
+CAboutDlg::CAboutDlg() : CMPCThemeDialog(CAboutDlg::IDD, NULL)
 {
     //{{AFX_DATA_INIT(CAboutDlg)
     //}}AFX_DATA_INIT
 }
 
+CAboutDlg::~CAboutDlg()
+{
+}
+
 BOOL CAboutDlg::OnInitDialog()
 {
     // Get the default text before it is overwritten by the call to __super::OnInitDialog()
-    GetDlgItem(IDC_AUTHORS_LINK)->GetWindowText(m_credits);
 #ifndef MPCHC_LITE
     GetDlgItem(IDC_LAVFILTERS_VERSION)->GetWindowText(m_LAVFiltersVersion);
 #endif
@@ -55,91 +61,23 @@ BOOL CAboutDlg::OnInitDialog()
     m_icon.SetIcon((HICON)LoadImage(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME), IMAGE_ICON, 48, 48, LR_SHARED));
 
     m_appname = _T("MPC-HC");
-    if (VersionInfo::IsNightly() || VersionInfo::Is64Bit()) {
-        m_appname += _T(" (");
-    }
-    if (VersionInfo::IsNightly()) {
-        m_appname += VersionInfo::GetNightlyWord();
-    }
-    if (VersionInfo::IsNightly() && VersionInfo::Is64Bit()) {
-        m_appname += _T(", ");
-    }
     if (VersionInfo::Is64Bit()) {
-        m_appname += _T("64-bit");
+        m_appname += _T(" (64-bit)");
     }
-    if (VersionInfo::IsNightly() || VersionInfo::Is64Bit()) {
-        m_appname += _T(")");
-    }
-
 #ifdef MPCHC_LITE
-    m_appname += _T(" Lite");
+    m_appname += _T(" (Lite)");
 #endif
-
-    // Build the path to Authors.txt
-    m_AuthorsPath = PathUtils::CombinePaths(PathUtils::GetProgramPath(), _T("Authors.txt"));
-    // Check if the file exists
-    if (PathUtils::Exists(m_AuthorsPath)) {
-        // If it does, we make the filename clickable
-        m_credits.Replace(_T("Authors.txt"), _T("<a>Authors.txt</a>"));
-    }
+#ifdef _DEBUG
+    m_appname += _T(" (Debug)");
+#endif
 
     m_homepage.Format(_T("<a>%s</a>"), WEBSITE_URL);
 
+    CString copyright;
+    copyright.Format(ResStr(IDS_ABOUT_COPYRIGHT), ResStr(IDS_ABOUT_COPYRIGHT_YEAR).GetString());
+    SetDlgItemText(IDC_AUTHORS_LINK, copyright);
+
     m_strBuildNumber = VersionInfo::GetFullVersionString();
-
-#if defined(__INTEL_COMPILER)
-#if (__INTEL_COMPILER >= 1210)
-    m_MPCCompiler = _T("ICL ") MAKE_STR(__INTEL_COMPILER) _T(" Build ") MAKE_STR(__INTEL_COMPILER_BUILD_DATE);
-#else
-#error Compiler is not supported!
-#endif
-#elif defined(_MSC_VER)
-#if (_MSC_VER >= 1910)
-    m_MPCCompiler.Format(_T("MSVC v%.2d.%.2d.%.5d"), _MSC_VER / 100, _MSC_VER % 100, _MSC_FULL_VER % 100000);
-#if _MSC_BUILD
-    m_MPCCompiler.AppendFormat(_T(".%.2d"), _MSC_BUILD);
-#endif
-#elif (_MSC_VER == 1900)                // 2015
-#if (_MSC_FULL_VER >= 190024210 && _MSC_FULL_VER <= 190024218)
-    m_MPCCompiler = _T("MSVC 2015 Update 3");
-#elif (_MSC_FULL_VER == 190023918)
-    m_MPCCompiler = _T("MSVC 2015 Update 2");
-#elif (_MSC_FULL_VER == 190023506)
-    m_MPCCompiler = _T("MSVC 2015 Update 1");
-#elif (_MSC_FULL_VER == 190023026)
-    m_MPCCompiler = _T("MSVC 2015");
-#else
-    m_MPCCompiler.Format(_T("MSVC v%.2d.%.2d.%.5d"), _MSC_VER / 100, _MSC_VER % 100, _MSC_FULL_VER % 100000);
-#if _MSC_BUILD
-    m_MPCCompiler.AppendFormat(_T(".%.2d"), _MSC_BUILD);
-#endif
-#endif
-#elif (_MSC_VER <= 1800)
-#error Compiler is not supported!
-#endif
-#else
-#error Please add support for your compiler
-#endif
-
-#if (__AVX2__)
-    m_MPCCompiler += _T(" (AVX2)");
-#elif (__AVX__)
-    m_MPCCompiler += _T(" (AVX)");
-#elif (__SSSE3__)
-    m_MPCCompiler += _T(" (SSSE3)");
-#elif (__SSE3__)
-    m_MPCCompiler += _T(" (SSE3)");
-#elif !defined(_M_X64) && defined(_M_IX86_FP)
-#if (_M_IX86_FP == 2)   // /arch:SSE2 was used
-    m_MPCCompiler += _T(" (SSE2)");
-#elif (_M_IX86_FP == 1) // /arch:SSE was used
-    m_MPCCompiler += _T(" (SSE)");
-#endif
-#endif
-
-#ifdef _DEBUG
-    m_MPCCompiler += _T(" Debug");
-#endif
 
     m_LAVFilters.Format(IDS_STRING_COLON, _T("LAV Filters"));
 #ifndef MPCHC_LITE
@@ -157,14 +95,113 @@ BOOL CAboutDlg::OnInitDialog()
     GetVersionEx(reinterpret_cast<LPOSVERSIONINFO>(&osVersion));
 #pragma warning(pop)
 
-    m_OSName.Format(_T("Windows NT %1u.%1u (build %u"),
-                    osVersion.dwMajorVersion, osVersion.dwMinorVersion, osVersion.dwBuildNumber);
-    if (osVersion.szCSDVersion[0]) {
-        m_OSName.AppendFormat(_T(", %s)"), osVersion.szCSDVersion);
+    if (osVersion.dwMajorVersion == 10 && osVersion.dwMinorVersion == 0) {
+        if (IsWindowsServer()) {
+            if (osVersion.dwBuildNumber > 26100) {
+                m_OSName = _T("Windows Server");
+            } else if (osVersion.dwBuildNumber == 26100) {
+                m_OSName = _T("Windows Server 2025");
+            } else if (osVersion.dwBuildNumber >= 20348) {
+                m_OSName = _T("Windows Server 2022");
+            } else if (osVersion.dwBuildNumber >= 19042) {
+                m_OSName = _T("Windows Server, version 20H2");
+            } else if (osVersion.dwBuildNumber >= 19041) {
+                m_OSName = _T("Windows Server, version 2004");
+            } else if (osVersion.dwBuildNumber >= 18363) {
+                m_OSName = _T("Windows Server, version 1909");
+            } else if (osVersion.dwBuildNumber >= 18362) {
+                m_OSName = _T("Windows Server, version 1903");
+            } else if (osVersion.dwBuildNumber >= 17763) {
+                m_OSName = _T("Windows Server 2019");
+            } else {
+                m_OSName = _T("Windows Server 2016");
+            }
+        } else {
+            if (osVersion.dwBuildNumber > 28000) {
+                m_OSName = _T("Windows 11");
+            } else if (osVersion.dwBuildNumber == 28000) {
+                m_OSName = _T("Windows 11 (Build 26H1)");
+            } else if (osVersion.dwBuildNumber == 26200) {
+                m_OSName = _T("Windows 11 (Build 25H2)");
+            } else if (osVersion.dwBuildNumber == 26100) {
+                m_OSName = _T("Windows 11 (Build 24H2)");
+            } else if (osVersion.dwBuildNumber == 22631) {
+                m_OSName = _T("Windows 11 (Build 23H2)");
+            } else if (osVersion.dwBuildNumber == 22621) {
+                m_OSName = _T("Windows 11 (Build 22H2)");
+            } else if (osVersion.dwBuildNumber == 22000) {
+                m_OSName = _T("Windows 11 (Build 21H2)");
+            } else if (osVersion.dwBuildNumber >= 20000) {
+                m_OSName = _T("Windows 11");
+            } else if (osVersion.dwBuildNumber >= 19046) {
+                m_OSName = _T("Windows 10");
+            } else if (osVersion.dwBuildNumber == 19045) {
+                m_OSName = _T("Windows 10 (Build 22H2)");
+            } else if (osVersion.dwBuildNumber == 19044) {
+                m_OSName = _T("Windows 10 (Build 21H2)");
+            } else if (osVersion.dwBuildNumber == 19043) {
+                m_OSName = _T("Windows 10 (Build 21H1)");
+            } else if (osVersion.dwBuildNumber == 19042) {
+                m_OSName = _T("Windows 10 (Build 20H2)");
+            } else if (osVersion.dwBuildNumber == 19041) {
+                m_OSName = _T("Windows 10 (Build 2004)");
+            } else if (osVersion.dwBuildNumber >= 18363) {
+                m_OSName = _T("Windows 10 (Build 1909)");
+            } else if (osVersion.dwBuildNumber == 18362) {
+                m_OSName = _T("Windows 10 (Build 1903)");
+            } else if (osVersion.dwBuildNumber >= 17763) {
+                m_OSName = _T("Windows 10 (Build 1809)");
+            } else if (osVersion.dwBuildNumber >= 17134) {
+                m_OSName = _T("Windows 10 (Build 1803)");
+            } else if (osVersion.dwBuildNumber >= 16299) {
+                m_OSName = _T("Windows 10 (Build 1709)");
+            } else if (osVersion.dwBuildNumber >= 15063) {
+                m_OSName = _T("Windows 10 (Build 1703)");
+            } else if (osVersion.dwBuildNumber >= 14393) {
+                m_OSName = _T("Windows 10 (Build 1607)");
+            } else if (osVersion.dwBuildNumber >= 10586) {
+                m_OSName = _T("Windows 10 (Build 1511)");
+            } else if (osVersion.dwBuildNumber >= 10240) {
+                m_OSName = _T("Windows 10 (Build 1507)");
+            } else {
+                m_OSName = _T("Windows 10");
+            }
+        }
+    } else if (osVersion.dwMajorVersion == 6 && osVersion.dwMinorVersion == 3) {
+        if (IsWindowsServer()) {
+            m_OSName = _T("Windows Server 2012 R2");
+        } else {
+            m_OSName = _T("Windows 8.1");
+        }
+    } else if (osVersion.dwMajorVersion == 6 && osVersion.dwMinorVersion == 2) {
+        if (IsWindowsServer()) {
+            m_OSName = _T("Windows Server 2012");
+        } else {
+            m_OSName = _T("Windows 8");
+        }
+    } else if (osVersion.dwMajorVersion == 6 && osVersion.dwMinorVersion == 1) {
+        if (IsWindowsServer()) {
+            m_OSName = _T("Windows Server 2008 R2");
+        } else {
+            m_OSName = _T("Windows 7");
+        }
+    } else if (osVersion.dwMajorVersion == 6 && osVersion.dwMinorVersion == 0) {
+        if (IsWindowsServer()) {
+            m_OSName = _T("Windows Server 2008");
+        } else {
+            m_OSName = _T("Windows Vista");
+        }
     } else {
-        m_OSName += _T(")");
+        if (IsWindowsServer()) {
+            m_OSName = _T("Windows Server");
+        } else {
+            m_OSName = _T("Windows NT");
+        }
     }
-    m_OSVersion.Format(_T("%1u.%1u"), osVersion.dwMajorVersion, osVersion.dwMinorVersion);
+    if (osVersion.dwMajorVersion == 6 && osVersion.dwMinorVersion < 2 && osVersion.szCSDVersion[0]) {
+        m_OSName.AppendFormat(_T(" (%s)"), osVersion.szCSDVersion);
+    }
+    m_OSVersion.Format(_T("%1u.%1u.%u"), osVersion.dwMajorVersion, osVersion.dwMinorVersion, osVersion.dwBuildNumber);
 
 #if !defined(_WIN64)
     // 32-bit programs run on both 32-bit and 64-bit Windows
@@ -179,6 +216,7 @@ BOOL CAboutDlg::OnInitDialog()
     UpdateData(FALSE);
 
     GetDlgItem(IDOK)->SetFocus();
+    fulfillThemeReqs();
 
     return FALSE;
 }
@@ -190,10 +228,8 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
     //}}AFX_DATA_MAP
     DDX_Control(pDX, IDR_MAINFRAME, m_icon);
     DDX_Text(pDX, IDC_STATIC1, m_appname);
-    DDX_Text(pDX, IDC_AUTHORS_LINK, m_credits);
     DDX_Text(pDX, IDC_HOMEPAGE_LINK, m_homepage);
     DDX_Text(pDX, IDC_VERSION, m_strBuildNumber);
-    DDX_Text(pDX, IDC_MPC_COMPILER, m_MPCCompiler);
     DDX_Text(pDX, IDC_STATIC5, m_LAVFilters);
 #ifndef MPCHC_LITE
     DDX_Text(pDX, IDC_LAVFILTERS_VERSION, m_LAVFiltersVersion);
@@ -203,12 +239,11 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_STATIC4, m_OSVersion);
 }
 
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
+BEGIN_MESSAGE_MAP(CAboutDlg, CMPCThemeDialog)
     //{{AFX_MSG_MAP(CAboutDlg)
     // No message handlers
     //}}AFX_MSG_MAP
     ON_NOTIFY(NM_CLICK, IDC_HOMEPAGE_LINK, OnHomepage)
-    ON_NOTIFY(NM_CLICK, IDC_AUTHORS_LINK, OnAuthors)
     ON_BN_CLICKED(IDC_BUTTON1, OnCopyToClipboard)
 END_MESSAGE_MAP()
 
@@ -218,19 +253,14 @@ void CAboutDlg::OnHomepage(NMHDR* pNMHDR, LRESULT* pResult)
     *pResult = 0;
 }
 
-void CAboutDlg::OnAuthors(NMHDR* pNMHDR, LRESULT* pResult)
-{
-    ShellExecute(m_hWnd, _T("open"), m_AuthorsPath, nullptr, nullptr, SW_SHOWDEFAULT);
-    *pResult = 0;
-}
-
 void CAboutDlg::OnCopyToClipboard()
 {
+    auto &s = AfxGetAppSettings();
+
     CStringW info = m_appname + _T("\r\n");
     info += CString(_T('-'), m_appname.GetLength()) + _T("\r\n\r\n");
     info += _T("Build information:\r\n");
     info += _T("    Version:            ") + m_strBuildNumber + _T("\r\n");
-    info += _T("    Compiler:           ") + m_MPCCompiler + _T("\r\n");
     info += _T("    Build date:         ") + m_buildDate + _T("\r\n\r\n");
 #ifndef MPCHC_LITE
     info += _T("LAV Filters:\r\n");
@@ -258,52 +288,62 @@ void CAboutDlg::OnCopyToClipboard()
         }
     }
 
-    const WinapiFunc<decltype(Direct3DCreate9)> fnDirect3DCreate9 = { _T("d3d9.dll"), "Direct3DCreate9" };
-    CComPtr<IDirect3D9> pD3D9;
-    if (fnDirect3DCreate9 && (pD3D9 = fnDirect3DCreate9(D3D_SDK_VERSION))) {
-        for (UINT adapter = 0, adapterCount = pD3D9->GetAdapterCount(); adapter < adapterCount; adapter++) {
-            D3DADAPTER_IDENTIFIER9 adapterIdentifier;
-            if (pD3D9->GetAdapterIdentifier(adapter, 0, &adapterIdentifier) == D3D_OK) {
-                CString deviceName = adapterIdentifier.Description;
-                deviceName.Trim();
-
-                if (adapterCount > 1) {
-                    info.AppendFormat(_T("    GPU%u:               %s"), adapter + 1, deviceName.GetString());
-                } else {
-                    info.AppendFormat(_T("    GPU:                %s"), deviceName.GetString());
-                }
-                if (adapterIdentifier.DriverVersion.QuadPart) {
-                    info.AppendFormat(_T(" (driver version: %s)"),
-                                      FileVersionInfo::FormatVersionString(adapterIdentifier.DriverVersion.LowPart, adapterIdentifier.DriverVersion.HighPart).GetString());
-                }
-                info += _T("\r\n");
-            }
+    GPUDetect gpuinfo = GPUDetect(false);
+    if (gpuinfo.GetCount() > 0) {
+        info.AppendFormat(_T("    GPU:                %s [%s]"), gpuinfo.gpu1.description.GetString(), gpuinfo.GetGPUID1().GetString());
+        if (gpuinfo.gpu1.UMDVersion.QuadPart) {
+            info.AppendFormat(_T(" [driver: %s]"), gpuinfo.gpu1.GetDriverVersionString().GetString());
         }
+        info += _T("\r\n");
+    }
+    if (gpuinfo.GetCount() > 1) {
+        info.AppendFormat(_T("    GPU2:               %s [%s]"), gpuinfo.gpu2.description.GetString(), gpuinfo.GetGPUID2().GetString());
+        if (gpuinfo.gpu2.UMDVersion.QuadPart) {
+            info.AppendFormat(_T(" [driver: %s]"), gpuinfo.gpu2.GetDriverVersionString().GetString());
+        }
+        info += _T("\r\n");
     }
 
-    // Allocate a global memory object for the text
-    int len = info.GetLength() + 1;
-    HGLOBAL hGlob = GlobalAlloc(GMEM_MOVEABLE, len * sizeof(WCHAR));
-    if (hGlob) {
-        // Lock the handle and copy the text to the buffer
-        LPVOID pData = GlobalLock(hGlob);
-        if (pData) {
-            wcscpy_s((WCHAR*)pData, len, (LPCWSTR)info);
-            GlobalUnlock(hGlob);
+    CMonitors monitors;
 
-            if (GetParent()->OpenClipboard()) {
-                // Place the handle on the clipboard, if the call succeeds
-                // the system will take care of the allocated memory
-                if (::EmptyClipboard() && ::SetClipboardData(CF_UNICODETEXT, hGlob)) {
-                    hGlob = nullptr;
-                }
+    CStringW currentMonitorName;
+    monitors.GetNearestMonitor(AfxGetMainWnd()).GetName(currentMonitorName);
 
-                ::CloseClipboard();
+    CMonitor fullscreenMonitor = monitors.GetMonitor(s.strFullScreenMonitorID, s.strFullScreenMonitorDeviceName);
+
+    for (int i = 0; i < monitors.GetCount(); i++) {
+        CMonitor monitor = monitors.GetMonitor(i);
+
+        if (monitor.IsMonitor()) {
+            CStringW displayName, deviceName;
+            monitor.GetNames(displayName, deviceName);
+            CStringW str = displayName;
+
+            if (!deviceName.IsEmpty()) {
+                str.Append(L" - " + deviceName);
             }
-        }
 
-        if (hGlob) {
-            GlobalFree(hGlob);
+            int bpp = monitor.GetBitsPerPixel();
+            CRect mr;
+            monitor.GetMonitorRect(mr);
+            int dpi = DpiHelper::GetDPIForMonitor(monitor);
+            CString dpis;
+            if (dpi > 0) {
+                dpis.Format(L" %i DPI", dpi);
+            }
+            str.AppendFormat(L" [%ix%i %i-bit%s]", mr.Width(), mr.Height(), bpp, dpis.GetString());
+            if (displayName == currentMonitorName) {
+                str.AppendFormat(L" - [%s]", ResStr(IDS_FULLSCREENMONITOR_CURRENT).GetString());
+            }
+            info.AppendFormat(L"    Monitor:            %s\r\n", str.GetString());
         }
     }
+    info += _T("\r\nText:\r\n");
+    double textScaleFactor = DpiHelper::GetTextScaleFactor();
+    info.AppendFormat(L"    Scale Factor:       %f\r\n", textScaleFactor);
+    int cp = GetACP();
+    info.AppendFormat(L"    Ansi Codepage:      %i\r\n", cp);
+
+    CClipboard clipboard(this);
+    VERIFY(clipboard.SetText(info));
 }

@@ -30,7 +30,7 @@
 
 //IMPLEMENT_DYNAMIC(CMediaTypesDlg, CResizableDialog)
 CMediaTypesDlg::CMediaTypesDlg(IGraphBuilderDeadEnd* pGBDE, CWnd* pParent /*=nullptr*/)
-    : CResizableDialog(CMediaTypesDlg::IDD, pParent)
+    : CMPCThemeResizableDialog(CMediaTypesDlg::IDD, pParent)
     , m_pGBDE(pGBDE)
     , m_type(UNKNOWN)
     , m_subtype(GUID_NULL)
@@ -75,8 +75,9 @@ void CMediaTypesDlg::AddMediaType(const AM_MEDIA_TYPE* pmt)
     }
 }
 
-BEGIN_MESSAGE_MAP(CMediaTypesDlg, CResizableDialog)
+BEGIN_MESSAGE_MAP(CMediaTypesDlg, CMPCThemeResizableDialog)
     ON_CBN_SELCHANGE(IDC_COMBO1, OnCbnSelchangeCombo1)
+    ON_MESSAGE(WM_EXTERNALCLOSE, OnExternalClose)
 END_MESSAGE_MAP()
 
 
@@ -106,6 +107,9 @@ BOOL CMediaTypesDlg::OnInitDialog()
     AddAnchor(IDOK, BOTTOM_RIGHT);
 
     SetMinTrackSize(CSize(300, 200));
+    fulfillThemeReqs();
+
+    //DWORD threadID = GetWindowThreadProcessId(m_hWnd,nullptr);
 
     return TRUE;  // return TRUE unless you set the focus to a control
     // EXCEPTION: OCX Property Pages should return FALSE
@@ -146,4 +150,9 @@ void CMediaTypesDlg::OnCbnSelchangeCombo1()
     }
 
     m_report.SetSel(0, 0);
+}
+
+LRESULT CMediaTypesDlg::OnExternalClose(WPARAM wParam, LPARAM lParam) {
+    EndDialog(IDCANCEL);
+    return LRESULT();
 }

@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2016 see Authors.txt
+ * (C) 2006-2017 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -22,18 +22,41 @@
 #pragma once
 
 #include <afxcoll.h>
-#include "PlayerBar.h"
+#include <unordered_map>
+#include <vector>
+#include "CMPCThemePlayerBar.h"
 #include "PlayerListCtrl.h"
 #include "Playlist.h"
 #include "DropTarget.h"
 #include "../Subtitles/TextFile.h"
+#include "YoutubeDL.h"
+#include "AppSettings.h"
+#include "CMPCThemeInlineEdit.h"
 
 
 class OpenMediaData;
 
 class CMainFrame;
 
-class CPlayerPlaylistBar : public CPlayerBar, public CDropClient
+// Thin container window that provides WS_EX_CLIENTEDGE border drawing and
+// forwards child-originated messages to its own parent (the playlist bar).
+class CPlaylistListFrame : public CWnd
+{
+protected:
+    afx_msg void OnNcPaint();
+    LRESULT WindowProc(UINT message, WPARAM wParam, LPARAM lParam) override;
+    DECLARE_MESSAGE_MAP()
+};
+
+struct CueTrackMeta {
+    CString title;
+    CString performer;
+    int fileID = 0;
+    int trackID = 0;
+    REFERENCE_TIME time = 0;
+};
+
+class CPlayerPlaylistBar : public CMPCThemePlayerBar, public CDropClient
 {
     DECLARE_DYNAMIC(CPlayerPlaylistBar)
 
@@ -41,36 +64,62 @@ private:
     enum { COL_NAME, COL_TIME };
 
     CMainFrame* m_pMainFrame;
+    int inlineEditXpos;
+    CMPCThemeInlineEdit m_edit;
 
     CFont m_font;
     void ScaleFont();
 
     CImageList m_fakeImageList;
+    CPlaylistListFrame m_listFrame;
     CPlayerListCtrl m_list;
 
-    int m_itemHeight = 0;
+    int m_initialWindowDPI = 0;
+    bool createdWindow;
+    CPlaylistIDs m_ExternalPlayListFNCopy;
+    void ExternalPlayListLoaded(CStringW fn);
+
     EventClient m_eventc;
     void EventCallback(MpcEvent ev);
 
     int m_nTimeColWidth;
     void ResizeListColumn();
+    void RefreshItem(POSITION pos);
+    void RemoveItemAt(int index);
 
+    CPlaylistItem* GetCur();
+
+    void AddItem(CString fn, bool insertAtCurrent = false);
     void AddItem(CString fn, CAtlList<CString>* subs);
-    void AddItem(CAtlList<CString>& fns, CAtlList<CString>* subs);
-    void ParsePlayList(CString fn, CAtlList<CString>* subs);
-    void ParsePlayList(CAtlList<CString>& fns, CAtlList<CString>* subs);
+    void AddItem(CAtlList<CString>& fns, CAtlList<CString>* subs = nullptr, CString label = _T(""), CString ydl_src = _T(""), CString ydl_ua = _T(""), CString cue = _T(""), CAtlList<CYoutubeDLInstance::YDLSubInfo>* ydl_subs = nullptr);
+    bool AddItemNoDuplicate(CString fn, bool insertAtCurrent = false);
+    bool AddFromFilemask(CString mask, bool recurse_dirs, bool insertAtCurrent = false);
+    bool AddItemsInFolder(CString folder, bool insertAtCurrent = false);
+    void ParsePlayList(CString fn, CAtlList<CString>* subs, int redir_count = 0);
+    void ParsePlayList(CAtlList<CString>& fns, CAtlList<CString>* subs, int redir_count = 0, CString label = _T(""), CString ydl_src = _T(""), CString ydl_ua = _T(""), CString cue = _T(""), CAtlList<CYoutubeDLInstance::YDLSubInfo>* ydl_subs = nullptr);
     void ResolveLinkFiles(CAtlList<CString>& fns);
 
     bool ParseBDMVPlayList(CString fn);
 
+    bool PlaylistCanStripPath(CString path);
     bool ParseMPCPlayList(CString fn);
-    bool SaveMPCPlayList(CString fn, CTextFile::enc e, bool fRemovePath);
-
+    bool SaveMPCPlayList(CString fn, CTextFile::enc e);
+    bool ParseM3UPlayList(CString fn, bool* lav_fallback);
+    bool ParseCUESheet(CString fn);
+    
     void SetupList();
+    void SyncSelectionToPos(POSITION pos);
     void UpdateList();
     void EnsureVisible(POSITION pos);
+    bool ListHasGeometry() const;
+    bool m_bScrollToCurrentPending = false; // a scroll was deferred while the bar had no geometry
     int FindItem(const POSITION pos) const;
     POSITION FindPos(int i);
+    void RebuildPosMap();
+    void InvalidatePlayingItem(POSITION oldPos, POSITION newPos);
+    std::unordered_map<POSITION, int> m_posToIndex;
+    std::vector<POSITION> m_indexToPos;
+    POSITION m_insertingPos;
 
     CImageList* m_pDragImage;
     BOOL m_bDragging;
@@ -85,6 +134,13 @@ private:
     void OnDropFiles(CAtlList<CString>& slFiles, DROPEFFECT) override;
     DROPEFFECT OnDropAccept(COleDataObject*, DWORD, CPoint) override;
 
+    CString m_playListPath;
+
+    ULONGLONG m_tcLastSave;
+    bool m_SaveDelayed;
+
+    CCritSec m_plEditLock;
+
 public:
     CPlayerPlaylistBar(CMainFrame* pMainFrame);
     virtual ~CPlayerPlaylistBar();
@@ -97,42 +153,55 @@ public:
     virtual void SaveState();
 
     bool IsHiddenDueToFullscreen() const;
-    void SetHiddenDueToFullscreen(bool bHidenDueToFullscreen);
+    void SetHiddenDueToFullscreen(bool bHidenDueToFullscreen, bool returningFromFullScreen = false );
+
+    void LoadDuration(POSITION pos);
 
     CPlaylist m_pl;
 
     INT_PTR GetCount() const;
+    int GetValidCount() const;
     int GetSelIdx() const;
     void SetSelIdx(int i);
     bool IsAtEnd();
-    bool GetCur(CPlaylistItem& pli) const;
-    CPlaylistItem* GetCur();
-    CString GetCurFileName();
+    bool GetCur(CPlaylistItem& pli, bool check_fns = false);
+    CString GetCurFileName(bool use_ydl_source = false);
+    CString GetCurFileNameTitle();
     bool SetNext();
     bool SetPrev();
     void SetFirstSelected();
     void SetFirst();
     void SetLast();
+    void EnsureCurrentVisible();
     void SetCurValid(bool fValid);
+    void SetCurLabel(CString label);
     void SetCurTime(REFERENCE_TIME rt);
     void Randomize();
+    void SortByPathFrom(int startIndex);
+    void UpdateLabel(CString in);
 
     void Refresh();
+    void PlayListChanged();
     bool Empty();
 
-    void Open(CAtlList<CString>& fns, bool fMulti, CAtlList<CString>* subs = nullptr);
-    void Append(CAtlList<CString>& fns, bool fMulti, CAtlList<CString>* subs = nullptr);
+    void Open(CAtlList<CString>& fns, bool fMulti, CAtlList<CString>* subs = nullptr, CString label = _T(""), CString ydl_src = _T(""), CString ydl_ua = _T(""), CString cue = _T(""));
+    void Append(CAtlList<CString>& fns, bool fMulti, CAtlList<CString>* subs = nullptr, CString label = _T(""), CString ydl_src = _T(""), CString ydl_ua = _T(""), CString cue = _T(""), CAtlList<CYoutubeDLInstance::YDLSubInfo>* ydl_subs = nullptr);
+    void ReplaceCurrentItem(CAtlList<CString>& fns, CAtlList<CString>* subs = nullptr, CString label = _T(""), CString ydl_src = _T(""), CString ydl_ua = _T(""), CString cue = _T(""), CAtlList<CYoutubeDLInstance::YDLSubInfo>* ydl_subs = nullptr);
+    void AddSubtitleToCurrent(CString fn);
 
+    void OpenDVD(CString fn);
     void Open(CStringW vdn, CStringW adn, int vinput, int vchannel, int ainput);
     void Append(CStringW vdn, CStringW adn, int vinput, int vchannel, int ainput);
 
-    OpenMediaData* GetCurOMD(REFERENCE_TIME rtStart = 0);
+    OpenMediaData* GetCurOMD(REFERENCE_TIME rtStart = 0, ABRepeat abRepeat = ABRepeat());
 
     void LoadPlaylist(LPCTSTR filename);
-    void SavePlaylist();
+    void SavePlaylist(bool can_delay = false);
 
     bool SelectFileInPlaylist(LPCTSTR filename);
     bool DeleteFileInPlaylist(POSITION pos, bool recycle = true);
+    bool IsExternalPlayListActive(CStringW& playlistPath);
+    void ClearExternalPlaylistIfInvalid();
 
 protected:
     virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
@@ -156,7 +225,10 @@ public:
     afx_msg BOOL OnToolTipNotify(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     afx_msg void OnContextMenu(CWnd* /*pWnd*/, CPoint point);
+    afx_msg void OnLvnGetDispInfoList(NMHDR* pNMHDR, LRESULT* pResult);
+    afx_msg void OnLvnBeginlabeleditList(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnLvnEndlabeleditList(NMHDR* pNMHDR, LRESULT* pResult);
+    afx_msg void OnLvnFinditem(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnXButtonDown(UINT nFlags, UINT nButton, CPoint point);
     afx_msg void OnXButtonUp(UINT nFlags, UINT nButton, CPoint point);
     afx_msg void OnXButtonDblClk(UINT nFlags, UINT nButton, CPoint point);

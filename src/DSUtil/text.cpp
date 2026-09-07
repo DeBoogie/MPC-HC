@@ -22,6 +22,7 @@
 #include "stdafx.h"
 #include <atlutil.h>
 #include "text.h"
+#include <memory>
 
 DWORD CharSetToCodePage(DWORD dwCharSet)
 {
@@ -120,6 +121,154 @@ CStringA UrlDecode(const CStringA& strIn)
     strOut.ReleaseBuffer(dwStrLen);
 
     return strOut;
+}
+
+CStringW UrlDecodeWithUTF8(CStringW in, bool keepEncodedSpecialChar) {
+    TCHAR t[100];
+    DWORD bufSize = _countof(t);
+    CString tem(in);
+    tem.Replace(_T("+"), _T(" ")); //UrlUnescape does not deal with '+' properly
+    if (keepEncodedSpecialChar) {
+        tem.Replace(_T("%25"), _T("%2525"));  // %
+        tem.Replace(_T("%3A"), _T("%253A"));
+        tem.Replace(_T("%3a"), _T("%253A"));
+        tem.Replace(_T("%2F"), _T("%252F"));
+        tem.Replace(_T("%2f"), _T("%252F"));
+        tem.Replace(_T("%3F"), _T("%253F"));
+        tem.Replace(_T("%3f"), _T("%253F"));
+        tem.Replace(_T("%23"), _T("%2523"));
+        tem.Replace(_T("%5B"), _T("%255B"));
+        tem.Replace(_T("%5b"), _T("%255B"));
+        tem.Replace(_T("%5D"), _T("%255D"));
+        tem.Replace(_T("%5d"), _T("%255D"));
+        tem.Replace(_T("%40"), _T("%2540"));
+        tem.Replace(_T("%21"), _T("%2521"));
+        tem.Replace(_T("%24"), _T("%2524"));
+        tem.Replace(_T("%26"), _T("%2526"));
+        tem.Replace(_T("%27"), _T("%2527"));
+        tem.Replace(_T("%28"), _T("%2528"));
+        tem.Replace(_T("%29"), _T("%2529"));
+        tem.Replace(_T("%2A"), _T("%252A"));
+        tem.Replace(_T("%2a"), _T("%252A"));
+        tem.Replace(_T("%2B"), _T("%252B"));
+        tem.Replace(_T("%2b"), _T("%252B"));
+        tem.Replace(_T("%2C"), _T("%252C"));
+        tem.Replace(_T("%2c"), _T("%252C"));
+        tem.Replace(_T("%3B"), _T("%253B"));
+        tem.Replace(_T("%3b"), _T("%253B"));
+        tem.Replace(_T("%3D"), _T("%253D"));
+        tem.Replace(_T("%3d"), _T("%253D"));
+        tem.Replace(_T("%20"), _T("%2520"));
+    }
+    HRESULT result = UrlUnescape(tem.GetBuffer(), t, &bufSize, URL_ESCAPE_AS_UTF8); //URL_ESCAPE_AS_UTF8 will work as URL_UNESCAPE_AS_UTF8 on windows 8+, otherwise it will just ignore utf-8
+
+    if (result == E_POINTER) {
+        std::shared_ptr<TCHAR[]> buffer(new TCHAR[bufSize]);
+        if (S_OK == UrlUnescape(tem.GetBuffer(), buffer.get(), &bufSize, URL_ESCAPE_AS_UTF8)) {
+            CString urlDecoded(buffer.get());
+            return urlDecoded;
+        }
+    }
+    else {
+        CString urlDecoded(t);
+        return urlDecoded;
+    }
+    return in;
+}
+
+CStringW URLGetHostName(const CStringW in) {
+    CStringW t(in);
+    if (t.Find(_T("://")) > 1) {
+        t = t.Mid(t.Find(_T("://")) + 3);
+    }
+    if (t.Left(4) == _T("www.")) {
+        t = t.Mid(4);
+    }
+    if (t.Find(_T("/")) > 0) {
+        t = t.Left(t.Find(_T("/")));
+    }
+    return UrlDecodeWithUTF8(t);
+}
+
+CStringW ShortenURL(const CStringW url, int targetLength, bool returnHostnameIfTooLong) {
+    CStringW t(url);
+    if (t.Find(_T("://")) > 1) {
+        t = t.Mid(t.Find(_T("://")) + 3);
+    }
+    if (t.Left(4) == _T("www.")) {
+        t = t.Mid(4);
+    }
+    while (t.GetLength() > targetLength) {
+        int position = t.ReverseFind('#');
+        if (position > 0) {
+            t = t.Left(position);
+            continue;
+        }
+        position = t.ReverseFind('&');
+        if (position > 0) {
+            t = t.Left(position);
+            continue;
+        }
+        position = t.ReverseFind('?');
+        if (position > 0) {
+            t = t.Left(position);
+            break;
+        }
+        break;
+    }
+    t = UrlDecodeWithUTF8(t);
+    if (t.GetLength() > targetLength && returnHostnameIfTooLong) return URLGetHostName(url);
+    return t;
+}
+
+static CStringW SanitizeMenuLabelPart(const CStringW& text, int maxChars)
+{
+    CStringW label;
+    for (int i = 0; i < text.GetLength(); i++) {
+        const wchar_t c = text[i];
+        // A tab starts the right-aligned accelerator column of a menu item, so
+        // a label carrying one would render as two columns; nothing else below
+        // the space is printable there either.
+        label += (c < L' ' || c == 0x7F) ? L' ' : c;
+    }
+    label.Trim();
+
+    if (maxChars > 0 && label.GetLength() > maxChars) {
+        int cut = maxChars - 1; // the ellipsis takes the last character
+        if (cut > 0 && label[cut - 1] >= 0xD800 && label[cut - 1] <= 0xDBFF) {
+            cut--; // never leave half of a surrogate pair behind
+        }
+        label = label.Left(cut);
+        label.TrimRight();
+        label += L'\x2026';
+    }
+
+    // last, so that the escaping is not what the length was spent on
+    label.Replace(L"&", L"&&");
+    return label;
+}
+
+CStringW SanitizeMenuLabel(const CStringW& text, int maxChars, bool allowColumn)
+{
+    CStringW label;
+
+    const int tab = allowColumn ? text.Find(L'\t') : -1;
+    if (tab >= 0) {
+        // The caller composed its own right-aligned column, so keep the first
+        // tab, but only that one: the text cannot manufacture a column of its
+        // own. The right half is our own short text, so it is not truncated.
+        label = SanitizeMenuLabelPart(text.Left(tab), maxChars);
+        label += L'\t';
+        label += SanitizeMenuLabelPart(text.Mid(tab + 1), 0);
+    } else {
+        label = SanitizeMenuLabelPart(text, maxChars);
+    }
+
+    if (label.IsEmpty()) {
+        label = L" "; // a zero-length label gives the item nothing to measure
+    }
+
+    return label;
 }
 
 CString ExtractTag(CString tag, CMapStringToString& attribs, bool& fClosing)
@@ -232,4 +381,134 @@ CString FormatNumber(CString szNumber, bool bNoFractionalDigits /*= true*/)
     }
 
     return ret;
+}
+
+void GetLocaleString(LCID lcid, LCTYPE type, CString& output) {
+    int len = GetLocaleInfo(lcid, type, output.GetBuffer(256), 256);
+    output.ReleaseBufferSetLength(std::max(len - 1, 0));
+}
+
+int LastIndexOfCString(const CString& text, const CString& pattern) {
+    int found = -1;
+    int next_pos = 0;
+    while (true) {
+        next_pos = text.Find(pattern, next_pos);
+        if (next_pos > found) {
+            found = next_pos;
+            next_pos = next_pos + pattern.GetLength();
+        } else {
+            return found;
+        }        
+    }
+}
+
+// Remove characters that are illegal in file names, together with the
+// substitutes download tools commonly use when sanitizing them (youtube-dl
+// replaces '/' with '_', deletes '?', expands ':' to " -", turns '"' into
+// '\''). Removing both the originals and the substitutes from both strings
+// lets a title still match its sanitized file name.
+static CString StripIgnoredForNameSimilarity(const CString& str) {
+    CString ret;
+    LPTSTR buf = ret.GetBuffer(str.GetLength());
+    int len = 0;
+    for (int i = 0; i < str.GetLength(); i++) {
+        TCHAR c = str[i];
+        if (c > _T(' ') && !_tcschr(_T("/\\:*?\"<>|_-.'"), c)) {
+            buf[len++] = c;
+        }
+    }
+    ret.ReleaseBufferSetLength(len);
+    return ret;
+}
+
+bool IsNameSimilar(const CString& title, const CString& fileName) {
+    if (fileName.Find(title.Left(25)) > -1) return true;
+
+    // Titles of the form "ReleaseGroup | FileNameWithoutExt" contain the file
+    // name instead of the other way around. Treat those as similar when the
+    // title is not much longer than the file name itself.
+    int dot = fileName.ReverseFind(_T('.'));
+    CString baseName = dot > 0 ? fileName.Left(dot) : fileName;
+    if (baseName.GetLength() >= 10 && title.Find(baseName) > -1
+            && title.GetLength() <= baseName.GetLength() + 25) {
+        return true;
+    }
+
+    CString strippedTitle = StripIgnoredForNameSimilarity(title);
+    if (strippedTitle.GetLength() >= 10) {
+        return StripIgnoredForNameSimilarity(fileName).Find(strippedTitle.Left(25)) > -1;
+    }
+    return false;
+}
+
+CStringW ToUnicode(CStringW str, DWORD CharSet) {
+    CStringW ret;
+    DWORD cp = CharSetToCodePage(CharSet);
+
+    for (int i = 0, j = str.GetLength(); i < j; i++) {
+        WCHAR wc = str.GetAt(i);
+        char c = wc & 0xff;
+
+        if (IsDBCSLeadByteEx(cp, (BYTE)wc)) {
+            i++;
+
+            if (i < j) {
+                char cc[2];
+                cc[0] = c;
+                cc[1] = (char)str.GetAt(i);
+
+                MultiByteToWideChar(cp, 0, cc, 2, &wc, 1);
+            }
+        } else {
+            MultiByteToWideChar(cp, 0, &c, 1, &wc, 1);
+        }
+
+        ret += wc;
+    }
+
+    return ret;
+}
+
+void AppendWithDelimiter(CStringW &output, CStringW append, wchar_t delim) {
+    if (!append.IsEmpty()) {
+        if (!output.IsEmpty()) {
+            output.AppendChar(delim);
+        }
+        output.Append(append);
+    }
+}
+
+bool EndsWith(CStringW str, CStringW suffix) {
+    const int str_len = str.GetLength();
+    const int suffix_len = suffix.GetLength();
+    return str_len >= suffix_len && 0 == str.Right(suffix_len).Compare(suffix);
+}
+
+bool StartsWith(CStringW str, CStringW prefix) {
+    const int str_len = str.GetLength();
+    const int prefix_len = prefix.GetLength();
+    return str_len >= prefix_len && 0 == str.Left(prefix_len).Compare(prefix);
+}
+
+bool EndsWithNoCase(CStringW str, CStringW suffix) {
+    const int str_len = str.GetLength();
+    const int suffix_len = suffix.GetLength();
+    return str_len >= suffix_len && 0 == str.Right(suffix_len).CompareNoCase(suffix);
+}
+
+bool StartsWithNoCase(CStringW str, CStringW prefix) {
+    const int str_len = str.GetLength();
+    const int prefix_len = prefix.GetLength();
+    return str_len >= prefix_len && 0 == str.Left(prefix_len).CompareNoCase(prefix);
+}
+
+CStringW& TrimLeadingUTF16BOM(CStringW& str)
+{
+    if (str.GetLength() >= 2) {
+        int i = 0;
+        while (i++ < 2 && (str.GetAt(0) == 0xFFEF || str.GetAt(0) == 0xFEFF)) {
+            str.Delete(0, 1);
+        }
+    }
+    return str;
 }

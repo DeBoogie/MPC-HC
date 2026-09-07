@@ -23,6 +23,7 @@
 
 #include <atlcoll.h>
 #include <string>
+#include <list>
 
 template<class T, typename SEP>
 T Explode(const T& str, CAtlList<T>& sl, SEP sep, size_t limit = 0)
@@ -37,6 +38,25 @@ T Explode(const T& str, CAtlList<T>& sl, SEP sep, size_t limit = 0)
             break;
         } else {
             sl.AddTail(str.Mid(i, j - i).Trim());
+        }
+    }
+
+    return sl.GetHead();
+}
+
+template<class T, typename SEP>
+T ExplodeNoTrim(const T& str, CAtlList<T>& sl, SEP sep, size_t limit = 0)
+{
+    sl.RemoveAll();
+
+    for (int i = 0, j = 0; ; i = j + 1) {
+        j = str.Find(sep, i);
+
+        if (j < 0 || sl.GetCount() == limit - 1) {
+            sl.AddTail(str.Mid(i));
+            break;
+        } else {
+            sl.AddTail(str.Mid(i, j - i));
         }
     }
 
@@ -93,6 +113,40 @@ T ExplodeEsc(T str, CAtlList<T>& sl, SEP sep, size_t limit = 0, SEP esc = _T('\\
 }
 
 template<class T, typename SEP>
+std::enable_if_t<(std::is_same_v<T, CStringW> || std::is_same_v<T, CStringA>), T>
+ExplodeEsc(T str, std::list<T>& sl, SEP sep, size_t limit = 0, SEP esc = '\\') {
+    sl.clear();
+    if (str.IsEmpty()) {
+        return T();
+    }
+
+    int split = 0;
+    for (int i = 0, j = 0; ; i = j + 1) {
+        j = str.Find(sep, i);
+        if (j < 0) {
+            break;
+        }
+
+        // Skip this separator if it is escaped
+        if (j > 0 && str.GetAt(j - 1) == esc) {
+            // Delete the escape character
+            str.Delete(j - 1);
+            continue;
+        }
+
+        if (sl.size() < limit - 1) {
+            sl.push_back(str.Mid(split, j - split).Trim());
+
+            // Save new splitting position
+            split = j + 1;
+        }
+    }
+    sl.push_back(str.Mid(split).Trim());
+
+    return sl.front();
+}
+
+template<class T, typename SEP>
 T Implode(const CAtlList<T>& sl, SEP sep)
 {
     T ret;
@@ -133,13 +187,46 @@ extern CStringA UrlEncode(const CStringA& strIn);
  */
 extern CStringA EscapeJSONString(const CStringA& str);
 extern CStringA UrlDecode(const CStringA& strIn);
+extern CStringW UrlDecodeWithUTF8(const CStringW in, bool keepEncodedSpecialChar = false);
+extern CStringW URLGetHostName(const CStringW in);
+extern CStringW ShortenURL(const CStringW url, int targetLength = 100, bool returnHostnameIfTooLong = false);
+// How much of an externally supplied name (a track title, a disc label, a
+// channel name, ...) a menu item shows. Long enough for any real name, short
+// enough to bound a pathological one.
+#define MENU_NAME_MAX 256
+// Makes an arbitrary, possibly untrusted string safe to use as the label of a
+// menu item. What it guarantees:
+//   - every '&' is escaped to "&&", so the text cannot silently claim a
+//     mnemonic (or lose a character to one);
+//   - tabs, which would otherwise split the label into a right-aligned
+//     accelerator column, and every other control character are replaced by a
+//     space, and leading and trailing whitespace is dropped;
+//   - the result is at most maxChars characters, truncated with a trailing
+//     ellipsis and never in the middle of a surrogate pair;
+//   - the result is never empty, so a menu item always has something to
+//     measure.
+// The length is counted before the escaping, so the label is as long as it
+// looks. maxChars <= 0 means no truncation, and it defaults to MENU_NAME_MAX.
+// With allowColumn the first tab is kept, so that a caller composing its own
+// right-aligned column keeps it: both halves are sanitized separately, any
+// further tab still becomes a space, and only the left half is truncated.
+extern CStringW SanitizeMenuLabel(const CStringW& text, int maxChars = MENU_NAME_MAX, bool allowColumn = false);
 extern CStringA HtmlSpecialChars(CStringA str, bool bQuotes = false);
 extern CStringA HtmlSpecialCharsDecode(CStringA str);
 extern DWORD CharSetToCodePage(DWORD dwCharSet);
 extern CAtlList<CString>& MakeLower(CAtlList<CString>& sl);
 extern CAtlList<CString>& MakeUpper(CAtlList<CString>& sl);
-
-CString FormatNumber(CString szNumber, bool bNoFractionalDigits = true);
+extern int LastIndexOfCString(const CString& text, const CString& pattern);
+extern bool IsNameSimilar(const CString& title, const CString& fileName);
+extern CStringW ToUnicode(CStringW str, DWORD CharSet);
+extern void AppendWithDelimiter(CStringW& output, CStringW append, wchar_t delim = L' ');
+extern bool EndsWith(CStringW str, CStringW suffix);
+extern bool StartsWith(CStringW str, CStringW prefix);
+extern bool EndsWithNoCase(CStringW str, CStringW suffix);
+extern bool StartsWithNoCase(CStringW str, CStringW prefix);
+extern CString FormatNumber(CString szNumber, bool bNoFractionalDigits = true);
+extern void GetLocaleString(LCID lcid, LCTYPE type, CString& output);
+extern CStringW& TrimLeadingUTF16BOM(CStringW& str);
 
 template<class T>
 T& FastTrimRight(T& str)
@@ -149,7 +236,7 @@ T& FastTrimRight(T& str)
         typename T::PCXSTR szEnd   = szStart + str.GetLength() - 1;
         typename T::PCXSTR szCur   = szEnd;
         for (; szCur >= szStart; szCur--) {
-            if (!T::StrTraits::IsSpace(*szCur)) {
+            if (!T::StrTraits::IsSpace(*szCur) || *szCur == 133) { // allow ellipsis character
                 break;
             }
         }

@@ -26,9 +26,9 @@
 
 // CPnSPresetsDlg dialog
 
-IMPLEMENT_DYNAMIC(CPnSPresetsDlg, CCmdUIDialog)
+IMPLEMENT_DYNAMIC(CPnSPresetsDlg, CDialog)
 CPnSPresetsDlg::CPnSPresetsDlg(CWnd* pParent /*=nullptr*/)
-    : CCmdUIDialog(CPnSPresetsDlg::IDD, pParent)
+    : CMPCThemeResizableDialog(CPnSPresetsDlg::IDD, pParent)
 {
 }
 
@@ -45,6 +45,7 @@ void CPnSPresetsDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_EDIT5, m_ZoomY);
     DDX_Text(pDX, IDC_EDIT1, m_label);
     DDX_Control(pDX, IDC_LIST1, m_list);
+    fulfillThemeReqs();
 }
 
 BOOL CPnSPresetsDlg::OnInitDialog()
@@ -63,6 +64,26 @@ BOOL CPnSPresetsDlg::OnInitDialog()
             OnLbnSelchangeList1();
         }
     }
+
+    AddAnchor(IDC_LIST1, TOP_LEFT, BOTTOM_RIGHT);
+    AddAnchor(IDC_EDIT1, BOTTOM_LEFT, BOTTOM_RIGHT);
+    AddAnchor(IDC_STATIC1, BOTTOM_LEFT, BOTTOM_RIGHT);
+
+    AddAnchor(IDC_EDIT2, TOP_RIGHT);
+    AddAnchor(IDC_EDIT3, TOP_RIGHT);
+    AddAnchor(IDC_EDIT4, TOP_RIGHT);
+    AddAnchor(IDC_EDIT5, TOP_RIGHT);
+    AddAnchor(IDC_STATIC2, TOP_RIGHT);
+    AddAnchor(IDC_STATIC3, TOP_RIGHT);
+
+    AddAnchor(IDC_BUTTON1, BOTTOM_LEFT);
+    AddAnchor(IDC_BUTTON2, BOTTOM_LEFT);
+    AddAnchor(IDC_BUTTON3, BOTTOM_LEFT);
+    AddAnchor(IDC_BUTTON4, BOTTOM_LEFT);
+    AddAnchor(IDC_BUTTON5, BOTTOM_LEFT);
+
+    AddAnchor(IDOK, BOTTOM_RIGHT);
+    AddAnchor(IDCANCEL, BOTTOM_RIGHT);
 
     return TRUE;  // return TRUE unless you set the focus to a control
     // EXCEPTION: OCX Property Pages should return FALSE
@@ -108,7 +129,7 @@ CString CPnSPresetsDlg::ParamsToString(CString label, double PosX, double PosY, 
     return str;
 }
 
-BEGIN_MESSAGE_MAP(CPnSPresetsDlg, CCmdUIDialog)
+BEGIN_MESSAGE_MAP(CPnSPresetsDlg, CMPCThemeResizableDialog)
     ON_LBN_SELCHANGE(IDC_LIST1, OnLbnSelchangeList1)
     ON_BN_CLICKED(IDC_BUTTON2, OnBnClickedButton2)
     ON_UPDATE_COMMAND_UI(IDC_BUTTON2, OnUpdateButton2)
@@ -235,10 +256,10 @@ void CPnSPresetsDlg::OnUpdateButton1(CCmdUI* pCmdUI)
     UpdateData();
     pCmdUI->Enable(m_list.GetCurSel() >= 0
                    && !m_label.IsEmpty() // && m_label.Find(',') < 0
-                   && m_PosX >= 0 && m_PosX <= 1
-                   && m_PosY >= 0 && m_PosY <= 1
-                   && m_ZoomX >= 0.2 && m_ZoomX <= 3.0
-                   && m_ZoomY >= 0.2 && m_ZoomY <= 3.0);
+                   && m_PosX >= -0.5 && m_PosX <= 1.5
+                   && m_PosY >= -0.5 && m_PosY <= 1.5
+                   && m_ZoomX >= 0.2 && m_ZoomX <= 5.0
+                   && m_ZoomY >= 0.2 && m_ZoomY <= 5.0);
 }
 
 void CPnSPresetsDlg::OnOK()

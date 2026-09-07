@@ -21,14 +21,17 @@
 
 #pragma once
 
-#include "PlayerBar.h"
+#include "CMPCThemePlayerBar.h"
 #include "PlayerCaptureDialog.h"
 
 // CPlayerCaptureBar
 
-class CPlayerCaptureBar : public CPlayerBar
+class CPlayerCaptureBar : public CMPCThemePlayerBar
 {
     DECLARE_DYNAMIC(CPlayerCaptureBar)
+
+private:
+    CWnd* m_pParent;
 
 public:
     CPlayerCaptureDialog m_capdlg;
@@ -41,9 +44,13 @@ public:
     virtual void ReloadTranslatableResources();
 
     void InitControls();
+    EventClient m_eventc;
+    void EventCallback(MpcEvent ev);
 
 protected:
     virtual BOOL PreTranslateMessage(MSG* pMsg);
 
     DECLARE_MESSAGE_MAP()
+
+    afx_msg void OnNcLButtonUp(UINT nHitTest, CPoint point);
 };

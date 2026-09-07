@@ -2,20 +2,21 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# Superb, 2013
-# Superb, 2014
+# MPC HC <adiposegithub@gmail.com>, 2020
+# Shimi <shimig998@gmail.com>, 2021
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2016-01-17 21:31:34+0000\n"
-"PO-Revision-Date: 2017-08-13 20:49+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Hebrew (http://www.transifex.com/mpc-hc/mpc-hc/language/he/)\n"
+"POT-Creation-Date: 2023-11-03 23:11:00+0000\n"
+"PO-Revision-Date: 2020-01-02 07:46+0000\n"
+"Last-Translator: Shimi <shimig998@gmail.com>, 2021\n"
+"Language-Team: Hebrew (https://app.transifex.com/mpchc/teams/106126/he/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: he\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: (n % 10 == 0 && n % 1 == 0 && n > 10) ? 2 : 3;\n"
 
 msgctxt "POPUP"
 msgid "&File"
@@ -26,7 +27,7 @@ msgid "&Quick Open File..."
 msgstr "פתיחה מהירה של קובץ..."
 
 msgctxt "ID_FILE_OPENMEDIA"
-msgid "&Open File..."
+msgid "&Open File/URL..."
 msgstr "פתיחת קובץ..."
 
 msgctxt "ID_FILE_OPENDVDBD"
@@ -71,23 +72,23 @@ msgstr "כתוביות"
 
 msgctxt "ID_FILE_SUBTITLES_LOAD"
 msgid "&Load Subtitles..."
-msgstr ""
+msgstr "טען כתוביות..."
 
 msgctxt "ID_FILE_SUBTITLES_SAVE"
 msgid "Save S&ubtitles..."
-msgstr ""
+msgstr "שמור כתוביות..."
 
 msgctxt "ID_FILE_SUBTITLES_DOWNLOAD"
 msgid "&Download Subtitles..."
-msgstr ""
-
-msgctxt "ID_FILE_SUBTITLES_UPLOAD"
-msgid "&Upload Subtitles..."
-msgstr ""
+msgstr "הורד כתוביות..."
 
 msgctxt "ID_FILE_PROPERTIES"
 msgid "P&roperties"
 msgstr "מאפיינים"
+
+msgctxt "ID_FILE_OPEN_LOCATION"
+msgid "Open File &Location"
+msgstr "פתח מיקום קובץ"
 
 msgctxt "ID_FILE_EXIT"
 msgid "E&xit"
@@ -137,10 +138,6 @@ msgctxt "ID_VIEW_NAVIGATION"
 msgid "Na&vigation"
 msgstr "ניווט"
 
-msgctxt "ID_VIEW_DEBUGSHADERS"
-msgid "&Debug Shaders"
-msgstr "ניפוי באגים במצלילים"
-
 msgctxt "POPUP"
 msgid "&Presets..."
 msgstr "מראה מותאם מראש..."
@@ -157,6 +154,10 @@ msgctxt "ID_VIEW_PRESETS_NORMAL"
 msgid "&Normal"
 msgstr "רגיל"
 
+msgctxt "ID_VIEW_PRESETS_CUSTOM"
+msgid "C&ustom"
+msgstr ""
+
 msgctxt "ID_VIEW_FULLSCREEN"
 msgid "F&ull Screen"
 msgstr "מסך מלא"
@@ -164,6 +165,10 @@ msgstr "מסך מלא"
 msgctxt "POPUP"
 msgid "&Zoom"
 msgstr "זום"
+
+msgctxt "ID_VIEW_ZOOM_25"
+msgid "&25%"
+msgstr "25%"
 
 msgctxt "ID_VIEW_ZOOM_50"
 msgid "&50%"
@@ -181,10 +186,6 @@ msgctxt "ID_VIEW_ZOOM_AUTOFIT"
 msgid "Auto &Fit"
 msgstr "התאמה אוטומטית"
 
-msgctxt "ID_VIEW_ZOOM_AUTOFIT_LARGER"
-msgid "Auto Fit (&Larger Only)"
-msgstr "Auto Fit (Larger Only)"
-
 msgctxt "POPUP"
 msgid "R&enderer Settings"
 msgstr "הגדרות מציג וידאו"
@@ -195,15 +196,15 @@ msgstr "בדיקת קריעה"
 
 msgctxt "ID_VIEW_DISPLAY_RENDERER_STATS"
 msgid "&Display Statistics"
-msgstr ""
+msgstr "הצג סטטיסטיקה"
 
 msgctxt "ID_VIEW_OSD_DISPLAY_TIME"
 msgid "Display Current T&ime"
-msgstr ""
+msgstr "הצג זמן נוכחי"
 
 msgctxt "ID_VIEW_OSD_SHOW_FILENAME"
 msgid "Show &File Name"
-msgstr ""
+msgstr "הצג שם קובץ"
 
 msgctxt "POPUP"
 msgid "&Output Range"
@@ -357,17 +358,9 @@ msgctxt "ID_VIEW_FLUSHGPU_WAIT"
 msgid "&Wait for flushes"
 msgstr "המתן לריקון"
 
-msgctxt "POPUP"
-msgid "R&eset"
-msgstr "אפס"
-
 msgctxt "ID_VIEW_RESET_DEFAULT"
 msgid "Reset to &default renderer settings"
 msgstr "אפס להגדרות ברירת מחדל של תצוגה"
-
-msgctxt "ID_VIEW_RESET_OPTIMAL"
-msgid "Reset to &optimal renderer settings"
-msgstr "אפס להגדרות אופטימליות של תצוגה"
 
 msgctxt "POPUP"
 msgid "Video &Frame"
@@ -407,11 +400,11 @@ msgstr "גע בחלון מבחוץ"
 
 msgctxt "POPUP"
 msgid "&Aspect Ratio"
-msgstr ""
+msgstr "יחס גובה-רוחב"
 
 msgctxt "ID_ASPECTRATIO_DAR"
 msgid "&Default (DAR)"
-msgstr ""
+msgstr "ברירת מחדל (DAR)"
 
 msgctxt "ID_ASPECTRATIO_4_3"
 msgid "&4:3"
@@ -435,15 +428,15 @@ msgstr "185:100"
 
 msgctxt "ID_ASPECTRATIO_SAR"
 msgid "Assume &square pixels (SAR)"
-msgstr ""
+msgstr "הנח פיקסלים מרובעים (SAR)"
 
 msgctxt "ID_VIEW_VF_COMPMONDESKARDIFF"
 msgid "&Correct Monitor/Desktop AR Diff"
 msgstr "תקן הפרש יחס גובה-רוחב של מסך/שולחן עבודה"
 
 msgctxt "POPUP"
-msgid "Pa&n && Scan"
-msgstr "הזזה וסריקה"
+msgid "P&nS Frame Adjust"
+msgstr ""
 
 msgctxt "ID_VIEW_INCSIZE"
 msgid "&Increase Size"
@@ -488,6 +481,22 @@ msgstr "הזז למטה"
 msgctxt "ID_PANSCAN_CENTER"
 msgid "Cen&ter"
 msgstr "מרכז"
+
+msgctxt "ID_PANSCAN_ROTATEZM"
+msgid "Rotate Cloc&kwise"
+msgstr "סובב עם כיוון השעון"
+
+msgctxt "ID_PANSCAN_ROTATEZ270"
+msgid "Rotate Counter-Clock&wise"
+msgstr "סובב נגד כיוון השעון"
+
+msgctxt "ID_PANSCAN_ROTATEXM"
+msgid "&Flip Vertically"
+msgstr "היפוך אנכי"
+
+msgctxt "ID_PANSCAN_ROTATEYM"
+msgid "&Mirror"
+msgstr "מראה"
 
 msgctxt "ID_VIEW_RESET"
 msgid "Re&set"
@@ -535,18 +544,106 @@ msgstr "התקדם בפריים"
 
 msgctxt "POPUP"
 msgid "&Repeat"
-msgstr ""
+msgstr "חזרה"
 
 msgctxt "ID_PLAY_REPEAT_FOREVER"
 msgid "F&orever"
-msgstr ""
+msgstr "לנצח"
 
 msgctxt "ID_PLAY_REPEAT_ONEFILE"
 msgid "&File"
-msgstr ""
+msgstr "קובץ"
 
 msgctxt "ID_PLAY_REPEAT_WHOLEPLAYLIST"
 msgid "&Playlist"
+msgstr "רשימת ניגון"
+
+msgctxt "ID_PLAY_REPEAT_AB"
+msgid "A-B (&Reset)"
+msgstr "א-ב (איפוס)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_A"
+msgid "A-B (Mark &A)"
+msgstr "א-ב (סמן א)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_B"
+msgid "A-B (Mark &B)"
+msgstr "א-ב (סמן ב)"
+
+msgctxt "POPUP"
+msgid "&Playback Rate"
+msgstr "קצב ניגון"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_025"
+msgid "0.25 x"
+msgstr "0.25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_050"
+msgid "0.50 x"
+msgstr "0.50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_075"
+msgid "0.75 x"
+msgstr "0.75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_090"
+msgid "0.90 x"
+msgstr "0.90 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_100"
+msgid "1.00 x"
+msgstr "1.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_110"
+msgid "1.10 x"
+msgstr "1.10 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_125"
+msgid "1.25 x"
+msgstr "1.25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_150"
+msgid "1.50 x"
+msgstr "1.50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_175"
+msgid "1.75 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_200"
+msgid "2.00 x"
+msgstr "2.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_300"
+msgid "3.00 x"
+msgstr "3.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_400"
+msgid "4.00 x"
+msgstr "4.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_600"
+msgid "6.00 x"
+msgstr "6.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_800"
+msgid "8.00 x"
+msgstr "8.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS23"
+msgid "23.976 fps"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS24"
+msgid "24 fps"
+msgstr "24 פריימים לשנייה"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS25"
+msgid "25 fps"
+msgstr "25 פריימים לשנייה"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS59"
+msgid "59.94 fps"
 msgstr ""
 
 msgctxt "ID_PLAY_DECRATE"
@@ -565,21 +662,29 @@ msgctxt "ID_FILTERS"
 msgid "&Filters"
 msgstr "פילטרים"
 
+msgctxt "ID_COLOR_CONTROLS"
+msgid "&Color controls..."
+msgstr ""
+
 msgctxt "ID_SHADERS"
 msgid "S&haders"
 msgstr "מצלילים"
 
 msgctxt "ID_AUDIOS"
 msgid "&Audio Track"
-msgstr ""
+msgstr "רצועת שמע"
 
 msgctxt "ID_SUBTITLES"
 msgid "Su&btitle Track"
+msgstr "רצועת כתוביות"
+
+msgctxt "ID_SUBTITLES_SECONDARY"
+msgid "Secondary Subtitle Track"
 msgstr ""
 
 msgctxt "ID_VIDEO_STREAMS"
 msgid "Vide&o Track"
-msgstr ""
+msgstr "רצועת וידאו"
 
 msgctxt "POPUP"
 msgid "&Volume"
@@ -603,15 +708,15 @@ msgstr "אחרי ניגון"
 
 msgctxt "ID_AFTERPLAYBACK_DONOTHING"
 msgid "Do no&thing"
-msgstr ""
+msgstr "אל תעשה דבר"
 
 msgctxt "ID_AFTERPLAYBACK_PLAYNEXT"
 msgid "Play &next file in the folder"
-msgstr ""
+msgstr "נגן את הקובץ הבא בתיקיה"
 
 msgctxt "ID_AFTERPLAYBACK_MONITOROFF"
 msgid "Turn off the &monitor"
-msgstr ""
+msgstr "כבה את המסך"
 
 msgctxt "ID_AFTERPLAYBACK_EXIT"
 msgid "&Exit"
@@ -708,4 +813,3 @@ msgstr "תרומה"
 msgctxt "ID_HELP_ABOUT"
 msgid "&About..."
 msgstr "אודות..."
-

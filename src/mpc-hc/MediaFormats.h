@@ -28,20 +28,15 @@
 class CMediaFormatCategory
 {
 protected:
-    CString m_label, m_description, m_specreqnote;
+    CString m_label, m_description;
     CAtlList<CString> m_exts, m_backupexts;
     bool m_fAudioOnly;
-    engine_t m_engine;
     bool m_fAssociable;
 
 public:
     CMediaFormatCategory();
-    CMediaFormatCategory(
-        CString label, CString description, CAtlList<CString>& exts, bool fAudioOnly = false,
-        CString specreqnote = _T(""), engine_t e = DirectShow, bool fAssociable = true);
-    CMediaFormatCategory(
-        CString label, CString description, CString exts, bool fAudioOnly = false,
-        CString specreqnote = _T(""), engine_t e = DirectShow, bool fAssociable = true);
+    CMediaFormatCategory(CString label, CString description, CAtlList<CString>& exts, bool fAudioOnly = false, bool fAssociable = true);
+    CMediaFormatCategory(CString label, CString description, CString exts, bool fAudioOnly = false, bool fAssociable = true);
     virtual ~CMediaFormatCategory();
 
     void UpdateData(bool fSave);
@@ -61,40 +56,27 @@ public:
 
     CString GetDescription() const { return m_description; }
     CString GetFilter() const;
-    CString GetExts(bool fAppendEngine = false) const;
-    CString GetExtsWithPeriod(bool fAppendEngine = false) const;
-    CString GetBackupExtsWithPeriod(bool fAppendEngine = false) const;
-    CString GetSpecReqNote() const { return m_specreqnote; }
+    CString GetExts() const;
+    CString GetExtsWithPeriod() const;
+    CString GetBackupExtsWithPeriod() const;
     bool IsAudioOnly() const { return m_fAudioOnly; }
     bool IsAssociable() const { return m_fAssociable; }
-    engine_t GetEngineType() const { return m_engine; }
-    void SetEngineType(engine_t e) { m_engine = e; }
+    bool IsVideoOnly() const { return !m_fAudioOnly && m_label != _T("pls") && m_label != _T("cue") && m_label != _T("swf"); }
 };
 
 class CMediaFormats : public CAtlArray<CMediaFormatCategory>
 {
-protected:
-    engine_t m_iRtspHandler;
-    bool m_fRtspFileExtFirst;
-
 public:
     CMediaFormats();
     virtual ~CMediaFormats();
 
     //CMediaFormats(const CMediaFormats& mf) { *this = mf; }
     CMediaFormats& operator=(const CMediaFormats& mf) {
-        m_iRtspHandler = mf.m_iRtspHandler;
-        m_fRtspFileExtFirst = mf.m_fRtspFileExtFirst;
-
         Copy(mf);
-
         return *this;
     }
 
     void UpdateData(bool fSave);
-
-    engine_t GetRtspHandler(bool& fRtspFileExtFirst) const;
-    void SetRtspHandler(engine_t e, bool fRtspFileExtFirst);
 
     bool IsUsingEngine(CString path, engine_t e) const;
     engine_t GetEngine(CString path) const;

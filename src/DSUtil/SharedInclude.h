@@ -21,6 +21,8 @@
 #pragma once
 
 #pragma warning(disable:4995)
+#pragma warning(disable:5054)
+#pragma warning(disable:4467)
 
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 #define VC_EXTRALEAN        // Exclude rarely-used stuff from Windows headers
@@ -30,6 +32,10 @@
 #endif
 
 #ifdef _DEBUG
+#if 1
 #define _CRTDBG_MAP_ALLOC   // include Microsoft memory leak detection procedures
 #include <crtdbg.h>
+#else
+#include "vld.h" //include visual leak detector procedures
+#endif
 #endif

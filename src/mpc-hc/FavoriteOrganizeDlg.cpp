@@ -20,16 +20,19 @@
  */
 
 #include "stdafx.h"
+#include <strsafe.h>
+#include <WinAPIUtils.h>
 #include "FavoriteOrganizeDlg.h"
 #include "mplayerc.h"
 #include "MainFrm.h"
-#include <strsafe.h>
+#include "CMPCTheme.h"
+#undef SubclassWindow
 
 // CFavoriteOrganizeDlg dialog
 
-//IMPLEMENT_DYNAMIC(CFavoriteOrganizeDlg, CResizableDialog)
+//IMPLEMENT_DYNAMIC(CFavoriteOrganizeDlg, CMPCThemeResizableDialog)
 CFavoriteOrganizeDlg::CFavoriteOrganizeDlg(CWnd* pParent /*=nullptr*/)
-    : CResizableDialog(CFavoriteOrganizeDlg::IDD, pParent)
+    : CMPCThemeModelessResizableDialog(CFavoriteOrganizeDlg::IDD, pParent)
 {
 }
 
@@ -39,9 +42,11 @@ CFavoriteOrganizeDlg::~CFavoriteOrganizeDlg()
 
 void CFavoriteOrganizeDlg::SetupList(bool fSave)
 {
+
     int i = m_tab.GetCurSel();
 
     if (fSave) {
+        // Update the internal list to match the visual list order and names
         CAtlList<CString> sl;
 
         for (int j = 0; j < m_list.GetItemCount(); j++) {
@@ -51,35 +56,38 @@ void CFavoriteOrganizeDlg::SetupList(bool fSave)
             args.AddHead(m_list.GetItemText(j, 0));
             sl.AddTail(ImplodeEsc(args, _T(';')));
         }
-
         m_sl[i].RemoveAll();
         m_sl[i].AddTailList(&sl);
+
+        // Update itemdata pointers to point to new positions in the rebuilt list
+        POSITION pos = m_sl[i].GetHeadPosition();
+        for (int j = 0; j < m_list.GetItemCount() && pos; j++) {
+            POSITION tmp = pos;
+            m_sl[i].GetNext(pos);
+            m_list.SetItemData(j, (DWORD_PTR)tmp);
+        }
     } else {
+        m_list.SetRedraw(FALSE);
         m_list.DeleteAllItems();
 
-        POSITION pos = m_sl[i].GetHeadPosition(), tmp;
-        while (pos) {
+        for(POSITION pos = m_sl[i].GetHeadPosition(), tmp; pos; ) {
             tmp = pos;
 
-            CAtlList<CString> sl;
-            ExplodeEsc(m_sl[i].GetNext(pos), sl, _T(';'), 3);
+            FileFavorite ff;
+            VERIFY(FileFavorite::TryParse(m_sl[i].GetNext(pos), ff));
 
-            int n = m_list.InsertItem(m_list.GetItemCount(), sl.RemoveHead());
+            int n = m_list.InsertItem(m_list.GetItemCount(), ff.Name);
             m_list.SetItemData(n, (DWORD_PTR)tmp);
 
-            if (!sl.IsEmpty()) {
-                REFERENCE_TIME rt = 0;
-                if (1 == _stscanf_s(sl.GetHead(), _T("%I64d"), &rt) && rt > 0) {
-                    DVD_HMSF_TIMECODE hmsf = RT2HMSF(rt);
-
-                    CString str;
-                    str.Format(_T("[%02u:%02u:%02u]"), hmsf.bHours, hmsf.bMinutes, hmsf.bSeconds);
-                    m_list.SetItemText(n, 1, str);
-                }
+            CString str = ff.ToString();
+            if (!str.IsEmpty()) {
+                m_list.SetItemText(n, 1, str);
             }
         }
 
         UpdateColumnsSizes();
+        m_list.SetRedraw(TRUE);
+        m_list.RedrawWindow(0, 0, RDW_INVALIDATE);
     }
 }
 
@@ -87,9 +95,13 @@ void CFavoriteOrganizeDlg::UpdateColumnsSizes()
 {
     CRect r;
     m_list.GetClientRect(r);
-    m_list.SetColumnWidth(0, LVSCW_AUTOSIZE);
-    m_list.SetColumnWidth(1, LVSCW_AUTOSIZE);
-    m_list.SetColumnWidth(1, std::max(m_list.GetColumnWidth(1), r.Width() - m_list.GetColumnWidth(0)));
+    m_list.SetColumnWidth(0, LVSCW_AUTOSIZE_USEHEADER);
+    if (firstSize) {
+        m_list.SetColumnWidth(1, LVSCW_AUTOSIZE); //this is needed to calculate the min width, but don't keep resetting it or you get flicker
+        firstSize = false;
+        minSizeTime = m_list.GetColumnWidth(1);
+    }
+    m_list.SetColumnWidth(1, std::max(minSizeTime, r.Width() - m_list.GetColumnWidth(0)));
 }
 
 void CFavoriteOrganizeDlg::DoDataExchange(CDataExchange* pDX)
@@ -100,9 +112,10 @@ void CFavoriteOrganizeDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 
-BEGIN_MESSAGE_MAP(CFavoriteOrganizeDlg, CResizableDialog)
+BEGIN_MESSAGE_MAP(CFavoriteOrganizeDlg, CMPCThemeModelessResizableDialog)
     ON_NOTIFY(TCN_SELCHANGE, IDC_TAB1, OnTcnSelchangeTab1)
     ON_WM_DRAWITEM()
+    ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST2, OnLvnItemchangedList2)
     ON_BN_CLICKED(IDC_BUTTON1, OnRenameBnClicked)
     ON_UPDATE_COMMAND_UI(IDC_BUTTON1, OnUpdateRenameBn)
     ON_BN_CLICKED(IDC_BUTTON2, OnDeleteBnClicked)
@@ -113,21 +126,34 @@ BEGIN_MESSAGE_MAP(CFavoriteOrganizeDlg, CResizableDialog)
     ON_UPDATE_COMMAND_UI(IDC_BUTTON4, OnUpdateDownBn)
     ON_NOTIFY(TCN_SELCHANGING, IDC_TAB1, OnTcnSelchangingTab1)
     ON_BN_CLICKED(IDOK, OnBnClickedOk)
+    ON_BN_CLICKED(ID_APPLY_NOW, OnBnClickedApply)
+    ON_UPDATE_COMMAND_UI(ID_APPLY_NOW, OnUpdateApplyBn)
     ON_WM_ACTIVATE()
     ON_NOTIFY(LVN_ENDLABELEDIT, IDC_LIST2, OnLvnEndlabeleditList2)
     ON_NOTIFY(NM_DBLCLK, IDC_LIST2, OnPlayFavorite)
     ON_NOTIFY(LVN_KEYDOWN, IDC_LIST2, OnKeyPressed)
     ON_NOTIFY(LVN_GETINFOTIP, IDC_LIST2, OnLvnGetInfoTipList)
     ON_WM_SIZE()
+    ON_MESSAGE(WM_DPICHANGED, OnDpiChanged)
 END_MESSAGE_MAP()
 
-
+void  CFavoriteOrganizeDlg::OnLvnItemchangedList2(NMHDR* pNMHDR, LRESULT* pResult) {
+    CWnd::UpdateDialogControls(this, TRUE); //needed for modeless dialog due to no idle pump
+}
 // CFavoriteOrganizeDlg message handlers
 
 BOOL CFavoriteOrganizeDlg::OnInitDialog()
 {
-    __super::OnInitDialog();
+    EnableSaveRestoreKey(IDS_R_DLG_ORGANIZE_FAV);
 
+    __super::OnInitDialog();
+    if (GetExStyle() & WS_EX_TOPMOST) {
+        if (auto tt = m_list.GetToolTips()) { //when dialog is topmost, tooltips appear behind the dialog?
+            tt->SetWindowPos(&wndTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOMOVE);
+        }
+    }
+    firstSize = true;
+    minSizeTime = 0;
     m_tab.InsertItem(0, ResStr(IDS_FAVFILES));
     m_tab.InsertItem(1, ResStr(IDS_FAVDVDS));
     //  m_tab.InsertItem(2, ResStr(IDS_FAVDEVICES));
@@ -135,27 +161,55 @@ BOOL CFavoriteOrganizeDlg::OnInitDialog()
 
     m_list.InsertColumn(0, _T(""));
     m_list.InsertColumn(1, _T(""));
-    m_list.SetExtendedStyle(m_list.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
+    m_list.SetExtendedStyle(m_list.GetExtendedStyle() | LVS_EX_INFOTIP);
+    m_list.setAdditionalStyles(LVS_EX_FULLROWSELECT);
 
+    LoadList();
+
+    SetupAnchors();
+    fulfillThemeReqs();
+
+    return TRUE;  // return TRUE unless you set the focus to a control
+    // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CFavoriteOrganizeDlg::LoadList() {
     const CAppSettings& s = AfxGetAppSettings();
     s.GetFav(FAV_FILE, m_sl[0]);
     s.GetFav(FAV_DVD, m_sl[1]);
     s.GetFav(FAV_DEVICE, m_sl[2]);
 
     SetupList(false);
+    m_bModified = false;
+}
 
-    AddAnchor(IDC_TAB1, TOP_LEFT, BOTTOM_RIGHT);
-    AddAnchor(IDC_LIST2, TOP_LEFT, BOTTOM_RIGHT);
-    AddAnchor(IDC_BUTTON1, TOP_RIGHT);
-    AddAnchor(IDC_BUTTON2, TOP_RIGHT);
-    AddAnchor(IDC_BUTTON3, TOP_RIGHT);
-    AddAnchor(IDC_BUTTON4, TOP_RIGHT);
-    AddAnchor(IDOK, BOTTOM_RIGHT);
+void CFavoriteOrganizeDlg::ShowAndLoad()
+{
+    LoadList();
+    ShowWindow(SW_SHOW);
+}
 
-    EnableSaveRestore(IDS_R_DLG_ORGANIZE_FAV);
+void CFavoriteOrganizeDlg::AddItemToVisualList(int tabIndex, const CString& favoriteString) {
+    // Add to the in-memory list
+    m_sl[tabIndex].AddTail(favoriteString);
 
-    return TRUE;  // return TRUE unless you set the focus to a control
-    // EXCEPTION: OCX Property Pages should return FALSE
+    // If we're currently on this tab, refresh the list
+    if (m_tab.GetCurSel() == tabIndex) {
+        SetupList(false);
+
+        // Select and scroll to the newly added item (it's at the end)
+        int newItemIndex = m_list.GetItemCount() - 1;
+        if (newItemIndex >= 0) {
+            m_list.SetItemState(newItemIndex, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+            m_list.EnsureVisible(newItemIndex, FALSE);
+        }
+    }
+
+    // Mark as modified so changes can be saved
+    m_bModified = true;
+
+    // Update dialog controls to enable Apply button
+    UpdateDialogControls(this, TRUE);
 }
 
 BOOL CFavoriteOrganizeDlg::PreTranslateMessage(MSG* pMsg)
@@ -185,30 +239,78 @@ void CFavoriteOrganizeDlg::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStr
     }
 
     int nItem = lpDrawItemStruct->itemID;
-    CRect rcItem = lpDrawItemStruct->rcItem;
+    if (m_list.IsItemVisible(nItem)) {
+        CEdit* pEdit = m_list.GetEditControl();
 
-    CDC* pDC = CDC::FromHandle(lpDrawItemStruct->hDC);
+        CRect rcItem = lpDrawItemStruct->rcItem;
+        CRect rText, rTime, rectDC, rHighlight;
 
-    if (!!m_list.GetItemState(nItem, LVIS_SELECTED)) {
-        CBrush b1, b2;
-        b1.CreateSolidBrush(0xf1dacc);
-        pDC->FillRect(rcItem, &b1);
-        b2.CreateSolidBrush(0xc56a31);
-        pDC->FrameRect(rcItem, &b2);
-    } else {
-        CBrush b;
-        b.CreateSysColorBrush(COLOR_WINDOW);
-        pDC->FillRect(rcItem, &b);
-    }
+        m_list.GetSubItemRect(nItem, 0, LVIR_LABEL, rText);
+        rText.left += 2; //magic number for column 0
+        m_list.GetSubItemRect(nItem, 1, LVIR_LABEL, rTime);
+        rTime.right -= 6; //magic number for column >0, from right
+        rectDC = rcItem;
+        rHighlight = rcItem;
+        rHighlight.left = rText.left;
+        rHighlight.right = rTime.right;
 
-    CString str;
-    pDC->SetTextColor(0);
+        CDC* pDC = CDC::FromHandle(lpDrawItemStruct->hDC);
+        int savedDC = pDC->SaveDC();
+        bool isSelected = !!m_list.GetItemState(nItem, LVIS_SELECTED);
+        bool isEdited = pEdit && ::IsWindow(pEdit->m_hWnd) && isSelected;
 
-    str = m_list.GetItemText(nItem, 0);
-    pDC->TextOut(rcItem.left + 3, (rcItem.top + rcItem.bottom - pDC->GetTextExtent(str).cy) / 2, str);
-    str = m_list.GetItemText(nItem, 1);
-    if (!str.IsEmpty()) {
-        pDC->TextOut(rcItem.right - pDC->GetTextExtent(str).cx - 3, (rcItem.top + rcItem.bottom - pDC->GetTextExtent(str).cy) / 2, str);
+        CDC dcMem;
+        CBitmap bmMem;
+        CMPCThemeUtil::initMemDC(pDC, dcMem, bmMem, rectDC);
+        rcItem.OffsetRect(-rectDC.TopLeft());
+        rText.OffsetRect(-rectDC.TopLeft());
+        rTime.OffsetRect(-rectDC.TopLeft());
+        rHighlight.OffsetRect(-rectDC.TopLeft());
+
+        if (AppIsThemeLoaded()) {
+            dcMem.FillSolidRect(rcItem, CMPCTheme::ContentBGColor);
+        } else {
+            dcMem.FillSolidRect(rcItem, GetSysColor(COLOR_WINDOW));
+        }
+
+        if (isSelected) {
+            if (AppIsThemeLoaded()) {
+                dcMem.FillSolidRect(rHighlight, CMPCTheme::ContentSelectedColor);
+            } else {
+                CBrush b2;
+                dcMem.FillSolidRect(rHighlight, 0xf1dacc);
+                b2.CreateSolidBrush(0xc56a31);
+                dcMem.FrameRect(rHighlight, &b2);
+                b2.DeleteObject();
+            }
+        }
+
+        COLORREF textcolor;
+        if (AppIsThemeLoaded()) {
+            textcolor = CMPCTheme::TextFGColor;
+        } else {
+            textcolor = 0;
+        }
+        dcMem.SetTextColor(textcolor);
+
+        CString str;
+
+        if (!isEdited) {
+            str = m_list.GetItemText(nItem, 0);
+            dcMem.DrawTextW(str, rText, DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_LEFT | DT_NOPREFIX);
+        }
+        str = m_list.GetItemText(nItem, 1);
+        if (!str.IsEmpty()) {
+            dcMem.DrawTextW(str, rTime, DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_RIGHT | DT_NOPREFIX);
+        }
+        if (isEdited) { //added to reduce flicker while editing.  
+            CRect r;
+            pEdit->GetWindowRect(r);
+            m_list.ScreenToClient(r);
+            pDC->ExcludeClipRect(r);
+        }
+        CMPCThemeUtil::flushMemDC(pDC, dcMem, rectDC);
+        pDC->RestoreDC(savedDC);
     }
 }
 
@@ -230,6 +332,8 @@ void CFavoriteOrganizeDlg::OnLvnEndlabeleditList2(NMHDR* pNMHDR, LRESULT* pResul
     NMLVDISPINFO* pDispInfo = reinterpret_cast<NMLVDISPINFO*>(pNMHDR);
     if (pDispInfo->item.iItem >= 0 && pDispInfo->item.pszText) {
         m_list.SetItemText(pDispInfo->item.iItem, 0, pDispInfo->item.pszText);
+        m_bModified = true;
+        UpdateDialogControls(this, TRUE);
     }
     UpdateColumnsSizes();
 
@@ -292,6 +396,15 @@ void CFavoriteOrganizeDlg::OnKeyPressed(NMHDR* pNMHDR, LRESULT* pResult)
             }
             *pResult = 1;
             break;
+
+        case 'C':
+            if (GetKeyState(VK_CONTROL) < 0) {
+                if(m_tab.GetCurSel() == 0) {   // Files
+                    CopyToClipboard();
+                }
+            }
+            *pResult = 1;
+            break;
         default:
             *pResult = 0;
     }
@@ -309,10 +422,12 @@ void CFavoriteOrganizeDlg::OnDeleteBnClicked()
         }
 
         m_list.DeleteItem(nItem);
+        m_bModified = true;
     }
 
     nItem = std::min(nItem, m_list.GetItemCount() - 1);
     m_list.SetItemState(nItem, LVIS_SELECTED, LVIS_SELECTED);
+    UpdateDialogControls(this, TRUE);
 }
 
 void CFavoriteOrganizeDlg::OnUpdateDeleteBn(CCmdUI* pCmdUI)
@@ -334,6 +449,8 @@ void CFavoriteOrganizeDlg::MoveItem(int nItem, int offset)
     m_list.SetItemData(nItem, data);
     m_list.SetItemText(nItem, 1, strPos);
     m_list.SetItemState(nItem, LVIS_SELECTED, LVIS_SELECTED);
+    m_list.EnsureVisible(nItem, FALSE);
+    m_bModified = true;
 }
 
 void CFavoriteOrganizeDlg::OnUpBnClicked()
@@ -348,6 +465,7 @@ void CFavoriteOrganizeDlg::OnUpBnClicked()
 
         MoveItem(nItem, -1);
     }
+    UpdateDialogControls(this, TRUE);
 }
 
 void CFavoriteOrganizeDlg::OnUpdateUpBn(CCmdUI* pCmdUI)
@@ -372,6 +490,7 @@ void CFavoriteOrganizeDlg::OnDownBnClicked()
     for (INT_PTR i = selectedItems.GetSize() - 1; i >= 0; i--) {
         MoveItem(selectedItems[i], +1);
     }
+    UpdateDialogControls(this, TRUE);
 }
 
 void CFavoriteOrganizeDlg::OnUpdateDownBn(CCmdUI* pCmdUI)
@@ -386,7 +505,7 @@ void CFavoriteOrganizeDlg::OnTcnSelchangingTab1(NMHDR* pNMHDR, LRESULT* pResult)
     *pResult = 0;
 }
 
-void CFavoriteOrganizeDlg::OnBnClickedOk()
+void CFavoriteOrganizeDlg::SaveChanges()
 {
     SetupList(true);
 
@@ -395,7 +514,41 @@ void CFavoriteOrganizeDlg::OnBnClickedOk()
     s.SetFav(FAV_DVD, m_sl[1]);
     s.SetFav(FAV_DEVICE, m_sl[2]);
 
+    m_bModified = false;
+}
+
+void CFavoriteOrganizeDlg::OnBnClickedOk()
+{
+    SaveChanges();
     OnOK();
+}
+
+void CFavoriteOrganizeDlg::OnBnClickedApply()
+{
+    SaveChanges();
+    UpdateDialogControls(this, TRUE);
+}
+
+void CFavoriteOrganizeDlg::OnUpdateApplyBn(CCmdUI* pCmdUI)
+{
+    pCmdUI->Enable(m_bModified);
+}
+
+void CFavoriteOrganizeDlg::OnCancel()
+{
+    if (m_bModified) {
+        int nRet = AfxMessageBox(IDS_FAVORITES_UNSAVED_CHANGES, MB_YESNOCANCEL | MB_ICONQUESTION);
+        if (nRet == IDYES) {
+            SaveChanges();
+        } else if (nRet == IDCANCEL) {
+            return;
+        } else {
+            // IDNO - discard changes by reloading from settings
+            LoadList();
+        }
+    }
+
+    __super::OnCancel();
 }
 
 void CFavoriteOrganizeDlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
@@ -407,13 +560,38 @@ void CFavoriteOrganizeDlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimi
     }
 }
 
+void CFavoriteOrganizeDlg::SetupAnchors()
+{
+    AddAnchor(IDC_TAB1, TOP_LEFT, BOTTOM_RIGHT);
+    AddAnchor(IDC_LIST2, TOP_LEFT, BOTTOM_RIGHT);
+    AddAnchor(IDC_BUTTON1, TOP_RIGHT);
+    AddAnchor(IDC_BUTTON2, TOP_RIGHT);
+    AddAnchor(IDC_BUTTON3, TOP_RIGHT);
+    AddAnchor(IDC_BUTTON4, TOP_RIGHT);
+    AddAnchor(IDOK, BOTTOM_RIGHT);
+    AddAnchor(IDCANCEL, BOTTOM_RIGHT);
+    AddAnchor(ID_APPLY_NOW, BOTTOM_RIGHT);
+}
+
 void CFavoriteOrganizeDlg::OnSize(UINT nType, int cx, int cy)
 {
     __super::OnSize(nType, cx, cy);
 
     if (IsWindow(m_list)) {
-        m_list.SetColumnWidth(0, LVSCW_AUTOSIZE_USEHEADER);
+        UpdateColumnsSizes(); //on first size, we need to call this, or it doesn't use the full window until a rename/resize
     }
+}
+
+LRESULT CFavoriteOrganizeDlg::OnDpiChanged(WPARAM wParam, LPARAM lParam)
+{
+    LRESULT result = __super::OnDpiChanged(wParam, lParam);
+
+    // CDpiAwareResizableDialog blocks OnSize during dpi changes.  Update columns here
+    if (IsWindow(m_list)) {
+        UpdateColumnsSizes();
+    }
+
+    return result;
 }
 
 void CFavoriteOrganizeDlg::OnLvnGetInfoTipList(NMHDR* pNMHDR, LRESULT* pResult)
@@ -426,7 +604,33 @@ void CFavoriteOrganizeDlg::OnLvnGetInfoTipList(NMHDR* pNMHDR, LRESULT* pResult)
     // Relative to drive value is always third. If less args are available that means it is not included.
     int rootLength = (args.GetCount() == 3 && args.RemoveTail() != _T("0")) ? CPath(path).SkipRoot() : 0;
 
-    StringCchCopy(pGetInfoTip->pszText, pGetInfoTip->cchTextMax, path.Mid(rootLength));
+    StringCchCopyW(pGetInfoTip->pszText, pGetInfoTip->cchTextMax, path.Mid(rootLength));
 
     *pResult = 0;
+}
+
+
+void CFavoriteOrganizeDlg::CopyToClipboard()
+{
+    CAtlList<CString>* pSL = &m_sl[m_tab.GetCurSel()];
+
+    // Iterate through selected items
+    CString favorites;
+    for(POSITION pos = m_list.GetFirstSelectedItemPosition(); pos; ) {
+        int iItem = m_list.GetNextSelectedItem(pos);
+        const CString& fav = pSL->GetAt((POSITION)m_list.GetItemData(iItem));
+        CAtlList<CString> args;
+        ((CMainFrame*)GetParentFrame())->ParseFavoriteFile(fav, args);
+
+        CString path = args.GetHead().Trim();
+        if (!path.IsEmpty()) {
+            favorites.Append(path);
+            favorites.Append(_T("\r\n"));
+        }
+    }
+
+    if (!favorites.IsEmpty()) {
+        CClipboard clipboard(this);
+        VERIFY(clipboard.SetText(favorites));
+    }
 }

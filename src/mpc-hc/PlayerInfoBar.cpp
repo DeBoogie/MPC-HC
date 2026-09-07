@@ -23,6 +23,7 @@
 #include "mplayerc.h"
 #include "PlayerInfoBar.h"
 #include "MainFrm.h"
+#include "CMPCTheme.h"
 
 
 // CPlayerInfoBar
@@ -42,6 +43,7 @@ CPlayerInfoBar::~CPlayerInfoBar()
 
 bool CPlayerInfoBar::SetLine(CString label, CString info)
 {
+    bool usetheme = AppIsThemeLoaded();
     info.Trim();
     if (info.IsEmpty()) {
         return RemoveLine(label);
@@ -54,20 +56,33 @@ bool CPlayerInfoBar::SetLine(CString label, CString info)
             m_info[idx]->GetWindowText(tmp);
             if (info != tmp) {
                 m_info[idx]->SetWindowText(info);
-                m_tooltip.UpdateTipText(info, m_info[idx]);
+                if (usetheme) {
+                    themedToolTip.UpdateTipText(info, m_info[idx]);
+                } else {
+                    m_tooltip.UpdateTipText(info, m_info[idx]);
+                }
             }
             return false;
         }
     }
 
     CAutoPtr<CStatusLabel> l(DEBUG_NEW CStatusLabel(m_pMainFrame->m_dpi, true, false));
-    l->Create(label, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SS_OWNERDRAW, CRect(0, 0, 0, 0), this);
-    m_label.Add(l);
+    if (l->Create(label, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SS_OWNERDRAW, CRect(0, 0, 0, 0), this)) {
+        m_label.Add(l);
+    } else {
+        ASSERT(false);
+        return false;
+    }
 
     CAutoPtr<CStatusLabel> i(DEBUG_NEW CStatusLabel(m_pMainFrame->m_dpi, false, true));
-    i->Create(info, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SS_OWNERDRAW | SS_NOTIFY, CRect(0, 0, 0, 0), this);
-    m_tooltip.AddTool(i, info);
-    m_info.Add(i);
+    if (i->Create(info, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | SS_OWNERDRAW | SS_NOTIFY, CRect(0, 0, 0, 0), this)) {
+        if (usetheme) {
+            themedToolTip.AddTool(i, info);
+        } else {
+            m_tooltip.AddTool(i, info);
+        }
+        m_info.Add(i);
+    }
 
     Relayout();
 
@@ -91,11 +106,16 @@ void CPlayerInfoBar::GetLine(CString label, CString& info)
 
 bool CPlayerInfoBar::RemoveLine(CString label)
 {
+    bool usetheme = AppIsThemeLoaded();
     for (size_t i = 0; i < m_label.GetCount(); i++) {
         CString tmp;
         m_label[i]->GetWindowText(tmp);
         if (label == tmp) {
-            m_tooltip.DelTool(m_info[i]);
+            if (usetheme) {
+                themedToolTip.DelTool(m_info[i]);
+            } else {
+                m_tooltip.DelTool(m_info[i]);
+            }
             m_label.RemoveAt(i);
             m_info.RemoveAt(i);
             Relayout();
@@ -119,10 +139,17 @@ BOOL CPlayerInfoBar::Create(CWnd* pParentWnd)
 {
     BOOL res = CDialogBar::Create(pParentWnd, IDD_PLAYERINFOBAR, WS_CHILD | WS_VISIBLE | CBRS_ALIGN_BOTTOM, IDD_PLAYERINFOBAR);
 
-    m_tooltip.Create(this, TTS_NOPREFIX);
-    m_tooltip.Activate(TRUE);
-    m_tooltip.SetMaxTipWidth(m_pMainFrame->m_dpi.ScaleX(500));
-    m_tooltip.SetDelayTime(TTDT_AUTOPOP, 10000);
+    if (AppIsThemeLoaded()) {
+        themedToolTip.Create(this, TTS_NOPREFIX);
+        themedToolTip.Activate(TRUE);
+        themedToolTip.SetMaxTipWidth(m_pMainFrame->m_dpi.ScaleX(500));
+        themedToolTip.SetDelayTime(TTDT_AUTOPOP, 10000);
+    } else {
+        m_tooltip.Create(this, TTS_NOPREFIX);
+        m_tooltip.Activate(TRUE);
+        m_tooltip.SetMaxTipWidth(m_pMainFrame->m_dpi.ScaleX(500));
+        m_tooltip.SetDelayTime(TTDT_AUTOPOP, 10000);
+    }
 
     return res;
 }
@@ -168,7 +195,13 @@ void CPlayerInfoBar::EventCallback(MpcEvent ev)
 void CPlayerInfoBar::Relayout()
 {
     CRect r;
-    GetParent()->GetClientRect(&r);
+    CWnd* pWnd = GetParent();
+    if (pWnd) {
+        pWnd->GetClientRect(&r);
+    } else {
+        ASSERT(FALSE);
+        return;
+    }
 
     int w = m_pMainFrame->m_dpi.ScaleX(100);
     const int h = m_pMainFrame->m_dpi.ScaleY(17);
@@ -178,8 +211,10 @@ void CPlayerInfoBar::Relayout()
         CDC* pDC = m_label[i]->GetDC();
         CString str;
         m_label[i]->GetWindowText(str);
-        w = std::max<int>(w, pDC->GetTextExtent(str).cx);
-        m_label[i]->ReleaseDC(pDC);
+        if (pDC) {
+            w = std::max<int>(w, pDC->GetTextExtent(str).cx);
+            m_label[i]->ReleaseDC(pDC);
+        }
     }
 
     const int sep = m_pMainFrame->m_dpi.ScaleX(10);
@@ -199,15 +234,25 @@ END_MESSAGE_MAP()
 
 BOOL CPlayerInfoBar::PreTranslateMessage(MSG* pMsg)
 {
-    if (IsWindow(m_tooltip)) {
-        m_tooltip.RelayEvent(pMsg);
+    if (AppIsThemeLoaded()) {
+        if (IsWindow(themedToolTip)) {
+            themedToolTip.RelayEvent(pMsg);
+        }
+    } else {
+        if (IsWindow(m_tooltip)) {
+            m_tooltip.RelayEvent(pMsg);
+        }
     }
-
     return __super::PreTranslateMessage(pMsg);
 }
 
 BOOL CPlayerInfoBar::OnEraseBkgnd(CDC* pDC)
 {
+    if (!pDC) {
+        ASSERT(FALSE);
+        return FALSE;
+    }
+
     for (CWnd* pChild = GetWindow(GW_CHILD); pChild; pChild = pChild->GetNextWindow()) {
         CRect r;
         pChild->GetClientRect(&r);
@@ -228,7 +273,11 @@ BOOL CPlayerInfoBar::OnEraseBkgnd(CDC* pDC)
         r.InflateRect(1, 0, 1, 0);
     }
 
-    pDC->Draw3dRect(&r, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
+    if (AppIsThemeLoaded()) {
+        pDC->FillSolidRect(&r, CMPCTheme::NoBorderColor);
+    } else {
+        pDC->Draw3dRect(&r, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
+    }
 
     r.DeflateRect(1, 1);
 
@@ -250,7 +299,7 @@ void CPlayerInfoBar::OnLButtonDown(UINT nFlags, CPoint point)
 {
     CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
     if (!pFrame->m_fFullScreen) {
-        MapWindowPoints(pFrame, &point, 1);
+        ClientToScreen(&point);
         pFrame->PostMessage(WM_NCLBUTTONDOWN, HTCAPTION, MAKELPARAM(point.x, point.y));
     }
 }

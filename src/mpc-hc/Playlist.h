@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2012, 2015 see Authors.txt
+ * (C) 2006-2012, 2015, 2017 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -22,6 +22,7 @@
 #pragma once
 
 #include <afxcoll.h>
+#include "YoutubeDL.h"
 
 
 class CPlaylistItem
@@ -39,9 +40,19 @@ public:
     CAtlList<CString> m_subs;
     enum type_t { file, device } m_type;
     REFERENCE_TIME m_duration;
+    ULONGLONG m_filetime; // file creation time; 0 = not checked yet, 1 = unavailable (missing file or URL)
+    int inlineEditMaxWidth;
     int m_vinput, m_vchannel;
     int m_ainput;
     long m_country;
+    bool m_cue;
+    CString m_cue_filename;
+    int m_cue_index;
+    CString m_cover;
+    bool m_bYoutubeDL;
+    CString m_ydlSourceURL;
+    CString m_useragent;
+    CAtlList<CYoutubeDLInstance::YDLSubInfo> m_ydl_subs;
 
     bool m_fInvalid;
 
@@ -55,6 +66,11 @@ public:
     void AutoLoadFiles();
 
     CString GetLabel(int i = 0);
+};
+
+
+class CPlaylistIDs : public std::vector<UINT> {
+
 };
 
 class CPlaylist : protected CAtlList<CPlaylistItem>
@@ -84,6 +100,7 @@ public:
     using CAtlList<CPlaylistItem>::IsEmpty;
     using CAtlList<CPlaylistItem>::MoveToHead;
     using CAtlList<CPlaylistItem>::MoveToTail;
+    using CAtlList<CPlaylistItem>::SetAt;
 
     CPlaylist(bool bShuffle = false);
     virtual ~CPlaylist();
@@ -91,7 +108,9 @@ public:
     bool RemoveAll();
     bool RemoveAt(POSITION pos);
 
-    void SortById(), SortByName(), SortByPath(), Randomize();
+    void SortById(), SortByName(), Randomize();
+    void SortByPath(int startIndex = 0);
+    void SortByDate(bool bIncreasing);
 
     POSITION GetPos() const;
     void SetPos(POSITION pos);
@@ -103,4 +122,5 @@ public:
     CPlaylistItem& GetPrevWrap(POSITION& pos);
 
     void SetShuffle(bool bEnable);
+    CPlaylistIDs GetIDs();
 };

@@ -283,7 +283,7 @@ CoInitializeHelper::~CoInitializeHelper()
     CoUninitialize();
 }
 
-HRESULT FileDelete(CString file, HWND hWnd, bool recycle /*= true*/)
+HRESULT FileDelete(CString file, HWND hWnd, bool recycle /*= true*/, bool noconfirm /*= false*/)
 {
     // Strings in SHFILEOPSTRUCT must be double-null terminated
     file.AppendChar(_T('\0'));
@@ -293,8 +293,14 @@ HRESULT FileDelete(CString file, HWND hWnd, bool recycle /*= true*/)
     fileOpStruct.hwnd = hWnd;
     fileOpStruct.wFunc = FO_DELETE;
     fileOpStruct.pFrom = file;
+    fileOpStruct.fFlags = FOF_FILESONLY | FOF_SILENT;
     if (recycle) {
-        fileOpStruct.fFlags = FOF_ALLOWUNDO | FOF_WANTNUKEWARNING;
+        fileOpStruct.fFlags |= FOF_ALLOWUNDO;
+    }
+    if (noconfirm) {
+        fileOpStruct.fFlags |= FOF_NOCONFIRMATION;
+    } else {
+        fileOpStruct.fFlags |= FOF_WANTNUKEWARNING;
     }
     int hRes = SHFileOperation(&fileOpStruct);
     if (fileOpStruct.fAnyOperationsAborted) {
@@ -302,4 +308,52 @@ HRESULT FileDelete(CString file, HWND hWnd, bool recycle /*= true*/)
     }
     TRACE(_T("Delete recycle=%d hRes=0x%08x, file=%s\n"), recycle, hRes, file.GetString());
     return hRes;
+}
+
+bool IsLeftMouseButtonDown() {
+    int lkey;
+    if (GetSystemMetrics(SM_SWAPBUTTON)) {
+        lkey = VK_RBUTTON;
+    } else {
+        lkey = VK_LBUTTON;
+    }
+
+    return (GetAsyncKeyState(lkey) & 0x8000) != 0;
+}
+
+BOOL CClipboard::SetText(const CString& text) const
+{
+#ifdef _UNICODE
+    const UINT format = CF_UNICODETEXT;
+#else
+    const UINT format = CF_TEXT;
+#endif
+
+    BOOL bResult = FALSE;
+
+    if(m_bOpened) {
+        // Allocate a global memory object for the text
+        int len = text.GetLength() + 1;
+        auto hGlob = GlobalAlloc(GMEM_MOVEABLE, len*sizeof(TCHAR));
+        if (hGlob) {
+            // Lock the handle and copy the text to the buffer
+            auto pData = (LPTSTR)GlobalLock(hGlob);
+            if (pData) {
+                _tcscpy_s(pData, len, text.GetString());
+                GlobalUnlock(hGlob);
+
+                // Place the handle on the clipboard, if the call succeeds
+                // the system will take care of the allocated memory
+                if (::EmptyClipboard() && ::SetClipboardData(format, hGlob)) {
+                    bResult = TRUE;
+                    hGlob = nullptr;
+                }
+            }
+
+            if (hGlob) {
+                GlobalFree(hGlob);
+            }
+        }
+    }
+    return bResult;
 }

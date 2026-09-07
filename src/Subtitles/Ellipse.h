@@ -55,7 +55,14 @@ public:
     }
 
     int GetArc(int dy) const {
-        return m_arc[m_ry + dy];
+        int idx = m_ry + dy;
+        if (idx < 0)
+            idx = 0;
+#if 0
+        else if (idx >= m_arc.size())
+            idx = m_arc.size() - 1;
+#endif
+        return m_arc[idx];
     }
 
     int GetLeftIntersect(int dx, int dy);

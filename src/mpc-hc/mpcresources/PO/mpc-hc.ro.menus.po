@@ -2,15 +2,18 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# Daniel <danny3@tutanota.com>, 2014-2016
-# lordkag <lord.kagula@gmail.com>, 2014-2015,2017
+# MPC HC <adiposegithub@gmail.com>, 2020
+# Daniel <danny3@tutanota.com>, 2022
+# Miloiu Andrei-Valentin <miloiuandrei@gmail.com>, 2026
+# Transifex sync (Studio), 2026
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2016-01-17 21:31:34+0000\n"
-"PO-Revision-Date: 2017-08-13 20:49+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Romanian (http://www.transifex.com/mpc-hc/mpc-hc/language/ro/)\n"
+"POT-Creation-Date: 2026-07-18 21:00:08+0000\n"
+"PO-Revision-Date: 2026-08-31 14:37+0000\n"
+"Last-Translator: Transifex sync (Studio)\n"
+"Language-Team: Romanian (https://app.transifex.com/mpchc/teams/106126/ro/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -23,27 +26,27 @@ msgstr "&Fișier"
 
 msgctxt "ID_FILE_OPENQUICK"
 msgid "&Quick Open File..."
-msgstr "Deschidere &rapidă fișier..."
+msgstr "Deschide &rapid un fișier..."
 
 msgctxt "ID_FILE_OPENMEDIA"
-msgid "&Open File..."
-msgstr "&Deschidere fișier..."
+msgid "&Open File/URL..."
+msgstr "&Deschide un fișier / un URL..."
 
 msgctxt "ID_FILE_OPENDVDBD"
 msgid "Open &DVD/BD..."
-msgstr "Deschidere disc &DVD/BD..."
+msgstr "Deschide &DVD-ul/BD-ul..."
 
 msgctxt "ID_FILE_OPENDEVICE"
 msgid "Open De&vice..."
-msgstr "Deschidere dis&pozitiv..."
+msgstr "Deschide dis&pozitivul..."
 
 msgctxt "ID_FILE_OPENDIRECTORY"
 msgid "Open Dir&ectory..."
-msgstr "Deschidere dir&ector..."
+msgstr "Deschide dir&ectorul..."
 
 msgctxt "ID_FILE_OPENDISC"
 msgid "O&pen Disc"
-msgstr "De&schide disc"
+msgstr "De&schide discul"
 
 msgctxt "ID_RECENT_FILES"
 msgid "Recent &Files"
@@ -55,39 +58,39 @@ msgstr "Î&nchide"
 
 msgctxt "ID_FILE_SAVE_COPY"
 msgid "&Save a Copy..."
-msgstr "Salvare &copie..."
+msgstr "Salvează o &copie..."
 
 msgctxt "ID_FILE_SAVE_IMAGE"
 msgid "Save &Image..."
-msgstr "Salvare &imagine..."
+msgstr "Salvează &imaginea..."
 
 msgctxt "ID_FILE_SAVE_THUMBNAILS"
 msgid "Save &Thumbnails..."
-msgstr "Salvare &miniaturi..."
+msgstr "Salvează &miniaturi..."
 
 msgctxt "POPUP"
 msgid "S&ubtitles"
-msgstr "Subtitluri"
+msgstr "S&ubtitrări"
 
 msgctxt "ID_FILE_SUBTITLES_LOAD"
 msgid "&Load Subtitles..."
-msgstr "Î&ncărcare subtitluri..."
+msgstr "Î&ncarcă subtitrări..."
 
 msgctxt "ID_FILE_SUBTITLES_SAVE"
 msgid "Save S&ubtitles..."
-msgstr "Salvare s&ubtitluri..."
+msgstr "Salvează s&ubtitrările..."
 
 msgctxt "ID_FILE_SUBTITLES_DOWNLOAD"
 msgid "&Download Subtitles..."
-msgstr "&Descărcare subtitluri..."
-
-msgctxt "ID_FILE_SUBTITLES_UPLOAD"
-msgid "&Upload Subtitles..."
-msgstr "&Urcare subtitluri..."
+msgstr "&Descarcă subtitrări..."
 
 msgctxt "ID_FILE_PROPERTIES"
 msgid "P&roperties"
-msgstr "Pr&oprietăți"
+msgstr "P&roprietăți"
+
+msgctxt "ID_FILE_OPEN_LOCATION"
+msgid "Open File &Location"
+msgstr "Deschide &locația fișierului"
 
 msgctxt "ID_FILE_EXIT"
 msgid "E&xit"
@@ -99,15 +102,15 @@ msgstr "&Vizualizare"
 
 msgctxt "ID_VIEW_CAPTIONMENU"
 msgid "Caption&&Menu"
-msgstr "Meniu && titlu"
+msgstr "Meniu și subtitrări"
 
 msgctxt "ID_VIEW_SEEKER"
 msgid "See&k Bar"
-msgstr "Bară de &căutare"
+msgstr "Bara de &căutare"
 
 msgctxt "ID_VIEW_CONTROLS"
 msgid "&Controls"
-msgstr "Cont&roale"
+msgstr "Cont&roale (Comenzi)"
 
 msgctxt "ID_VIEW_INFORMATION"
 msgid "&Information"
@@ -123,47 +126,51 @@ msgstr "St&are"
 
 msgctxt "ID_VIEW_SUBRESYNC"
 msgid "Su&bresync"
-msgstr "Resincronizare su&btitluri"
+msgstr "Resincronizează su&btitrările"
 
 msgctxt "ID_VIEW_PLAYLIST"
 msgid "Pla&ylist"
-msgstr "Listă de &redare"
+msgstr "Listă de &redare (Playlist)"
 
 msgctxt "ID_VIEW_CAPTURE"
 msgid "Captu&re"
-msgstr "Captu&ră"
+msgstr "Captu&rează (Fă o captură)"
 
 msgctxt "ID_VIEW_NAVIGATION"
 msgid "Na&vigation"
 msgstr "Na&vigare"
 
-msgctxt "ID_VIEW_DEBUGSHADERS"
-msgid "&Debug Shaders"
-msgstr "&Depanare nuanțatoare"
-
 msgctxt "POPUP"
 msgid "&Presets..."
-msgstr "&Prestabiliri..."
+msgstr "&Presetări..."
 
 msgctxt "ID_VIEW_PRESETS_MINIMAL"
 msgid "&Minimal"
-msgstr "&Minim"
+msgstr "Interfață &minimală"
 
 msgctxt "ID_VIEW_PRESETS_COMPACT"
 msgid "&Compact"
-msgstr "&Compact"
+msgstr "Interfață &compactă"
 
 msgctxt "ID_VIEW_PRESETS_NORMAL"
 msgid "&Normal"
-msgstr "&Normal"
+msgstr "Interfață &normală"
+
+msgctxt "ID_VIEW_PRESETS_CUSTOM"
+msgid "C&ustom"
+msgstr "Pe&rsonalizat"
 
 msgctxt "ID_VIEW_FULLSCREEN"
 msgid "F&ull Screen"
-msgstr "Ecran comp&let"
+msgstr "Ecran comp&let (Pe tot ecranul)"
 
 msgctxt "POPUP"
 msgid "&Zoom"
-msgstr "&Scalare"
+msgstr "Mărește/Micșorează (&Scalează)"
+
+msgctxt "ID_VIEW_ZOOM_25"
+msgid "&25%"
+msgstr "&25%"
 
 msgctxt "ID_VIEW_ZOOM_50"
 msgid "&50%"
@@ -179,19 +186,15 @@ msgstr "&200%"
 
 msgctxt "ID_VIEW_ZOOM_AUTOFIT"
 msgid "Auto &Fit"
-msgstr "Auto&potrivire"
-
-msgctxt "ID_VIEW_ZOOM_AUTOFIT_LARGER"
-msgid "Auto Fit (&Larger Only)"
-msgstr "Autopotrivire (&doar cele mari)"
+msgstr "&Potrivire automată"
 
 msgctxt "POPUP"
 msgid "R&enderer Settings"
-msgstr "Stabiliri r&andor"
+msgstr "Setări pentru r&andor"
 
 msgctxt "ID_VIEW_TEARING_TEST"
 msgid "&Tearing Test"
-msgstr "&Test de rupere (tearing)"
+msgstr "&Test de rupere"
 
 msgctxt "ID_VIEW_DISPLAY_RENDERER_STATS"
 msgid "&Display Statistics"
@@ -199,15 +202,15 @@ msgstr "&Statistici de afișare"
 
 msgctxt "ID_VIEW_OSD_DISPLAY_TIME"
 msgid "Display Current T&ime"
-msgstr "Afișează t&impul actual"
+msgstr "Afișează &ora curentă"
 
 msgctxt "ID_VIEW_OSD_SHOW_FILENAME"
 msgid "Show &File Name"
-msgstr "Arată nume &fișier"
+msgstr "Afișează numele &fișierului"
 
 msgctxt "POPUP"
 msgid "&Output Range"
-msgstr "&Interval de ieșire"
+msgstr "&Intervalul de ieșire"
 
 msgctxt "ID_VIEW_EVROUTPUTRANGE_0_255"
 msgid "&0 - 255"
@@ -223,11 +226,11 @@ msgstr "&Prezentare"
 
 msgctxt "ID_VIEW_D3DFULLSCREEN"
 msgid "D3D Fullscreen &Mode"
-msgstr "&Mod ecran complet D3D"
+msgstr "&Modul ecran complet (pe tot ecranul) D3D"
 
 msgctxt "ID_VIEW_FULLSCREENGUISUPPORT"
 msgid "D3D Fullscreen &GUI Support"
-msgstr "&Sprijinire ecran complet D3D în interfață"
+msgstr "Suport pentru ecranul complet D3D de tip &GUI"
 
 msgctxt "ID_VIEW_HIGHCOLORRESOLUTION"
 msgid "10-bit &RGB Output"
@@ -235,19 +238,19 @@ msgstr "Ieșire &RGB pe 10 biți"
 
 msgctxt "ID_VIEW_FORCEINPUTHIGHCOLORRESOLUTION"
 msgid "Force 10-bit RGB &Input"
-msgstr "Forțează &intrare RGB pe 10 biți"
+msgstr "Forțează &intrarea RGB pe 10 biți"
 
 msgctxt "ID_VIEW_FULLFLOATINGPOINTPROCESSING"
 msgid "&Full Floating Point Processing"
-msgstr "Procesare &completă în virgulă mobilă (32 biți)"
+msgstr "Procesare &completă în virgulă mobilă (pe 32 biți)"
 
 msgctxt "ID_VIEW_HALFFLOATINGPOINTPROCESSING"
 msgid "&Half Floating Point Processing"
-msgstr "Procesare pe &jumătate în virgulă mobilă (16 biți)"
+msgstr "Procesare pe &jumătate în virgulă mobilă (pe 16 biți)"
 
 msgctxt "ID_VIEW_DISABLEDESKTOPCOMPOSITION"
 msgid "Disable desktop composition (&Aero)"
-msgstr "Dezactivează compoziție desktop (&Aero)"
+msgstr "Dezactivează compoziția desktop (&Aero)"
 
 msgctxt "ID_VIEW_ENABLEFRAMETIMECORRECTION"
 msgid "Enable Frame Time &Correction"
@@ -255,7 +258,7 @@ msgstr "Activează &corecția de timp a cadrelor"
 
 msgctxt "POPUP"
 msgid "&Color Management"
-msgstr "Gestionare &culori"
+msgstr "Gestionează &culorile"
 
 msgctxt "ID_VIEW_CM_ENABLE"
 msgid "&Enable"
@@ -263,11 +266,11 @@ msgstr "&Activează"
 
 msgctxt "POPUP"
 msgid "&Input Type"
-msgstr "&Tip intrare"
+msgstr "&Tipul de intrare"
 
 msgctxt "ID_VIEW_CM_INPUT_AUTO"
 msgid "&Auto-Detect"
-msgstr "&Autodetecție"
+msgstr "Detectare &automată"
 
 msgctxt "ID_VIEW_CM_INPUT_HDTV"
 msgid "&HDTV"
@@ -287,15 +290,15 @@ msgstr "&Lumină ambientală"
 
 msgctxt "ID_VIEW_CM_AMBIENTLIGHT_BRIGHT"
 msgid "&Bright (2.2 Gamma)"
-msgstr "L&uminos (2.2 Gamma)"
+msgstr "L&uminoasă (2.2 Gamma)"
 
 msgctxt "ID_VIEW_CM_AMBIENTLIGHT_DIM"
 msgid "&Dim (2.35 Gamma)"
-msgstr "&Estompată (2.35 Gamma)"
+msgstr "Sla&bă (2.35 Gamma)"
 
 msgctxt "ID_VIEW_CM_AMBIENTLIGHT_DARK"
 msgid "D&ark (2.4 Gamma)"
-msgstr "În&tunecat (2.4 Gamma)"
+msgstr "În&tunecată (2.4 Gamma)"
 
 msgctxt "POPUP"
 msgid "&Rendering Intent"
@@ -307,7 +310,7 @@ msgstr "&Perceptuală"
 
 msgctxt "ID_VIEW_CM_INTENT_RELATIVECOLORIMETRIC"
 msgid "&Relative Colorimetric"
-msgstr "&Colorimetrică &relativ"
+msgstr "Colorimetrică &relativă"
 
 msgctxt "ID_VIEW_CM_INTENT_SATURATION"
 msgid "&Saturation"
@@ -319,11 +322,11 @@ msgstr "Colorimetrică &absolută"
 
 msgctxt "POPUP"
 msgid "&VSync"
-msgstr "Sincronizare &verticală"
+msgstr "Sincronizare &verticală (VSync)"
 
 msgctxt "ID_VIEW_VSYNC"
 msgid "&VSync"
-msgstr "Activează sincronizarea &verticală"
+msgstr "Sincronizare &verticală (VSync)"
 
 msgctxt "ID_VIEW_VSYNCACCURATE"
 msgid "&Accurate VSync"
@@ -343,31 +346,23 @@ msgstr "&Mărește decalajul sincronizării verticale"
 
 msgctxt "POPUP"
 msgid "&GPU Control"
-msgstr "Control unitate &grafică"
+msgstr "Controlul &GPU-ului"
 
 msgctxt "ID_VIEW_FLUSHGPU_BEFOREVSYNC"
 msgid "Flush GPU &before VSync"
-msgstr "&Golește unitatea grafică înainte de sincronizarea verticală"
+msgstr "Curăță &GPU-ul înainte de sincronizarea verticală (VSync)"
 
 msgctxt "ID_VIEW_FLUSHGPU_AFTERPRESENT"
 msgid "Flush GPU &after Present"
-msgstr "Golește unitatea grafică &după prezentare"
+msgstr "Curăță GPU-ul &după prezentare"
 
 msgctxt "ID_VIEW_FLUSHGPU_WAIT"
 msgid "&Wait for flushes"
-msgstr "&Așteaptă după goliri"
-
-msgctxt "POPUP"
-msgid "R&eset"
-msgstr "R&estabilește"
+msgstr "&Așteaptă după eliberări de memorie"
 
 msgctxt "ID_VIEW_RESET_DEFAULT"
 msgid "Reset to &default renderer settings"
-msgstr "Restabilește la stabilirile &implicite ale randorului"
-
-msgctxt "ID_VIEW_RESET_OPTIMAL"
-msgid "Reset to &optimal renderer settings"
-msgstr "Restabilește la stabilirile &optime ale randorului"
+msgstr "Revino la setările &implicite ale randorului"
 
 msgctxt "POPUP"
 msgid "Video &Frame"
@@ -395,11 +390,11 @@ msgstr "Atinge fereastra din &interior"
 
 msgctxt "ID_VIEW_VF_ZOOM1"
 msgid "Zoom &1"
-msgstr "Scalare &1"
+msgstr "Scalează &1"
 
 msgctxt "ID_VIEW_VF_ZOOM2"
 msgid "Zoom &2"
-msgstr "Scalare &2"
+msgstr "Scalează &2"
 
 msgctxt "ID_VIEW_VF_FROMOUTSIDE"
 msgid "Touch Window From &Outside"
@@ -407,7 +402,7 @@ msgstr "Atinge fereastra din exteri&or"
 
 msgctxt "POPUP"
 msgid "&Aspect Ratio"
-msgstr "Raport de &aspect"
+msgstr "Raportul de &aspect (AR-ul/RA-ul)"
 
 msgctxt "ID_ASPECTRATIO_DAR"
 msgid "&Default (DAR)"
@@ -439,11 +434,12 @@ msgstr "Presupune că pixelii sunt &pătrați (SAR)"
 
 msgctxt "ID_VIEW_VF_COMPMONDESKARDIFF"
 msgid "&Correct Monitor/Desktop AR Diff"
-msgstr "&Corectează diferența RA Monitor/Desktop"
+msgstr ""
+"&Corectează diferența RA-ului (raportului de aspect) pentru monitor/desktop"
 
 msgctxt "POPUP"
-msgid "Pa&n && Scan"
-msgstr "Pa&noramare trunchiată"
+msgid "P&nS Frame Adjust"
+msgstr "Ajustează cadrele pentru P&nS (Panoramare și Scanare)"
 
 msgctxt "ID_VIEW_INCSIZE"
 msgid "&Increase Size"
@@ -487,11 +483,27 @@ msgstr "Mută în &jos"
 
 msgctxt "ID_PANSCAN_CENTER"
 msgid "Cen&ter"
-msgstr "Cen&trare"
+msgstr "Cen&trează"
+
+msgctxt "ID_PANSCAN_ROTATEZM"
+msgid "Rotate Cloc&kwise"
+msgstr "Rotește în sensul acelor de &ceasornic"
+
+msgctxt "ID_PANSCAN_ROTATEZ270"
+msgid "Rotate Counter-Clock&wise"
+msgstr "Rotește în sensul &invers acelor de ceasornic"
+
+msgctxt "ID_PANSCAN_ROTATEXM"
+msgid "&Flip Vertically"
+msgstr "Răstoarnă &vertical"
+
+msgctxt "ID_PANSCAN_ROTATEYM"
+msgid "&Mirror"
+msgstr "&Oglindește"
 
 msgctxt "ID_VIEW_RESET"
 msgid "Re&set"
-msgstr "Re&stabilește"
+msgstr "Re&setează"
 
 msgctxt "POPUP"
 msgid "On &Top"
@@ -523,7 +535,7 @@ msgstr "&Redare"
 
 msgctxt "ID_PLAY_PLAYPAUSE"
 msgid "&Play/Pause"
-msgstr "&Redă/Pauzează"
+msgstr "&Redă/Pune pe pauză (Întrerupe)"
 
 msgctxt "ID_PLAY_STOP"
 msgid "&Stop"
@@ -539,7 +551,7 @@ msgstr "Repetă"
 
 msgctxt "ID_PLAY_REPEAT_FOREVER"
 msgid "F&orever"
-msgstr "La &nesfârșit"
+msgstr "La nesfârșit (Pentru t&otdeauna)"
 
 msgctxt "ID_PLAY_REPEAT_ONEFILE"
 msgid "&File"
@@ -547,7 +559,95 @@ msgstr "&Fișierul"
 
 msgctxt "ID_PLAY_REPEAT_WHOLEPLAYLIST"
 msgid "&Playlist"
-msgstr "&Lista de redare"
+msgstr "&Listă de redare (Playlist)"
+
+msgctxt "ID_PLAY_REPEAT_AB"
+msgid "A-B (&Reset)"
+msgstr "A-B (&Resetează)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_A"
+msgid "A-B (Mark &A)"
+msgstr "A-B (Marchează &A-ul)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_B"
+msgid "A-B (Mark &B)"
+msgstr "A-B (Marchează &B-ul)"
+
+msgctxt "POPUP"
+msgid "&Playback Rate"
+msgstr "Rată de &redare"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_025"
+msgid "0.25 x"
+msgstr "0,25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_050"
+msgid "0.50 x"
+msgstr "0,50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_075"
+msgid "0.75 x"
+msgstr "0,75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_090"
+msgid "0.90 x"
+msgstr "0,90 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_100"
+msgid "1.00 x"
+msgstr "1,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_110"
+msgid "1.10 x"
+msgstr "1,10 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_125"
+msgid "1.25 x"
+msgstr "1,25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_150"
+msgid "1.50 x"
+msgstr "1,50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_175"
+msgid "1.75 x"
+msgstr "1.75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_200"
+msgid "2.00 x"
+msgstr "2,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_300"
+msgid "3.00 x"
+msgstr "3,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_400"
+msgid "4.00 x"
+msgstr "4,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_600"
+msgid "6.00 x"
+msgstr "6,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_800"
+msgid "8.00 x"
+msgstr "8,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS23"
+msgid "23.976 fps"
+msgstr "23.976 de fps-uri (de cadre pe secundă)"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS24"
+msgid "24 fps"
+msgstr "24 de fps-uri (de cadre pe secundă)"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS25"
+msgid "25 fps"
+msgstr "25 de fps-uri (de cadre pe secundă)"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS59"
+msgid "59.94 fps"
+msgstr "59.94 de fps-uri (de cadre pe secundă)"
 
 msgctxt "ID_PLAY_DECRATE"
 msgid "&Decrease Rate"
@@ -559,27 +659,35 @@ msgstr "&Mărește rata de redare"
 
 msgctxt "ID_PLAY_RESETRATE"
 msgid "R&eset Rate"
-msgstr "R&estabilește rata de redare"
+msgstr "R&esetează rata de redare"
 
 msgctxt "ID_FILTERS"
 msgid "&Filters"
 msgstr "&Filtre"
 
+msgctxt "ID_COLOR_CONTROLS"
+msgid "&Color controls..."
+msgstr "&Controale de culoare (Comenzi de culoare)..."
+
 msgctxt "ID_SHADERS"
 msgid "S&haders"
-msgstr "&Nuanțatoare"
+msgstr "&Nuanțatoare (Shadere)"
 
 msgctxt "ID_AUDIOS"
 msgid "&Audio Track"
-msgstr "Pistă &audio"
+msgstr "Pista &audio"
 
 msgctxt "ID_SUBTITLES"
 msgid "Su&btitle Track"
-msgstr "Pistă su&btitlu"
+msgstr "Pista de su&btitrări"
+
+msgctxt "ID_SUBTITLES_SECONDARY"
+msgid "Secondary Subtitle Track"
+msgstr "Pista secundară de subtitrări"
 
 msgctxt "ID_VIDEO_STREAMS"
 msgid "Vide&o Track"
-msgstr "Pistă &video"
+msgstr "Pista &video"
 
 msgctxt "POPUP"
 msgid "&Volume"
@@ -587,15 +695,15 @@ msgstr "Vol&um"
 
 msgctxt "ID_VOLUME_UP"
 msgid "&Up"
-msgstr "&Crește"
+msgstr "S&us (Crește volumul)"
 
 msgctxt "ID_VOLUME_DOWN"
 msgid "&Down"
-msgstr "&Scade"
+msgstr "Jos (Sca&de volumul)"
 
 msgctxt "ID_VOLUME_MUTE"
 msgid "&Mute"
-msgstr "&Taci"
+msgstr "&Mut (Fără sonor / Silențios)"
 
 msgctxt "POPUP"
 msgid "Af&ter Playback"
@@ -607,7 +715,7 @@ msgstr "&Nicio acțiune"
 
 msgctxt "ID_AFTERPLAYBACK_PLAYNEXT"
 msgid "Play &next file in the folder"
-msgstr "Redă &următorul fișier din dosar"
+msgstr "Redă &următorul fișier din dosar (folder)"
 
 msgctxt "ID_AFTERPLAYBACK_MONITOROFF"
 msgid "Turn off the &monitor"
@@ -655,27 +763,27 @@ msgstr "&Du-te la..."
 
 msgctxt "ID_NAVIGATE_TITLEMENU"
 msgid "&Title Menu"
-msgstr "Meniu &titlu"
+msgstr "&Titlul meniului"
 
 msgctxt "ID_NAVIGATE_ROOTMENU"
 msgid "&Root Menu"
-msgstr "Meniu &rădăcină"
+msgstr "Meniul p&rincipal"
 
 msgctxt "ID_NAVIGATE_SUBPICTUREMENU"
 msgid "&Subtitle Menu"
-msgstr "Meniu &subtitluri"
+msgstr "Meniul pentru &subtitrări"
 
 msgctxt "ID_NAVIGATE_AUDIOMENU"
 msgid "&Audio Menu"
-msgstr "Meniu &audio"
+msgstr "Meniul pentru pista &audio (Meniul pentru sunet)"
 
 msgctxt "ID_NAVIGATE_ANGLEMENU"
 msgid "An&gle Menu"
-msgstr "Meniu un&ghiuri"
+msgstr "Meniul pentru un&ghiuri"
 
 msgctxt "ID_NAVIGATE_CHAPTERMENU"
 msgid "&Chapter Menu"
-msgstr "Meniu &capitole"
+msgstr "Meniul pentru &capitole"
 
 msgctxt "ID_FAVORITES"
 msgid "F&avorites"
@@ -687,7 +795,7 @@ msgstr "Aj&utor"
 
 msgctxt "ID_HELP_HOMEPAGE"
 msgid "&Home Page"
-msgstr "&Pagină de pornire pentru MPC-HC"
+msgstr "&Pagina de pornire pentru MPC-HC"
 
 msgctxt "ID_HELP_CHECKFORUPDATE"
 msgid "Check for &updates"
@@ -695,17 +803,16 @@ msgstr "Caută act&ualizări"
 
 msgctxt "ID_HELP_SHOWCOMMANDLINESWITCHES"
 msgid "&Command Line Switches"
-msgstr "&Comutatoare linie de comandă"
+msgstr "&Comutatoare pentru linia de comandă (pentru CLI)"
 
 msgctxt "ID_HELP_TOOLBARIMAGES"
 msgid "Download &Toolbar Images"
-msgstr "Descărcare imagini pentru bara de ins&trumente"
+msgstr "Descarcă imagini pentru bara de ins&trumente"
 
 msgctxt "ID_HELP_DONATE"
 msgid "&Donate"
-msgstr "&Donare"
+msgstr "&Donează"
 
 msgctxt "ID_HELP_ABOUT"
 msgid "&About..."
 msgstr "&Despre..."
-

@@ -26,13 +26,13 @@
 #include "PathUtils.h"
 #include <afxglobals.h>
 #include "WebServer.h"
-
+#include "CMPCThemeMsgBox.h"
 
 // CPPageWebServer dialog
 
-IMPLEMENT_DYNAMIC(CPPageWebServer, CPPageBase)
+IMPLEMENT_DYNAMIC(CPPageWebServer, CMPCThemePPageBase)
 CPPageWebServer::CPPageWebServer()
-    : CPPageBase(CPPageWebServer::IDD, CPPageWebServer::IDD)
+    : CMPCThemePPageBase(CPPageWebServer::IDD, CPPageWebServer::IDD)
     , m_fEnableWebServer(FALSE)
     , m_nWebServerPort(0)
     , m_launch(_T("http://localhost:13579/"))
@@ -79,7 +79,7 @@ BOOL CPPageWebServer::PreTranslateMessage(MSG* pMsg)
         }
     }
 
-    return CPPageBase::PreTranslateMessage(pMsg);
+    return CMPCThemePPageBase::PreTranslateMessage(pMsg);
 }
 
 BOOL CPPageWebServer::OnInitDialog()
@@ -199,7 +199,7 @@ bool CPPageWebServer::PickDir(CString& dir)
     return success;
 }
 
-BEGIN_MESSAGE_MAP(CPPageWebServer, CPPageBase)
+BEGIN_MESSAGE_MAP(CPPageWebServer, CMPCThemePPageBase)
     ON_EN_CHANGE(IDC_EDIT1, OnEnChangeEdit1)
     ON_BN_CLICKED(IDC_BUTTON1, OnBnClickedButton1)
     ON_BN_CLICKED(IDC_BUTTON2, OnBnClickedButton2)
@@ -253,7 +253,7 @@ void CPPageWebServer::OnUpdateButton2(CCmdUI* pCmdUI)
 void CPPageWebServer::OnEnablePreviewChecked()
 {
     if (IsDlgButtonChecked(IDC_CHECK6)
-            && (MessageBox(ResStr(IDS_WEBUI_PREVIEW_WARNING), nullptr, MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2) == IDNO)) {
+            && (CMPCThemeMsgBox::MessageBox(this, ResStr(IDS_WEBUI_PREVIEW_WARNING), nullptr, MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2) == IDNO)) {
         CheckDlgButton(IDC_CHECK6, BST_UNCHECKED);
     } else {
         SetModified();

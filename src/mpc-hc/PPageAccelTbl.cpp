@@ -24,6 +24,10 @@
 #include "PPageAccelTbl.h"
 #include "AppSettings.h"
 
+#define DUP_KEY      (1<<12)
+#define DUP_APPCMD   (1<<13)
+#define DUP_RMCMD    (1<<14)
+#define MASK_DUP     (DUP_KEY|DUP_APPCMD|DUP_RMCMD)
 
 struct APP_COMMAND {
     UINT    appcmd;
@@ -32,6 +36,22 @@ struct APP_COMMAND {
 
 static constexpr APP_COMMAND g_CommandList[] = {
     {0,                                 _T("")},
+    {APPCOMMAND_MEDIA_PLAY_PAUSE,       _T("MEDIA_PLAY_PAUSE")},
+    {APPCOMMAND_MEDIA_PLAY,             _T("MEDIA_PLAY")},
+    {APPCOMMAND_MEDIA_PAUSE,            _T("MEDIA_PAUSE")},
+    {APPCOMMAND_MEDIA_STOP,             _T("MEDIA_STOP")},
+    {APPCOMMAND_MEDIA_NEXTTRACK,        _T("MEDIA_NEXTTRACK")},
+    {APPCOMMAND_MEDIA_PREVIOUSTRACK,    _T("MEDIA_PREVIOUSTRACK")},
+    {APPCOMMAND_MEDIA_FAST_FORWARD,     _T("MEDIA_FAST_FORWARD")},
+    {APPCOMMAND_MEDIA_REWIND,           _T("MEDIA_REWIND")},
+    {APPCOMMAND_MEDIA_CHANNEL_UP,       _T("MEDIA_CHANNEL_UP")},
+    {APPCOMMAND_MEDIA_CHANNEL_DOWN,     _T("MEDIA_CHANNEL_DOWN")},
+    {APPCOMMAND_MEDIA_RECORD,           _T("MEDIA_RECORD")},
+    {APPCOMMAND_VOLUME_DOWN,            _T("VOLUME_DOWN")},
+    {APPCOMMAND_VOLUME_UP,              _T("VOLUME_UP")},
+    {APPCOMMAND_VOLUME_MUTE,            _T("VOLUME_MUTE")},
+    {APPCOMMAND_LAUNCH_MEDIA_SELECT,    _T("LAUNCH_MEDIA_SELECT")},
+    /*
     {APPCOMMAND_BROWSER_BACKWARD,       _T("BROWSER_BACKWARD")},
     {APPCOMMAND_BROWSER_FORWARD,        _T("BROWSER_FORWARD")},
     {APPCOMMAND_BROWSER_REFRESH,        _T("BROWSER_REFRESH")},
@@ -39,53 +59,12 @@ static constexpr APP_COMMAND g_CommandList[] = {
     {APPCOMMAND_BROWSER_SEARCH,         _T("BROWSER_SEARCH")},
     {APPCOMMAND_BROWSER_FAVORITES,      _T("BROWSER_FAVORITES")},
     {APPCOMMAND_BROWSER_HOME,           _T("BROWSER_HOME")},
-    {APPCOMMAND_VOLUME_MUTE,            _T("VOLUME_MUTE")},
-    {APPCOMMAND_VOLUME_DOWN,            _T("VOLUME_DOWN")},
-    {APPCOMMAND_VOLUME_UP,              _T("VOLUME_UP")},
-    {APPCOMMAND_MEDIA_NEXTTRACK,        _T("MEDIA_NEXTTRACK")},
-    {APPCOMMAND_MEDIA_PREVIOUSTRACK,    _T("MEDIA_PREVIOUSTRACK")},
-    {APPCOMMAND_MEDIA_STOP,             _T("MEDIA_STOP")},
-    {APPCOMMAND_MEDIA_PLAY_PAUSE,       _T("MEDIA_PLAY_PAUSE")},
-    {APPCOMMAND_LAUNCH_MAIL,            _T("LAUNCH_MAIL")},
-    {APPCOMMAND_LAUNCH_MEDIA_SELECT,    _T("LAUNCH_MEDIA_SELECT")},
+    */
     {APPCOMMAND_LAUNCH_APP1,            _T("LAUNCH_APP1")},
     {APPCOMMAND_LAUNCH_APP2,            _T("LAUNCH_APP2")},
-    {APPCOMMAND_BASS_DOWN,              _T("BASS_DOWN")},
-    {APPCOMMAND_BASS_BOOST,             _T("BASS_BOOST")},
-    {APPCOMMAND_BASS_UP,                _T("BASS_UP")},
-    {APPCOMMAND_TREBLE_DOWN,            _T("TREBLE_DOWN")},
-    {APPCOMMAND_TREBLE_UP,              _T("TREBLE_UP")},
-    {APPCOMMAND_MICROPHONE_VOLUME_MUTE, _T("MICROPHONE_VOLUME_MUTE")},
-    {APPCOMMAND_MICROPHONE_VOLUME_DOWN, _T("MICROPHONE_VOLUME_DOWN")},
-    {APPCOMMAND_MICROPHONE_VOLUME_UP,   _T("MICROPHONE_VOLUME_UP")},
-    {APPCOMMAND_HELP,                   _T("HELP")},
-    {APPCOMMAND_FIND,                   _T("FIND")},
-    {APPCOMMAND_NEW,                    _T("NEW")},
     {APPCOMMAND_OPEN,                   _T("OPEN")},
     {APPCOMMAND_CLOSE,                  _T("CLOSE")},
-    {APPCOMMAND_SAVE,                   _T("SAVE")},
-    {APPCOMMAND_PRINT,                  _T("PRINT")},
-    {APPCOMMAND_UNDO,                   _T("UNDO")},
-    {APPCOMMAND_REDO,                   _T("REDO")},
-    {APPCOMMAND_COPY,                   _T("COPY")},
-    {APPCOMMAND_CUT,                    _T("CUT")},
-    {APPCOMMAND_PASTE,                  _T("PASTE")},
-    {APPCOMMAND_REPLY_TO_MAIL,          _T("REPLY_TO_MAIL")},
-    {APPCOMMAND_FORWARD_MAIL,           _T("FORWARD_MAIL")},
-    {APPCOMMAND_SEND_MAIL,              _T("SEND_MAIL")},
-    {APPCOMMAND_SPELL_CHECK,            _T("SPELL_CHECK")},
-    {APPCOMMAND_DICTATE_OR_COMMAND_CONTROL_TOGGLE, _T("DICTATE_OR_COMMAND_CONTROL_TOGGLE")},
-    {APPCOMMAND_MIC_ON_OFF_TOGGLE,      _T("MIC_ON_OFF_TOGGLE")},
-    {APPCOMMAND_CORRECTION_LIST,        _T("CORRECTION_LIST")},
-    {APPCOMMAND_MEDIA_PLAY,             _T("MEDIA_PLAY")},
-    {APPCOMMAND_MEDIA_PAUSE,            _T("MEDIA_PAUSE")},
-    {APPCOMMAND_MEDIA_RECORD,           _T("MEDIA_RECORD")},
-    {APPCOMMAND_MEDIA_FAST_FORWARD,     _T("MEDIA_FAST_FORWARD")},
-    {APPCOMMAND_MEDIA_REWIND,           _T("MEDIA_REWIND")},
-    {APPCOMMAND_MEDIA_CHANNEL_UP,       _T("MEDIA_CHANNEL_UP")},
-    {APPCOMMAND_MEDIA_CHANNEL_DOWN,     _T("MEDIA_CHANNEL_DOWN")},
     {APPCOMMAND_DELETE,                 _T("DELETE")},
-    {APPCOMMAND_DWM_FLIP3D,             _T("DWM_FLIP3D")},
     {MCE_DETAILS,                       _T("MCE_DETAILS")},
     {MCE_GUIDE,                         _T("MCE_GUIDE")},
     {MCE_TVJUMP,                        _T("MCE_TVJUMP")},
@@ -111,16 +90,16 @@ static constexpr APP_COMMAND g_CommandList[] = {
 
 // CPPageAccelTbl dialog
 
-IMPLEMENT_DYNAMIC(CPPageAccelTbl, CPPageBase)
+IMPLEMENT_DYNAMIC(CPPageAccelTbl, CMPCThemePPageBase)
 CPPageAccelTbl::CPPageAccelTbl()
-    : CPPageBase(CPPageAccelTbl::IDD, CPPageAccelTbl::IDD)
+    : CMPCThemePPageBase(CPPageAccelTbl::IDD, CPPageAccelTbl::IDD)
     , m_counter(0)
-    , m_list(0)
+    , m_list()
     , m_fWinLirc(FALSE)
     , m_WinLircLink(_T("http://winlirc.sourceforge.net/"))
-    , m_fUIce(FALSE)
-    , m_UIceLink(_T("http://www.mediatexx.com/"))
     , m_nStatusTimerID(0)
+    , filterTimerID(0)
+    , sortDirection(HDF_SORTUP)
     , m_fGlobalMedia(FALSE)
 {
 }
@@ -131,20 +110,100 @@ CPPageAccelTbl::~CPPageAccelTbl()
 
 BOOL CPPageAccelTbl::PreTranslateMessage(MSG* pMsg)
 {
-    if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN
-            && (pMsg->hwnd == m_WinLircEdit.m_hWnd || pMsg->hwnd == m_UIceEdit.m_hWnd)) {
+    if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN && pMsg->hwnd == m_WinLircEdit.m_hWnd) {
         OnApply();
         return TRUE;
+    }
+
+    if (pMsg->message == WM_KEYDOWN && (pMsg->wParam == VK_SPACE || pMsg->wParam == VK_RETURN) && pMsg->hwnd == m_list.m_hWnd
+            && GetKeyState(VK_CONTROL) >= 0 && GetKeyState(VK_MENU) >= 0 && GetKeyState(VK_SHIFT) >= 0) {
+        int nItem = m_list.GetNextItem(-1, LVNI_FOCUSED);
+        if (nItem >= 0) {
+            m_list.BeginInPlaceEdit(nItem, COL_KEY);
+            return TRUE;
+        }
     }
 
     return __super::PreTranslateMessage(pMsg);
 }
 
-
-void CPPageAccelTbl::SetupList()
+void CPPageAccelTbl::UpdateKeyDupFlags()
 {
     for (int row = 0; row < m_list.GetItemCount(); row++) {
-        wmcmd& wc = m_wmcmds.GetAt((POSITION)m_list.GetItemData(row));
+        auto itemData = (ITEMDATA*)m_list.GetItemData(row);
+        const wmcmd& wc = m_wmcmds.GetAt(itemData->index);
+
+        itemData->flag &= ~DUP_KEY;
+
+        if (wc.key) {
+            POSITION pos = m_wmcmds.GetHeadPosition();
+            for (; pos; m_wmcmds.GetNext(pos)) {
+                if (itemData->index == pos) { continue; }
+
+                if (wc.key == m_wmcmds.GetAt(pos).key && (wc.fVirt & (FCONTROL | FALT | FSHIFT)) == (m_wmcmds.GetAt(pos).fVirt & (FCONTROL | FALT | FSHIFT))) {
+                    itemData->flag |= DUP_KEY;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void CPPageAccelTbl::UpdateAppcmdDupFlags()
+{
+    for (int row = 0; row < m_list.GetItemCount(); row++) {
+        auto itemData = (ITEMDATA*)m_list.GetItemData(row);
+        const wmcmd& wc = m_wmcmds.GetAt(itemData->index);
+
+        itemData->flag &= ~DUP_APPCMD;
+
+        if (wc.appcmd) {
+            POSITION pos = m_wmcmds.GetHeadPosition();
+            for (; pos; m_wmcmds.GetNext(pos)) {
+                if (itemData->index == pos) { continue; }
+
+                if (wc.appcmd == m_wmcmds.GetAt(pos).appcmd) {
+                    itemData->flag |= DUP_APPCMD;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void CPPageAccelTbl::UpdateRmcmdDupFlags()
+{
+    for (int row = 0; row < m_list.GetItemCount(); row++) {
+        auto itemData = (ITEMDATA*)m_list.GetItemData(row);
+        const wmcmd& wc = m_wmcmds.GetAt(itemData->index);
+
+        itemData->flag &= ~DUP_RMCMD;
+
+        if (wc.rmcmd.GetLength()) {
+            POSITION pos = m_wmcmds.GetHeadPosition();
+            for (; pos; m_wmcmds.GetNext(pos)) {
+                if (itemData->index == pos) { continue; }
+
+                if (wc.rmcmd.CompareNoCase(m_wmcmds.GetAt(pos).rmcmd) == 0) {
+                    itemData->flag |= DUP_RMCMD;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void CPPageAccelTbl::UpdateAllDupFlags()
+{
+    UpdateKeyDupFlags();
+    UpdateAppcmdDupFlags();
+    UpdateRmcmdDupFlags();
+}
+
+void CPPageAccelTbl::SetupList(bool allowResize)
+{
+    for (int row = 0; row < m_list.GetItemCount(); row++) {
+        wmcmd& wc = m_wmcmds.GetAt(((ITEMDATA*)m_list.GetItemData(row))->index);
 
         CString hotkey;
         HotkeyModToString(wc.key, wc.fVirt, hotkey);
@@ -153,10 +212,6 @@ void CPPageAccelTbl::SetupList()
         CString id;
         id.Format(_T("%u"), wc.cmd);
         m_list.SetItemText(row, COL_ID, id);
-
-        m_list.SetItemText(row, COL_MOUSE, MakeMouseButtonLabel(wc.mouse));
-
-        m_list.SetItemText(row, COL_MOUSE_FS, MakeMouseButtonLabel(wc.mouseFS));
 
         m_list.SetItemText(row, COL_APPCMD, MakeAppCommandLabel(wc.appcmd));
 
@@ -167,12 +222,20 @@ void CPPageAccelTbl::SetupList()
         m_list.SetItemText(row, COL_RMREPCNT, repcnt);
     }
 
-    for (int nCol = COL_CMD; nCol <= COL_RMREPCNT; nCol++) {
-        m_list.SetColumnWidth(nCol, LVSCW_AUTOSIZE);
-        int contentSize = m_list.GetColumnWidth(nCol);
-        m_list.SetColumnWidth(nCol, LVSCW_AUTOSIZE_USEHEADER);
-        if (contentSize > m_list.GetColumnWidth(nCol)) {
+    UpdateAllDupFlags();
+
+    if (allowResize) {
+        for (int nCol = COL_CMD; nCol <= COL_RMREPCNT; nCol++) {
             m_list.SetColumnWidth(nCol, LVSCW_AUTOSIZE);
+            int contentSize = m_list.GetColumnWidth(nCol);
+            m_list.SetColumnWidth(nCol, LVSCW_AUTOSIZE_USEHEADER);
+            if (contentSize > m_list.GetColumnWidth(nCol)) {
+                m_list.SetColumnWidth(nCol, LVSCW_AUTOSIZE);
+            }
+        }
+        for (int nCol = COL_CMD; nCol <= COL_RMREPCNT; nCol++) {
+            int contentSize = m_list.GetColumnWidth(nCol);
+            m_list.SetColumnWidth(nCol, contentSize);
         }
     }
 }
@@ -596,16 +659,16 @@ CString CPPageAccelTbl::MakeAccelShortcutLabel(const ACCEL& a)
             str = _T("OEM 2");
             break;
         case VK_OEM_3:
-            str = _T("OEM 3");
+            str = _T("`");
             break;
         case VK_OEM_4:
-            str = _T("OEM 4");
+            str = _T("[");
             break;
         case VK_OEM_5:
             str = _T("OEM 5");
             break;
         case VK_OEM_6:
-            str = _T("OEM 6");
+            str = _T("]");
             break;
         case VK_OEM_7:
             str = _T("OEM 7");
@@ -785,69 +848,6 @@ CString CPPageAccelTbl::MakeAccelShortcutLabel(const ACCEL& a)
     return str;
 }
 
-CString CPPageAccelTbl::MakeMouseButtonLabel(UINT mouse)
-{
-    CString ret;
-    switch (mouse) {
-        case wmcmd::NONE:
-        default:
-            ret.LoadString(IDS_AG_NONE);
-            break;
-        case wmcmd::LDOWN:
-            ret = _T("Left Down");
-            break;
-        case wmcmd::LUP:
-            ret = _T("Left Up");
-            break;
-        case wmcmd::LDBLCLK:
-            ret = _T("Left DblClk");
-            break;
-        case wmcmd::MDOWN:
-            ret = _T("Middle Down");
-            break;
-        case wmcmd::MUP:
-            ret = _T("Middle Up");
-            break;
-        case wmcmd::MDBLCLK:
-            ret = _T("Middle DblClk");
-            break;
-        case wmcmd::RDOWN:
-            ret = _T("Right Down");
-            break;
-        case wmcmd::RUP:
-            ret = _T("Right Up");
-            break;
-        case wmcmd::RDBLCLK:
-            ret = _T("Right DblClk");
-            break;
-        case wmcmd::X1DOWN:
-            ret = _T("X1 Down");
-            break;
-        case wmcmd::X1UP:
-            ret = _T("X1 Up");
-            break;
-        case wmcmd::X1DBLCLK:
-            ret = _T("X1 DblClk");
-            break;
-        case wmcmd::X2DOWN:
-            ret = _T("X2 Down");
-            break;
-        case wmcmd::X2UP:
-            ret = _T("X2 Up");
-            break;
-        case wmcmd::X2DBLCLK:
-            ret = _T("X2 DblClk");
-            break;
-        case wmcmd::WUP:
-            ret = _T("Wheel Up");
-            break;
-        case wmcmd::WDOWN:
-            ret = _T("Wheel Down");
-            break;
-    }
-    return ret;
-}
-
 CString CPPageAccelTbl::MakeAppCommandLabel(UINT id)
 {
     for (int i = 0; i < _countof(g_CommandList); i++) {
@@ -855,7 +855,7 @@ CString CPPageAccelTbl::MakeAppCommandLabel(UINT id)
             return CString(g_CommandList[i].cmdname);
         }
     }
-    return _T("");
+    return id == 0 ? _T("") : _T("Invalid");
 }
 
 void CPPageAccelTbl::DoDataExchange(CDataExchange* pDX)
@@ -865,10 +865,7 @@ void CPPageAccelTbl::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_EDIT1, m_WinLircEdit);
     DDX_Control(pDX, IDC_STATICLINK, m_WinLircLink);
     DDX_Check(pDX, IDC_CHECK1, m_fWinLirc);
-    DDX_Text(pDX, IDC_EDIT2, m_UIceAddr);
-    DDX_Control(pDX, IDC_EDIT2, m_UIceEdit);
-    DDX_Control(pDX, IDC_STATICLINK2, m_UIceLink);
-    DDX_Check(pDX, IDC_CHECK9, m_fUIce);
+    DDX_Control(pDX, IDC_EDIT3, filterEdit);
     DDX_Check(pDX, IDC_CHECK2, m_fGlobalMedia);
 }
 
@@ -876,10 +873,13 @@ BEGIN_MESSAGE_MAP(CPPageAccelTbl, CPPageBase)
     ON_NOTIFY(LVN_BEGINLABELEDIT, IDC_LIST1, OnBeginListLabelEdit)
     ON_NOTIFY(LVN_DOLABELEDIT, IDC_LIST1, OnDoListLabelEdit)
     ON_NOTIFY(LVN_ENDLABELEDIT, IDC_LIST1, OnEndListLabelEdit)
+    ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST1, OnListColumnClick)
+    ON_EN_CHANGE(IDC_EDIT3, OnChangeFilterEdit)
     ON_BN_CLICKED(IDC_BUTTON1, OnBnClickedSelectAll)
     ON_BN_CLICKED(IDC_BUTTON2, OnBnClickedReset)
     ON_WM_TIMER()
     ON_WM_CTLCOLOR()
+    ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST1, OnCustomdrawList)
 END_MESSAGE_MAP()
 
 // CPPageAccelTbl message handlers
@@ -913,15 +913,11 @@ BOOL CPPageAccelTbl::OnInitDialog()
     m_wmcmds.AddTail(&s.wmcmds);
     m_fWinLirc = s.fWinLirc;
     m_WinLircAddr = s.strWinLircAddr;
-    m_fUIce = s.fUIce;
-    m_UIceAddr = s.strUIceAddr;
     m_fGlobalMedia = s.fGlobalMedia;
 
     CString text;
     text.Format(IDS_STRING_COLON, _T("WinLIRC"));
     m_WinLircLink.SetWindowText(text);
-    text.Format(IDS_STRING_COLON, _T("uICE"));
-    m_UIceLink.SetWindowText(text);
 
     UpdateData(FALSE);
 
@@ -931,28 +927,41 @@ BOOL CPPageAccelTbl::OnInitDialog()
 
     m_list.CreateEx(
         WS_EX_CLIENTEDGE,
-        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP | LVS_REPORT | LVS_AUTOARRANGE | LVS_SHOWSELALWAYS,
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |  WS_TABSTOP | LVS_REPORT | LVS_AUTOARRANGE | LVS_SHOWSELALWAYS,
         r, this, IDC_LIST1);
 
-    m_list.SetExtendedStyle(m_list.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | LVS_EX_GRIDLINES);
+    //m_list.SetExtendedStyle(m_list.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | LVS_EX_GRIDLINES );
+    m_list.setAdditionalStyles(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER | LVS_EX_GRIDLINES);
+    m_list.setAdditionalStyles(WS_CLIPCHILDREN, false);
+    m_list.setColorInterface(this);
 
-    for (int i = 0, j = m_list.GetHeaderCtrl()->GetItemCount(); i < j; i++) {
-        m_list.DeleteColumn(0);
+    //this list was created dynamically but lives in a dialog.  if we don't inherit the parent font,
+    //it will be scaled by text zoom settings, which looks bad in an unscaled dialog
+    CFont* curDialogFont = GetFont();
+    if (curDialogFont && curDialogFont->m_hObject) {
+        m_list.SetFont(curDialogFont);
+    }
+
+    CHeaderCtrl* hctrl = m_list.GetHeaderCtrl();
+    if (hctrl) {
+        for (int i = 0, j = hctrl->GetItemCount(); i < j; i++) {
+            m_list.DeleteColumn(0);
+        }
     }
     m_list.InsertColumn(COL_CMD, ResStr(IDS_AG_COMMAND), LVCFMT_LEFT, 80);
     m_list.InsertColumn(COL_KEY, ResStr(IDS_AG_KEY), LVCFMT_LEFT, 80);
     m_list.InsertColumn(COL_ID, _T("ID"), LVCFMT_LEFT, 40);
-    m_list.InsertColumn(COL_MOUSE, ResStr(IDS_AG_MOUSE), LVCFMT_LEFT, 80);
-    m_list.InsertColumn(COL_MOUSE_FS, ResStr(IDS_AG_MOUSE_FS), LVCFMT_LEFT, 80);
     m_list.InsertColumn(COL_APPCMD, ResStr(IDS_AG_APP_COMMAND), LVCFMT_LEFT, 120);
     m_list.InsertColumn(COL_RMCMD, _T("RemoteCmd"), LVCFMT_LEFT, 80);
     m_list.InsertColumn(COL_RMREPCNT, _T("RepCnt"), LVCFMT_CENTER, 60);
 
     POSITION pos = m_wmcmds.GetHeadPosition();
-    for (int i = 0; pos; i++) {
+    for (; pos; m_wmcmds.GetNext(pos)) {
         int row = m_list.InsertItem(m_list.GetItemCount(), m_wmcmds.GetAt(pos).GetName(), COL_CMD);
-        m_list.SetItemData(row, (DWORD_PTR)pos);
-        m_wmcmds.GetNext(pos);
+        auto itemData = std::make_unique<ITEMDATA>();
+        itemData->index = pos;
+        m_list.SetItemData(row, (DWORD_PTR)itemData.get());
+        m_pItemsData.push_back(std::move(itemData));
     }
 
     SetupList();
@@ -978,28 +987,32 @@ BOOL CPPageAccelTbl::OnApply()
     s.wmcmds.RemoveAll();
     s.wmcmds.AddTail(&m_wmcmds);
 
-    CAtlArray<ACCEL> pAccel;
-    pAccel.SetCount(m_wmcmds.GetCount());
-    POSITION pos = m_wmcmds.GetHeadPosition();
-    for (int i = 0; pos; i++) {
-        pAccel[i] = m_wmcmds.GetNext(pos);
-    }
     if (s.hAccel) {
         DestroyAcceleratorTable(s.hAccel);
     }
-    s.hAccel = CreateAcceleratorTable(pAccel.GetData(), (int)pAccel.GetCount());
 
-    GetParentFrame()->m_hAccelTable = s.hAccel;
+    CAtlArray<ACCEL> pAccel;
+    pAccel.SetCount(ACCEL_LIST_SIZE);
+    int accel_count = 0;
+    POSITION pos = m_wmcmds.GetHeadPosition();
+    for (int i = 0; pos; i++) {
+        ACCEL x = m_wmcmds.GetNext(pos);
+        if (x.key > 0) {
+            pAccel[accel_count] = x;
+            accel_count++;
+        }
+    }
+    s.hAccel = CreateAcceleratorTable(pAccel.GetData(), accel_count);
+
+    CFrameWnd* parent = GetParentFrame();
+    if (parent) {
+        parent->m_hAccelTable = s.hAccel;
+    }
 
     s.fWinLirc = !!m_fWinLirc;
     s.strWinLircAddr = m_WinLircAddr;
     if (s.fWinLirc) {
         s.WinLircClient.Connect(m_WinLircAddr);
-    }
-    s.fUIce = !!m_fUIce;
-    s.strUIceAddr = m_UIceAddr;
-    if (s.fUIce) {
-        s.UIceClient.Connect(m_UIceAddr);
     }
     s.fGlobalMedia = !!m_fGlobalMedia;
 
@@ -1028,7 +1041,7 @@ void CPPageAccelTbl::OnBnClickedReset()
 
     while (pos) {
         int ni = m_list.GetNextSelectedItem(pos);
-        POSITION pi = (POSITION)m_list.GetItemData(ni);
+        POSITION pi = ((ITEMDATA*)m_list.GetItemData(ni))->index;
         wmcmd& wc = m_wmcmds.GetAt(pi);
         wc.Restore();
     }
@@ -1036,6 +1049,96 @@ void CPPageAccelTbl::OnBnClickedReset()
     SetupList();
 
     SetModified();
+}
+
+void CPPageAccelTbl::OnChangeFilterEdit()
+{
+    KillTimer(filterTimerID);
+    filterTimerID = SetTimer(2, 100, NULL);
+}
+
+void  CPPageAccelTbl::FilterList()
+{
+    CString filter;
+    filterEdit.GetWindowText(filter);
+    LANGID langid = AfxGetAppSettings().language;
+    filter = NormalizeUnicodeStrForSearch(filter, langid);
+
+    m_list.SetRedraw(false);
+    m_list.DeleteAllItems();
+    m_pItemsData.clear();
+
+    POSITION pos = m_wmcmds.GetHeadPosition();
+    for (; pos; ) {
+        CString hotkey, id, name, sname;
+
+        wmcmd& wc = m_wmcmds.GetAt(pos);
+
+        HotkeyModToString(wc.key, wc.fVirt, hotkey);
+        id.Format(_T("%u"), wc.cmd);
+        sname = wc.GetName();
+
+        sname = NormalizeUnicodeStrForSearch(sname, langid);
+        id = NormalizeUnicodeStrForSearch(id, langid);
+        hotkey = NormalizeUnicodeStrForSearch(hotkey, langid);
+
+        if (filter.IsEmpty() || sname.Find(filter) != -1 || hotkey.Find(filter) != -1 || id.Find(filter) != -1) {
+            int row = m_list.InsertItem(m_list.GetItemCount(), wc.GetName(), COL_CMD);
+            auto itemData = std::make_unique<ITEMDATA>();
+            itemData->index = pos;
+            m_list.SetItemData(row, (DWORD_PTR)itemData.get());
+            m_pItemsData.push_back(std::move(itemData));
+        }
+        m_wmcmds.GetNext(pos);
+    }
+    SetupList(false);
+    m_list.SetRedraw(true);
+    m_list.RedrawWindow();
+}
+
+void CPPageAccelTbl::GetCustomTextColors(INT_PTR nItem, int iSubItem, COLORREF& clrText, COLORREF& clrTextBk, bool& overrideSelectedBG) {
+    auto itemData = (ITEMDATA*)m_list.GetItemData(nItem);
+    auto dup = itemData->flag;
+    if (iSubItem == COL_CMD && dup
+        || iSubItem == COL_KEY && (dup & DUP_KEY)
+        || iSubItem == COL_APPCMD && (dup & DUP_APPCMD)
+        || iSubItem == COL_RMCMD && (dup & DUP_RMCMD)) {
+        if (AppNeedsThemedControls()) {
+            clrTextBk = CMPCTheme::ListCtrlErrorColor;
+            overrideSelectedBG = true;
+        } else {
+            clrTextBk = RGB(255, 130, 120);
+        }
+    } else {
+        if (AppNeedsThemedControls()) {
+            clrTextBk = CMPCTheme::ContentBGColor;
+        } else {
+            clrTextBk = GetSysColor(COLOR_WINDOW);
+        }
+    }
+}
+
+void CPPageAccelTbl::GetCustomGridColors(int nItem, COLORREF& horzGridColor, COLORREF& vertGridColor) {
+    horzGridColor = CMPCTheme::ListCtrlGridColor;
+    vertGridColor = CMPCTheme::ListCtrlGridColor;
+}
+
+void CPPageAccelTbl::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult) {
+    //this custom draw is used in classic and light modes; dark draws via CMPCThemePlayerListCtrl
+    *pResult = CDRF_DODEFAULT;
+    if (!AppNeedsThemedControls()) {
+        NMLVCUSTOMDRAW* pLVCD = reinterpret_cast<NMLVCUSTOMDRAW*>(pNMHDR);
+
+        if (CDDS_PREPAINT == pLVCD->nmcd.dwDrawStage) {
+            *pResult = CDRF_NOTIFYITEMDRAW;
+        } else if (CDDS_ITEMPREPAINT == pLVCD->nmcd.dwDrawStage) {
+            *pResult = CDRF_NOTIFYSUBITEMDRAW;
+        } else if ((CDDS_ITEMPREPAINT | CDDS_SUBITEM) == pLVCD->nmcd.dwDrawStage) {
+            bool ignore;
+            GetCustomTextColors(pLVCD->nmcd.dwItemSpec, pLVCD->iSubItem, pLVCD->clrText, pLVCD->clrTextBk, ignore);
+            *pResult = CDRF_DODEFAULT;
+        }
+    }
 }
 
 void CPPageAccelTbl::OnBeginListLabelEdit(NMHDR* pNMHDR, LRESULT* pResult)
@@ -1049,9 +1152,7 @@ void CPPageAccelTbl::OnBeginListLabelEdit(NMHDR* pNMHDR, LRESULT* pResult)
         return;
     }
 
-    if (pItem->iSubItem == COL_KEY || pItem->iSubItem == COL_APPCMD
-            || pItem->iSubItem == COL_MOUSE || pItem->iSubItem == COL_MOUSE_FS
-            || pItem->iSubItem == COL_RMCMD || pItem->iSubItem == COL_RMREPCNT) {
+    if (pItem->iSubItem == COL_KEY || pItem->iSubItem == COL_APPCMD || pItem->iSubItem == COL_RMCMD || pItem->iSubItem == COL_RMREPCNT) {
         *pResult = TRUE;
     }
 }
@@ -1070,49 +1171,32 @@ void CPPageAccelTbl::OnDoListLabelEdit(NMHDR* pNMHDR, LRESULT* pResult)
 
     *pResult = TRUE;
 
-    wmcmd& wc = m_wmcmds.GetAt((POSITION)m_list.GetItemData(pItem->iItem));
+    
+    wmcmd& wc = m_wmcmds.GetAt(((ITEMDATA*)m_list.GetItemData(pItem->iItem))->index);
 
     CAtlList<CString> sl;
     int nSel = -1;
 
-    switch (pItem->iSubItem) {
-        case COL_KEY: {
-            m_list.ShowInPlaceWinHotkey(pItem->iItem, pItem->iSubItem);
-            CWinHotkeyCtrl* pWinHotkey = (CWinHotkeyCtrl*)m_list.GetDlgItem(IDC_WINHOTKEY1);
-            UINT cod = 0, mod = 0;
-
-            if (wc.fVirt & FALT) {
-                mod |= MOD_ALT;
-            }
-            if (wc.fVirt & FCONTROL) {
-                mod |= MOD_CONTROL;
-            }
-            if (wc.fVirt & FSHIFT) {
-                mod |= MOD_SHIFT;
-            }
-            cod = wc.key;
-            pWinHotkey->SetWinHotkey(cod, mod);
-            break;
+    auto createHotkey = [&](auto virt, auto key) {
+        m_list.ShowInPlaceWinHotkey(pItem->iItem, pItem->iSubItem);
+        CWinHotkeyCtrl* pWinHotkey = (CWinHotkeyCtrl*)m_list.GetDlgItem(IDC_WINHOTKEY1);
+        UINT cod = 0, mod = 0;
+        if (virt & FALT) {
+            mod |= MOD_ALT;
         }
-        case COL_MOUSE:
-            for (UINT i = 0; i < wmcmd::LAST; i++) {
-                sl.AddTail(MakeMouseButtonLabel(i));
-                if (wc.mouse == i) {
-                    nSel = i;
-                }
-            }
+        if (virt & FCONTROL) {
+            mod |= MOD_CONTROL;
+        }
+        if (virt & FSHIFT) {
+            mod |= MOD_SHIFT;
+        }
+        cod = key;
+        pWinHotkey->SetWinHotkey(cod, mod);
+    };
 
-            m_list.ShowInPlaceComboBox(pItem->iItem, pItem->iSubItem, sl, nSel);
-            break;
-        case COL_MOUSE_FS:
-            for (UINT i = 0; i < wmcmd::LAST; i++) {
-                sl.AddTail(MakeMouseButtonLabel(i));
-                if (wc.mouseFS == i) {
-                    nSel = i;
-                }
-            }
-
-            m_list.ShowInPlaceComboBox(pItem->iItem, pItem->iSubItem, sl, nSel);
+    switch (pItem->iSubItem) {
+        case COL_KEY:
+            createHotkey(wc.fVirt, wc.key);
             break;
         case COL_APPCMD:
             for (int i = 0; i < _countof(g_CommandList); i++) {
@@ -1136,6 +1220,70 @@ void CPPageAccelTbl::OnDoListLabelEdit(NMHDR* pNMHDR, LRESULT* pResult)
     }
 }
 
+int CPPageAccelTbl::CompareFunc(LPARAM lParam1, LPARAM lParam2)
+{
+    int result;
+
+    CString strItem1 = m_list.GetItemText(static_cast<int>(lParam1), sortColumn);
+    CString strItem2 = m_list.GetItemText(static_cast<int>(lParam2), sortColumn);
+    if (sortColumn == COL_ID || sortColumn == COL_RMREPCNT) {
+        wmcmd& wc1 = m_wmcmds.GetAt(((ITEMDATA*)m_list.GetItemData(static_cast<int>(lParam1)))->index);
+        wmcmd& wc2 = m_wmcmds.GetAt(((ITEMDATA*)m_list.GetItemData(static_cast<int>(lParam2)))->index);
+
+        result = wc1.cmd == wc2.cmd ? 0 : (wc1.cmd < wc2.cmd ? -1 : 1);
+    } else {
+        result = strItem1.Compare(strItem2);
+    }
+
+    if (sortDirection == HDF_SORTUP) {
+        return result;
+    } else {
+        return -result;
+    }
+}
+
+static int CALLBACK StaticCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+    CPPageAccelTbl* ppAccelTbl = (CPPageAccelTbl*)lParamSort;
+    return ppAccelTbl->CompareFunc(lParam1, lParam2);
+}
+
+void CPPageAccelTbl::UpdateHeaderSort(int column, int sort)
+{
+    CHeaderCtrl* hdr = m_list.GetHeaderCtrl();
+    HDITEMW hItem = { 0 };
+    hItem.mask = HDI_FORMAT;
+    if (hdr->GetItem(column, &hItem)) {
+        if (sort == HDF_SORTUP) {
+            hItem.fmt |= HDF_SORTUP;
+            hItem.fmt &= ~HDF_SORTDOWN;
+        } else if (sort == HDF_SORTDOWN) {
+            hItem.fmt |= HDF_SORTDOWN;
+            hItem.fmt &= ~HDF_SORTUP;
+        } else { //no sort
+            hItem.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+        }
+        hdr->SetItem(column, &hItem);
+    }
+}
+
+void CPPageAccelTbl::OnListColumnClick(NMHDR* pNMHDR, LRESULT* pResult)
+{
+    NM_LISTVIEW* pNMListView = (NM_LISTVIEW*)pNMHDR;
+    int colToSort = pNMListView->iSubItem;
+    if (colToSort == sortColumn) {
+        sortDirection = sortDirection == HDF_SORTUP ? HDF_SORTDOWN : HDF_SORTUP;
+    } else {
+        if (sortColumn != -1) {
+            UpdateHeaderSort(sortColumn, 0); //clear old sort
+        }
+        sortColumn = colToSort;
+        sortDirection = HDF_SORTUP;
+    }
+    m_list.SortItemsEx(StaticCompareFunc, (LPARAM)this);
+    UpdateHeaderSort(sortColumn, sortDirection);
+}
+
 void CPPageAccelTbl::OnEndListLabelEdit(NMHDR* pNMHDR, LRESULT* pResult)
 {
     LV_DISPINFO* pDispInfo = (LV_DISPINFO*)pNMHDR;
@@ -1150,54 +1298,48 @@ void CPPageAccelTbl::OnEndListLabelEdit(NMHDR* pNMHDR, LRESULT* pResult)
     if (pItem->iItem < 0) {
         return;
     }
+    wmcmd& wc = m_wmcmds.GetAt(((ITEMDATA*)m_list.GetItemData(pItem->iItem))->index);
 
-    wmcmd& wc = m_wmcmds.GetAt((POSITION)m_list.GetItemData(pItem->iItem));
-
-    switch (pItem->iSubItem) {
-        case COL_KEY: {
-            UINT cod, mod;
-            CWinHotkeyCtrl* pWinHotkey = (CWinHotkeyCtrl*)m_list.GetDlgItem(IDC_WINHOTKEY1);
-            pWinHotkey->GetWinHotkey(&cod, &mod);
-            wc.fVirt = 0;
-            if (mod & MOD_ALT) {
-                wc.fVirt |= FALT;
-            }
-            if (mod & MOD_CONTROL) {
-                wc.fVirt |= FCONTROL;
-            }
-            if (mod & MOD_SHIFT) {
-                wc.fVirt |= FSHIFT;
-            }
-            wc.fVirt |= FVIRTKEY;
-            ASSERT(cod < WORD_MAX);
-            wc.key = (WORD)cod;
-
-            CString str;
-            HotkeyToString(cod, mod, str);
-            m_list.SetItemText(pItem->iItem, pItem->iSubItem, str);
-
-            *pResult = TRUE;
+    auto updateHotkey = [&](auto &virt, auto &key) {
+        UINT cod, mod;
+        CWinHotkeyCtrl* pWinHotkey = (CWinHotkeyCtrl*)m_list.GetDlgItem(IDC_WINHOTKEY1);
+        pWinHotkey->GetWinHotkey(&cod, &mod);
+        ASSERT(cod < WORD_MAX);
+        key = (WORD)cod;
+        virt = FVIRTKEY;
+        if (mod & MOD_ALT) {
+            virt |= FALT;
         }
-        break;
+        if (mod & MOD_CONTROL) {
+            virt |= FCONTROL;
+        }
+        if (mod & MOD_SHIFT) {
+            virt |= FSHIFT;
+        }
+ 
+        CString str;
+        HotkeyToString(key, mod, str);
+        m_list.SetItemText(pItem->iItem, pItem->iSubItem, str);
+
+        *pResult = TRUE;
+        UpdateKeyDupFlags();
+    };
+
+    WORD discard;
+    switch (pItem->iSubItem) {
+        case COL_KEY:
+            updateHotkey(wc.fVirt, wc.key);
+            break;
         case COL_APPCMD: {
             ptrdiff_t i = pItem->lParam;
             if (i >= 0 && i < _countof(g_CommandList)) {
                 wc.appcmd = g_CommandList[i].appcmd;
                 m_list.SetItemText(pItem->iItem, COL_APPCMD, pItem->pszText);
                 *pResult = TRUE;
+                UpdateAppcmdDupFlags();
             }
         }
         break;
-        case COL_MOUSE:
-            wc.mouse = BYTE(pItem->lParam);
-            m_list.SetItemText(pItem->iItem, COL_MOUSE, pItem->pszText);
-            *pResult = TRUE;
-            break;
-        case COL_MOUSE_FS:
-            wc.mouseFS = BYTE(pItem->lParam);
-            m_list.SetItemText(pItem->iItem, COL_MOUSE_FS, pItem->pszText);
-            *pResult = TRUE;
-            break;
         case COL_RMCMD: {
             CString cmd = pItem->pszText;
             cmd.Trim();
@@ -1205,6 +1347,7 @@ void CPPageAccelTbl::OnEndListLabelEdit(NMHDR* pNMHDR, LRESULT* pResult)
             m_list.SetItemText(pItem->iItem, pItem->iSubItem, cmd);
             wc.rmcmd = cmd;
             *pResult = TRUE;
+            UpdateRmcmdDupFlags();
             break;
         }
         case COL_RMREPCNT:
@@ -1217,6 +1360,7 @@ void CPPageAccelTbl::OnEndListLabelEdit(NMHDR* pNMHDR, LRESULT* pResult)
     }
 
     if (*pResult) {
+        m_list.RedrawWindow();
         SetModified();
     }
 }
@@ -1233,18 +1377,12 @@ void CPPageAccelTbl::OnTimer(UINT_PTR nIDEvent)
             m_WinLircEdit.GetWindowText(addr);
             s.WinLircClient.Connect(addr);
         }
-
         m_WinLircEdit.Invalidate();
 
-        if (m_fUIce) {
-            CString addr;
-            m_UIceEdit.GetWindowText(addr);
-            s.UIceClient.Connect(addr);
-        }
-
-        m_UIceEdit.Invalidate();
-
         m_counter++;
+    } else if (nIDEvent == filterTimerID) {
+        KillTimer(filterTimerID);
+        FilterList();
     } else {
         __super::OnTimer(nIDEvent);
     }
@@ -1254,19 +1392,14 @@ HBRUSH CPPageAccelTbl::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 {
     HBRUSH hbr = __super::OnCtlColor(pDC, pWnd, nCtlColor);
 
-    const CAppSettings& s = AfxGetAppSettings();
-    int status = -1;
-
     if (*pWnd == m_WinLircEdit) {
-        status = s.WinLircClient.GetStatus();
-    } else if (*pWnd == m_UIceEdit) {
-        status = s.UIceClient.GetStatus();
-    }
-
-    if (status == 0 || status == 2 && (m_counter & 1)) {
-        pDC->SetTextColor(0x0000ff);
-    } else if (status == 1) {
-        pDC->SetTextColor(0x008000);
+        //must be applied after the base handler, which sets the default text color for every control on the page
+        int status = AfxGetAppSettings().WinLircClient.GetStatus();
+        if (status == 0 || (status == 2 && (m_counter & 1))) {
+            pDC->SetTextColor(RGB(255, 0, 0));
+        } else if (status == 1) {
+            pDC->SetTextColor(RGB(0, 128, 0));
+        }
     }
 
     return hbr;
@@ -1293,9 +1426,6 @@ void CPPageAccelTbl::OnCancel()
 
     if (!s.fWinLirc) {
         s.WinLircClient.DisConnect();
-    }
-    if (!s.fUIce) {
-        s.UIceClient.DisConnect();
     }
 
     __super::OnCancel();

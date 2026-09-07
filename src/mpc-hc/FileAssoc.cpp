@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2014, 2016-2017 see Authors.txt
+ * (C) 2006-2018 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -74,10 +74,6 @@ CFileAssoc::CFileAssoc()
     , m_bNoRecentDocs(false)
     , m_checkIconsAssocInactiveEvent(TRUE, TRUE) // initially set, manual reset
 {
-    // Default manager (requires at least Vista)
-    VERIFY(CoCreateInstance(CLSID_ApplicationAssociationRegistration, nullptr,
-                            CLSCTX_INPROC, IID_PPV_ARGS(&m_pAAR)) != CO_E_NOTINITIALIZED);
-
     m_handlers[0] = { _T("VideoFiles"), _T(" %1"), IDS_AUTOPLAY_PLAYVIDEO };
     m_handlers[1] = { _T("MusicFiles"), _T(" %1"), IDS_AUTOPLAY_PLAYMUSIC };
     m_handlers[2] = { _T("CDAudio"), _T(" %1 /cd"), IDS_AUTOPLAY_PLAYAUDIOCD };
@@ -89,6 +85,15 @@ CFileAssoc::~CFileAssoc()
     HANDLE hEvent = m_checkIconsAssocInactiveEvent;
     DWORD dwEvent;
     VERIFY(CoWaitForMultipleHandles(0, INFINITE, 1, &hEvent, &dwEvent) == S_OK);
+}
+
+void CFileAssoc::LoadAAR()
+{
+    if (!m_pAAR) {
+        // Default manager (requires at least Vista)
+        VERIFY(CoCreateInstance(CLSID_ApplicationAssociationRegistration, nullptr,
+                            CLSCTX_INPROC, IID_PPV_ARGS(&m_pAAR)) != CO_E_NOTINITIALIZED);
+    }
 }
 
 std::shared_ptr<const CFileAssoc::IconLib> CFileAssoc::GetIconLib() const
@@ -136,6 +141,7 @@ bool CFileAssoc::RegisterApp()
 {
     bool success = false;
 
+    LoadAAR();
     if (m_pAAR) {
         CString appIcon = _T("\"") + PathUtils::GetProgramPath(true) + _T("\",0");
 
@@ -159,7 +165,7 @@ bool CFileAssoc::RegisterApp()
     return success;
 }
 
-bool CFileAssoc::Register(CString ext, CString strLabel, bool bRegister, bool bRegisterContextMenuEntries, bool bAssociatedWithIcon)
+bool CFileAssoc::Register(CString ext, CString strLabel, bool bRegister, bool bAddEnqueueContextMenu, bool bAssociatedWithIcon)
 {
     CRegKey key;
     CString strProgID = PROGID + ext;
@@ -194,10 +200,11 @@ bool CFileAssoc::Register(CString ext, CString strLabel, bool bRegister, bool bR
         CString appIcon = _T("\"") + PathUtils::GetProgramPath(true) + _T("\",0");
 
         // Add to playlist option
-        if (bRegisterContextMenuEntries) {
+        if (bAddEnqueueContextMenu) {
             if (ERROR_SUCCESS != key.Create(HKEY_CLASSES_ROOT, strProgID + _T("\\shell\\enqueue"))
                     || ERROR_SUCCESS != key.SetStringValue(nullptr, ResStr(IDS_ADD_TO_PLAYLIST))
                     || ERROR_SUCCESS != key.SetStringValue(_T("Icon"), appIcon)
+                    || ERROR_SUCCESS != key.SetStringValue(_T("MultiSelectModel"), _T("Player"))
                     || ERROR_SUCCESS != key.Create(HKEY_CLASSES_ROOT, strProgID + _T("\\shell\\enqueue\\command"))
                     || ERROR_SUCCESS != key.SetStringValue(nullptr, m_strEnqueueCommand)) {
                 return false;
@@ -212,18 +219,11 @@ bool CFileAssoc::Register(CString ext, CString strLabel, bool bRegister, bool bR
         if (ERROR_SUCCESS != key.Create(HKEY_CLASSES_ROOT, strProgID + _T("\\shell\\open"))) {
             return false;
         }
-        if (bRegisterContextMenuEntries) {
-            if (ERROR_SUCCESS != key.SetStringValue(nullptr, ResStr(IDS_OPEN_WITH_MPC))
-                    || ERROR_SUCCESS != key.SetStringValue(_T("Icon"), appIcon)) {
-                return false;
-            }
-        } else {
-            if (ERROR_SUCCESS != key.SetStringValue(nullptr, _T(""))
-                    || ERROR_SUCCESS != key.SetStringValue(_T("Icon"), _T(""))) {
-                return false;
-            }
+        if (ERROR_SUCCESS != key.SetStringValue(nullptr, ResStr(IDS_OPEN_WITH_MPC))
+                || ERROR_SUCCESS != key.SetStringValue(_T("MultiSelectModel"), _T("Player"))
+                || ERROR_SUCCESS != key.SetStringValue(_T("Icon"), appIcon)) {
+            return false;
         }
-
         if (ERROR_SUCCESS != key.Create(HKEY_CLASSES_ROOT, strProgID + _T("\\shell\\open\\command"))
                 || ERROR_SUCCESS != key.SetStringValue(nullptr, m_strOpenCommand)) {
             return false;
@@ -265,7 +265,7 @@ bool CFileAssoc::Register(CString ext, CString strLabel, bool bRegister, bool bR
 
 bool CFileAssoc::SetFileAssociation(CString strExt, CString strProgID, bool bRegister)
 {
-    CString extOldReg/*, extOldIcon*/;
+    CString extOldReg;
     CRegKey key;
     HRESULT hr = S_OK;
     TCHAR   buff[MAX_PATH];
@@ -273,7 +273,7 @@ bool CFileAssoc::SetFileAssociation(CString strExt, CString strProgID, bool bReg
     ZeroMemory(buff, sizeof(buff));
 
     if (m_pAAR) {
-        // The Vista/Seven way
+        // The Windows 7 way
         CString strNewApp;
         if (bRegister) {
             // Create non existing file type
@@ -289,20 +289,6 @@ bool CFileAssoc::SetFileAssociation(CString strExt, CString strProgID, bool bReg
                 }
 
                 key.SetStringValue(m_strOldAssocKey, pszCurrentAssociation);
-
-                /*
-                // Get current icon for file type
-                if (ERROR_SUCCESS == key.Open(HKEY_CLASSES_ROOT, CString(pszCurrentAssociation) + _T("\\DefaultIcon")))
-                {
-                    len = sizeof(buff);
-                    ZeroMemory(buff, sizeof(buff));
-                    if (ERROR_SUCCESS == key.QueryStringValue(nullptr, buff, &len) && !CString(buff).Trim().IsEmpty())
-                    {
-                        if (ERROR_SUCCESS == key.Create(HKEY_CLASSES_ROOT, strProgID + _T("\\DefaultIcon")))
-                            key.SetStringValue (nullptr, buff);
-                    }
-                }
-                */
             }
             strNewApp = m_strRegisteredAppName;
         } else {
@@ -313,69 +299,9 @@ bool CFileAssoc::SetFileAssociation(CString strExt, CString strProgID, bool bReg
             if (ERROR_SUCCESS == key.QueryStringValue(m_strOldAssocKey, buff, &len)) {
                 strNewApp = buff;
             }
-
-            // TODO : retrieve registered app name from previous association (or find Bill function for that...)
         }
 
         hr = m_pAAR->SetAppAsDefault(strNewApp, strExt, AT_FILEEXTENSION);
-    } else {
-        // The XP way
-        if (bRegister) {
-            // Set new association
-            if (ERROR_SUCCESS != key.Create(HKEY_CLASSES_ROOT, strExt)) {
-                return false;
-            }
-
-            len = _countof(buff);
-            ZeroMemory(buff, sizeof(buff));
-            if (ERROR_SUCCESS == key.QueryStringValue(nullptr, buff, &len) && !CString(buff).Trim().IsEmpty()) {
-                extOldReg = buff;
-            }
-            if (ERROR_SUCCESS != key.SetStringValue(nullptr, strProgID)) {
-                return false;
-            }
-
-            /*
-            // Get current icon for file type
-            if (!extOldReg.IsEmpty())
-            {
-                if (ERROR_SUCCESS == key.Open(HKEY_CLASSES_ROOT, extoldreg + _T("\\DefaultIcon")))
-                {
-                    len = sizeof(buff);
-                    ZeroMemory(buff, sizeof(buff));
-                    if (ERROR_SUCCESS == key.QueryStringValue(nullptr, buff, &len) && !CString(buff).Trim().IsEmpty())
-                        extOldIcon = buff;
-                }
-            }
-            */
-
-            // Save old association
-            if (ERROR_SUCCESS != key.Create(HKEY_CLASSES_ROOT, strProgID)) {
-                return false;
-            }
-            key.SetStringValue(m_strOldAssocKey, extOldReg);
-
-            /*
-            if (!extOldIcon.IsEmpty() && (ERROR_SUCCESS == key.Create(HKEY_CLASSES_ROOT, strProgID + _T("\\DefaultIcon"))))
-                key.SetStringValue(nullptr, extOldIcon);
-            */
-        } else {
-            // Get previous association
-            len = _countof(buff);
-            ZeroMemory(buff, sizeof(buff));
-            if (ERROR_SUCCESS != key.Create(HKEY_CLASSES_ROOT, strProgID)) {
-                return false;
-            }
-            if (ERROR_SUCCESS == key.QueryStringValue(m_strOldAssocKey, buff, &len) && !CString(buff).Trim().IsEmpty()) {
-                extOldReg = buff;
-            }
-
-            // Set previous association
-            if (ERROR_SUCCESS != key.Create(HKEY_CLASSES_ROOT, strExt)) {
-                return false;
-            }
-            key.SetStringValue(nullptr, extOldReg);
-        }
     }
 
     return SUCCEEDED(hr);
@@ -387,25 +313,9 @@ bool CFileAssoc::IsRegistered(CString ext) const
     CString strProgID = PROGID + ext;
 
     if (IsWindows8OrGreater()) {
-        // The Eight way
         bIsDefault = TRUE; // Check only if MPC-HC is registered as able to handle that format, not if it's the default.
     } else if (m_pAAR) {
-        // The Vista/Seven way
         m_pAAR->QueryAppIsDefault(ext, AT_FILEEXTENSION, AL_EFFECTIVE, m_strRegisteredAppName, &bIsDefault);
-    } else {
-        // The XP way
-        CRegKey key;
-        TCHAR   buff[MAX_PATH];
-        ULONG   len = _countof(buff);
-        ZeroMemory(buff, sizeof(buff));
-
-        if (ERROR_SUCCESS != key.Open(HKEY_CLASSES_ROOT, ext, KEY_READ)
-                || ERROR_SUCCESS != key.QueryStringValue(nullptr, buff, &len)
-                || CString(buff).Trim().IsEmpty()) {
-            return false;
-        }
-
-        bIsDefault = (buff == strProgID);
     }
 
     // Check if association is for this instance of MPC-HC
@@ -425,25 +335,15 @@ bool CFileAssoc::IsRegistered(CString ext) const
     return !!bIsDefault;
 }
 
-bool CFileAssoc::AreRegisteredFileContextMenuEntries(CString strExt) const
+bool CFileAssoc::HasEnqueueContextMenuEntry(CString strExt) const
 {
     CRegKey key;
-    TCHAR   buff[MAX_PATH];
-    ULONG   len = _countof(buff);
     CString strProgID = PROGID + strExt;
-    bool    registered = false;
 
-    if (ERROR_SUCCESS == key.Open(HKEY_CLASSES_ROOT, strProgID + _T("\\shell\\open"), KEY_READ)) {
-        CString strCommand(StrRes(IDS_OPEN_WITH_MPC));
-        if (ERROR_SUCCESS == key.QueryStringValue(nullptr, buff, &len)) {
-            registered = (strCommand.CompareNoCase(CString(buff)) == 0);
-        }
-    }
-
-    return registered;
+    return (ERROR_SUCCESS == key.Open(HKEY_CLASSES_ROOT, strProgID + _T("\\shell\\enqueue"), KEY_READ));
 }
 
-bool CFileAssoc::Register(const CMediaFormatCategory& mfc, bool bRegister, bool bRegisterContextMenuEntries, bool bAssociatedWithIcon)
+bool CFileAssoc::Register(const CMediaFormatCategory& mfc, bool bRegister, bool bAddEnqueueContextMenu, bool bAssociatedWithIcon)
 {
     if (!mfc.IsAssociable()) {
         ASSERT(FALSE);
@@ -458,7 +358,7 @@ bool CFileAssoc::Register(const CMediaFormatCategory& mfc, bool bRegister, bool 
 
     POSITION pos = exts.GetHeadPosition();
     while (pos) {
-        res &= Register(exts.GetNext(pos), strLabel, bRegister, bRegisterContextMenuEntries, bAssociatedWithIcon);
+        res &= Register(exts.GetNext(pos), strLabel, bRegister, bAddEnqueueContextMenu, bAssociatedWithIcon);
     }
 
     return res;
@@ -490,7 +390,7 @@ CFileAssoc::reg_state_t CFileAssoc::IsRegistered(const CMediaFormatCategory& mfc
     return res;
 }
 
-CFileAssoc::reg_state_t CFileAssoc::AreRegisteredFileContextMenuEntries(const CMediaFormatCategory& mfc) const
+CFileAssoc::reg_state_t CFileAssoc::HasAnyEnqueueContextMenuEntries(const CMediaFormatCategory& mfc) const
 {
     CAtlList<CString> exts;
     ExplodeMin(mfc.GetExtsWithPeriod(), exts, ' ');
@@ -499,7 +399,7 @@ CFileAssoc::reg_state_t CFileAssoc::AreRegisteredFileContextMenuEntries(const CM
 
     POSITION pos = exts.GetHeadPosition();
     while (pos) {
-        if (CFileAssoc::AreRegisteredFileContextMenuEntries(exts.GetNext(pos))) {
+        if (CFileAssoc::HasEnqueueContextMenuEntry(exts.GetNext(pos))) {
             cnt++;
         }
     }
@@ -687,7 +587,7 @@ bool CFileAssoc::GetAssociatedExtensions(const CMediaFormats& mf, CAtlList<CStri
     return !exts.IsEmpty();
 }
 
-bool CFileAssoc::GetAssociatedExtensionsFromRegistry(CAtlList<CString>& exts) const
+bool CFileAssoc::GetAssociatedExtensionsFromRegistry(CAtlList<CString>& exts)
 {
     exts.RemoveAll();
 
@@ -696,6 +596,8 @@ bool CFileAssoc::GetAssociatedExtensionsFromRegistry(CAtlList<CString>& exts) co
     DWORD i = 0;
     CString keyName, ext;
     DWORD len = MAX_PATH;
+
+    LoadAAR();
 
     while ((ret = rkHKCR.EnumKey(i, keyName.GetBuffer(len), &len)) != ERROR_NO_MORE_ITEMS) {
         if (ret == ERROR_SUCCESS) {
@@ -826,9 +728,9 @@ void CFileAssoc::CheckIconsAssoc()
     DWORD dwEvent;
     VERIFY(CoWaitForMultipleHandles(0, INFINITE, 1, &hEvent, &dwEvent) == S_OK);
     m_checkIconsAssocInactiveEvent.Reset();
-    std::thread(
-        [this] { CheckIconsAssocThread(); }
-    ).detach();
+    try {
+        std::thread([this] { CheckIconsAssocThread(); }).detach();
+    } catch (...) {}
 }
 
 bool CFileAssoc::ShowWindowsAssocDialog() const

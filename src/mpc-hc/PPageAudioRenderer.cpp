@@ -26,7 +26,7 @@
 
 #include <FunctionDiscoveryKeys_devpkey.h>
 #include <Mmdeviceapi.h>
-#include <sanear/sanear/src/Settings.h>
+#include <sanear/src/Settings.h>
 #include "AppSettings.h"
 
 namespace
@@ -65,30 +65,30 @@ namespace
     }
 }
 
+IMPLEMENT_DYNAMIC(CPPageAudioRenderer, CMPCThemePPageBase)
 CPPageAudioRenderer::CPPageAudioRenderer()
-    : CPPageBase(IDD, VersionInfo::IsLite() ? IDS_PPAGE_OUTPUT_AUD_INTERNAL_REND : IDD_PPAGEAUDIORENDERER)
+    : CMPCThemePPageBase(IDD, IDS_PPAGE_AUDIORENDERER_TITLE)
     , m_bExclusiveMode(FALSE)
-    , m_bAllowBitstreaming(TRUE)
     , m_bCrossfeedEnabled(FALSE)
     , m_bIgnoreSystemChannelMixer(TRUE)
 {
+    m_bPopupHosted = true;
 }
 
 void CPPageAudioRenderer::DoDataExchange(CDataExchange* pDX)
 {
     __super::DoDataExchange(pDX);
     DDX_Check(pDX, IDC_CHECK1, m_bExclusiveMode);
-    DDX_Check(pDX, IDC_CHECK2, m_bAllowBitstreaming);
     DDX_Check(pDX, IDC_CHECK3, m_bCrossfeedEnabled);
     DDX_Check(pDX, IDC_CHECK4, m_bIgnoreSystemChannelMixer);
+
     DDX_Control(pDX, IDC_COMBO1, m_combo1);
     DDX_Control(pDX, IDC_SLIDER1, m_slider1);
     DDX_Control(pDX, IDC_SLIDER2, m_slider2);
 }
 
-BEGIN_MESSAGE_MAP(CPPageAudioRenderer, CPPageBase)
+BEGIN_MESSAGE_MAP(CPPageAudioRenderer, CMPCThemePPageBase)
     ON_WM_HSCROLL()
-    ON_UPDATE_COMMAND_UI(IDC_CHECK2, OnUpdateAllowBitstreamingCheckbox)
     ON_UPDATE_COMMAND_UI(IDC_BUTTON1, OnUpdateCrossfeedGroup)
     ON_BN_CLICKED(IDC_BUTTON1, OnCMoyButton)
     ON_UPDATE_COMMAND_UI(IDC_BUTTON2, OnUpdateCrossfeedGroup)
@@ -112,6 +112,7 @@ BOOL CPPageAudioRenderer::OnInitDialog()
     m_combo1.AddString(defaultString);
     m_deviceIds.emplace_back();
     m_combo1.SetItemData(0, 0);
+    m_combo1.SetCurSel(0);
 
     for (const auto& device : GetDevices()) {
         int idx = m_combo1.AddString(device.first);
@@ -122,10 +123,9 @@ BOOL CPPageAudioRenderer::OnInitDialog()
     }
 
     CComHeapPtr<WCHAR> pDeviceId;
-    if (SUCCEEDED(s.sanear->GetOuputDevice(&pDeviceId, &m_bExclusiveMode, nullptr))) {
-        if (!pDeviceId || pDeviceId[0] == '\0') {
-            m_combo1.SetCurSel(0);
-        } else {
+    if (SUCCEEDED(s.sanear->GetOutputDevice(&pDeviceId, &m_bExclusiveMode, nullptr))) {
+        if (pDeviceId && pDeviceId[0] != '\0') {
+            bool found = false;
             for (size_t i = 0; i < m_deviceIds.size(); i++) {
                 if (m_deviceIds[i] == pDeviceId) {
                     for (int j = 0; j < m_combo1.GetCount(); j++) {
@@ -133,13 +133,17 @@ BOOL CPPageAudioRenderer::OnInitDialog()
                             m_combo1.SetCurSel(j);
                         }
                     }
+                    found = true;
                     break;
                 }
+            }
+            if (!found) {
+                // device does not exist anymore or is invalid, reset to default
+                s.sanear->SetOutputDevice(nullptr, m_bExclusiveMode, 200);
             }
         }
     }
 
-    m_bAllowBitstreaming = s.sanear->GetAllowBitstreaming();
     m_bCrossfeedEnabled = s.sanear->GetCrossfeedEnabled();
     m_bIgnoreSystemChannelMixer = s.sanear->GetIgnoreSystemChannelMixer();
 
@@ -174,20 +178,14 @@ BOOL CPPageAudioRenderer::OnApply()
     }
 
     UINT32 buffer;
-    s.sanear->GetOuputDevice(nullptr, nullptr, &buffer);
-    s.sanear->SetOuputDevice(deviceId, m_bExclusiveMode, buffer);
+    s.sanear->GetOutputDevice(nullptr, nullptr, &buffer);
+    s.sanear->SetOutputDevice(deviceId, m_bExclusiveMode, buffer);
 
-    s.sanear->SetAllowBitstreaming(m_bAllowBitstreaming);
     s.sanear->SetCrossfeedSettings(m_slider1.GetPos(), m_slider2.GetPos());
     s.sanear->SetCrossfeedEnabled(m_bCrossfeedEnabled);
     s.sanear->SetIgnoreSystemChannelMixer(m_bIgnoreSystemChannelMixer);
 
     return __super::OnApply();
-}
-
-void CPPageAudioRenderer::OnCancel()
-{
-    __super::OnCancel();
 }
 
 void CPPageAudioRenderer::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
@@ -209,11 +207,6 @@ void CPPageAudioRenderer::OnJMeierButton()
     m_slider1.SetPos(SaneAudioRenderer::ISettings::CROSSFEED_CUTOFF_FREQ_JMEIER);
     m_slider2.SetPos(SaneAudioRenderer::ISettings::CROSSFEED_LEVEL_JMEIER);
     SetModified(TRUE);
-}
-
-void CPPageAudioRenderer::OnUpdateAllowBitstreamingCheckbox(CCmdUI* pCmdUI)
-{
-    pCmdUI->Enable(IsDlgButtonChecked(IDC_CHECK1));
 }
 
 void CPPageAudioRenderer::OnUpdateCrossfeedGroup(CCmdUI* pCmdUI)

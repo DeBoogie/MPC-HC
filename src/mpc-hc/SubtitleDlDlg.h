@@ -24,13 +24,17 @@
 #include "ResizableLib/ResizableDialog.h"
 #include "SubtitlesProviders.h" // Forward declaration doesn't work on VS2013. Remove this once VS2013 support is dropped.
 #include <list>
+#include "CMPCThemePlayerListCtrl.h"
+#include "CMPCThemeModelessResizableDialog.h"
+#include "CMPCThemeStatusBar.h"
+#include "CMPCThemeProgressCtrl.h"
 
 class CMainFrame;
 struct SubtitlesInfo;
 using SubtitlesList = std::list<SubtitlesInfo>;
 enum SRESULT;
 
-class CSubtitleDlDlgListCtrl final : public CListCtrl
+class CSubtitleDlDlgListCtrl final : public CMPCThemePlayerListCtrl
 {
     void PreSubclassWindow() override;
 
@@ -38,7 +42,7 @@ class CSubtitleDlDlgListCtrl final : public CListCtrl
     afx_msg BOOL OnToolNeedText(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
 };
 
-class CSubtitleDlDlg : public CResizableDialog
+class CSubtitleDlDlg : public CMPCThemeModelessResizableDialog
 {
 public:
     enum {
@@ -46,13 +50,12 @@ public:
         COL_FILENAME,
         COL_LANGUAGE,
         //COL_FORMAT,
+        COL_FRAMERATE,
         COL_HEARINGIMPAIRED,
         COL_DOWNLOADS,
-        COL_DISC,
         COL_TITLES,
-#ifdef _DEBUG
         COL_SCORE,
-#endif
+        COL_DISC,
         COL_TOTAL_COLUMNS
     };
 
@@ -70,10 +73,11 @@ private:
     bool m_bIsRefreshed;
 
     CSubtitleDlDlgListCtrl m_list;
-    CProgressCtrl m_progress;
-    CStatusBarCtrl m_status;
+    CMPCThemeProgressCtrl m_progress;
+    CMPCThemeStatusBar m_status;
     CMainFrame* m_pMainFrame;
     SubtitlesList m_Subtitles;
+    CString manualSearch;
 
     static int CALLBACK SortCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
     void SetStatusText(const CString& status, BOOL bPropagate = TRUE);
@@ -85,13 +89,16 @@ public:
     virtual ~CSubtitleDlDlg() = default;
     enum { IDD = IDD_SUBTITLEDL_DLG };
 
+    UINT GetDialogTemplateID() const override { return IDD; }
+    void SetupAnchors() override;
+
+    void UpdateStatusBarLayout();
 
 protected:
     virtual void DoDataExchange(CDataExchange* pDX);
     virtual BOOL OnInitDialog();
     virtual BOOL PreTranslateMessage(MSG* pMsg);
     virtual void OnOK();
-    virtual void OnCancel();
 
     DECLARE_MESSAGE_MAP()
 
@@ -100,16 +107,17 @@ protected:
     afx_msg void OnUpdateRefresh(CCmdUI* pCmdUI);
     afx_msg void OnAbort();
     afx_msg void OnRefresh();
+    afx_msg void OnManualSearch();
     afx_msg void OnOptions();
     afx_msg void OnColumnClick(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnDestroy();
-    afx_msg BOOL OnEraseBkgnd(CDC* pDC);
     afx_msg void OnDoubleClickSubtitle(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnKeyPressedSubtitle(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnRightClick(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnItemChanging(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnItemChanged(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
+    afx_msg LRESULT OnDpiChanged(WPARAM wParam, LPARAM lParam);
 
     afx_msg LRESULT OnSearch(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnSearching(WPARAM wParam, LPARAM lParam);
@@ -117,7 +125,8 @@ protected:
     afx_msg LRESULT OnDownloaded(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnCompleted(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnFinished(WPARAM wParam, LPARAM lParam);
-    afx_msg LRESULT OnFailed(WPARAM wParam, LPARAM lParam);
+    afx_msg LRESULT OnFailedSearch(WPARAM wParam, LPARAM lParam);
+    afx_msg LRESULT OnFailedDownload(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnClear(WPARAM wParam, LPARAM lParam);
 
 public:
@@ -127,6 +136,7 @@ public:
     void DoDownloaded(SubtitlesInfo& _fileInfo);
     void DoCompleted(SRESULT _result, SubtitlesList& _subtitlesList);
     void DoFinished(BOOL _bAborted, BOOL _bShowDialog);
-    void DoFailed();
+    void DoSearchFailed();
+    void DoDownloadFailed(DWORD statuscode);
     void DoClear();
 };

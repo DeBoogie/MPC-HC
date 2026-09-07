@@ -19,17 +19,17 @@ import os
 import codecs
 import re
 from collections import OrderedDict
-import itertools
-import ConfigParser
+import configparser as ConfigParser
 from datetime import datetime
-
+import polib
+import csv
 
 def xstr(s):
-    return '' if s is None else str(s)
+    return '' if s is None else s
 
 
 def detectEncoding(filename):
-    encoding = 'cp1252'
+    encoding = 'utf-8'
 
     with codecs.open(filename, 'rb') as f:
         bytes = min(32, os.path.getsize(filename))
@@ -59,15 +59,15 @@ msgstr ""
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\\n"
 "Language-Team: LANGUAGE <LL@li.org>\\n"
+"Language: \\n"
 "MIME-Version: 1.0\\n"
 "Content-Type: text/plain; charset=UTF-8\\n"
-"Content-Transfer-Encoding: 8bit\\n"
-"Language: \\n"\n
+"Content-Transfer-Encoding: 8bit\\n"\n
 '''
 
 
 class TranslationData:
-    poLine = re.compile(ur'^\s*(?:(msgctxt|msgid|msgstr)\s+)?"((?:[^"]|\\")*)"\r?\n', re.UNICODE)
+    poLine = re.compile(r'^\s*(?:(msgctxt|msgid|msgstr)\s+)?"((?:[^"]|\\")*)"\r?\n', re.UNICODE)
     potHeader = potHeader.replace('\n', '\r\n')
 
     def __init__(self):
@@ -156,14 +156,14 @@ class TranslationData:
         self.prepareHeaders(ext)
 
         if output[0]:
-            self.writePOData(filename + '.dialogs.' + ext,
-                             self.dialogs, self.dialogsHeader)
+            fname = filename + '.dialogs.' + ext
+            self.writePOData(fname, self.dialogs, self.dialogsHeader)
         if output[1]:
-            self.writePOData(filename + '.menus.' + ext,
-                             self.menus, self.menusHeader)
+            fname = filename + '.menus.' + ext
+            self.writePOData(fname, self.menus, self.menusHeader)
         if output[2]:
-            self.writePOData(filename + '.strings.' + ext,
-                             self.strings, self.stringsHeader)
+            fname = filename + '.strings.' + ext
+            self.writePOData(fname, self.strings, self.stringsHeader)
 
     def prepareHeaders(self, ext):
         if ext == 'pot':
@@ -184,7 +184,6 @@ class TranslationData:
         with codecs.open(filename, 'w', 'utf8') as f:
             if header:
                 f.write(header)
-
             for dataID in data:
                 f.write('msgctxt "')
                 f.write(dataID[0].replace('""', '\\"'))     # msgctxt
@@ -195,6 +194,17 @@ class TranslationData:
                 f.write('msgstr "')
                 f.write(data[dataID].replace('""', '\\"'))  # msgstr
                 f.write('"\r\n\r\n')
+            f.close()
+        po = polib.pofile(filename)
+        po.save(filename)
+        with codecs.open(filename, 'r', 'utf8') as f:
+            lines = f.readlines()
+        with codecs.open(filename, 'w', 'utf8') as f:
+            f.write(header)
+            for num,line in enumerate(lines):
+                if num >= len(header.splitlines()):
+                    f.write(line)
+            f.close()
 
     def areEqualsSections(self, translationData):
         return (self.dialogs == translationData.dialogs,
@@ -205,11 +215,17 @@ class TranslationData:
     # but we need it to migrate from our old system.
     def translateFromTemplate(self, translationData):
         for dataPair in ((self.dialogs, translationData.dialogs), (self.menus, translationData.menus), (self.strings, translationData.strings)):
-            for (dataID, dataIDTranslated) in itertools.izip(*dataPair):
+            for (dataID, dataIDTranslated) in zip(*dataPair):
                 if dataID[1] != dataIDTranslated[1]:
                     dataPair[0][dataID] = dataIDTranslated[1]
 
     def translate(self, translationData):
+        migrations={}
+        with open('migrate.csv', 'r', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if row['OLDID'] != None and row['NEWID'] != None and row['String'] != None:
+                    migrations[(row['NEWID'],row['String'])]=(row['OLDID'],row['String'])
         self.dialogsHeader = translationData.dialogsHeader
         self.menusHeader = translationData.menusHeader
         self.stringsHeader = translationData.stringsHeader
@@ -218,3 +234,5 @@ class TranslationData:
             for dataID in dataPair[0]:
                 if dataID in dataPair[1]:
                     dataPair[0][dataID] = dataPair[1][dataID]
+                elif dataID in migrations and migrations[dataID] in translationData.dialogs:
+                    dataPair[0][dataID] = translationData.dialogs[migrations[dataID]]

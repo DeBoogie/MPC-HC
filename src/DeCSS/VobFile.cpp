@@ -483,24 +483,25 @@ bool CVobFile::Open(CString fn, CAtlList<CString>& vobs, ULONG nProgNum /*= 1*/,
         return false;
     }
 
-    char hdr[IFO_HEADER_SIZE + 1];
-    m_ifoFile.Read(hdr, IFO_HEADER_SIZE);
-    hdr[IFO_HEADER_SIZE] = '\0';
-    if (strcmp(hdr, VTS_HEADER)) {
-        return false;
-    }
+    try {
+        char hdr[IFO_HEADER_SIZE + 1];
+        m_ifoFile.Read(hdr, IFO_HEADER_SIZE);
+        hdr[IFO_HEADER_SIZE] = '\0';
+        if (strcmp(hdr, VTS_HEADER)) {
+            return false;
+        }
 
-    // Audio streams ...
-    m_ifoFile.Seek(0x202, CFile::begin);
-    BYTE buffer[SUBTITLE_BLOCK_SIZE];
-    m_ifoFile.Read(buffer, AUDIO_BLOCK_SIZE);
-    CGolombBuffer gb(buffer, AUDIO_BLOCK_SIZE);
-    int stream_count = gb.ReadShort();
-    for (int i = 0; i < std::min(stream_count, 8); i++) {
-        BYTE Coding_mode = (BYTE)gb.BitRead(3);
-        gb.BitRead(5);// skip
-        int ToAdd = 0;
-        switch (Coding_mode) {
+        // Audio streams ...
+        m_ifoFile.Seek(0x202, CFile::begin);
+        BYTE buffer[SUBTITLE_BLOCK_SIZE];
+        m_ifoFile.Read(buffer, AUDIO_BLOCK_SIZE);
+        CGolombBuffer gb(buffer, AUDIO_BLOCK_SIZE);
+        int stream_count = gb.ReadShort();
+        for (int i = 0; i < std::min(stream_count, 8); i++) {
+            BYTE Coding_mode = (BYTE)gb.BitRead(3);
+            gb.BitRead(5);// skip
+            int ToAdd = 0;
+            switch (Coding_mode) {
             case 0:
                 ToAdd = 0x80;
                 break;
@@ -512,91 +513,97 @@ bool CVobFile::Open(CString fn, CAtlList<CString>& vobs, ULONG nProgNum /*= 1*/,
                 break;
             default:
                 break;
-        }
-        gb.ReadByte();// skip
-        char lang[2];
-        gb.ReadBuffer((BYTE*)lang, 2);
-        gb.ReadDword();// skip
-        if (ToAdd) {
-            m_pStream_Lang[ToAdd + i] = ISOLang::ISO6391ToLanguage(lang);
-        }
-    }
-
-    // Subtitle streams ...
-    m_ifoFile.Seek(0x254, CFile::begin);
-    m_ifoFile.Read(buffer, SUBTITLE_BLOCK_SIZE);
-    CGolombBuffer gb_s(buffer, SUBTITLE_BLOCK_SIZE);
-    stream_count = gb_s.ReadShort();
-    for (int i = 0; i < std::min(stream_count, 32); i++) {
-        gb_s.ReadShort();
-        char lang[2];
-        gb_s.ReadBuffer((BYTE*)lang, 2);
-        gb_s.ReadShort();
-        m_pStream_Lang[0x20 + i] = ISOLang::ISO6391ToLanguage(lang);
-    }
-
-    // Chapters ...
-    m_ifoFile.Seek(0xCC, CFile::begin); //Get VTS_PGCI address
-    DWORD pcgITPosition = ReadDword() * 2048;
-    m_ifoFile.Seek(pcgITPosition, CFile::begin);
-    WORD nProgCount = (WORD)ReadShort();
-    if (nProgNum > nProgCount) {
-        return false;
-    }
-    m_ifoFile.Seek(pcgITPosition + 8 * nProgNum + 4, CFile::begin);
-    DWORD chainOffset = ReadDword();
-    m_ifoFile.Seek(pcgITPosition + chainOffset + 2, CFile::begin);
-    BYTE programChainPrograms = ReadByte();
-    m_iChaptersCount = programChainPrograms;
-    m_ifoFile.Seek(pcgITPosition + chainOffset + 230, CFile::begin);
-    int programMapOffset = ReadShort();
-    m_ifoFile.Seek(pcgITPosition + chainOffset + 0xE8, CFile::begin);
-    int cellTableOffset = ReadShort();
-    REFERENCE_TIME rtDuration = 0;
-    m_pChapters[0] = 0;
-    for (BYTE currentProgram = 0; currentProgram < programChainPrograms; currentProgram++) {
-        m_ifoFile.Seek(pcgITPosition + chainOffset + programMapOffset + currentProgram, CFile::begin);
-        byte entryCell = ReadByte();
-        byte exitCell = entryCell;
-        if (currentProgram < (programChainPrograms - 1)) {
-            m_ifoFile.Seek(pcgITPosition + chainOffset + programMapOffset + (currentProgram + 1), CFile::begin);
-            exitCell = ReadByte() - 1;
-        }
-
-        REFERENCE_TIME rtTotalTime = 0;
-        for (int currentCell = entryCell; currentCell <= exitCell; currentCell++) {
-            int cellStart = cellTableOffset + ((currentCell - 1) * 0x18);
-            m_ifoFile.Seek(pcgITPosition + chainOffset + cellStart, CFile::begin);
-            BYTE bytes[4];
-            ReadBuffer(bytes, 4);
-            int cellType = bytes[0] >> 6;
-            if (cellType == 0x00 || cellType == 0x01) {
-                m_ifoFile.Seek(pcgITPosition + chainOffset + cellStart + 4, CFile::begin);
-                ReadBuffer(bytes, 4);
-                short frames = GetFrames(bytes[3]);
-                int fpsMask = bytes[3] >> 6;
-                double fps = fpsMask == 0x01 ? 25 : fpsMask == 0x03 ? (30 / 1.001) : 0;
-                CString tmp;
-                int hours = bytes[0];
-                tmp.Format(_T("%x"), hours);
-                _stscanf_s(tmp, _T("%d"), &hours);
-                int minutes = bytes[1];
-                tmp.Format(_T("%x"), minutes);
-                _stscanf_s(tmp, _T("%d"), &minutes);
-                int seconds = bytes[2];
-                tmp.Format(_T("%x"), seconds);
-                _stscanf_s(tmp, _T("%d"), &seconds);
-                int mmseconds = 0;
-                if (fps != 0) {
-                    mmseconds = (int)(1000 * frames / fps);
-                }
-
-                REFERENCE_TIME rtCurrentTime = 10000i64 * (((hours * 60 + minutes) * 60 + seconds) * 1000 + mmseconds);
-                rtTotalTime += rtCurrentTime;
+            }
+            gb.ReadByte();// skip
+            char lang[2];
+            gb.ReadBuffer((BYTE*)lang, 2);
+            gb.ReadDword();// skip
+            if (ToAdd) {
+                m_pStream_Lang[ToAdd + i] = ISOLang::ISO6391ToLanguage(lang);
             }
         }
-        rtDuration += rtTotalTime;
-        m_pChapters[currentProgram + 1] = rtDuration;
+
+        // Subtitle streams ...
+        m_ifoFile.Seek(0x254, CFile::begin);
+        m_ifoFile.Read(buffer, SUBTITLE_BLOCK_SIZE);
+        CGolombBuffer gb_s(buffer, SUBTITLE_BLOCK_SIZE);
+        stream_count = gb_s.ReadShort();
+        for (int i = 0; i < std::min(stream_count, 32); i++) {
+            gb_s.ReadShort();
+            char lang[2];
+            gb_s.ReadBuffer((BYTE*)lang, 2);
+            gb_s.ReadShort();
+            m_pStream_Lang[0x20 + i] = ISOLang::ISO6391ToLanguage(lang);
+        }
+
+        // Chapters ...
+        m_ifoFile.Seek(0xCC, CFile::begin); //Get VTS_PGCI address
+        DWORD pcgITPosition = ReadDword() * 2048;
+        m_ifoFile.Seek(pcgITPosition, CFile::begin);
+        WORD nProgCount = (WORD)ReadShort();
+        if (nProgNum > nProgCount) {
+            return false;
+        }
+        m_ifoFile.Seek(pcgITPosition + 8 * nProgNum + 4, CFile::begin);
+        DWORD chainOffset = ReadDword();
+        m_ifoFile.Seek(pcgITPosition + chainOffset + 2, CFile::begin);
+        BYTE programChainPrograms = ReadByte();
+        m_iChaptersCount = programChainPrograms;
+        m_ifoFile.Seek(pcgITPosition + chainOffset + 230, CFile::begin);
+        int programMapOffset = ReadShort();
+        m_ifoFile.Seek(pcgITPosition + chainOffset + 0xE8, CFile::begin);
+        int cellTableOffset = ReadShort();
+        REFERENCE_TIME rtDuration = 0;
+        m_pChapters[0] = 0;
+        for (BYTE currentProgram = 0; currentProgram < programChainPrograms; currentProgram++) {
+            m_ifoFile.Seek(pcgITPosition + chainOffset + programMapOffset + currentProgram, CFile::begin);
+            byte entryCell = ReadByte();
+            byte exitCell = entryCell;
+            if (currentProgram < (programChainPrograms - 1)) {
+                m_ifoFile.Seek(pcgITPosition + chainOffset + programMapOffset + (currentProgram + 1), CFile::begin);
+                exitCell = ReadByte() - 1;
+            }
+
+            REFERENCE_TIME rtTotalTime = 0;
+            for (int currentCell = entryCell; currentCell <= exitCell; currentCell++) {
+                int cellStart = cellTableOffset + ((currentCell - 1) * 0x18);
+                m_ifoFile.Seek(pcgITPosition + chainOffset + cellStart, CFile::begin);
+                BYTE bytes[4];
+                ReadBuffer(bytes, 4);
+                int cellType = bytes[0] >> 6;
+                if (cellType == 0x00 || cellType == 0x01) {
+                    m_ifoFile.Seek(pcgITPosition + chainOffset + cellStart + 4, CFile::begin);
+                    ReadBuffer(bytes, 4);
+                    short frames = GetFrames(bytes[3]);
+                    int fpsMask = bytes[3] >> 6;
+                    double fps = fpsMask == 0x01 ? 25 : fpsMask == 0x03 ? (30 / 1.001) : 0;
+                    CString tmp;
+                    int hours = bytes[0];
+                    tmp.Format(_T("%x"), hours);
+                    _stscanf_s(tmp, _T("%d"), &hours);
+                    int minutes = bytes[1];
+                    tmp.Format(_T("%x"), minutes);
+                    _stscanf_s(tmp, _T("%d"), &minutes);
+                    int seconds = bytes[2];
+                    tmp.Format(_T("%x"), seconds);
+                    _stscanf_s(tmp, _T("%d"), &seconds);
+                    int mmseconds = 0;
+                    if (fps != 0) {
+                        mmseconds = (int)(1000 * frames / fps);
+                    }
+
+                    REFERENCE_TIME rtCurrentTime = 10000i64 * (((hours * 60 + minutes) * 60 + seconds) * 1000 + mmseconds);
+                    rtTotalTime += rtCurrentTime;
+                }
+            }
+            rtDuration += rtTotalTime;
+            m_pChapters[currentProgram + 1] = rtDuration;
+        }
+    }
+    catch (...) {
+        m_ifoFile.Close();
+        ASSERT(FALSE);
+        return false;
     }
 
     m_ifoFile.Close();
@@ -612,12 +619,18 @@ bool CVobFile::Open(CString fn, CAtlList<CString>& vobs, ULONG nProgNum /*= 1*/,
         vob.Format(_T("%s%d.vob"), fn.GetString(), i);
 
         CFileStatus status;
-        if (!CFile::GetStatus(vob, status)) {
-            if (i == 0) {
-                continue;
-            } else {
-                break;
+        try {
+            if (!CFile::GetStatus(vob, status)) {
+                if (i == 0) {
+                    continue;
+                }
+                else {
+                    break;
+                }
             }
+        }
+        catch (...) {
+            break;
         }
 
         if (status.m_size & 0x7ff) {
@@ -799,7 +812,11 @@ int CVobFile::Seek(int pos)
     m_pos = pos;
 
     pos -= (size - m_files[i].size);
-    m_file.Seek(pos);
+    try {
+        m_file.Seek(pos);
+    } catch (...) {
+        return -1;
+    }
 
     return GetPosition();
 }

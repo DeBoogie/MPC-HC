@@ -28,30 +28,45 @@
 #include "EventDispatcher.h"
 #include "DpiHelper.h"
 #include "AppSettings.h"
-#include "RenderersSettings.h"
+#include "MpcApi.h"
+#include "Profile.h"
+#include "../filters/renderer/VideoRenderers/RenderersSettings.h"
 #include "resource.h"
 
 #include <atlsync.h>
 #include <d3d9.h>
-#include <d3d10.h>
-#include <dxgi.h>
 #include <dxva2api.h>
 #include <vmr9.h>
 
 #include <map>
 #include <memory>
 #include <mutex>
+#include <afxwinappex.h>
 
 #define MPC_WND_CLASS_NAME L"MediaPlayerClassicW"
 
 // define the default logo we use
 #define DEF_LOGO IDF_LOGO3
 
+#define MIN_MODERN_SEEKBAR_HEIGHT 8
+#define DEF_MODERN_SEEKBAR_HEIGHT 16
+#define MAX_MODERN_SEEKBAR_HEIGHT 64
+
+#define MIN_TOOLBAR_HEIGHT 16
+#define DEF_TOOLBAR_HEIGHT 24
+#define MAX_TOOLBAR_HEIGHT 128
+
+
+#define MIN_FULLSCREEN_DELAY 0
+#define MAX_FULLSCREEN_DELAY 500
+#define MAX_REGKEY_LEN 255
+
 extern HICON LoadIcon(CString fn, bool bSmallIcon, DpiHelper* pDpiHelper = nullptr);
 extern bool LoadType(CString fn, CString& type);
 extern bool LoadResource(UINT resid, CStringA& str, LPCTSTR restype);
-extern CStringA GetContentType(CString fn, CAtlList<CString>* redir = nullptr);
-extern WORD AssignedToCmd(UINT keyOrMouseValue, bool bIsFullScreen = false, bool bCheckMouse = true);
+extern CString GetContentType(CString fn, CAtlList<CString>* redir = nullptr);
+extern WORD AssignedToCmd(UINT keyValue);
+extern std::map<CStringW, CStringW> GetAudioDeviceList();
 extern void SetAudioRenderer(int AudioDevNo);
 extern void SetHandCursor(HWND m_hWnd, UINT nID);
 
@@ -81,7 +96,16 @@ enum {
     WM_TUNER_NEW_CHANNEL,
     WM_DVB_EIT_DATA_READY,
     WM_LOADSUBTITLES,
-    WM_GETSUBTITLES
+    WM_GETSUBTITLES,
+    WM_OSD_HIDE,
+    WM_OSD_DRAW,
+    WM_MPC_STANDBY,
+    WM_MPC_HIBERNATE,
+    WM_MPC_SHUTDOWN,
+    WM_MPC_LOGOFF,
+    WM_MPC_OPENCURPLAYLIST,
+    WM_LAV_PROPPAGE_CALLBACK,
+    WM_MPCVR_SWITCH_FULLSCREEN = WM_APP + 4096,
 };
 
 enum ControlType {
@@ -102,7 +126,7 @@ struct COLORPROPERTY_RANGE {
 
 class CAppSettings;
 
-class CMPlayerCApp : public CWinApp
+class CMPlayerCApp : public CWinAppEx
 {
     HMODULE m_hNTDLL;
 
@@ -130,39 +154,87 @@ public:
     CMPlayerCApp();
     ~CMPlayerCApp();
 
+    int DoMessageBox(LPCTSTR lpszPrompt, UINT nType, UINT nIDPrompt);
+
     EventRouter m_eventd;
 
     void ShowCmdlnSwitches() const;
 
-    bool StoreSettingsToIni();
+    bool StoreSettingsToIni(bool bKeepRegistryCopy = false);
     bool StoreSettingsToRegistry();
     CString GetIniPath() const;
     bool IsIniValid() const;
+    // True when settings are stored in the registry (as opposed to an INI file).
+    bool IsUsingRegistry() const;
+    // Keep the cached HistoryInAppData option in sync when it is changed
+    // through the advanced options (see UseAppDataForHistory).
+    void SetHistoryInAppData(bool inAppData);
     bool ChangeSettingsLocation(bool useIni);
     bool ExportSettings(CString savePath, CString subKey = _T(""));
+    bool ExportSettingsZip(const CString& zipPath);
 
 private:
-    std::map<CString, std::map<CString, CString, CStringUtils::IgnoreCaseLess>, CStringUtils::IgnoreCaseLess> m_ProfileMap;
-    bool m_bProfileInitialized;
-    bool m_bQueuedProfileFlush;
-    void InitProfile();
-    std::recursive_mutex m_profileMutex;
-    ULONGLONG m_dwProfileLastAccessTick;
+    // Cached HistoryInAppData option; -1 until first read.
+    int m_iHistoryInAppData = -1;
+    // True when the HistoryInAppData option is set in the settings store. The
+    // first call reads the raw value (it happens before LoadSettings() has
+    // run); afterwards the cached copy is used, kept in sync by
+    // SetHistoryInAppData().
+    bool UseAppDataForHistory();
+    // Resolved location of the MediaHistory INI (portable mode): next to the
+    // executable by default, %APPDATA%\MPC-HC when the HistoryInAppData option
+    // is set or the program folder is not writable. Carries an existing file
+    // over when the location changes.
+    CStringW ResolveHistoryIniPath();
+    // Set up the settings store: in portable (INI) mode, create the separate
+    // MediaHistory store and perform the one-time split out of the main file.
+    void SetupSettingsStore();
+    // Set up the separate MediaHistory store (portable/INI mode) incl. the
+    // one-time split of MediaHistory out of the main settings file.
+    void SetupHistoryStore();
+    // User-visible settings policies deferred until a normal launch is committed
+    // (skipped for /help, /close, file-association and other utility switches):
+    // currently just the HKLM machine-defaults import.
+    void ApplySettingsPolicies();
+    // Route a section to the MediaHistory store when applicable, else m_Profile.
+    CProfile& ProfileForSection(LPCWSTR lpszSection);
+    // Import machine-wide default settings from HKLM\Software\MPC-HC into the
+    // user store once, gated by SettingsReset / SettingsTimestamp (issue #2347).
+    void ApplyHKLMDefaults();
+    void ImportHKLMTree(HKEY hKey, const CStringW& section);
 
 public:
+    // The settings store (HKCU\Software\MPC-HC\MPC-HC or <exe>.ini). All
+    // GetProfile*/WriteProfile* overrides below delegate to it (via
+    // ProfileForSection).
+    CProfile m_Profile;
+    // Separate MediaHistory store (INI mode only; registry installs keep
+    // history in the registry). Null in registry mode.
+    std::unique_ptr<CProfile> m_HistoryProfile;
+
     void FlushProfile(bool bForce = true);
     virtual BOOL GetProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPBYTE* ppData, UINT* pBytes) override;
     virtual UINT GetProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault) override;
+
+    std::list<CStringW> GetSectionSubKeys(LPCWSTR lpszSection);
     virtual CString GetProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszDefault = nullptr) override;
     virtual BOOL WriteProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPBYTE pData, UINT nBytes) override;
+    virtual LONG RemoveProfileKey(LPCWSTR lpszSection, LPCWSTR lpszEntry);
     virtual BOOL WriteProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nValue) override;
     virtual BOOL WriteProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszValue) override;
     bool HasProfileEntry(LPCTSTR lpszSection, LPCTSTR lpszEntry);
+    std::vector<int> GetProfileVectorInt(CString strSection, CString strKey);
+    void WriteProfileVectorInt(CString strSection, CString strKey, std::vector<int> vData);
 
     bool GetAppSavePath(CString& path);
     bool GetAppDataPath(CString& path);
+    // Folder for the saved playlist (default.mpcpl). Follows the MediaHistory
+    // store's folder in portable mode, so the HistoryInAppData option (and the
+    // unwritable-program-folder fallback) relocates both together.
+    bool GetPlaylistSavePath(CString& path);
 
     bool m_fClosingState;
+    bool m_bThemeLoaded;
     CRenderersData m_Renderers;
     CString     m_strVersion;
     CString     m_AudioRendererDisplayName_CL;
@@ -186,6 +258,11 @@ public:
 public:
     virtual BOOL InitInstance() override;
     virtual int ExitInstance() override;
+    virtual BOOL SaveAllModified() override;
+
+public:
+    void HookModuleLoading();
+    void SetClosingState();
 
 public:
     DECLARE_MESSAGE_MAP()
@@ -194,7 +271,18 @@ public:
     afx_msg void OnHelpShowcommandlineswitches();
 };
 
+bool ReadRegistryDWORD(HKEY hKeyRoot, const wchar_t* subKey, const wchar_t* valueName, DWORD& value);
+bool ReadRegistryString(HKEY hKeyRoot, LPCWSTR subKey, LPCWSTR valueName, CString& value);
+bool WriteRegistryDWORD(HKEY hKeyRoot, LPCWSTR subKey, LPCWSTR valueName, DWORD value);
+bool WriteRegistryString(HKEY hKeyRoot, LPCWSTR subKey, LPCWSTR valueName, const CString& value);
+
 #define AfxGetAppSettings() (*static_cast<CMPlayerCApp*>(AfxGetApp())->m_s.get())
 #define AfxGetMyApp()       static_cast<CMPlayerCApp*>(AfxGetApp())
 
 #define GetEventd() AfxGetMyApp()->m_eventd
+
+#define AppIsThemeLoaded() (static_cast<CMPlayerCApp*>(AfxGetApp())->m_bThemeLoaded)
+#define AppNeedsThemedControls() (AppIsThemeLoaded() && CMPCTheme::drawThemedControls)
+
+#define AfxGetMainFrame()   static_cast<CMainFrame*>(AfxGetMainWnd())
+#define AfxFindMainFrame()  dynamic_cast<CMainFrame*>(AfxGetMainWnd())

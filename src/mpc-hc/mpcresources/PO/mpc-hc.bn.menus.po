@@ -2,15 +2,15 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# mehzad, 2014
-# Mehzad Galib, 2016
+# MPC HC <adiposegithub@gmail.com>, 2020
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2016-01-17 21:31:34+0000\n"
-"PO-Revision-Date: 2017-08-13 20:49+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Bengali (http://www.transifex.com/mpc-hc/mpc-hc/language/bn/)\n"
+"POT-Creation-Date: 2021-02-15 14:52:58+0000\n"
+"PO-Revision-Date: 2020-01-02 07:46+0000\n"
+"Last-Translator: MPC HC <adiposegithub@gmail.com>, 2020\n"
+"Language-Team: Bengali (https://www.transifex.com/mpchc/teams/106126/bn/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -26,7 +26,7 @@ msgid "&Quick Open File..."
 msgstr "দ্রুত ফাইল খুলি... (&Q)"
 
 msgctxt "ID_FILE_OPENMEDIA"
-msgid "&Open File..."
+msgid "&Open File/URL..."
 msgstr "ফাইল খুলি... (&O)"
 
 msgctxt "ID_FILE_OPENDVDBD"
@@ -81,13 +81,13 @@ msgctxt "ID_FILE_SUBTITLES_DOWNLOAD"
 msgid "&Download Subtitles..."
 msgstr "সাবটাইটেল ডাউনলোড করি... (&D)"
 
-msgctxt "ID_FILE_SUBTITLES_UPLOAD"
-msgid "&Upload Subtitles..."
-msgstr "সাবটাইটেল আপলোড করি... (&U)"
-
 msgctxt "ID_FILE_PROPERTIES"
 msgid "P&roperties"
 msgstr "প্রোপার্টিস (&R)"
+
+msgctxt "ID_FILE_OPEN_LOCATION"
+msgid "Open File &Location"
+msgstr ""
 
 msgctxt "ID_FILE_EXIT"
 msgid "E&xit"
@@ -137,10 +137,6 @@ msgctxt "ID_VIEW_NAVIGATION"
 msgid "Na&vigation"
 msgstr "ন্যাভিগেশন (&V)"
 
-msgctxt "ID_VIEW_DEBUGSHADERS"
-msgid "&Debug Shaders"
-msgstr "শেইডারসমূহ ডিবাগকরণ (&D)"
-
 msgctxt "POPUP"
 msgid "&Presets..."
 msgstr "প্রিসেটসমুহ... (&P)"
@@ -157,6 +153,10 @@ msgctxt "ID_VIEW_PRESETS_NORMAL"
 msgid "&Normal"
 msgstr "সাধারণ (&N)"
 
+msgctxt "ID_VIEW_PRESETS_CUSTOM"
+msgid "C&ustom"
+msgstr ""
+
 msgctxt "ID_VIEW_FULLSCREEN"
 msgid "F&ull Screen"
 msgstr "ফুলস্ক্রীন (&U)"
@@ -164,6 +164,10 @@ msgstr "ফুলস্ক্রীন (&U)"
 msgctxt "POPUP"
 msgid "&Zoom"
 msgstr "জূম (&Z)"
+
+msgctxt "ID_VIEW_ZOOM_25"
+msgid "&25%"
+msgstr ""
 
 msgctxt "ID_VIEW_ZOOM_50"
 msgid "&50%"
@@ -180,10 +184,6 @@ msgstr "২০০% (&2)"
 msgctxt "ID_VIEW_ZOOM_AUTOFIT"
 msgid "Auto &Fit"
 msgstr "স্বয়ংক্রিয় পরিব্যাপ্তি (&F)"
-
-msgctxt "ID_VIEW_ZOOM_AUTOFIT_LARGER"
-msgid "Auto Fit (&Larger Only)"
-msgstr "স্বয়ংক্রিয় পরিব্যাপ্তি(শুধু বড়ো) (&L)"
 
 msgctxt "POPUP"
 msgid "R&enderer Settings"
@@ -357,17 +357,9 @@ msgctxt "ID_VIEW_FLUSHGPU_WAIT"
 msgid "&Wait for flushes"
 msgstr "ফ্লাশসমূহের জন্য অপেক্ষাকরণ (&W)"
 
-msgctxt "POPUP"
-msgid "R&eset"
-msgstr "পুনর্বিন্যাস করণ (&E)"
-
 msgctxt "ID_VIEW_RESET_DEFAULT"
 msgid "Reset to &default renderer settings"
 msgstr "ডিফল্ট রেনডারার সেটিংসমূহে পুনর্বিন্যাস (&D)"
-
-msgctxt "ID_VIEW_RESET_OPTIMAL"
-msgid "Reset to &optimal renderer settings"
-msgstr "সর্বোত্তম রেনডারার সেটিংসমূহে পুনর্বিন্যাস (&O)"
 
 msgctxt "POPUP"
 msgid "Video &Frame"
@@ -442,8 +434,8 @@ msgid "&Correct Monitor/Desktop AR Diff"
 msgstr "মনিটর/ডেস্কটপ AR বৈসাদৃশ্য ঠিককরণ (&C)"
 
 msgctxt "POPUP"
-msgid "Pa&n && Scan"
-msgstr "প্যানঅ্যান্ডস্ক্যান (&N)"
+msgid "P&nS Frame Adjust"
+msgstr ""
 
 msgctxt "ID_VIEW_INCSIZE"
 msgid "&Increase Size"
@@ -488,6 +480,22 @@ msgstr "নিচে সরাই (&D)"
 msgctxt "ID_PANSCAN_CENTER"
 msgid "Cen&ter"
 msgstr "কেন্দ্রে সরাই (&T)"
+
+msgctxt "ID_PANSCAN_ROTATEZM"
+msgid "Rotate Cloc&kwise"
+msgstr ""
+
+msgctxt "ID_PANSCAN_ROTATEZ270"
+msgid "Rotate Counter-Clock&wise"
+msgstr ""
+
+msgctxt "ID_PANSCAN_ROTATEXM"
+msgid "&Flip Vertically"
+msgstr ""
+
+msgctxt "ID_PANSCAN_ROTATEYM"
+msgid "&Mirror"
+msgstr ""
 
 msgctxt "ID_VIEW_RESET"
 msgid "Re&set"
@@ -549,6 +557,94 @@ msgctxt "ID_PLAY_REPEAT_WHOLEPLAYLIST"
 msgid "&Playlist"
 msgstr "প্লেলিস্ট (&P)"
 
+msgctxt "ID_PLAY_REPEAT_AB"
+msgid "A-B (&Reset)"
+msgstr ""
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_A"
+msgid "A-B (Mark &A)"
+msgstr ""
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_B"
+msgid "A-B (Mark &B)"
+msgstr ""
+
+msgctxt "POPUP"
+msgid "&Playback Rate"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_025"
+msgid "0.25 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_050"
+msgid "0.50 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_075"
+msgid "0.75 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_090"
+msgid "0.90 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_100"
+msgid "1.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_110"
+msgid "1.10 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_125"
+msgid "1.25 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_150"
+msgid "1.50 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_175"
+msgid "1.75 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_200"
+msgid "2.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_300"
+msgid "3.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_400"
+msgid "4.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_600"
+msgid "6.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_800"
+msgid "8.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS23"
+msgid "23.976 fps"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS24"
+msgid "24 fps"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS25"
+msgid "25 fps"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS59"
+msgid "59.94 fps"
+msgstr ""
+
 msgctxt "ID_PLAY_DECRATE"
 msgid "&Decrease Rate"
 msgstr "গতি হ্রাস করি (&D)"
@@ -565,6 +661,10 @@ msgctxt "ID_FILTERS"
 msgid "&Filters"
 msgstr "ফিল্টারসমূহ (&F)"
 
+msgctxt "ID_COLOR_CONTROLS"
+msgid "&Color controls..."
+msgstr ""
+
 msgctxt "ID_SHADERS"
 msgid "S&haders"
 msgstr "শেইডারসমূহ (&H)"
@@ -576,6 +676,10 @@ msgstr "অডিও ট্র্যাক (&A)"
 msgctxt "ID_SUBTITLES"
 msgid "Su&btitle Track"
 msgstr "সাবটাইটেল ট্র্যাক (&B)"
+
+msgctxt "ID_SUBTITLES_SECONDARY"
+msgid "Secondary Subtitle Track"
+msgstr ""
 
 msgctxt "ID_VIDEO_STREAMS"
 msgid "Vide&o Track"
@@ -708,4 +812,3 @@ msgstr "আর্থসহায়তা (&D)"
 msgctxt "ID_HELP_ABOUT"
 msgid "&About..."
 msgstr "MPC-HC বিষয়ক... (&A)"
-

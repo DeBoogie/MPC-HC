@@ -25,7 +25,7 @@
 #include "OuterVMR.h"
 #include "IPinHook.h"
 #include "MacrovisionKicker.h"
-
+#include "Variables.h"
 
 // ISubPicAllocatorPresenter
 
@@ -43,6 +43,16 @@ CVMR9AllocatorPresenter::CVMR9AllocatorPresenter(HWND hWnd, bool bFullscreen, HR
     , m_fUseInternalTimer(false)
     , m_rtPrevStart(-1)
 {
+}
+
+CVMR9AllocatorPresenter::~CVMR9AllocatorPresenter()
+{
+    if (m_bHookedNewSegment) {
+        UnhookNewSegment();
+    }
+    if (m_bHookedReceive) {
+        UnhookReceive();
+    }
 }
 
 STDMETHODIMP CVMR9AllocatorPresenter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
@@ -99,11 +109,15 @@ STDMETHODIMP CVMR9AllocatorPresenter::CreateRenderer(IUnknown** ppRenderer)
     CComQIPtr<IBaseFilter> pBF = pUnk;
 
     CComPtr<IPin> pPin = GetFirstPin(pBF);
-    CComQIPtr<IMemInputPin> pMemInputPin = pPin;
-    m_fUseInternalTimer = HookNewSegmentAndReceive((IPinC*)(IPin*)pPin, (IMemInputPinC*)(IMemInputPin*)pMemInputPin);
-
-    if (CComQIPtr<IAMVideoAccelerator> pAMVA = pPin) {
-        HookAMVideoAccelerator((IAMVideoAcceleratorC*)(IAMVideoAccelerator*)pAMVA);
+    if (!m_bIsPreview) {
+        if (HookNewSegment((IPinC*)(IPin*)pPin)) {
+            m_bHookedNewSegment = true;
+            CComQIPtr<IMemInputPin> pMemInputPin = pPin;
+            if (HookReceive((IMemInputPinC*)(IMemInputPin*)pMemInputPin)) {
+                m_fUseInternalTimer = true;
+                m_bHookedReceive = true;
+            }
+         }
     }
 
     CComQIPtr<IVMRFilterConfig9> pConfig = pBF;
@@ -151,7 +165,6 @@ STDMETHODIMP CVMR9AllocatorPresenter::CreateRenderer(IUnknown** ppRenderer)
 STDMETHODIMP_(void) CVMR9AllocatorPresenter::SetTime(REFERENCE_TIME rtNow)
 {
     __super::SetTime(rtNow);
-    //m_fUseInternalTimer = false;
 }
 
 // IVMRSurfaceAllocator9
@@ -389,9 +402,10 @@ STDMETHODIMP CVMR9AllocatorPresenter::PresentImage(DWORD_PTR dwUserID, VMR9Prese
                 AfxGetApp()->m_pMainWnd->PostMessage(WM_REARRANGERENDERLESS);
             }
         }
-        // If framerate not set by Video Decoder choose 23.97...
+        // If framerate not set by Video Decoder choose 23.976
         if (m_rtTimePerFrame == 0) {
-            m_rtTimePerFrame = 417166;
+            m_rtTimePerFrame = 417083;
+            //ASSERT(FALSE);
         }
 
         m_fps = 10000000.0 / m_rtTimePerFrame;
@@ -404,16 +418,25 @@ STDMETHODIMP CVMR9AllocatorPresenter::PresentImage(DWORD_PTR dwUserID, VMR9Prese
     CAutoLock cAutoLock(this);
     CAutoLock cRenderLock(&m_RenderLock);
 
-    if (lpPresInfo->rtEnd <= lpPresInfo->rtStart) {
-        TRACE(_T("VMR9: Invalid timestamps (%s - %s). The timestamp from the pin hook will be used anyway (%s).\n"),
-              ReftimeToString(lpPresInfo->rtStart).GetString(), ReftimeToString(lpPresInfo->rtEnd).GetString(), ReftimeToString(g_tSampleStart).GetString());
-    }
-
     if (m_pSubPicQueue) {
         m_pSubPicQueue->SetFPS(m_fps);
 
         if (m_fUseInternalTimer && !g_bExternalSubtitleTime) {
-            __super::SetTime(g_tSegmentStart + g_tSampleStart);
+            REFERENCE_TIME rtCurFrameTime = lpPresInfo->rtEnd - lpPresInfo->rtStart;
+            REFERENCE_TIME rtSampleTime = 0;
+            // check if present timestamps are valid, rtStart can be invalid after a seek, while rtEnd always seems to be correct
+            // rtStart is reliable when rtEnd equals duration of two frames (+2 ms because timestamps are sometimes rounded to ms values)
+            // or if frame duration seems normal
+            if (lpPresInfo->rtEnd > lpPresInfo->rtStart && (lpPresInfo->rtEnd >= 2 * m_rtTimePerFrame + 20000LL || abs(rtCurFrameTime - m_rtTimePerFrame) < 10000LL)) {
+                rtSampleTime = lpPresInfo->rtStart;
+                //TRACE(_T("VMR9: Present %s -> %s | g_tSampleStart %s | g_tSegmentStart %s | rtCurFrameTime %ld\n"), ReftimeToString(lpPresInfo->rtStart).GetString(), ReftimeToString(lpPresInfo->rtEnd).GetString(), ReftimeToString(g_tSampleStart).GetString(), ReftimeToString(g_tSegmentStart).GetString(), rtCurFrameTime);
+            } else {
+                if (lpPresInfo->rtEnd > m_rtTimePerFrame) {
+                    rtSampleTime = lpPresInfo->rtEnd - m_rtTimePerFrame;
+                }
+                //TRACE(_T("VMR9: Present %s -> %s INVALID! | g_tSampleStart %s | g_tSegmentStart %s | m_rtTimePerFrame %ld\n"), ReftimeToString(lpPresInfo->rtStart).GetString(), ReftimeToString(lpPresInfo->rtEnd).GetString(), ReftimeToString(g_tSampleStart).GetString(), ReftimeToString(g_tSegmentStart).GetString(), m_rtTimePerFrame);
+            }
+            __super::SetTime(g_tSegmentStart + rtSampleTime * (g_bExternalSubtitle ? g_dRate : 1));
         }
     }
 

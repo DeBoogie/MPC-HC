@@ -22,6 +22,9 @@
 #include "resource.h"
 #include "WinHotkeyCtrl.h"
 #include "vkCodes.h"
+#include "mplayerc.h"
+#include "CMPCThemeButton.h"
+#include "CMPCThemeMenu.h"
 
 #define WM_KEY (WM_USER + 444)
 
@@ -29,6 +32,7 @@
 
 HHOOK CWinHotkeyCtrl::sm_hhookKb = nullptr;
 CWinHotkeyCtrl* CWinHotkeyCtrl::sm_pwhcFocus = nullptr;
+DWORD CWinHotkeyCtrl::sm_fModsDown = 0;
 
 
 IMPLEMENT_DYNAMIC(CWinHotkeyCtrl, CEdit)
@@ -39,6 +43,7 @@ CWinHotkeyCtrl::CWinHotkeyCtrl()
     , m_fModRel(0)
     , m_fModSet_def(0)
     , m_fIsPressed(FALSE)
+    , isMouseModifier(false)
 {
 }
 
@@ -69,9 +74,49 @@ LRESULT CALLBACK CWinHotkeyCtrl::LowLevelKeyboardProc(int nCode, WPARAM wParam, 
 {
     LRESULT lResult = 1;
 
+    if (nCode < 0) {
+        return ::CallNextHookEx(sm_hhookKb, nCode, wParam, lParam);
+    }
+
     if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN ||
                                wParam == WM_KEYUP || wParam == WM_SYSKEYUP) && sm_pwhcFocus) {
-        sm_pwhcFocus->PostMessage(WM_KEY, ((PKBDLLHOOKSTRUCT)lParam)->vkCode, (wParam & 1));
+        DWORD vkCode = ((PKBDLLHOOKSTRUCT)lParam)->vkCode;
+        BOOL fUp = (wParam & 1);
+        DWORD fMod = 0;
+
+        switch (vkCode) {
+            case VK_CONTROL:
+            case VK_LCONTROL:
+            case VK_RCONTROL:
+                fMod = MOD_CONTROL;
+                break;
+            case VK_MENU:
+            case VK_LMENU:
+            case VK_RMENU:
+                fMod = MOD_ALT;
+                break;
+            case VK_SHIFT:
+            case VK_LSHIFT:
+            case VK_RSHIFT:
+                fMod = MOD_SHIFT;
+                break;
+        }
+        if (fMod) {
+            if (fUp) {
+                sm_fModsDown &= ~fMod;
+            } else {
+                sm_fModsDown |= fMod;
+            }
+        }
+
+        // Tab and Enter without modifiers leave the field through the normal message flow,
+        // so keyboard-only users are not trapped in it. Ctrl+Enter, Shift+Tab etc. stay assignable
+        // (a modifier press has already replaced the recorded key by the time Tab arrives).
+        if ((vkCode == VK_RETURN || vkCode == VK_TAB) && sm_fModsDown == 0) {
+            return ::CallNextHookEx(sm_hhookKb, nCode, wParam, lParam);
+        }
+
+        sm_pwhcFocus->PostMessage(WM_KEY, vkCode, fUp);
     }
     return lResult;
 }
@@ -82,6 +127,17 @@ BOOL CWinHotkeyCtrl::InstallKbHook()
         sm_pwhcFocus->UninstallKbHook();
     }
     sm_pwhcFocus = this;
+    // seed with the modifiers already held, so a combo started before the field got focus is still recorded
+    sm_fModsDown = 0;
+    if (GetAsyncKeyState(VK_CONTROL) < 0) {
+        sm_fModsDown |= MOD_CONTROL;
+    }
+    if (GetAsyncKeyState(VK_MENU) < 0) {
+        sm_fModsDown |= MOD_ALT;
+    }
+    if (GetAsyncKeyState(VK_SHIFT) < 0) {
+        sm_fModsDown |= MOD_SHIFT;
+    }
 
     sm_hhookKb = ::SetWindowsHookEx(WH_KEYBOARD_LL, (HOOKPROC)LowLevelKeyboardProc, GetModuleHandle(nullptr), 0);
 
@@ -103,7 +159,11 @@ BOOL CWinHotkeyCtrl::UninstallKbHook()
 void CWinHotkeyCtrl::UpdateText()
 {
     CString sText;
-    HotkeyToString(m_vkCode, m_fModSet, sText);
+    if (isMouseModifier) {
+        HotkeyToString(0, m_fModSet, sText);
+    } else {
+        HotkeyToString(m_vkCode, m_fModSet, sText);
+    }
     SetWindowText((LPCTSTR)sText);
     SetSel(0x8fffffff, 0x8fffffff, FALSE);
 }
@@ -132,6 +192,21 @@ void CWinHotkeyCtrl::SetWinHotkey(UINT vkCode, UINT fModifiers)
     m_fIsPressed = FALSE;
 
     UpdateText();
+}
+
+void CWinHotkeyCtrl::DrawButton(CRect rectButton)
+{
+    if (AppNeedsThemedControls()) {
+        CWindowDC dc(this);
+        bool disabled = 0 != (GetStyle() & (ES_READONLY | WS_DISABLED));
+        bool selected = GetButtonThemeState() == PBS_PRESSED;
+        bool highlighted = GetButtonThemeState() == PBS_HOT;
+        CFont* pOldFont = dc.SelectObject(GetFont());
+        CMPCThemeButton::drawButtonBase(&dc, rectButton, GetButtonText(), selected, highlighted, false, false, disabled, true, false);
+        dc.SelectObject(pOldFont);
+    } else {
+        __super::DrawButton(rectButton);
+    }
 }
 
 LRESULT CWinHotkeyCtrl::OnKey(WPARAM wParam, LPARAM lParam)
@@ -245,15 +320,18 @@ void CWinHotkeyCtrl::OnKillFocus(CWnd* pNewWnd)
 
 void CWinHotkeyCtrl::OnContextMenu(CWnd*, CPoint pt)
 {
-    HMENU hmenu = CreatePopupMenu();
+    CMPCThemeMenu menu;
+    menu.CreatePopupMenu();
     UINT cod = 0, mod = 0;
-    AppendMenu(hmenu, MF_STRING, 1, ResStr(IDS_APPLY));
-    AppendMenu(hmenu, MF_STRING, 2, ResStr(IDS_CLEAR));
-    AppendMenu(hmenu, MF_STRING, 3, ResStr(IDS_CANCEL));
+    menu.AppendMenu(MF_STRING, 1, ResStr(IDS_APPLY));
+    menu.AppendMenu(MF_STRING, 2, ResStr(IDS_CLEAR));
+    menu.AppendMenu(MF_STRING, 3, ResStr(IDS_CANCEL));
+    if (AppNeedsThemedControls()) {
+        menu.fulfillThemeReqs();
+    }
 
-    UINT uMenuID = TrackPopupMenu(hmenu,
-                                  TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_VERPOSANIMATION | TPM_NONOTIFY | TPM_RETURNCMD,
-                                  pt.x, pt.y, 0, GetSafeHwnd(), nullptr);
+    UINT uMenuID = menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_VERPOSANIMATION | TPM_NONOTIFY | TPM_RETURNCMD,
+                                       pt.x, pt.y, this, nullptr);
 
     if (uMenuID) {
         switch (uMenuID) {
@@ -280,7 +358,6 @@ void CWinHotkeyCtrl::OnContextMenu(CWnd*, CPoint pt)
         GetParent() ->SetFocus();
     }
 
-    DestroyMenu(hmenu);
 }
 
 void CWinHotkeyCtrl::OnDestroy()

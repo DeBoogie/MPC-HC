@@ -20,6 +20,10 @@
 
 #include "stdafx.h"
 #include "PathUtils.h"
+#include <memory>
+#include <regex>
+#include "text.h"
+#include "DSUtil.h"
 
 namespace PathUtils
 {
@@ -51,6 +55,19 @@ namespace PathUtils
     CString FileExt(LPCTSTR path)
     {
         return CPath(path).GetExtension();
+    }
+
+    CString StripExtensionAndRarVolumeSuffix(LPCTSTR path)
+    {
+        // base.mkv        -> base
+        // base.part01.rar -> base (multi-volume rar)
+        static const std::wregex re(_T("(\\.part\\d+\\.rar|\\.[^.\\\\/]+)$"),
+                                    std::wregex::icase | std::wregex::optimize);
+        std::wcmatch mc;
+        if (std::regex_search(path, mc, re)) {
+            return CString(path, (int)mc.position());
+        }
+        return path;
     }
 
     CString GetModulePath(HMODULE hModule)
@@ -114,6 +131,9 @@ namespace PathUtils
                 case _T('|'):
                 case _T('?'):
                 case _T('*'):
+                case _T('\r'):
+                case _T('\n'):
+                case _T('\t'):
                     buff[i] = replacementChar;
                     break;
                 default:
@@ -136,10 +156,16 @@ namespace PathUtils
     {
         // Replacement for CPath::StripPath which works fine also for URLs
         CString p = path;
+        bool isURL = p.Find(_T("://")) > 1;
         p.Replace('\\', '/');
         p.TrimRight('/');
         p = p.Mid(p.ReverseFind('/') + 1);
-        return p.IsEmpty() ? CString(path) : p;
+        if (p.IsEmpty()) {
+            return CString(path);
+        } else if (isURL) {
+            return UrlDecodeWithUTF8(p);
+        }
+        return p;
     }
 
     bool IsInDir(LPCTSTR path, LPCTSTR dir)
@@ -220,6 +246,7 @@ namespace PathUtils
 
             if (!finder.IsDots() && finder.IsDirectory()) {
                 CString folderPath = finder.GetFilePath();
+                ExtendMaxPathLengthIfNeeded(folderPath);
                 paths.AddTail(folderPath);
                 RecurseAddDir(folderPath, paths);
             }
@@ -247,5 +274,15 @@ namespace PathUtils
                 }
             }
         }
+    }
+
+    bool IsURL(CString& fn)
+    {
+        return (fn.Find(_T("://")) > 1) && (fn.Left(5) != L"file:");
+    }
+
+    bool IsFullFilePath(CString& fn)
+    {
+        return (fn.Find(_T(":")) > 0) && !IsURL(fn) || (fn.Find(_T("\\\\")) == 0);
     }
 }

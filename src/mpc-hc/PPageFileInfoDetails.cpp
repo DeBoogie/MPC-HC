@@ -29,15 +29,18 @@
 #include <vmr9.h>
 #include "moreuuids.h"
 #include "../SubPic/ISubPic.h"
+#include "PathUtils.h"
 
 
 // CPPageFileInfoDetails dialog
 
-IMPLEMENT_DYNAMIC(CPPageFileInfoDetails, CPropertyPage)
-CPPageFileInfoDetails::CPPageFileInfoDetails(CString path, IFilterGraph* pFG, ISubPicAllocatorPresenter* pCAP, IFileSourceFilter* pFSF, IDvdInfo2* pDVDI)
-    : CPropertyPage(CPPageFileInfoDetails::IDD, CPPageFileInfoDetails::IDD)
+IMPLEMENT_DYNAMIC(CPPageFileInfoDetails, CMPCThemeResizablePropertyPage)
+CPPageFileInfoDetails::CPPageFileInfoDetails(CString path, CString ydlsrc, IFilterGraph* pFG, ISubPicAllocatorPresenter* pCAP, IFileSourceFilter* pFSF, IDvdInfo2* pDVDI)
+    : CMPCThemeResizablePropertyPage(CPPageFileInfoDetails::IDD, CPPageFileInfoDetails::IDD)
     , m_hIcon(nullptr)
     , m_fn(path)
+    , m_ydlsrc(ydlsrc)
+    , m_displayFn()
     , m_path(path)
     , m_type(StrRes(IDS_AG_NOT_KNOWN))
     , m_size(StrRes(IDS_AG_NOT_KNOWN))
@@ -305,7 +308,7 @@ void CPPageFileInfoDetails::DoDataExchange(CDataExchange* pDX)
 {
     __super::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_DEFAULTICON, m_icon);
-    DDX_Text(pDX, IDC_EDIT1, m_fn);
+    DDX_Text(pDX, IDC_EDIT1, m_displayFn);
     DDX_Text(pDX, IDC_EDIT4, m_type);
     DDX_Text(pDX, IDC_EDIT3, m_size);
     DDX_Text(pDX, IDC_EDIT2, m_duration);
@@ -314,7 +317,7 @@ void CPPageFileInfoDetails::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT7, m_trackInfo);
 }
 
-BEGIN_MESSAGE_MAP(CPPageFileInfoDetails, CPropertyPage)
+BEGIN_MESSAGE_MAP(CPPageFileInfoDetails, CMPCThemeResizablePropertyPage)
 END_MESSAGE_MAP()
 
 // CPPageFileInfoDetails message handlers
@@ -341,9 +344,37 @@ BOOL CPPageFileInfoDetails::OnInitDialog()
         m_icon.SetIcon(m_hIcon);
     }
 
+    if (!m_ydlsrc.IsEmpty()) {
+        m_displayFn = m_ydlsrc;
+    } else if (PathUtils::IsURL(m_path)) {
+        m_displayFn = UrlDecodeWithUTF8(ShortenURL(m_fn, 200));
+    } else {
+        m_displayFn = m_fn;
+    }
+
     if (!LoadType(ext, m_type)) {
         m_type.LoadString(IDS_AG_NOT_KNOWN);
     }
+
+    //we have multiple IDC_STATIC, we'll get them by window
+    CWnd* pChild = GetWindow(GW_CHILD);
+    while (pChild) {
+        if (pChild->GetDlgCtrlID() == IDC_STATIC) {
+            AddAnchor(pChild->GetSafeHwnd(), TOP_LEFT);
+        }
+        pChild = pChild->GetNextWindow();
+    }
+
+    AddAnchor(IDC_DEFAULTICON, TOP_LEFT);
+    AddAnchor(IDC_EDIT1, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_EDIT2, TOP_LEFT);
+    AddAnchor(IDC_EDIT3, TOP_LEFT);
+    AddAnchor(IDC_EDIT4, TOP_LEFT);
+    AddAnchor(IDC_EDIT5, TOP_LEFT);
+    AddAnchor(IDC_EDIT6, TOP_LEFT);
+    AddAnchor(IDC_EDIT7, TOP_LEFT, BOTTOM_RIGHT);
+    AddAnchor(IDC_STATIC1, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_STATIC2, TOP_LEFT, TOP_RIGHT);
 
     UpdateData(FALSE);
 

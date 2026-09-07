@@ -23,18 +23,24 @@
 #include "mplayerc.h"
 #include "MainFrm.h"
 #include "PPageLogo.h"
+#include "CMPCTheme.h"
+#include "CMPCThemeUtil.h"
+#include "ColorProfileUtil.h"
+#include "OpenFileDlg.h"
 
 // CPPageLogo dialog
 
-IMPLEMENT_DYNAMIC(CPPageLogo, CPPageBase)
+IMPLEMENT_DYNAMIC(CPPageLogo, CMPCThemePPageBase)
 CPPageLogo::CPPageLogo()
-    : CPPageBase(CPPageLogo::IDD, CPPageLogo::IDD)
+    : CMPCThemePPageBase(CPPageLogo::IDD, CPPageLogo::IDD)
     , m_intext(0)
+    , colorProfileEnabled(FALSE)
 {
     m_logoids.AddTail(IDF_LOGO0);
     m_logoids.AddTail(IDF_LOGO1);
     m_logoids.AddTail(IDF_LOGO2);
     m_logoids.AddTail(IDF_LOGO3);
+    m_logoids.AddTail(IDF_LOGO4);
     m_logoidpos = m_logoids.GetHeadPosition();
 }
 
@@ -49,12 +55,14 @@ void CPPageLogo::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_LOGOFILENAME, m_logofn);
     DDX_Control(pDX, IDC_LOGOPREVIEW, m_logopreview);
     DDX_Text(pDX, IDC_AUTHOR, m_author);
+    DDX_Check(pDX, IDC_CHECK1, colorProfileEnabled);
 }
 
 
-BEGIN_MESSAGE_MAP(CPPageLogo, CPPageBase)
+BEGIN_MESSAGE_MAP(CPPageLogo, CMPCThemePPageBase)
     ON_BN_CLICKED(IDC_RADIO1, OnBnClickedInternalRadio)
     ON_BN_CLICKED(IDC_RADIO2, OnBnClickedExternalRadio)
+    ON_BN_CLICKED(IDC_CHECK1, OnBnClickedColorProfile)
     ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN1, OnDeltaposSpin1)
     ON_BN_CLICKED(IDC_BUTTON2, OnBnClickedButton2)
 END_MESSAGE_MAP()
@@ -70,12 +78,22 @@ BOOL CPPageLogo::OnInitDialog()
 
     m_intext = s.fLogoExternal ? 1 : 0;
     m_logofn = s.strLogoFileName;
+    colorProfileEnabled = s.fLogoColorProfileEnabled;
 
     UpdateData(FALSE);
 
     m_logoidpos = m_logoids.GetHeadPosition();
+    int useLogoId = s.nLogoId;
+    if (-1 == useLogoId) { // if the user has never chosen a logo, we can try loading a theme default logo
+        if (AppIsThemeLoaded()) {
+            useLogoId = CMPCThemeUtil::defaultLogo();
+        } else {
+            useLogoId = DEF_LOGO;
+        }
+    }
+
     for (POSITION pos = m_logoids.GetHeadPosition(); pos; m_logoids.GetNext(pos)) {
-        if (m_logoids.GetAt(pos) == s.nLogoId) {
+        if (m_logoids.GetAt(pos) == useLogoId) {
             m_logoidpos = pos;
             break;
         }
@@ -99,10 +117,12 @@ BOOL CPPageLogo::OnApply()
 
 
     if (s.fLogoExternal != !!m_intext || s.strLogoFileName != m_logofn
-            || s.nLogoId != m_logoids.GetAt(m_logoidpos)) {
+            || s.nLogoId != m_logoids.GetAt(m_logoidpos)
+            || s.fLogoColorProfileEnabled != colorProfileEnabled) {
         s.fLogoExternal = !!m_intext;
         s.strLogoFileName = m_logofn;
         s.nLogoId = m_logoids.GetAt(m_logoidpos);
+        s.fLogoColorProfileEnabled = colorProfileEnabled;
 
         if (CMainFrame* pMainFrame = AfxGetMainFrame()) {
             pMainFrame->UpdateControlState(CMainFrame::UPDATE_LOGO);
@@ -125,21 +145,43 @@ void CPPageLogo::OnBnClickedInternalRadio()
     SetModified();
 }
 
-void CPPageLogo::OnBnClickedExternalRadio()
-{
+void CPPageLogo::OnBnClickedExternalRadio() {
     UpdateData();
 
     m_author.Empty();
 
     m_logo.DeleteObject();
     m_logo.LoadFromFile(m_logofn);
-    m_logopreview.SetBitmap(m_logo);
+    SetLogoPreview();
     Invalidate();
 
     m_intext = 1;
     UpdateData(FALSE);
 
     SetModified();
+}
+
+void CPPageLogo::OnBnClickedColorProfile() {
+    UpdateData();
+    SetLogoPreview(true);
+    SetModified();
+}
+
+void CPPageLogo::SetLogoPreview(bool reload) {
+    if (reload) {
+        if (m_intext) {
+            OnBnClickedExternalRadio();
+        } else {
+            OnBnClickedInternalRadio();
+        }
+    }
+    if (colorProfileEnabled && m_logo.m_hObject) {
+        CImage t;
+        t.Attach(m_logo);
+        ColorProfileUtil::applyColorProfile(m_hWnd, t);
+        t.Detach();
+    }
+    m_logopreview.SetBitmap(m_logo);
 }
 
 void CPPageLogo::OnDeltaposSpin1(NMHDR* pNMHDR, LRESULT* pResult)
@@ -173,7 +215,7 @@ void CPPageLogo::OnBnClickedButton2()
                     this, 0);
 
     if (dlg.DoModal() == IDOK) {
-        m_logofn = dlg.GetPathName();
+        m_logofn = FileDialogUtils::GetSelectedPath(dlg);
         UpdateData(FALSE);
         OnBnClickedExternalRadio();
     }
@@ -184,12 +226,13 @@ void CPPageLogo::GetDataFromRes()
     m_author.Empty();
     m_logo.DeleteObject();
 
-    UINT id = m_logoids.GetAt(m_logoidpos);
+    int id = m_logoids.GetAt(m_logoidpos);
     if (IDF_LOGO0 != id) {
         m_logo.Load(id);
         if (!m_author.LoadString(id)) {
             m_author.LoadString(IDS_LOGO_AUTHOR);
         }
     }
-    m_logopreview.SetBitmap(m_logo);
+    SetLogoPreview();
 }
+

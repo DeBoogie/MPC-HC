@@ -22,6 +22,8 @@
 #pragma once
 
 #include "StatusLabel.h"
+#include "CMPCThemeToolTipCtrl.h"
+#include "CMPCThemeMenu.h"
 
 class CMainFrame;
 
@@ -41,19 +43,24 @@ private:
     CString m_typeExt;
     HICON m_hIcon;
 
+    REFERENCE_TIME m_rtNow, m_rtDur;
+
     CRect m_time_rect;
-    CMenu m_timerMenu;
+    CMPCThemeMenu m_timerMenu;
 
     CToolTipCtrl m_tooltip;
+    CMPCThemeToolTipCtrl themedToolTip;
 
     EventClient m_eventc;
     void EventCallback(MpcEvent ev);
 
-    void Relayout();
+    int m_initialWindowDPI = 0;
 
 public:
     CPlayerStatusBar(CMainFrame* pMainFrame);
     virtual ~CPlayerStatusBar();
+
+    void Relayout();
 
     void Clear();
 
@@ -64,12 +71,19 @@ public:
     void SetStatusTimer(REFERENCE_TIME rtNow, REFERENCE_TIME rtDur, bool fHighPrecision,
                         const GUID& timeFormat = TIME_FORMAT_MEDIA_TIME);
 
+    REFERENCE_TIME GetTimerCurPos();
+    REFERENCE_TIME GetTimerDuration();
+
     CString GetStatusTimer() const;
     CString GetStatusMessage() const;
 
     CString PreparePathStatusMessage(CPath path);
 
     void ShowTimer(bool fShow);
+
+    // Builds and tracks the timer-options popup (Remaining time / High precision / Show percentage),
+    // shared by the status-bar time control and the seekbar time section (#3256).
+    void ShowTimerOptionsMenu(CWnd* pOwner, CPoint screenPt);
 
     // Overrides
     virtual BOOL Create(CWnd* pParentWnd);
@@ -81,6 +95,7 @@ public:
 protected:
 
     void SetMediaTypeIcon();
+    void ScaleFont();
 
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
     afx_msg void OnPaint();

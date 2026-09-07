@@ -26,6 +26,8 @@
 #include "MainFrm.h"
 #include "TunerScanDlg.h"
 #include "DVBChannel.h"
+#include "CMPCTheme.h"
+#include "CMPCThemeUtil.h"
 
 
 enum TSC_COLUMN {
@@ -42,10 +44,10 @@ enum TSC_COLUMN {
 
 // CTunerScanDlg dialog
 
-IMPLEMENT_DYNAMIC(CTunerScanDlg, CDialog)
+IMPLEMENT_DYNAMIC(CTunerScanDlg, CMPCThemeDialog)
 
 CTunerScanDlg::CTunerScanDlg(CMainFrame* pMainFrame)
-    : CDialog(CTunerScanDlg::IDD, pMainFrame)
+    : CMPCThemeDialog(CTunerScanDlg::IDD, pMainFrame)
     , m_pMainFrame(pMainFrame)
     , m_bInProgress(false)
 {
@@ -54,6 +56,7 @@ CTunerScanDlg::CTunerScanDlg(CMainFrame* pMainFrame)
     m_ulFrequencyStart = s.iBDAScanFreqStart;
     m_ulFrequencyEnd = s.iBDAScanFreqEnd;
     m_ulBandwidth = s.iBDABandwidth * 1000;
+    m_ulSymbolRate = s.iBDASymbolRate;
     m_bUseOffset = s.fBDAUseOffset;
     m_lOffset = s.iBDAOffset;
     m_bIgnoreEncryptedChannels = s.fBDAIgnoreEncryptedChannels;
@@ -65,7 +68,7 @@ CTunerScanDlg::~CTunerScanDlg()
 
 BOOL CTunerScanDlg::OnInitDialog()
 {
-    CDialog::OnInitDialog();
+    CMPCThemeDialog::OnInitDialog();
 
     m_OffsetEditBox.EnableWindow(m_bUseOffset);
 
@@ -80,8 +83,12 @@ BOOL CTunerScanDlg::OnInitDialog()
     m_ChannelList.InsertColumn(TSCC_CHANNEL, _T("Channel"), LVCFMT_LEFT, 0);
 
     m_Progress.SetRange(0, 100);
+    CMPCThemeUtil::fulfillThemeReqs(&m_Progress);
     m_Strength.SetRange(0, 100);
+    CMPCThemeUtil::fulfillThemeReqs(&m_Strength);
     m_Quality.SetRange(0, 100);
+    CMPCThemeUtil::fulfillThemeReqs(&m_Quality);
+
     m_btnSave.EnableWindow(FALSE);
 
     return TRUE;
@@ -89,10 +96,11 @@ BOOL CTunerScanDlg::OnInitDialog()
 
 void CTunerScanDlg::DoDataExchange(CDataExchange* pDX)
 {
-    CDialog::DoDataExchange(pDX);
+    CMPCThemeDialog::DoDataExchange(pDX);
     DDX_Text(pDX, IDC_FREQ_START, m_ulFrequencyStart);
     DDX_Text(pDX, IDC_FREQ_END, m_ulFrequencyEnd);
     DDX_Text(pDX, IDC_BANDWIDTH, m_ulBandwidth);
+    DDX_Text(pDX, IDC_SYMBOLRATE, m_ulSymbolRate);
     DDX_Text(pDX, IDC_OFFSET, m_lOffset);
     DDX_Check(pDX, IDC_CHECK_OFFSET, m_bUseOffset);
     DDX_Check(pDX, IDC_CHECK_IGNORE_ENCRYPTED, m_bIgnoreEncryptedChannels);
@@ -104,9 +112,10 @@ void CTunerScanDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, ID_SAVE, m_btnSave);
     DDX_Control(pDX, IDCANCEL, m_btnCancel);
     DDX_Control(pDX, IDC_OFFSET, m_OffsetEditBox);
+    fulfillThemeReqs();
 }
 
-BEGIN_MESSAGE_MAP(CTunerScanDlg, CDialog)
+BEGIN_MESSAGE_MAP(CTunerScanDlg, CMPCThemeDialog)
     ON_MESSAGE(WM_TUNER_SCAN_PROGRESS, OnScanProgress)
     ON_MESSAGE(WM_TUNER_SCAN_END, OnScanEnd)
     ON_MESSAGE(WM_TUNER_STATS, OnStats)
@@ -126,7 +135,7 @@ void CTunerScanDlg::OnBnClickedSave()
 
     for (int i = 0; i < m_ChannelList.GetItemCount(); i++) {
         try {
-            CDVBChannel channel(m_ChannelList.GetItemText(i, TSCC_CHANNEL));
+            CBDAChannel channel(m_ChannelList.GetItemText(i, TSCC_CHANNEL));
             auto it = std::find(std::begin(DVBChannels), std::end(DVBChannels), channel);
             if (it != DVBChannels.end()) {
                 // replace existing channel
@@ -166,6 +175,7 @@ void CTunerScanDlg::OnBnClickedStart()
         pTSD->FrequencyStart = m_ulFrequencyStart;
         pTSD->FrequencyStop  = m_ulFrequencyEnd;
         pTSD->Bandwidth      = m_ulBandwidth;
+        pTSD->SymbolRate     = m_ulSymbolRate;
         pTSD->Offset         = m_bUseOffset ? m_lOffset : 0;
         SaveScanSettings();
 
@@ -216,7 +226,7 @@ LRESULT CTunerScanDlg::OnStats(WPARAM wParam, LPARAM lParam)
 LRESULT CTunerScanDlg::OnNewChannel(WPARAM wParam, LPARAM lParam)
 {
     try {
-        CDVBChannel channel((LPCTSTR)lParam);
+        CBDAChannel channel((LPCTSTR)lParam);
         if (!m_bIgnoreEncryptedChannels || !channel.IsEncrypted()) {
             CString strTemp;
             int nItem, nChannelNumber;
@@ -234,7 +244,13 @@ LRESULT CTunerScanDlg::OnNewChannel(WPARAM wParam, LPARAM lParam)
                 nItem = m_ChannelList.GetItemCount();
             }
 
-            strTemp.Format(_T("%d"), nChannelNumber);
+            if (channel.HasATSCNumber()) {
+                // ATSC numbers are two-part and are what a viewer recognises,
+                // so show 9.1 rather than the 9001 used internally to order them.
+                strTemp.Format(_T("%d.%d"), channel.GetATSCMajor(), channel.GetATSCMinor());
+            } else {
+                strTemp.Format(_T("%d"), nChannelNumber);
+            }
             nItem = m_ChannelList.InsertItem(nItem, strTemp);
 
             m_ChannelList.SetItemData(nItem, channel.GetOriginNumber());
@@ -245,9 +261,9 @@ LRESULT CTunerScanDlg::OnNewChannel(WPARAM wParam, LPARAM lParam)
             m_ChannelList.SetItemText(nItem, TSCC_FREQUENCY, strTemp);
 
             m_ChannelList.SetItemText(nItem, TSCC_ENCRYPTED, ResStr(channel.IsEncrypted() ? IDS_YES : IDS_NO));
-            if (channel.GetVideoType() == DVB_H264) {
+            if (channel.GetVideoType() == BDA_H264) {
                 strTemp = _T("H.264");
-            } else if (channel.GetVideoType() == DVB_HEVC) {
+            } else if (channel.GetVideoType() == BDA_HEVC) {
                 strTemp = _T("HEVC");
             } else if (channel.GetVideoPID()) {
                 strTemp = _T("MPEG-2");
@@ -300,6 +316,7 @@ void CTunerScanDlg::SaveScanSettings()
     s.iBDAScanFreqEnd = m_ulFrequencyEnd;
     div_t bdw = div(m_ulBandwidth, 1000);
     s.iBDABandwidth = bdw.quot;
+    s.iBDASymbolRate = m_ulSymbolRate;
     s.fBDAUseOffset = !!m_bUseOffset;
     s.iBDAOffset = m_lOffset;
     s.fBDAIgnoreEncryptedChannels = !!m_bIgnoreEncryptedChannels;

@@ -26,23 +26,19 @@
 #include "MainFrm.h"
 #include "PPageFileMediaInfo.h"
 #include "WinAPIUtils.h"
+#include "../DeCSS/VobFile.h"
+#include "PathUtils.h"
 
-#if USE_STATIC_MEDIAINFO
-#include "MediaInfo/MediaInfo.h"
-using namespace MediaInfoLib;
-#define MediaInfo_int64u ZenLib::int64u
-#else
-#include "MediaInfoDLL/MediaInfoDLL.h"
+#include "MediaInfo/MediaInfoDLL.h"
 using namespace MediaInfoDLL;
-#endif
 
 #define MEDIAINFO_BUFFER_SIZE 1024 * 256
 
 // CPPageFileMediaInfo dialog
 
-IMPLEMENT_DYNAMIC(CPPageFileMediaInfo, CPropertyPage)
+IMPLEMENT_DYNAMIC(CPPageFileMediaInfo, CMPCThemeResizablePropertyPage)
 CPPageFileMediaInfo::CPPageFileMediaInfo(CString path, IFileSourceFilter* pFSF, IDvdInfo2* pDVDI, CMainFrame* pMainFrame)
-    : CPropertyPage(CPPageFileMediaInfo::IDD, CPPageFileMediaInfo::IDD)
+    : CMPCThemeResizablePropertyPage(CPPageFileMediaInfo::IDD, CPPageFileMediaInfo::IDD)
     , m_fn(path)
     , m_path(path)
     , m_bSyncAnalysis(false)
@@ -66,7 +62,18 @@ CPPageFileMediaInfo::CPPageFileMediaInfo(CString path, IFileSourceFilter* pFSF, 
         ULONG len = 0;
         if (SUCCEEDED(pDVDI->GetDVDDirectory(m_path.GetBufferSetLength(MAX_PATH), MAX_PATH, &len)) && len) {
             m_path.ReleaseBuffer();
-            m_fn = m_path += _T("\\VIDEO_TS.IFO");
+
+            CString main_ifo = m_path + _T("\\VIDEO_TS.IFO");
+            DVD_PLAYBACK_LOCATION2 loc;
+            ULONG VTSN, TTN;
+            if (SUCCEEDED(pDVDI->GetCurrentLocation(&loc)) && CVobFile::GetTitleInfo(main_ifo, loc.TitleNum, VTSN, TTN)) {
+                CString vts_file;
+                vts_file.Format(_T("\\VTS_%02lu_0.IFO"), VTSN);
+                m_path += vts_file;
+            } else {
+                m_path = main_ifo;
+            }
+            m_fn = m_path;
         }
     }
 
@@ -84,13 +91,12 @@ CPPageFileMediaInfo::CPPageFileMediaInfo(CString path, IFileSourceFilter* pFSF, 
     }
 
     m_futureMIText = std::async(m_bSyncAnalysis ? std::launch::deferred : std::launch::async, [ = ]() {
-#if USE_STATIC_MEDIAINFO
-        MediaInfoLib::String filename = m_path;
-        MediaInfoLib::MediaInfo MI;
-#else
         MediaInfoDLL::String filename = m_path;
         MediaInfo MI;
-#endif
+        if (!MI.IsReady()) {
+            CString error = L"MediaInfo loading failed";
+            return error;
+        }
         // If we do a synchronous analysis on an optical drive, we pause the video during
         // the analysis to avoid concurrent accesses to the drive. Note that due to the
         // synchronous nature of the analysis, we are sure that the graph state will not
@@ -105,37 +111,37 @@ CPPageFileMediaInfo::CPPageFileMediaInfo(CString path, IFileSourceFilter* pFSF, 
         MI.Option(_T("Complete"));
         MI.Option(_T("Language"), _T("  Config_Text_ColumnSize;30"));
 
-        LONGLONG llSize, llAvailable;
-        if (pAR && SUCCEEDED(pAR->Length(&llSize, &llAvailable))) {
-            size_t ret = MI.Open_Buffer_Init((MediaInfo_int64u)llSize);
+        if (m_path.IsEmpty() || pAR && (m_path.Find(L".rar") > 0) || MI.Open(filename) == 0) {
+            LONGLONG llSize, llAvailable;
+            if (pAR && SUCCEEDED(pAR->Length(&llSize, &llAvailable))) {
+                size_t ret = MI.Open_Buffer_Init((MediaInfo_int64u)llSize);
 
-            std::vector<BYTE> buffer(MEDIAINFO_BUFFER_SIZE);
-            LONGLONG llPosition = 0;
-            while ((ret & 0x1) && !(ret & 0x8) && llPosition < llAvailable) { // While accepted and not finished
-                size_t szLength = (size_t)std::min(llAvailable - llPosition, (LONGLONG)buffer.size());
-                if (pAR->SyncRead(llPosition, (LONG)szLength, buffer.data()) != S_OK) {
-                    break;
+                std::vector<BYTE> buffer(MEDIAINFO_BUFFER_SIZE);
+                LONGLONG llPosition = 0;
+                while ((ret & 0x1) && !(ret & 0x8) && llPosition < llAvailable) { // While accepted and not finished
+                    size_t szLength = (size_t)std::min(llAvailable - llPosition, (LONGLONG)buffer.size());
+                    if (pAR->SyncRead(llPosition, (LONG)szLength, buffer.data()) != S_OK) {
+                        break;
+                    }
+
+                    ret = MI.Open_Buffer_Continue(buffer.data(), szLength);
+
+                    // Seek to a different position if needed
+                    MediaInfo_int64u uiNeeded = MI.Open_Buffer_Continue_GoTo_Get();
+                    if (uiNeeded != MediaInfo_int64u(-1)) {
+                        llPosition = (LONGLONG)uiNeeded;
+                        // Inform MediaInfo of the seek
+                        MI.Open_Buffer_Init((MediaInfo_int64u)llSize, (MediaInfo_int64u)llPosition);
+                    } else {
+                        llPosition += (LONGLONG)szLength;
+                    }
+
+                    if (FAILED(pAR->Length(&llSize, &llAvailable))) {
+                        break;
+                    }
                 }
-
-                ret = MI.Open_Buffer_Continue(buffer.data(), szLength);
-
-                // Seek to a different position if needed
-                MediaInfo_int64u uiNeeded = MI.Open_Buffer_Continue_GoTo_Get();
-                if (uiNeeded != MediaInfo_int64u(-1)) {
-                    llPosition = (LONGLONG)uiNeeded;
-                    // Inform MediaInfo of the seek
-                    MI.Open_Buffer_Init((MediaInfo_int64u)llSize, (MediaInfo_int64u)llPosition);
-                } else {
-                    llPosition += (LONGLONG)szLength;
-                }
-
-                if (FAILED(pAR->Length(&llSize, &llAvailable))) {
-                    break;
-                }
+                MI.Open_Buffer_Finalize();
             }
-            MI.Open_Buffer_Finalize();
-        } else {
-            MI.Open(filename);
         }
 
         if (bUnpause) {
@@ -173,7 +179,7 @@ BOOL CPPageFileMediaInfo::PreTranslateMessage(MSG* pMsg)
     return __super::PreTranslateMessage(pMsg);
 }
 
-BEGIN_MESSAGE_MAP(CPPageFileMediaInfo, CPropertyPage)
+BEGIN_MESSAGE_MAP(CPPageFileMediaInfo, CMPCThemeResizablePropertyPage)
     ON_WM_SHOWWINDOW()
     ON_WM_DESTROY()
     ON_MESSAGE_VOID(WM_MEDIAINFO_READY, OnMediaInfoReady)
@@ -189,10 +195,16 @@ BOOL CPPageFileMediaInfo::OnInitDialog()
     ZeroMemory(&lf, sizeof(lf));
     lf.lfPitchAndFamily = DEFAULT_PITCH | FF_MODERN;
     // The empty string will fall back to the first font that matches the other specified attributes.
-    LPCTSTR fonts[] = { _T("Lucida Console"), _T("Courier New"), _T("") };
+    LPCTSTR fonts[] = { _T("Consolas"), _T("Lucida Console"), _T("Courier New"), _T("") };
     // Use a negative value to match the character height instead of the cell height.
-    const int fonts_size[] = { 10, 11, 11 };
-    size_t i = 0;
+    const int fonts_size[] = { 12, 12, 13, 13 };
+    size_t i;
+    if (AppIsThemeLoaded()) {
+        i = 0; //added Consolas to the beginning for CMPCTheme
+    } else {
+        i = 1; //otherwise honor the old order (overly respectful of Lucida for old windows :) )
+    }
+
     bool bSuccess;
     DpiHelper dpi;
     do {
@@ -214,6 +226,8 @@ BOOL CPPageFileMediaInfo::OnInitDialog()
             PostMessage(WM_MEDIAINFO_READY); // then notify the window that MediaInfo analysis finished
         });
     }
+
+    AddAnchor(IDC_MIEDIT, TOP_LEFT, BOTTOM_RIGHT);
 
     return TRUE;  // return TRUE unless you set the focus to a control
     // EXCEPTION: OCX Property Pages should return FALSE
@@ -254,22 +268,17 @@ bool CPPageFileMediaInfo::OnKeyDownInEdit(MSG* pMsg)
     return bHandled;
 }
 
-#if !USE_STATIC_MEDIAINFO
 bool CPPageFileMediaInfo::HasMediaInfo()
 {
     MediaInfo MI;
     return MI.IsReady();
 }
-#endif
 
 void CPPageFileMediaInfo::OnSaveAs()
 {
-    CString fn = m_fn;
-
-    fn.TrimRight(_T('/'));
-    int i = std::max(fn.ReverseFind(_T('\\')), fn.ReverseFind(_T('/')));
-    if (i >= 0 && i < fn.GetLength() - 1) {
-        fn = fn.Mid(i + 1);
+    CStringW fn = m_fn;
+    if (PathUtils::IsURL(fn)) {
+        fn = L"online_stream";
     }
     fn.Append(_T(".MediaInfo.txt"));
 

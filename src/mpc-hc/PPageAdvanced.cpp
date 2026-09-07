@@ -24,13 +24,14 @@
 #include "MainFrm.h"
 #include "EventDispatcher.h"
 #include <strsafe.h>
+#include "CrashReporter.h"
+#include "ExceptionHandler.h"
+
+IMPLEMENT_DYNAMIC(CPPageAdvanced, CMPCThemePPageBase)
 
 CPPageAdvanced::CPPageAdvanced()
-    : CPPageBase(IDD, IDD)
+    : CMPCThemePPageBase(IDD, IDD)
 {
-    EventRouter::EventSelection fires;
-    fires.insert(MpcEvent::DEFAULT_TOOLBAR_SIZE_CHANGED);
-    GetEventd().Connect(m_eventc, fires);
 }
 
 void CPPageAdvanced::DoDataExchange(CDataExchange* pDX)
@@ -39,32 +40,33 @@ void CPPageAdvanced::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_LIST1, m_list);
     DDX_Control(pDX, IDC_COMBO1, m_comboBox);
     DDX_Control(pDX, IDC_SPIN1, m_spinButtonCtrl);
+    DDX_Control(pDX, IDC_EDIT1, m_dynamicEdit);
 }
 
 BOOL CPPageAdvanced::OnInitDialog()
 {
     __super::OnInitDialog();
-
-    if (CFont* pFont = m_list.GetFont()) {
-        LOGFONT logfont;
-        pFont->GetLogFont(&logfont);
-        logfont.lfWeight = FW_BOLD;
-        m_fontBold.CreateFontIndirect(&logfont);
-    }
+    initBoldFont();
 
     SetRedraw(FALSE);
-    m_list.SetExtendedStyle(m_list.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_AUTOSIZECOLUMNS | LVS_EX_DOUBLEBUFFER | LVS_EX_INFOTIP);
+    m_list.SetExtendedStyle(m_list.GetExtendedStyle() /* | LVS_EX_FULLROWSELECT */ /*| LVS_EX_DOUBLEBUFFER */ | LVS_EX_INFOTIP);
+    m_list.setAdditionalStyles(LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT);
+    m_list.setColorInterface(this);
     m_list.InsertColumn(COL_NAME, ResStr(IDS_PPAGEADVANCED_COL_NAME), LVCFMT_LEFT);
-    m_list.InsertColumn(COL_VALUE, ResStr(IDS_PPAGEADVANCED_COL_VALUE), LVCFMT_RIGHT);
+    m_list.InsertColumn(COL_VALUE, ResStr(IDS_PPAGEADVANCED_COL_VALUE), LVCFMT_LEFT);
+    m_list.InsertColumn(COL_DUMMYCOL, L"", LVCFMT_FIXED_WIDTH);
 
     if (auto pToolTip = m_list.GetToolTips()) {
         // Set topmost for tooltip window. Workaround bug https://connect.microsoft.com/VisualStudio/feedback/details/272350
         pToolTip->SetWindowPos(&wndTopMost, 0, 0, 0, 0, SWP_NOREDRAW | SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOOWNERZORDER);
     }
 
-    m_spinButtonCtrl.SetBuddy(GetDlgItem(IDC_EDIT1));
+    m_dynamicEdit.GetWindowRect(editRect);
+    ScreenToClient(editRect);
 
-    GetDlgItem(IDC_EDIT1)->ShowWindow(SW_HIDE);
+    m_spinButtonCtrl.SetBuddy(&m_dynamicEdit);
+
+    m_dynamicEdit.ShowWindow(SW_HIDE);
     GetDlgItem(IDC_COMBO1)->ShowWindow(SW_HIDE);
     GetDlgItem(IDC_RADIO1)->ShowWindow(SW_HIDE);
     GetDlgItem(IDC_RADIO2)->ShowWindow(SW_HIDE);
@@ -76,9 +78,10 @@ BOOL CPPageAdvanced::OnInitDialog()
 
     InitSettings();
 
-    for (int i = 0; i < m_list.GetHeaderCtrl()->GetItemCount(); ++i) {
-        m_list.SetColumnWidth(i, LVSCW_AUTOSIZE_USEHEADER);
-    }
+    AutoSizeValueColumn();
+    m_list.SetColumnWidth(COL_NAME, LVSCW_AUTOSIZE_USEHEADER);
+    m_list.SetColumnWidth(COL_DUMMYCOL, 0);
+
     SetRedraw(TRUE);
     return TRUE;
 }
@@ -87,12 +90,19 @@ void CPPageAdvanced::InitSettings()
 {
     auto& s = AfxGetAppSettings();
 
+    auto addHeaderItem = [this](CString name) {
+        int iItem = m_list.InsertItem(m_list.GetItemCount(), name);
+        m_list.SetItemData(iItem, HEADER_ITEM_DATA);
+        m_list.setFlaggedItem(iItem, true);
+    };
+
     auto addBoolItem = [this](int nItem, CString name, bool defaultValue, bool & settingReference, CString toolTipText) {
         auto pItem = std::make_shared<SettingsBool>(name, defaultValue, settingReference, toolTipText);
-        int iItem = m_list.InsertItem(nItem, pItem->GetName());
-        m_list.SetItemText(iItem, COL_VALUE, (pItem->GetValue() ? m_strTrue : m_strFalse));
+        auto eSetting = static_cast<ADVANCED_SETTINGS>(nItem);
+        int iItem = m_list.InsertItem(m_list.GetItemCount(), pItem->GetName());
+        m_hiddenOptions[eSetting] = pItem;
+        m_list.setItemTextWithDefaultFlag(iItem, COL_VALUE, (pItem->GetValue() ? m_strTrue : m_strFalse), !IsDefault(eSetting));
         m_list.SetItemData(iItem, nItem);
-        m_hiddenOptions[static_cast<ADVANCED_SETTINGS>(nItem)] = pItem;
     };
 
     // The range parameter defines range (inclusive) that particular option can have.
@@ -104,73 +114,225 @@ void CPPageAdvanced::InitSettings()
             settingReference = defaultValue;
         }
         auto pItem = std::make_shared<SettingsInt>(name, defaultValue, settingReference, range, toolTipText);
-        int iItem = m_list.InsertItem(nItem, pItem->GetName());
+        auto eSetting = static_cast<ADVANCED_SETTINGS>(nItem);
+        int iItem = m_list.InsertItem(m_list.GetItemCount(), pItem->GetName());
+        m_hiddenOptions[eSetting] = pItem;
+
         CString str;
         str.Format(_T("%d"), pItem->GetValue());
-        m_list.SetItemText(iItem, COL_VALUE, str);
+        m_list.setItemTextWithDefaultFlag(iItem, COL_VALUE, str, !IsDefault(eSetting));
         m_list.SetItemData(iItem, nItem);
-        m_hiddenOptions[static_cast<ADVANCED_SETTINGS>(nItem)] = pItem;
     };
 
     // The list parameter defines list of the strings that will be in the combobox.
     auto addComboItem = [this](int nItem, CString name, int defaultValue, int& settingReference, std::deque<CString> list, CString toolTipText) {
         auto pItem = std::make_shared<SettingsCombo>(name, defaultValue, settingReference, list, toolTipText);
-        int iItem = m_list.InsertItem(nItem, pItem->GetName());
-        m_list.SetItemText(iItem, COL_VALUE, list.at(settingReference));
+        auto eSetting = static_cast<ADVANCED_SETTINGS>(nItem);
+        int iItem = m_list.InsertItem(m_list.GetItemCount(), pItem->GetName());
+        m_hiddenOptions[eSetting] = pItem;
+        m_list.setItemTextWithDefaultFlag(iItem, COL_VALUE, list.at(settingReference), !IsDefault(eSetting));
         m_list.SetItemData(iItem, nItem);
-        m_hiddenOptions[static_cast<ADVANCED_SETTINGS>(nItem)] = pItem;
     };
 
     auto addCStringItem = [this](int nItem, CString name, CString defaultValue, CString & settingReference, CString toolTipText) {
         auto pItem = std::make_shared<SettingsCString>(name, defaultValue, settingReference, toolTipText);
-        int iItem = m_list.InsertItem(nItem, pItem->GetName());
-        m_list.SetItemText(iItem, COL_VALUE, pItem->GetValue());
+        auto eSetting = static_cast<ADVANCED_SETTINGS>(nItem);
+        int iItem = m_list.InsertItem(m_list.GetItemCount(), pItem->GetName());
+        m_hiddenOptions[eSetting] = pItem;
+        m_list.setItemTextWithDefaultFlag(iItem, COL_VALUE, pItem->GetValue(), !IsDefault(eSetting));
         m_list.SetItemData(iItem, nItem);
-        m_hiddenOptions[static_cast<ADVANCED_SETTINGS>(nItem)] = pItem;
     };
 
-    addBoolItem(HIDE_WINDOWED, IDS_RS_HIDE_WINDOWED_CONTROLS, false, s.bHideWindowedControls, StrRes(IDS_PPAGEADVANCED_HIDE_WINDOWED));
-    addBoolItem(BLOCK_VSFILTER, IDS_RS_BLOCKVSFILTER, true, s.fBlockVSFilter, StrRes(IDS_PPAGEADVANCED_BLOCK_VSFILTER));
-    addIntItem(RECENT_FILES_NB, IDS_RS_RECENT_FILES_NUMBER, 20, s.iRecentFilesNumber, std::make_pair(0, 1000), StrRes(IDS_PPAGEADVANCED_RECENT_FILES_NUMBER));
-    addIntItem(FILE_POS_LONGER, IDS_RS_FILEPOSLONGER, 0, s.iRememberPosForLongerThan, std::make_pair(0, INT_MAX), StrRes(IDS_PPAGEADVANCED_FILE_POS_LONGER));
-    addBoolItem(FILE_POS_AUDIO, IDS_RS_FILEPOSAUDIO, true, s.bRememberPosForAudioFiles, StrRes(IDS_PPAGEADVANCED_FILE_POS_AUDIO));
+    addHeaderItem(ResStr(IDS_PPAGEADVANCED_GRP_USER_INTERFACE));
+    addBoolItem(FULLSCREEN_SEPARATE_CONTROLS, IDS_RS_FULLSCREEN_SEPARATE_CONTROLS, true, s.bFullscreenSeparateControls, StrRes(IDS_PPAGEADVANCED_FULLSCREEN_SEPARATE_CONTROLS));
+    addIntItem(FULLSCREEN_DELAY, IDS_RS_FULLSCREEN_DELAY, MIN_FULLSCREEN_DELAY, s.iFullscreenDelay, std::make_pair(MIN_FULLSCREEN_DELAY, MAX_FULLSCREEN_DELAY), StrRes(IDS_PPAGEADVANCED_FULLSCREEN_DELAY));
+    addIntItem(OSD_TRANSPARENCY, IDS_RS_OSD_TRANSPARENCY, 64, s.nOSDTransparency, std::make_pair(0, 160), "");
+    addIntItem(OSD_BORDER, IDS_RS_OSD_BORDER, 1, s.nOSDBorder, std::make_pair(0, 3), "");
+    addBoolItem(SHOW_VOLUME_PERCENTAGE, IDS_RS_SHOW_VOLUME_PERCENTAGE, true, s.bShowVolumePercentage, StrRes(IDS_PPAGEADVANCED_SHOW_VOLUME_PERCENTAGE));
+    addBoolItem(TIME_ON_SEEKBAR_LEFT, IDS_RS_TIME_ON_SEEKBAR_LEFT, false, s.bTimeOnSeekBarLeft, StrRes(IDS_PPAGEADVANCED_TIME_ON_SEEKBAR_LEFT));
+    addComboItem(STARTUP_PRESET, IDS_RS_STARTUP_PRESET, STARTUP_PRESET_REMEMBER, s.nStartupPreset,
+        { StrRes(IDS_STARTUP_PRESET_REMEMBER), StrRes(IDS_AG_VIEW_MINIMAL), StrRes(IDS_AG_VIEW_COMPACT), StrRes(IDS_AG_VIEW_NORMAL), StrRes(IDS_AG_VIEW_CUSTOM) },
+        StrRes(IDS_PPAGEADVANCED_STARTUP_PRESET));
+    addBoolItem(ALWAYS_USE_SHORT_MENU, IDS_RS_ALWAYS_USE_SHORT_MENU, false, s.bAlwaysUseShortMenu, StrRes(IDS_PPAGEADVANCED_ALWAYS_USE_SHORT_MENU));
+    addIntItem(MOUSE_LEFTUP_DELAY, IDS_RS_MOUSE_LEFTUP_DELAY, 0, s.iMouseLeftUpDelay, std::make_pair(0, 1000), StrRes(IDS_PPAGEADVANCED_MOUSE_LEFTUP_DELAY));
     addIntItem(COVER_SIZE_LIMIT, IDS_RS_COVER_ART_SIZE_LIMIT, 600, s.nCoverArtSizeLimit, std::make_pair(0, INT_MAX), StrRes(IDS_PPAGEADVANCED_COVER_SIZE_LIMIT));
-    addBoolItem(LOGGING, IDS_RS_LOGGING, false, s.bEnableLogging, StrRes(IDS_PPAGEADVANCED_LOGGER));
+    addBoolItem(OPEN_REC_PANEL_WHEN_OPENING_DEVICE, IDS_RS_OPEN_REC_PANEL_WHEN_OPENING_DEVICE, true, s.bOpenRecPanelWhenOpeningDevice, StrRes(IDS_PPAGEADVANCED_OPEN_REC_PANEL_WHEN_OPENING_DEVICE));
+    addBoolItem(CONFIRM_FILE_DELETE, IDS_RS_CONFIRM_FILE_DELETE, true, s.bConfirmFileDelete, StrRes(IDS_PPAGEADVANCED_CONFIRM_FILE_DELETE));
+
+    addHeaderItem(ResStr(IDS_PPAGEADVANCED_GRP_PLAYBACK));
+    addBoolItem(LOOP_FOLDER_NEXT_FILE, IDS_RS_LOOP_FOLDER_NEXT_FILE, false, s.bLoopFolderOnPlayNextFile, StrRes(IDS_PPAGEADVANCED_LOOP_FOLDER_NEXT_FILE));
+    addBoolItem(NEXT_FILE_SORT_BY_DATE, IDS_RS_NEXT_FILE_SORT_BY_DATE, false, s.bNextFileInFolderSortByDate, L"Sort files by creation time instead of file name when skipping to the next/previous file in a folder.");
+    addBoolItem(LOCK_NOPAUSE, IDS_RS_LOCK_NOPAUSE, false, s.bLockNoPause, StrRes(IDS_PPAGEADVANCED_LOCK_NOPAUSE));
+    addBoolItem(PREVENT_DISPLAY_SLEEP, IDS_RS_PREVENT_DISPLAY_SLEEP, true, s.bPreventDisplaySleep, StrRes(IDS_PPAGEADVANCED_PREVENT_DISPLAY_SLEEP));
+    addIntItem(RELOAD_AFTER_LONG_PAUSE, IDS_RS_RELOAD_AFTER_LONG_PAUSE, 0, s.iReloadAfterLongPause, std::make_pair(-1, 1440), StrRes(IDS_PPAGEADVANCED_RELOAD_AFTER_LONG_PAUSE));
+    addBoolItem(INACCURATE_FASTSEEK, IDS_RS_ALLOW_INACCURATE_FASTSEEK, false, s.bAllowInaccurateFastseek, StrRes(IDS_PPAGEADVANCED_ALLOW_INACCURATE_FASTSEEK));
+    addIntItem(STILL_VIDEO_DURATION, IDS_RS_STILL_VIDEO_DURATION, 10, s.iStillVideoDuration, std::make_pair(0, 86400), StrRes(IDS_PPAGEADVANCED_STILL_VIDEO_DURATION));
+    addIntItem(STREAMPOSPOLLER_INTERVAL, IDS_RS_TIME_REFRESH_INTERVAL, 100, s.nStreamPosPollerInterval, std::make_pair(40, 500), StrRes(IDS_PPAGEADVANCED_TIME_REFRESH_INTERVAL));
+    addIntItem(REDIR_OPEN_TO_APPEND, IDS_RS_REDIRECT_OPEN_TO_APPEND_THRESHOLD, 1000, s.iRedirectOpenToAppendThreshold, std::make_pair(250, 5000), StrRes(IDS_PPAGEADVANCED_REDIRECT_OPEN_TO_APPEND_THRESHOLD));
+    addBoolItem(PAUSE_WHILE_DRAGGING_SEEKBAR, IDS_RS_PAUSE_WHILE_DRAGGING_SEEKBAR, true, s.bPauseWhileDraggingSeekbar, StrRes(IDS_PPAGEADVANCED_PAUSE_WHILE_DRAGGING_SEEKBAR));
+    addBoolItem(BLOCK_VSFILTER, IDS_RS_BLOCKVSFILTER, true, s.fBlockVSFilter, StrRes(IDS_PPAGEADVANCED_BLOCK_VSFILTER));
+    addBoolItem(BLOCK_RDP, IDS_RS_BLOCKRDP, true, s.bBlockRDP, StrRes(IDS_PPAGEADVANCED_BLOCKRDP));
+    addBoolItem(CAPTURE_DEINTERLACE, IDS_RS_CAPTURE_DEINTERLACE, false, s.bCaptureDeinterlace, StrRes(IDS_PPAGEADVANCED_CAPTURE_DEINTERLACE));
+    addBoolItem(USE_MEDIAINFO_LOAD_FILE_DURATION, IDS_RS_USE_MEDIAINFO_LOAD_FILE_DURATION, false, s.bUseMediainfoLoadFileDuration, StrRes(IDS_PPAGEADVANCED_USE_MEDIAINFO_LOAD_FILE_DURATION));
+
+    addHeaderItem(ResStr(IDS_PPAGEADVANCED_GRP_HISTORY));
+    addIntItem(RECENT_FILES_NB, IDS_RS_RECENT_FILES_NUMBER, 100, s.iRecentFilesNumber, std::make_pair(0, 1000), StrRes(IDS_PPAGEADVANCED_RECENT_FILES_NUMBER));
+    addIntItem(HISTORY_MAX_AGE_DAYS, IDS_RS_HISTORY_MAX_AGE_DAYS, 365, s.iHistoryMaxAgeDays, std::make_pair(0, 10000), L"Automatically remove entries older than this number of days from the recent files history. Set to 0 to disable age-based cleanup.");
+    addIntItem(FILE_POS_LONGER, IDS_RS_FILEPOSLONGER, 5, s.iRememberPosForLongerThan, std::make_pair(0, INT_MAX), StrRes(IDS_PPAGEADVANCED_FILE_POS_LONGER));
+    addBoolItem(FILE_POS_AUDIO, IDS_RS_FILEPOSAUDIO, true, s.bRememberPosForAudioFiles, StrRes(IDS_PPAGEADVANCED_FILE_POS_AUDIO));
+    addBoolItem(FILE_POS_PLAYLIST, IDS_RS_FILEPOS_PLAYLIST, true, s.bRememberExternalPlaylistPos, StrRes(IDS_PPAGEADVANCED_FILEPOS_PLAYLIST));
+    addBoolItem(FILE_POS_TRACK_SELECTION, IDS_RS_FILEPOS_TRACK_SELECTION, true, s.bRememberTrackSelection, StrRes(IDS_PPAGEADVANCED_FILEPOS_TRACK_SELECTION));
+    addBoolItem(USE_TITLE_IN_RECENT_FILE_LIST, IDS_RS_USE_TITLE_IN_RECENT_FILE_LIST, true, s.bUseTitleInRecentFileList, StrRes(IDS_PPAGEADVANCED_USE_TITLE_IN_RECENT_FILE_LIST));
+    addBoolItem(HISTORY_IN_APPDATA, IDS_RS_HISTORY_IN_APPDATA, false, s.bHistoryInAppData, L"Store the history file and the saved playlist in %APPDATA%\\MPC-HC instead of the player folder, when settings are stored in an INI file. This also happens automatically when the player folder is not writable. Requires restart.");
+    addCStringItem(HISTORY_EXCLUDE_FILTER, IDS_RS_HISTORY_EXCLUDE_FILTER, _T(""), s.sHistoryExcludeFilter, L"Semicolon separated list of substrings. Files and URLs whose full path contains any of them are not added to the recent files list, the resume position history, or the Windows recent documents list.\nExample: private;C:\\Videos\\Temp;youtube.com");
+
+    addHeaderItem(ResStr(IDS_INFOBAR_SUBTITLES));
+    addIntItem(SUB_SECONDARY_VERT_POS, L"SecondarySubVerPos", 8, s.nSecondarySubVerPos, std::make_pair(0, 95), L"Vertical position for secondary subtitle. Percentage offset from top.");
+    addBoolItem(ADD_LANGCODE_WHEN_SAVE_SUBTITLES, IDS_RS_ADD_LANGCODE_WHEN_SAVE_SUBTITLES, false, s.bAddLangCodeWhenSaveSubtitles, StrRes(IDS_PPAGEADVANCED_ADD_LANGCODE_WHEN_SAVE_SUBTITLES));
+    addBoolItem(LIBASS_FOR_SRT, IDS_RS_LIBASS_FOR_SRT, false, s.bRenderSRTUsingLibass, StrRes(IDS_PPAGEADVANCED_LIBASS_FOR_SRT));
+    addBoolItem(USE_FREETYPE, IDS_RS_USE_FREETYPE, false, s.bUseFreeType, StrRes(IDS_PPAGEADVANCED_USE_FREETYPE));
     addIntItem(AUTO_DOWNLOAD_SCORE_MOVIES, IDS_RS_AUTODOWNLOADSCOREMOVIES, 0x16, s.nAutoDownloadScoreMovies,
-               std::make_pair(10, 30), StrRes(IDS_PPAGEADVANCED_SCORE));
+        std::make_pair(10, 30), StrRes(IDS_PPAGEADVANCED_SCORE));
     addIntItem(AUTO_DOWNLOAD_SCORE_SERIES, IDS_RS_AUTODOWNLOADSCORESERIES, 0x18, s.nAutoDownloadScoreSeries,
-               std::make_pair(10, 30), StrRes(IDS_PPAGEADVANCED_SCORE));
-    addIntItem(DEFAULT_TOOLBAR_SIZE, IDS_RS_DEFAULTTOOLBARSIZE, 24, s.nDefaultToolbarSize,
-               std::make_pair(16, 128), StrRes(IDS_PPAGEADVANCED_DEFAULTTOOLBARSIZE));
-    addBoolItem(USE_LEGACY_TOOLBAR, IDS_RS_USE_LEGACY_TOOLBAR, false, s.bUseLegacyToolbar, StrRes(IDS_PPAGEADVANCED_USE_LEGACY_TOOLBAR));
+        std::make_pair(10, 30), StrRes(IDS_PPAGEADVANCED_SCORE));
+
+    addHeaderItem(ResStr(IDS_PPAGEADVANCED_GRP_SCREENSHOTS));
+    addBoolItem(SAVEIMAGE_POSITION, IDS_RS_SAVEIMAGE_POSITION, true, s.bSaveImagePosition, StrRes(IDS_PPAGEADVANCED_SAVEIMAGE_POSITION));
+    addBoolItem(SAVEIMAGE_CURRENTTIME, IDS_RS_SAVEIMAGE_CURRENTTIME, false, s.bSaveImageCurrentTime, StrRes(IDS_PPAGEADVANCED_SAVEIMAGE_CURRENTTIME));
+    addBoolItem(SNAPSHOTSUBTITLES, IDS_RS_SNAPSHOTSUBTITLES, true, s.bSnapShotSubtitles, StrRes(IDS_PPAGEADVANCED_SCREENSHOTSUBTITLES));
+    addBoolItem(SNAPSHOTKEEPVIDEOEXTENSION, IDS_RS_SNAPSHOTKEEPVIDEOEXTENSION, true, s.bSnapShotKeepVideoExtension, StrRes(IDS_PPAGEADVANCED_SCREENSHOTKEEPVIDEOEXTENSION));
+
+    addHeaderItem(L"yt-dlp");
+    addBoolItem(USE_YDL, IDS_RS_USE_YDL, true, s.bUseYDL, StrRes(IDS_PPAGEADVANCED_USE_YDL));
+    addIntItem(YDL_MAX_HEIGHT, IDS_RS_YDL_MAX_HEIGHT, 1440, s.iYDLMaxHeight, std::make_pair(0, INT_MAX), StrRes(IDS_PPAGEADVANCED_YDL_MAX_HEIGHT));
+    addIntItem(YDL_VIDEO_FORMAT, IDS_RS_YDL_VIDEO_FORMAT, 0, s.iYDLVideoFormat, std::make_pair(0, 8), StrRes(IDS_PPAGEADVANCED_YDL_VIDEO_FORMAT));
+    addIntItem(YDL_AUDIO_FORMAT, IDS_RS_YDL_AUDIO_FORMAT, 0, s.iYDLAudioFormat, std::make_pair(0, 2), StrRes(IDS_PPAGEADVANCED_YDL_AUDIO_FORMAT));
+    addBoolItem(YDL_AUDIO_ONLY, IDS_RS_YDL_AUDIO_ONLY, false, s.bYDLAudioOnly, StrRes(IDS_PPAGEADVANCED_YDL_AUDIO_ONLY));
+    addCStringItem(YDL_EXEPATH, IDS_RS_YDL_EXEPATH, _T(""), s.sYDLExePath, StrRes(IDS_PPAGEADVANCED_YDL_EXEPATH));
+    addCStringItem(YDL_COMMAND_LINE, L"YDLCommandLineForDownloadOnly", _T(""), s.sYDLCommandLine, StrRes(IDS_PPAGEADVANCED_YDL_COMMAND_LINE));
+    addCStringItem(YDL_SUBS_PREFERENCE, IDS_RS_YDL_SUBS_PREFERENCE, _T(""), s.sYDLSubsPreference, StrRes(IDS_PPAGEADVANCED_YDL_SUBS_PREFERENCE));
+    addBoolItem(USE_AUTOMATIC_CAPTIONS, IDS_RS_USE_AUTOMATIC_CAPTIONS, false, s.bUseAutomaticCaptions, StrRes(IDS_PPAGEADVANCED_USE_AUTOMATIC_CAPTIONS));
+
+    addHeaderItem(ResStr(IDS_PPAGEADVANCED_GRP_MISC));
+#if !defined(_DEBUG) && USE_DRDUMP_CRASH_REPORTER
+    addBoolItem(CRASHREPORTER, IDS_RS_ENABLE_CRASH_REPORTER, true, s.bEnableCrashReporter, StrRes(IDS_PPAGEADVANCED_CRASHREPORTER));
+#endif
+    addIntItem(LOGGING, IDS_RS_LOGGING, 0, s.DebugLogMask, std::make_pair(0, 31), /*StrRes(IDS_PPAGEADVANCED_LOGGER)*/ L"Enables logging to file (requires restart).\nThis option for debugging purposes only and should not be enabled during normal use!\nLogs are saved in folder: %appdata%\\MPC-HC\nValue to set is the sum of the loggers that you want to enable:\n1: General\n2: Graph builder\n4: Subtitle search\n8: yt-dlp processing\n16: DVB scanning");
+}
+
+std::pair<CString, bool> CPPageAdvanced::GetWidestValue(const std::shared_ptr<SettingsBase>& pItem, CDC* pDC)
+{
+    // Every value the setting can display, paired with the flagged (bold) state it would be drawn in.
+    std::deque<std::pair<CString, bool>> candidates;
+
+    if (auto pItemBool = std::dynamic_pointer_cast<SettingsBool>(pItem)) {
+        candidates.emplace_back(m_strTrue, !pItemBool->GetDefaultValue());
+        candidates.emplace_back(m_strFalse, pItemBool->GetDefaultValue());
+    } else if (auto pItemCombo = std::dynamic_pointer_cast<SettingsCombo>(pItem)) {
+        int nValue = 0;
+        for (const auto& str : pItemCombo->GetList()) {
+            candidates.emplace_back(str, nValue != pItemCombo->GetDefaultValue());
+            nValue++;
+        }
+    } else if (auto pItemInt = std::dynamic_pointer_cast<SettingsInt>(pItem)) {
+        const auto& range = pItemInt->GetRange();
+        CString str;
+        for (const auto& nValue : { range.first, range.second }) {
+            str.Format(_T("%d"), nValue);
+            candidates.emplace_back(str, nValue != pItemInt->GetDefaultValue());
+        }
+    } else if (auto pItemCString = std::dynamic_pointer_cast<SettingsCString>(pItem)) {
+        // Free text, so only the current value is knowable.
+        candidates.emplace_back(pItemCString->GetValue(), !pItemCString->IsDefault());
+    } else {
+        UNREACHABLE_CODE();
+    }
+
+    CFont* pNormalFont = m_list.GetFont();
+    std::pair<CString, bool> widest(_T(""), false);
+    int nMaxWidth = -1;
+    for (const auto& candidate : candidates) {
+        CFont* pFont = (candidate.second && m_fontBold.m_hObject) ? &m_fontBold : pNormalFont;
+        CFont* pOldFont = pFont ? pDC->SelectObject(pFont) : nullptr;
+        const int nWidth = pDC->GetTextExtent(candidate.first).cx;
+        if (pOldFont) {
+            pDC->SelectObject(pOldFont);
+        }
+        if (nWidth > nMaxWidth) {
+            nMaxWidth = nWidth;
+            widest = candidate;
+        }
+    }
+
+    return widest;
+}
+
+// The value column is sized once, to the widest value any setting can ever display, so that
+// changing a value during the session neither truncates it nor resizes the column. The list
+// control does the measuring itself (it reports the flagged/bold font through the custom draw
+// win32 runs for auto-size), which keeps the padding exact.
+void CPPageAdvanced::AutoSizeValueColumn()
+{
+    const int nCount = m_list.GetItemCount();
+    std::vector<std::pair<CString, bool>> savedValues(nCount);
+    CClientDC dc(&m_list);
+
+    m_list.SetRedraw(FALSE);
+
+    for (int i = 0; i < nCount; i++) {
+        if (IsHeaderRow(i)) {
+            continue;
+        }
+        auto eSetting = static_cast<ADVANCED_SETTINGS>(m_list.GetItemData(i));
+        savedValues[i] = std::make_pair(m_list.GetItemText(i, COL_VALUE), m_list.getFlaggedItem(i));
+        const auto widest = GetWidestValue(m_hiddenOptions.at(eSetting), &dc);
+        m_list.setItemTextWithDefaultFlag(i, COL_VALUE, widest.first, widest.second);
+    }
+
+    m_list.SetColumnWidth(COL_VALUE, LVSCW_AUTOSIZE_USEHEADER);
+    const int nWidth = m_list.GetColumnWidth(COL_VALUE);
+
+    for (int i = 0; i < nCount; i++) {
+        if (!IsHeaderRow(i)) {
+            m_list.setItemTextWithDefaultFlag(i, COL_VALUE, savedValues[i].first, savedValues[i].second);
+        }
+    }
+
+    m_list.SetColumnWidth(COL_VALUE, nWidth);
+    m_list.SetRedraw(TRUE);
 }
 
 BOOL CPPageAdvanced::OnApply()
 {
     auto& s = AfxGetAppSettings();
-
-    int nOldDefaultToolbarSize = s.nDefaultToolbarSize;
+    int oldHistoryMaxAgeDays = s.iHistoryMaxAgeDays;
 
     for (int i = 0; i < m_list.GetItemCount(); i++) {
+        if (IsHeaderRow(i)) {
+            continue;
+        }
         auto eSetting = static_cast<ADVANCED_SETTINGS>(m_list.GetItemData(i));
         m_hiddenOptions.at(eSetting)->Apply();
     }
 
     s.MRU.SetSize(s.iRecentFilesNumber);
-    s.MRUDub.SetSize(s.iRecentFilesNumber);
-    s.filePositions.SetMaxSize(s.iRecentFilesNumber);
-    s.dvdPositions.SetMaxSize(s.iRecentFilesNumber);
+    if (s.iHistoryMaxAgeDays != oldHistoryMaxAgeDays && s.iHistoryMaxAgeDays > 0) {
+        s.MRU.rfe_last_added = 0; // force reload so the new age limit is applied immediately
+        s.MRU.ReadMediaHistory();
+    }
+
+#if !defined(_DEBUG) && USE_DRDUMP_CRASH_REPORTER
+    if (!s.bEnableCrashReporter && CrashReporter::IsEnabled()) {
+        CrashReporter::Disable();
+        MPCExceptionHandler::Enable();
+    }
+#endif
 
     // There is no main frame when the option dialog is displayed stand-alone
     if (CMainFrame* pMainFrame = AfxGetMainFrame()) {
         pMainFrame->UpdateControlState(CMainFrame::UPDATE_CONTROLS_VISIBILITY);
-    }
-
-    if (nOldDefaultToolbarSize != s.nDefaultToolbarSize) {
-        m_eventc.FireEvent(MpcEvent::DEFAULT_TOOLBAR_SIZE_CHANGED);
-        if (CMainFrame* pMainFrame = AfxGetMainFrame()) {
-            pMainFrame->RecalcLayout();
-        }
+        pMainFrame->AdjustStreamPosPoller(true);
+        pMainFrame->ApplyTimeOnSeekBarChange();
     }
 
     return __super::OnApply();
@@ -181,7 +343,7 @@ bool CPPageAdvanced::IsDefault(ADVANCED_SETTINGS eSetting) const
     return m_hiddenOptions.at(eSetting)->IsDefault();
 }
 
-BEGIN_MESSAGE_MAP(CPPageAdvanced, CPPageBase)
+BEGIN_MESSAGE_MAP(CPPageAdvanced, CMPCThemePPageBase)
     ON_BN_CLICKED(IDC_BUTTON1, OnBnClickedDefaultButton)
     ON_UPDATE_COMMAND_UI(IDC_BUTTON1, OnUpdateDefaultButton)
     ON_NOTIFY(NM_DBLCLK, IDC_LIST1, OnNMDblclk)
@@ -207,7 +369,7 @@ void CPPageAdvanced::OnBnClickedDefaultButton()
 
         if (auto pItemBool = std::dynamic_pointer_cast<SettingsBool>(pItem)) {
             str = pItemBool->GetValue() ? m_strTrue : m_strFalse;
-            SetDlgItemText(IDC_EDIT1, str);
+            m_dynamicEdit.SetWindowText(str);
             if (pItemBool->GetValue()) {
                 CheckRadioButton(IDC_RADIO1, IDC_RADIO2, IDC_RADIO1);
             } else {
@@ -218,16 +380,16 @@ void CPPageAdvanced::OnBnClickedDefaultButton()
             str = list.at(pItemCombo->GetValue());
             m_comboBox.SetCurSel(pItemCombo->GetValue());
         } else if (auto pItemInt = std::dynamic_pointer_cast<SettingsInt>(pItem)) {
-            SetDlgItemInt(IDC_EDIT1, pItemInt->GetValue());
             str.Format(_T("%d"), pItemInt->GetValue());
+            m_dynamicEdit.SetWindowText(str);
         } else if (auto pItemCString = std::dynamic_pointer_cast<SettingsCString>(pItem)) {
             str = pItemCString->GetValue();
-            SetDlgItemText(IDC_EDIT1, pItemCString->GetValue());
+            m_dynamicEdit.SetWindowText(str);
         } else {
             UNREACHABLE_CODE();
         }
 
-        m_list.SetItemText(iItem, COL_VALUE, str);
+        m_list.setItemTextWithDefaultFlag(iItem, COL_VALUE, str, !IsDefault(eSetting));
         UpdateData(FALSE);
         m_list.Update(iItem);
         SetModified();
@@ -248,13 +410,13 @@ void CPPageAdvanced::OnUpdateDefaultButton(CCmdUI* pCmdUI)
 void CPPageAdvanced::OnNMDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 {
     LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-    if (pNMItemActivate->iItem >= 0) {
+    if (pNMItemActivate->iItem >= 0 && !IsHeaderRow(pNMItemActivate->iItem)) {
         auto eSetting = static_cast<ADVANCED_SETTINGS>(m_list.GetItemData(pNMItemActivate->iItem));
         auto pItem = m_hiddenOptions.at(eSetting);
         if (auto pItemBool = std::dynamic_pointer_cast<SettingsBool>(pItem)) {
             pItemBool->Toggle();
-            m_list.SetItemText(pNMItemActivate->iItem, COL_VALUE,
-                               pItemBool->GetValue() ? m_strTrue : m_strFalse);
+            m_list.setItemTextWithDefaultFlag(pNMItemActivate->iItem, COL_VALUE,
+                                              pItemBool->GetValue() ? m_strTrue : m_strFalse, !IsDefault(eSetting));
             if (pItemBool->GetValue()) {
                 CheckRadioButton(IDC_RADIO1, IDC_RADIO2, IDC_RADIO1);
             } else {
@@ -270,24 +432,52 @@ void CPPageAdvanced::OnNMDblclk(NMHDR* pNMHDR, LRESULT* pResult)
 
 void CPPageAdvanced::OnNMCustomdraw(NMHDR* pNMHDR, LRESULT* pResult)
 {
-    LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+    *pResult = CDRF_DODEFAULT;
 
-    switch (pNMCD->dwDrawStage) {
+    //this custom draw is used only in classic mode
+    if (!AppNeedsThemedControls()) {
+        LPNMLVCUSTOMDRAW pLVCD = reinterpret_cast<LPNMLVCUSTOMDRAW>(pNMHDR);
+
+        switch (pLVCD->nmcd.dwDrawStage) {
         case CDDS_PREPAINT:
             *pResult = CDRF_NOTIFYITEMDRAW | CDRF_NOTIFYPOSTPAINT;
             break;
         case CDDS_ITEMPREPAINT: {
-            auto eSetting = static_cast<ADVANCED_SETTINGS>(m_list.GetItemData((int)pNMCD->dwItemSpec));
-            if (!IsDefault(eSetting)) {
-                ::SelectObject(pNMCD->hdc, m_fontBold.GetSafeHandle());
-                *pResult |= CDRF_NEWFONT;
-            } else {
-                *pResult = CDRF_DODEFAULT;
+                int iItem = (int)pLVCD->nmcd.dwItemSpec;
+                if (IsHeaderRow(iItem)) {
+                    bool overrideSelectedBG = false;
+                    GetCustomTextColors(iItem, pLVCD->iSubItem, pLVCD->clrText, pLVCD->clrTextBk, overrideSelectedBG);
+                    if (overrideSelectedBG) {
+                        pLVCD->nmcd.uItemState &= ~CDIS_SELECTED;
+                    }
+                    ::SelectObject(pLVCD->nmcd.hdc, m_fontBold.GetSafeHandle());
+                    *pResult |= CDRF_NEWFONT;
+                } else {
+                    // the flagged state, not IsDefault(), so that auto-size measures the font the value will be drawn in
+                    if (m_list.getFlaggedItem(iItem)) {
+                        ::SelectObject(pLVCD->nmcd.hdc, m_fontBold.GetSafeHandle());
+                        *pResult |= CDRF_NEWFONT;
+                    } else {
+                        *pResult = CDRF_DODEFAULT;
+                    }
+                }
             }
+            break;
         }
-        break;
-        default:
-            *pResult = CDRF_DODEFAULT;
+    }
+}
+
+void CPPageAdvanced::GetCustomTextColors(INT_PTR nItem, int iSubItem, COLORREF& clrText, COLORREF& clrTextBk, bool& overrideSelectedBG)
+{
+    if (IsHeaderRow((int)nItem)) {
+        overrideSelectedBG = true;
+        if (AppNeedsThemedControls()) {
+            clrText = CMPCTheme::TextFGColor;
+            clrTextBk = CMPCTheme::ControlAreaBGColor;
+        } else {
+            clrText = GetSysColor(COLOR_BTNTEXT);
+            clrTextBk = GetSysColor(COLOR_BTNFACE);
+        }
     }
 }
 
@@ -295,9 +485,11 @@ void CPPageAdvanced::OnLvnGetInfoTipList(NMHDR* pNMHDR, LRESULT* pResult)
 {
     LPNMLVGETINFOTIP pGetInfoTip = reinterpret_cast<LPNMLVGETINFOTIP>(pNMHDR);
 
-    auto eSetting = static_cast<ADVANCED_SETTINGS>(m_list.GetItemData(pGetInfoTip->iItem));
-    auto pItem = m_hiddenOptions.at(eSetting);
-    StringCchCopy(pGetInfoTip->pszText, pGetInfoTip->cchTextMax, pItem->GetToolTipText());
+    if (!IsHeaderRow(pGetInfoTip->iItem)) {
+        auto eSetting = static_cast<ADVANCED_SETTINGS>(m_list.GetItemData(pGetInfoTip->iItem));
+        auto pItem = m_hiddenOptions.at(eSetting);
+        StringCchCopy(pGetInfoTip->pszText, pGetInfoTip->cchTextMax, pItem->GetToolTipText());
+    }
 
     *pResult = 0;
 }
@@ -313,7 +505,7 @@ void CPPageAdvanced::OnLvnItemchangedList(NMHDR* pNMHDR, LRESULT* pResult)
             }
         };
 
-        if (pNMLV->iItem >= 0) {
+        if (pNMLV->iItem >= 0 && !IsHeaderRow(pNMLV->iItem)) {
             m_lastSelectedItem = pNMLV->iItem;
             auto eSetting = static_cast<ADVANCED_SETTINGS>(m_list.GetItemData(pNMLV->iItem));
             auto pItem = m_hiddenOptions.at(eSetting);
@@ -337,17 +529,23 @@ void CPPageAdvanced::OnLvnItemchangedList(NMHDR* pNMHDR, LRESULT* pResult)
                 m_comboBox.ShowWindow(SW_SHOW);
             } else if (auto pItemInt = std::dynamic_pointer_cast<SettingsInt>(pItem)) {
                 setDialogItemsVisibility({ IDC_COMBO1, IDC_RADIO1, IDC_RADIO2 }, SW_HIDE);
-                GetDlgItem(IDC_EDIT1)->ModifyStyle(0, ES_NUMBER, 0);
                 const auto& range = pItemInt->GetRange();
+                m_dynamicEdit.SetMode(CMPCThemeDynamicEdit::Mode::INT);
+                m_dynamicEdit.SetIntRange(range.first, range.second);
+                if (!m_spinButtonCtrl.GetBuddy()) {
+                    m_dynamicEdit.MoveWindow(editRect, TRUE);
+                    m_spinButtonCtrl.SetBuddy(&m_dynamicEdit);
+                }
                 m_spinButtonCtrl.SetRange32(range.first, range.second);
                 m_spinButtonCtrl.SetPos32(pItemInt->GetValue());
                 m_spinButtonCtrl.ShowWindow(SW_SHOW);
-                GetDlgItem(IDC_EDIT1)->ShowWindow(SW_SHOW);
+                m_dynamicEdit.ShowWindow(SW_SHOW);
             } else if (auto pItemCString = std::dynamic_pointer_cast<SettingsCString>(pItem)) {
                 setDialogItemsVisibility({ IDC_COMBO1, IDC_RADIO1, IDC_RADIO2, IDC_BUTTON1, IDC_SPIN1 }, SW_HIDE);
-                GetDlgItem(IDC_EDIT1)->ModifyStyle(ES_NUMBER, 0, 0);
-                SetDlgItemText(IDC_EDIT1, pItemCString->GetValue());
-                GetDlgItem(IDC_EDIT1)->ShowWindow(SW_SHOW);
+                m_dynamicEdit.SetMode(CMPCThemeDynamicEdit::Mode::STRING);
+                m_dynamicEdit.SetWindowText(pItemCString->GetValue());
+                m_spinButtonCtrl.SetBuddy(NULL);
+                m_dynamicEdit.ShowWindow(SW_SHOW);
             } else {
                 UNREACHABLE_CODE();
             }
@@ -368,7 +566,7 @@ void CPPageAdvanced::OnBnClickedRadio1()
 
         if (auto pItemBool = std::dynamic_pointer_cast<SettingsBool>(pItem)) {
             pItemBool->SetValue(true);
-            m_list.SetItemText(iItem, COL_VALUE, m_strTrue);
+            m_list.setItemTextWithDefaultFlag(iItem, COL_VALUE, m_strTrue, !IsDefault(eSetting));
             UpdateData(FALSE);
             m_list.Update(iItem);
             SetModified();
@@ -385,7 +583,7 @@ void CPPageAdvanced::OnBnClickedRadio2()
 
         if (auto pItemBool = std::dynamic_pointer_cast<SettingsBool>(pItem)) {
             pItemBool->SetValue(false);
-            m_list.SetItemText(iItem, COL_VALUE, m_strFalse);
+            m_list.setItemTextWithDefaultFlag(iItem, COL_VALUE, m_strFalse, !IsDefault(eSetting));
             UpdateData(FALSE);
             m_list.Update(iItem);
             SetModified();
@@ -404,7 +602,7 @@ void CPPageAdvanced::OnCbnSelchangeCombobox()
         if (auto pItemCombo = std::dynamic_pointer_cast<SettingsCombo>(pItem)) {
             auto list = pItemCombo->GetList();
             pItemCombo->SetValue(iItem);
-            m_list.SetItemText(nItem, COL_VALUE, list.at(iItem));
+            m_list.setItemTextWithDefaultFlag(nItem, COL_VALUE, list.at(iItem), !IsDefault(eSetting));
             UpdateData(FALSE);
             m_list.Update(nItem);
             if (m_comboBox.IsWindowVisible()) {
@@ -449,10 +647,31 @@ void CPPageAdvanced::OnEnChangeEdit()
         }
 
         if (bChanged) {
-            m_list.SetItemText(iItem, COL_VALUE, str);
+            m_list.setItemTextWithDefaultFlag(iItem, COL_VALUE, str, !IsDefault(eSetting));
             m_list.Update(iItem);
             UpdateData(FALSE);
             SetModified();
         }
     }
+}
+
+void CPPageAdvanced::initBoldFont() {
+    if (CFont* pFont = m_list.GetFont()) {
+        if (!m_fontBold.m_hObject) {
+            LOGFONT logfont;
+            pFont->GetLogFont(&logfont);
+            logfont.lfWeight = FW_BOLD;
+            m_fontBold.CreateFontIndirect(&logfont);
+        }
+    }
+}
+
+void CPPageAdvanced::DoDPIChanged()
+{
+    if (m_fontBold.m_hObject) {
+        m_fontBold.DeleteObject();
+    }
+    initBoldFont();
+    m_list.DoDPIChanged(); //themed listctrl stores its own font, and isn't drawn through CPPageAdvanced::OnNMCustomdraw
+    AutoSizeValueColumn(); //the widest value is measured in pixels, so it must be recalculated
 }

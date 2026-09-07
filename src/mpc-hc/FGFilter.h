@@ -24,6 +24,7 @@
 #define MERIT64(merit)      (((UINT64)(merit)) << 16)
 #define MERIT64_DO_NOT_USE  MERIT64(MERIT_DO_NOT_USE)
 #define MERIT64_DO_USE      MERIT64(MERIT_DO_NOT_USE + 1)
+#define MERIT64_LOWEST      MERIT64(MERIT_DO_NOT_USE + 2)
 #define MERIT64_UNLIKELY    (MERIT64(MERIT_UNLIKELY))
 #define MERIT64_NORMAL      (MERIT64(MERIT_NORMAL))
 #define MERIT64_PREFERRED   (MERIT64(MERIT_PREFERRED))
@@ -118,16 +119,19 @@ public:
     CFGFilterFile(const CLSID& clsid, CString path, CStringW name = L"", UINT64 merit = MERIT64_DO_USE);
 
     HRESULT Create(IBaseFilter** ppBF, CInterfaceList<IUnknown, &IID_IUnknown>& pUnks);
+
+    CString GetPath() { return m_path; };
 };
 
 class CFGFilterVideoRenderer : public CFGFilter
 {
 protected:
     HWND m_hWnd;
-    bool m_bHas10BitWorkAround;
+    bool m_bHasHookReceiveConnection;
+    bool m_bIsPreview;
 
 public:
-    CFGFilterVideoRenderer(HWND hWnd, const CLSID& clsid, CStringW name = L"", UINT64 merit = MERIT64_DO_USE);
+    CFGFilterVideoRenderer(HWND hWnd, const CLSID& clsid, CStringW name = L"", UINT64 merit = MERIT64_DO_USE, bool preview = false);
     virtual ~CFGFilterVideoRenderer();
 
     HRESULT Create(IBaseFilter** ppBF, CInterfaceList<IUnknown, &IID_IUnknown>& pUnks);

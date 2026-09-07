@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2013 see Authors.txt
+ * (C) 2006-2017 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -54,6 +54,10 @@ private:
     CComPtr<IUnknown> m_pUnkInner;
     DWORD m_dwRegister;
 
+    bool m_aborted;
+
+    bool m_filter_blocked = false;
+
     CStreamPath m_streampath;
     CAutoPtrArray<CStreamDeadEnd> m_deadends;
 
@@ -62,7 +66,15 @@ protected:
     CInterfaceList<IUnknown, &IID_IUnknown> m_pUnks;
     CAtlList<CFGFilter*> m_source, m_transform, m_override;
 
+    BOOL m_ignoreVideo;
+
+    CString m_useragent;
+    CString m_referrer;
+
     static bool CheckBytes(HANDLE hFile, CString chkbytes);
+
+    bool HasFilterOverride(CLSID clsid);
+    bool HasFilterOverride(CStringW DisplayName);
 
     HRESULT EnumSourceFilters(LPCWSTR lpcwstrFileName, CFGFilterList& fl);
     HRESULT AddSourceFilter(CFGFilter* pFGF, LPCWSTR lpcwstrFileName, LPCWSTR lpcwstrFilterName, IBaseFilter** ppBF);
@@ -112,9 +124,26 @@ protected:
     STDMETHODIMP_(size_t) GetCount();
     STDMETHODIMP GetDeadEnd(int iIndex, CAtlList<CStringW>& path, CAtlList<CMediaType>& mts);
 
+	//
+	HWND m_hWnd;
+	bool m_bIsPreview,m_bPreviewSupportsRotation;
+    CStringW m_entryRFS;
+    bool m_bIsCapture;
+    CStringW m_input; // used as hint to determine which filters to use
+
 public:
-    CFGManager(LPCTSTR pName, LPUNKNOWN pUnk);
+	CFGManager(LPCWSTR pClassName, LPCWSTR pInputFileURL, HWND hWnd = 0, bool IsPreview = false);
     virtual ~CFGManager();
+    HRESULT RenderRFSFileEntry(LPCWSTR lpcwstrFileName, LPCWSTR lpcwstrPlayList, CStringW entryRFS);
+    bool PreviewSupportsRotation() { return m_bPreviewSupportsRotation; }
+    static CUnknown* WINAPI GetMpcAudioRendererInstance(LPUNKNOWN lpunk, HRESULT* phr);
+
+    QWORD GetFileVersionFromRegCLSID(CString clsid);
+
+    void SetUserAgent(CString ua) { m_useragent = ua; };
+    void SetReferrer(CString ref) { m_referrer = ref; };
+
+    bool GetInternalFilterLoadingBlocked() { return m_filter_blocked; };
 
     DECLARE_IUNKNOWN;
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
@@ -127,22 +156,29 @@ public:
 
     STDMETHODIMP AddFilter(IBaseFilter* pFilter, LPCWSTR pName);
 
+    void InsertLAVSplitterSource(bool IsPreview = false);
+    void InsertLAVSplitter(bool IsPreview = false);
+    void InsertLAVVideo(bool IsPreview = false);
+    void InsertLAVAudio();
+    void InsertOtherInternalSourcefilters(bool IsPreview = false);
+    void InsertSubtitleFilters(bool IsPreview = false);
+    void InsertBlockedFilters();
+
 public:
-    CFGManagerCustom(LPCTSTR pName, LPUNKNOWN pUnk);
+	CFGManagerCustom(LPCWSTR pClassName, LPCWSTR pInputFileURL, HWND hWnd = 0, bool IsPreview = false);
 };
 
 class CFGManagerPlayer : public CFGManagerCustom
 {
 protected:
     HWND m_hWnd;
-    UINT64 m_vrmerit, m_armerit;
 
     // IFilterGraph
 
     STDMETHODIMP ConnectDirect(IPin* pPinOut, IPin* pPinIn, const AM_MEDIA_TYPE* pmt);
 
 public:
-    CFGManagerPlayer(LPCTSTR pName, LPUNKNOWN pUnk, HWND hWnd);
+	CFGManagerPlayer(LPCWSTR pClassName, LPCWSTR pInputFileURL, HWND hWnd, bool IsPreview = false);
 };
 
 class CFGManagerDVD : public CFGManagerPlayer
@@ -154,19 +190,13 @@ protected:
     STDMETHODIMP AddSourceFilter(LPCWSTR lpcwstrFileName, LPCWSTR lpcwstrFilterName, IBaseFilter** ppFilter);
 
 public:
-    CFGManagerDVD(LPCTSTR pName, LPUNKNOWN pUnk, HWND hWnd);
+	CFGManagerDVD(LPCWSTR pInputFileURL, HWND hWnd, bool IsPreview = false);
 };
 
 class CFGManagerCapture : public CFGManagerPlayer
 {
 public:
-    CFGManagerCapture(LPCTSTR pName, LPUNKNOWN pUnk, HWND hWnd);
-};
-
-class CFGManagerMuxer : public CFGManagerCustom
-{
-public:
-    CFGManagerMuxer(LPCTSTR pName, LPUNKNOWN pUnk);
+    CFGManagerCapture(HWND hWnd);
 };
 
 //

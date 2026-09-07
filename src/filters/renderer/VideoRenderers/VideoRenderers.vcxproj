@@ -60,17 +60,17 @@
     <ClCompile Include="IPinHook.cpp" />
     <ClCompile Include="MacrovisionKicker.cpp" />
     <ClCompile Include="madVRAllocatorPresenter.cpp" />
+    <ClCompile Include="MPCVRAllocatorPresenter.cpp" />
     <ClCompile Include="OuterEVR.cpp" />
     <ClCompile Include="OuterVMR.cpp" />
     <ClCompile Include="PixelShaderCache.cpp" />
     <ClCompile Include="PixelShaderCompiler.cpp" />
-    <ClCompile Include="QT9AllocatorPresenter.cpp" />
     <ClCompile Include="RenderersSettings.cpp" />
-    <ClCompile Include="RM9AllocatorPresenter.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SyncRenderer.cpp" />
+    <ClCompile Include="Utils.cpp" />
     <ClCompile Include="VMR9AllocatorPresenter.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -87,16 +87,17 @@
     <ClInclude Include="IQTVideoSurface.h" />
     <ClInclude Include="MacrovisionKicker.h" />
     <ClInclude Include="madVRAllocatorPresenter.h" />
+    <ClInclude Include="MPCVRAllocatorPresenter.h" />
     <ClInclude Include="OuterEVR.h" />
     <ClInclude Include="OuterVMR.h" />
     <ClInclude Include="PixelShaderCache.h" />
     <ClInclude Include="PixelShaderCompiler.h" />
-    <ClInclude Include="QT9AllocatorPresenter.h" />
     <ClInclude Include="RenderersSettings.h" />
-    <ClInclude Include="RM9AllocatorPresenter.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SyncAllocatorPresenter.h" />
     <ClInclude Include="SyncRenderer.h" />
+    <ClInclude Include="Utils.h" />
+    <ClInclude Include="Variables.h" />
     <ClInclude Include="VMR9AllocatorPresenter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

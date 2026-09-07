@@ -20,17 +20,21 @@
  */
 
 #pragma once
-
+#include "CMPCThemeEdit.h"
 // CFloatEdit
 
-class CFloatEdit : public CEdit
+class CMPCThemeFloatEdit : public CMPCThemeEdit
 {
+    float m_lower = -1000000000.0f;
+    float m_upper = 1000000000.0f;
+
 public:
     bool GetFloat(float& f);
     double operator = (double d);
     operator double();
+    void SetRange(float fLower, float fUpper);
 
-    DECLARE_DYNAMIC(CFloatEdit)
+    DECLARE_DYNAMIC(CMPCThemeFloatEdit)
     DECLARE_MESSAGE_MAP()
 
 public:
@@ -39,10 +43,10 @@ public:
 
 // CIntEdit
 
-class CIntEdit : public CEdit
+class CMPCThemeIntEdit : public CMPCThemeEdit
 {
 public:
-    DECLARE_DYNAMIC(CIntEdit)
+    DECLARE_DYNAMIC(CMPCThemeIntEdit)
     DECLARE_MESSAGE_MAP()
 
 public:
@@ -51,16 +55,42 @@ public:
 
 // CHexEdit
 
-class CHexEdit : public CEdit
+class CMPCThemeHexEdit : public CMPCThemeEdit
 {
 public:
     bool GetDWORD(DWORD& dw);
     DWORD operator = (DWORD dw);
     operator DWORD();
 
-    DECLARE_DYNAMIC(CHexEdit)
+    DECLARE_DYNAMIC(CMPCThemeHexEdit)
     DECLARE_MESSAGE_MAP()
 
 public:
+    afx_msg void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags);
+};
+
+// CDynamicEdit - Multi-mode edit control for PPageAdvanced
+
+class CMPCThemeDynamicEdit : public CMPCThemeEdit
+{
+public:
+    enum class Mode {
+        INT,      // Integer (supports negative)
+        STRING    // Free text
+    };
+
+private:
+    Mode m_mode = Mode::STRING;
+    std::pair<int, int> m_intRange = {INT_MIN, INT_MAX};
+
+public:
+    void SetMode(Mode mode);
+    void SetIntRange(int lower, int upper);
+    Mode GetMode() const { return m_mode; }
+    std::pair<int, int> GetIntRange() const { return m_intRange; }
+
+    DECLARE_DYNAMIC(CMPCThemeDynamicEdit)
+    DECLARE_MESSAGE_MAP()
+
     afx_msg void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags);
 };

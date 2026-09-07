@@ -22,6 +22,8 @@
 #pragma once
 
 #include "WinHotkeyCtrl.h"
+#include "CMPCThemeComboBox.h"
+#include "CMPCThemePlayerListCtrl.h"
 
 #define LVN_DOLABELEDIT (LVN_FIRST+1)
 
@@ -87,7 +89,7 @@ public:
     afx_msg void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags);
 };
 
-class CInPlaceComboBox : public CComboBox
+class CInPlaceComboBox : public CMPCThemeComboBox
 {
 private:
     int m_iItem;
@@ -140,36 +142,41 @@ public:
 
 // CPlayerListCtrl
 
-class CPlayerListCtrl : public CListCtrl
+class CPlayerListCtrl : public CMPCThemePlayerListCtrl
 {
     DECLARE_DYNAMIC(CPlayerListCtrl)
 
 private:
     int m_nItemClicked, m_nSubItemClicked;
-    int m_tStartEditingDelay;
+    bool m_bDoubleClickAction;
+    bool inPlaceControl;
+    CRect inPlaceControlRect;
     UINT_PTR m_nTimerID;
 
-    bool PrepareInPlaceControl(int nRow, int nCol, CRect& rect);
-
 public:
-    CPlayerListCtrl(int tStartEditingDelay = 500);
+    CPlayerListCtrl(bool bDoubleClickAction = false);
     virtual ~CPlayerListCtrl();
+
+    bool PrepareInPlaceControl(int nRow, int nCol, CRect& rect);
 
     int HitTestEx(const CPoint& point, int* col) const;
     CImageList* CreateDragImageEx(LPPOINT lpPoint);
 
     int GetBottomIndex() const;
 
+    static LRESULT SendLabelEditNotify(CWnd* pList, UINT code, int nItem, int nSubItem, LPCTSTR pszText = nullptr);
+
+    void BeginInPlaceEdit(int nItem, int nSubItem);
     CWinHotkeyCtrl* ShowInPlaceWinHotkey(int nItem, int nCol);
-    CEdit* ShowInPlaceEdit(int nItem, int nCol);
+    CInPlaceEdit* ShowInPlaceEdit(int nItem, int nCol);
     CEdit* ShowInPlaceFloatEdit(int nItem, int nCol);
     CComboBox* ShowInPlaceComboBox(int nItem, int nCol, CAtlList<CString>& lstItems, int nSel, bool bShowDropDown = false);
     CListBox* ShowInPlaceListBox(int nItem, int nCol, CAtlList<CString>& lstItems, int nSel);
+    int InsertColumn(_In_ int nCol, _In_z_ LPCWSTR lpszColumnHeading, _In_ int nFormat = LVCFMT_LEFT, _In_ int nWidth = -1, _In_ int nSubItem = -1, _In_ int nMinWidth = 20);
 
     bool m_fInPlaceDirty;
 
 protected:
-    virtual void PreSubclassWindow();
     virtual INT_PTR OnToolHitTest(CPoint point, TOOLINFO* pTI) const;
     virtual ULONG GetGestureStatus(CPoint) override { return 0; };
 
@@ -179,10 +186,12 @@ public:
     afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
     afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
     afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+    afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
     afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
     afx_msg void OnLvnMarqueeBegin(NMHDR* pNMHDR, LRESULT* pResult);
+    afx_msg BOOL OnLvnBegindrag(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnLvnInsertitem(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnLvnDeleteitem(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnEnChangeEdit1();
@@ -195,4 +204,6 @@ public:
     afx_msg void OnXButtonDown(UINT nFlags, UINT nButton, CPoint point);
     afx_msg void OnXButtonUp(UINT nFlags, UINT nButton, CPoint point);
     afx_msg void OnXButtonDblClk(UINT nFlags, UINT nButton, CPoint point);
+    afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
+    afx_msg BOOL OnLvnEndlabeledit(NMHDR* pNMHDR, LRESULT* pResult);
 };

@@ -27,10 +27,15 @@
 
 // CPlayerCaptureBar
 
-IMPLEMENT_DYNAMIC(CPlayerCaptureBar, CPlayerBar)
+IMPLEMENT_DYNAMIC(CPlayerCaptureBar, CMPCThemePlayerBar)
 CPlayerCaptureBar::CPlayerCaptureBar(CMainFrame* pMainFrame)
-    : m_capdlg(pMainFrame)
+    : CMPCThemePlayerBar(pMainFrame)
+    , m_pParent(nullptr)
+    , m_capdlg(pMainFrame, this)
 {
+    GetEventd().Connect(m_eventc, {
+        MpcEvent::DPI_CHANGED,
+    }, std::bind(&CPlayerCaptureBar::EventCallback, this, std::placeholders::_1));
 }
 
 CPlayerCaptureBar::~CPlayerCaptureBar()
@@ -42,6 +47,8 @@ BOOL CPlayerCaptureBar::Create(CWnd* pParentWnd, UINT defDockBarID)
     if (!__super::Create(ResStr(IDS_CAPTURE_SETTINGS), pParentWnd, ID_VIEW_CAPTURE, defDockBarID, _T("Capture Settings"))) {
         return FALSE;
     }
+
+    m_pParent = pParentWnd;
 
     m_capdlg.Create(this);
     m_capdlg.ShowWindow(SW_SHOWNORMAL);
@@ -80,8 +87,40 @@ void CPlayerCaptureBar::InitControls()
     m_capdlg.InitControls();
 }
 
+void CPlayerCaptureBar::EventCallback(MpcEvent ev) {
+    switch (ev) {
+    case MpcEvent::DPI_CHANGED:
+        InitializeSize();
+        break;
+
+    default:
+        ASSERT(FALSE);
+    }
+}
+
+static WNDPROC g_parentFrameOrigWndProcCapture = nullptr;
+LRESULT CALLBACK ParentFrameSubclassWndProcCapture(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    ASSERT(g_parentFrameOrigWndProcCapture);
+    if (message == WM_SYSCOMMAND && wParam == SC_CLOSE) {
+        AfxGetAppSettings().bHideCaptureSettings = true;
+    }
+    return CallWindowProc(g_parentFrameOrigWndProcCapture, hwnd, message, wParam, lParam);
+}
+
 BOOL CPlayerCaptureBar::PreTranslateMessage(MSG* pMsg)
 {
+    if (CWnd* pParent1 = GetParent()) {
+        CWnd* pParent2 = pParent1->GetParent();
+        if (pParent2 != m_pParent) {
+            if (!g_parentFrameOrigWndProcCapture) {
+                g_parentFrameOrigWndProcCapture = SubclassWindow(pParent2->m_hWnd, ParentFrameSubclassWndProcCapture);
+            }
+        } else {
+            g_parentFrameOrigWndProcCapture = nullptr;
+        }
+    }
+
     if (IsWindow(pMsg->hwnd) && IsVisible() && pMsg->message >= WM_KEYFIRST && pMsg->message <= WM_KEYLAST) {
         if (IsDialogMessage(pMsg)) {
             return TRUE;
@@ -91,5 +130,16 @@ BOOL CPlayerCaptureBar::PreTranslateMessage(MSG* pMsg)
     return __super::PreTranslateMessage(pMsg);
 }
 
-BEGIN_MESSAGE_MAP(CPlayerCaptureBar, CPlayerBar)
+BEGIN_MESSAGE_MAP(CPlayerCaptureBar, CMPCThemePlayerBar)
+    ON_WM_NCLBUTTONUP()
 END_MESSAGE_MAP()
+
+
+void CPlayerCaptureBar::OnNcLButtonUp(UINT nHitTest, CPoint point)
+{
+    __super::OnNcLButtonUp(nHitTest, point);
+
+    if (nHitTest == HTCLOSE) {
+        AfxGetAppSettings().bHideCaptureSettings = true;
+    }
+}

@@ -40,6 +40,11 @@ CWebServer::CWebServer(CMainFrame* pMainFrame, int nPort)
     : m_pMainFrame(pMainFrame)
     , m_nPort(nPort)
 {
+    // Populate the route tables before the server thread below starts accepting requests,
+    // otherwise every request is answered with 404. Init() used to run at the end of
+    // InitInstance, long after CMainFrame::OnCreate had already started the server.
+    Init();
+
     m_webroot = CPath(PathUtils::GetProgramPath());
     const CAppSettings& s = AfxGetAppSettings();
 
@@ -77,7 +82,7 @@ CWebServer::CWebServer(CMainFrame* pMainFrame, int nPort)
 CWebServer::~CWebServer()
 {
     if (m_hThread != nullptr) {
-        PostThreadMessage(m_ThreadId, WM_QUIT, 0, 0);
+        PostThreadMessage(m_ThreadId, WM_QUIT, (WPARAM)0, (LPARAM)0);
         if (WaitForSingleObject(m_hThread, 10000) == WAIT_TIMEOUT) {
             TerminateThread(m_hThread, 0xDEAD);
         }
@@ -89,14 +94,20 @@ void CWebServer::Init()
 {
     m_internalpages["/"] = &CWebClientSocket::OnIndex;
     m_internalpages["/404.html"] = &CWebClientSocket::OnError404;
+    m_internalpages["/browse.json"] = &CWebClientSocket::OnBrowseJSON;
     m_internalpages["/browser.html"] = &CWebClientSocket::OnBrowser;
     m_internalpages["/command.html"] = &CWebClientSocket::OnCommand;
+    m_internalpages["/commands.json"] = &CWebClientSocket::OnCommandsJSON;
     m_internalpages["/controls.html"] = &CWebClientSocket::OnControls;
     m_internalpages["/index.html"] = &CWebClientSocket::OnIndex;
     m_internalpages["/info.html"] = &CWebClientSocket::OnInfo;
     m_internalpages["/player.html"] = &CWebClientSocket::OnPlayer;
+    m_internalpages["/playlist.json"] = &CWebClientSocket::OnPlaylistJSON;
+    m_internalpages["/img/buttons.svg"] = &CWebClientSocket::OnToolbarImage;
+    m_internalpages["/remote.html"] = &CWebClientSocket::OnRemote;
     m_internalpages["/snapshot.jpg"] = &CWebClientSocket::OnSnapshotJpeg;
     m_internalpages["/status.html"] = &CWebClientSocket::OnStatus;
+    m_internalpages["/status.json"] = &CWebClientSocket::OnStatusJSON;
     m_internalpages["/variables.html"] = &CWebClientSocket::OnVariables;
     m_internalpages["/viewres.html"] = &CWebClientSocket::OnViewRes;
     m_internalpages["/dvb/channels.json"] = &CWebClientSocket::OnDVBChannels;
@@ -136,6 +147,7 @@ void CWebServer::Init()
     m_downloads["/img/vbs.png"] = IDF_VBS_PNG;
     m_downloads["/javascript.js"] = IDF_JAVASCRIPT;
 
+#if 0
     CRegKey key;
     CString str(_T("MIME\\Database\\Content Type"));
     if (ERROR_SUCCESS == key.Open(HKEY_CLASSES_ROOT, str, KEY_READ)) {
@@ -151,16 +163,21 @@ void CWebServer::Init()
             }
         }
     }
+#endif
 
+    m_mimes[".bmp"] = "image/bmp";
     m_mimes[".css"] = "text/css";
     m_mimes[".gif"] = "image/gif";
+    m_mimes[".htm"] = "text/html";
     m_mimes[".html"] = "text/html";
     m_mimes[".jpeg"] = "image/jpeg";
     m_mimes[".jpg"] = "image/jpeg";
     m_mimes[".js"] = "text/javascript";
+    m_mimes[".json"] = "text/plain";
     m_mimes[".png"] = "image/png";
+    m_mimes[".svg"] = "image/svg+xml";
     m_mimes[".txt"] = "text/plain";
-    m_mimes[".ico"] = "image/vnd.microsoft.icon";
+    m_mimes[".ico"] = "image/x-icon";
 }
 
 DWORD WINAPI CWebServer::StaticThreadProc(LPVOID lpParam)
@@ -218,6 +235,9 @@ void CWebServer::Deploy(CString dir)
     }
     if (LoadResource(IDR_HTML_PLAYER, data, RT_HTML)) {
         PutFileContents(dir + _T("player.html"), data);
+    }
+    if (LoadResource(IDR_HTML_REMOTE, data, RT_HTML)) {
+        PutFileContents(dir + _T("remote.html"), data);
     }
 
     // Create the needed folder
@@ -329,7 +349,9 @@ void CWebServer::OnRequest(CWebClientSocket* pClient, CStringA& hdr, CStringA& b
     if (ext.IsEmpty()) {
         mime = "text/html";
     } else {
-        m_mimes.Lookup(ext, mime);
+        if (!m_mimes.Lookup(ext, mime)) {
+            mime = "none";
+        }
     }
 
     hdr = "HTTP/1.0 200 OK\r\n";
@@ -470,14 +492,15 @@ void CWebServer::OnRequest(CWebClientSocket* pClient, CStringA& hdr, CStringA& b
         body.Replace("[indexpath]", "/index.html");
         body.Replace("[path]", pClient->m_path);
         body.Replace("[setposcommand]", CMD_SETPOS);
-        body.Replace("[setvolumecommand]", CMD_SETVOLUME);
+        body.Replace("[setvolumecommand]", WEB_CMD_SETVOLUME);
         body.Replace("[wmcname]", "wm_command");
         // TODO: add more general tags to replace
     }
 
     // gzip
     if (s.fWebServerUseCompression && !body.IsEmpty()
-            && hdr.Find("Content-Encoding:") < 0 && ext != ".png" && ext != ".jpeg" && ext != ".gif")
+            && hdr.Find("Content-Encoding:") < 0
+            && ext != ".png" && ext != ".jpg" && ext != ".jpeg" && ext != ".gif" && ext != ".ico")
         do {
             CStringA accept_encoding;
             pClient->m_hdrlines.Lookup("accept-encoding", accept_encoding);

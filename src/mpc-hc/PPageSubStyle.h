@@ -22,12 +22,13 @@
 #pragma once
 
 #include "ColorButton.h"
-#include "PPageBase.h"
+#include "CMPCThemePPageBase.h"
 #include "../Subtitles/STS.h"
+#include "CMPCThemeSliderCtrl.h"
 
 // CPPageSubStyle dialog
 
-class CPPageSubStyle : public CPPageBase
+class CPPageSubStyle : public CMPCThemePPageBase
 {
     DECLARE_DYNAMIC(CPPageSubStyle)
 
@@ -35,43 +36,47 @@ private:
     CString m_title;
     STSStyle m_stss;
     bool m_bDefaultStyle;
+    bool isStyleDialog;
 
-    CButton m_font;
+    CMPCThemeButton m_font;
     int m_iCharset;
-    CComboBox m_cbCharset;
-    int m_spacing;
-    CSpinButtonCtrl m_spacingSpin;
+    CMPCThemeComboBox m_cbCharset;
+    int iOpenTypeLangHint;
+    CMPCThemeComboBox openTypeLangHint;
+    CMPCThemeFloatEdit m_spacing;
     int m_angle;
-    CSpinButtonCtrl m_angleSpin;
+    CMPCThemeSpinButtonCtrl m_angleSpin;
     int m_scalex;
-    CSpinButtonCtrl m_scalexSpin;
+    CMPCThemeSpinButtonCtrl m_scalexSpin;
     int m_scaley;
-    CSpinButtonCtrl m_scaleySpin;
+    CMPCThemeSpinButtonCtrl m_scaleySpin;
     int m_borderStyle;
-    int m_borderWidth;
-    CSpinButtonCtrl m_borderWidthSpin;
-    int m_shadowDepth;
-    CSpinButtonCtrl m_shadowDepthSpin;
+    CMPCThemeFloatEdit m_borderWidth;
+    CMPCThemeFloatEdit m_shadowDepth;
     int m_screenAlignment;
     CRect m_margin;
-    CSpinButtonCtrl m_marginLeftSpin;
-    CSpinButtonCtrl m_marginRightSpin;
-    CSpinButtonCtrl m_marginTopSpin;
-    CSpinButtonCtrl m_marginBottomSpin;
+    CMPCThemeSpinButtonCtrl m_marginLeftSpin;
+    CMPCThemeSpinButtonCtrl m_marginRightSpin;
+    CMPCThemeSpinButtonCtrl m_marginTopSpin;
+    CMPCThemeSpinButtonCtrl m_marginBottomSpin;
     std::array<CColorButton, 4> m_color;
     std::array<int, 4> m_alpha;
-    std::array<CSliderCtrl, 4> m_alphaSliders;
+    std::array<CMPCThemeSliderCtrl, 4> m_alphaSliders;
     BOOL m_bLinkAlphaSliders;
     int m_iRelativeTo;
+#if USE_LIBASS
+    int iRenderSSAUsingLibass;
+#endif
 
     void AskColor(int i);
 
 public:
-    CPPageSubStyle();
+    CPPageSubStyle(bool isStyleDialog = false);
     virtual ~CPPageSubStyle();
 
     void InitStyle(const CString& title, const STSStyle& stss);
     void GetStyle(STSStyle& stss) const { stss = m_stss; }
+    CString GetStyleName() { return m_title; }
 
     // Dialog Data
     enum { IDD = IDD_PPAGESUBSTYLE };
@@ -90,4 +95,6 @@ protected:
     afx_msg void OnChooseShadowColor();
     afx_msg void OnLinkAlphaSlidersChanged();
     afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+    void AdjustDynamicWidgets();
+    afx_msg BOOL OnToolTipNotify(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
 };

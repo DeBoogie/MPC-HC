@@ -1,5 +1,5 @@
 @ECHO OFF
-REM (C) 2009-2017 see Authors.txt
+REM (C) 2009-2019 see Authors.txt
 REM
 REM This file is part of MPC-HC.
 REM
@@ -25,7 +25,6 @@ SET ARG=%ARG:-=%
 SET ARGB=0
 SET ARGBC=0
 SET ARGC=0
-SET ARGCOMP=0
 SET ARGPL=0
 SET INPUT=0
 SET VALID=0
@@ -55,8 +54,6 @@ FOR %%G IN (%ARG%) DO (
   IF /I "%%G" == "Translations" SET "CONFIG=Translation" & SET /A ARGC+=1  & SET "NO_INST=True" & SET "NO_ZIP=True" & SET "NO_LITE=True"
   IF /I "%%G" == "Debug"        SET "BUILDCFG=Debug"     & SET /A ARGBC+=1 & SET "NO_INST=True"
   IF /I "%%G" == "Release"      SET "BUILDCFG=Release"   & SET /A ARGBC+=1
-  IF /I "%%G" == "VS2015"       SET "COMPILER=VS2015"    & SET /A ARGCOMP+=1
-  IF /I "%%G" == "VS2017"       SET "COMPILER=VS2017"    & SET /A ARGCOMP+=1
   IF /I "%%G" == "Packages"     SET "PACKAGES=True"      & SET /A VALID+=1
   IF /I "%%G" == "Installer"    SET "INSTALLER=True"     & SET /A VALID+=1
   IF /I "%%G" == "7z"           SET "ZIP=True"           & SET /A VALID+=1
@@ -65,6 +62,7 @@ FOR %%G IN (%ARG%) DO (
   IF /I "%%G" == "Silent"       SET "SILENT=True"        & SET /A VALID+=1
   IF /I "%%G" == "Nocolors"     SET "NOCOLORS=True"      & SET /A VALID+=1
   IF /I "%%G" == "Analyze"      SET "ANALYZE=True"       & SET /A VALID+=1
+  IF /I "%%G" == "MINGWLIB"     ENDLOCAL & SET "FORCE_MINGW_UPDATE=True" & CALL "%~dp0common.bat" :SubMINGWLIB & EXIT /B
 )
 
 SET "FILE_DIR=%~dp0"
@@ -76,14 +74,13 @@ CALL "%COMMON%" :SubPreBuild
 IF %ERRORLEVEL% NEQ 0 GOTO MissingVar
 
 FOR %%G IN (%*) DO SET /A INPUT+=1
-SET /A VALID+=%ARGB%+%ARGPL%+%ARGC%+%ARGBC%+%ARGCOMP%
+SET /A VALID+=%ARGB%+%ARGPL%+%ARGC%+%ARGBC%
 IF %VALID% NEQ %INPUT% GOTO UnsupportedSwitch
 
 IF %ARGB%    GTR 1 (GOTO UnsupportedSwitch) ELSE IF %ARGB% == 0    (SET "BUILDTYPE=Build")
 IF %ARGPL%   GTR 1 (GOTO UnsupportedSwitch) ELSE IF %ARGPL% == 0   (SET "PPLATFORM=Both")
 IF %ARGC%    GTR 1 (GOTO UnsupportedSwitch) ELSE IF %ARGC% == 0    (SET "CONFIG=MPCHC")
 IF %ARGBC%   GTR 1 (GOTO UnsupportedSwitch) ELSE IF %ARGBC% == 0   (SET "BUILDCFG=Release")
-IF %ARGCOMP% GTR 1 (GOTO UnsupportedSwitch) ELSE IF %ARGCOMP% == 0 (SET "COMPILER=VS2017")
 
 IF /I "%PACKAGES%" == "True" SET "INSTALLER=True" & SET "ZIP=True"
 
@@ -92,16 +89,10 @@ IF /I "%ZIP%" == "True"         IF "%NO_ZIP%" == "True"  GOTO UnsupportedSwitch
 IF /I "%MPCHC_LITE%" == "True"  IF "%NO_LITE%" == "True" GOTO UnsupportedSwitch
 IF /I "%CLEAN%" == "LAVFilters" IF "%NO_LAV%" == "True"  GOTO UnsupportedSwitch
 
-IF /I "%COMPILER%" == "VS2017" (
-  IF NOT EXIST "%MPCHC_VS_PATH%" CALL "%COMMON%" :SubVSPath
-  IF NOT EXIST "!MPCHC_VS_PATH!" GOTO MissingVar
-  SET "TOOLSET=!MPCHC_VS_PATH!\Common7\Tools\vsdevcmd"
-  SET "BIN_DIR=bin"
-) ELSE (
-  IF NOT DEFINED VS140COMNTOOLS GOTO MissingVar
-  SET "TOOLSET=%VS140COMNTOOLS%..\..\VC\vcvarsall.bat"
-  SET "BIN_DIR=bin15"
-)
+IF NOT EXIST "%MPCHC_VS_PATH%" CALL "%COMMON%" :SubVSPath
+IF NOT EXIST "!MPCHC_VS_PATH!" GOTO MissingVar
+SET "TOOLSET=!MPCHC_VS_PATH!\Common7\Tools\vsdevcmd"
+SET "BIN_DIR=bin"
 IF NOT EXIST "%TOOLSET%" GOTO MissingVar
 
 IF EXIST "%FILE_DIR%signinfo.txt" (
@@ -125,8 +116,13 @@ SET START_TIME=%TIME%
 SET START_DATE=%DATE%
 
 IF /I "%PPLATFORM%" == "Both" (
+  SETLOCAL
   SET "PPLATFORM=Win32" & CALL :Main
+  ENDLOCAL
+
+  SETLOCAL
   SET "PPLATFORM=x64"   & CALL :Main
+  ENDLOCAL
 ) ELSE (
   CALL :Main
 )
@@ -146,11 +142,7 @@ IF /I "%CLEAN%" == "LAVFilters" CALL "src\thirdparty\LAVFilters\build_lavfilters
 IF %ERRORLEVEL% NEQ 0 ENDLOCAL & EXIT /B
 
 IF /I "%PPLATFORM%" == "Win32" (SET ARCH=x86) ELSE (SET ARCH=amd64)
-IF /I "%COMPILER%" == "VS2017" (
-  CALL "%TOOLSET%" -no_logo -arch=%ARCH% -winsdk=%MPCHC_WINSDK_VER%
-) ELSE (
-  CALL "%TOOLSET%" %ARCH% %MPCHC_WINSDK_VER%
-)
+CALL "%TOOLSET%" -no_logo -arch=%ARCH% -winsdk=%MPCHC_WINSDK_VER%
 IF %ERRORLEVEL% NEQ 0 GOTO MissingVar
 
 IF /I "%CONFIG%" == "Filters" (
@@ -188,7 +180,10 @@ EXIT /B
 
 
 :End
-IF %ERRORLEVEL% NEQ 0 EXIT /B
+REM A bare "EXIT /B" at the outermost script level (run via cmd /c) returns 0 to
+REM the caller regardless of ERRORLEVEL, masking build failures. Propagate the
+REM real code explicitly so CI and callers see a non-zero exit on failure.
+IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 TITLE Compiling MPC-HC %COMPILER% [FINISHED]
 SET END_TIME=%TIME%
 CALL "%COMMON%" :SubGetDuration
@@ -201,7 +196,6 @@ EXIT /B
 IF %ERRORLEVEL% NEQ 0 EXIT /B
 
 TITLE Compiling MPC-HC Filters %COMPILER% - %BUILDCFG% Filter^|%1...
-REM Call update_version.bat before building the filters
 CALL "update_version.bat"
 
 MSBuild.exe mpc-hc.sln %MSBUILD_SWITCHES%^
@@ -223,6 +217,8 @@ EXIT /B
 IF %ERRORLEVEL% NEQ 0 EXIT /B
 
 TITLE Compiling MPC-HC %COMPILER% - %BUILDCFG%^|%1...
+CALL "update_version.bat"
+
 MSBuild.exe mpc-hc.sln %MSBUILD_SWITCHES%^
  /target:%BUILDTYPE% /property:Configuration="%BUILDCFG%";Platform=%1^
  /flp1:LogFile="%LOG_DIR%\mpc-hc_errors_%BUILDCFG%_%1.log";errorsonly;Verbosity=diagnostic^
@@ -333,6 +329,8 @@ EXIT /B
 
 
 :SubCopyDXDll
+REM SubCopyDXDll skipped
+EXIT /B
 IF /I "%BUILDCFG%" == "Debug" EXIT /B
 PUSHD "%BIN_DIR%"
 COPY /Y /V "%WindowsSdkDir%\Redist\D3D\%~1\d3dcompiler_%MPC_D3D_COMPILER_VERSION%.dll" "mpc-hc_%~1%~2" >NUL
@@ -359,9 +357,6 @@ IF DEFINED MPCHC_LITE (
 
 CALL :SubCopyDXDll %MPCHC_COPY_DX_DLL_ARGS%
 
-IF /I "%COMPILER%" == "VS2015" (
-  SET MPCHC_INNO_DEF=%MPCHC_INNO_DEF% /DVS2015
-)
 CALL "%COMMON%" :SubDetectInnoSetup
 
 IF NOT DEFINED InnoSetupPath (
@@ -383,6 +378,7 @@ IF %ERRORLEVEL% NEQ 0 EXIT /B
 
 CALL "%COMMON%" :SubDetectSevenzipPath
 CALL "%COMMON%" :SubGetVersion
+CALL "%COMMON%" :SubMINGWLIB
 
 IF NOT DEFINED SEVENZIP (
   CALL "%COMMON%" :SubMsg "WARNING" "7-Zip wasn't found, the %1 %2 package wasn't built"
@@ -415,9 +411,6 @@ IF /I "%BUILDCFG%" == "Debug" (
   SET "VS_OUT_DIR=%VS_OUT_DIR%_Debug"
 )
 
-IF /I "%COMPILER%" == "VS2015" (
-  SET "PCKG_NAME=%PCKG_NAME%.%COMPILER%"
-)
 IF EXIST "%PCKG_NAME%.7z"     DEL "%PCKG_NAME%.7z"
 IF EXIST "%PCKG_NAME%.pdb.7z" DEL "%PCKG_NAME%.pdb.7z"
 IF EXIST "%PCKG_NAME%"        RD /Q /S "%PCKG_NAME%"
@@ -463,7 +456,9 @@ IF /I "%NAME%" == "MPC-HC" (
   COPY /Y /V "%VS_OUT_DIR%\d3dcompiler_%MPC_D3D_COMPILER_VERSION%.dll" "%PCKG_NAME%\d3dcompiler_%MPC_D3D_COMPILER_VERSION%.dll" >NUL
   COPY /Y /V "%VS_OUT_DIR%\d3dx9_%MPC_DX_SDK_NUMBER%.dll"              "%PCKG_NAME%\d3dx9_%MPC_DX_SDK_NUMBER%.dll" >NUL
   IF NOT EXIST "%PCKG_NAME%\Shaders" MD "%PCKG_NAME%\Shaders"
-  COPY /Y /V "..\src\mpc-hc\res\shaders\external\*.hlsl" "%PCKG_NAME%\Shaders" >NUL
+  COPY /Y /V "..\src\mpc-hc\res\shaders\dx9\*.hlsl" "%PCKG_NAME%\Shaders" >NUL
+  IF NOT EXIST "%PCKG_NAME%\Shaders11" MD "%PCKG_NAME%\Shaders11"
+  COPY /Y /V "..\src\mpc-hc\res\shaders\dx11\*.hlsl" "%PCKG_NAME%\Shaders11" >NUL
   IF /I "%BUILDCFG%" NEQ "Debug" IF /I "%BUILDCFG%" NEQ "Debug Lite" IF EXIST "%VS_OUT_DIR%\CrashReporter\crashrpt.dll" (
     IF NOT EXIST "%PCKG_NAME%\CrashReporter" MD "%PCKG_NAME%\CrashReporter"
     COPY /Y /V "%VS_OUT_DIR%\CrashReporter\crashrpt.dll"            "%PCKG_NAME%\CrashReporter"
@@ -477,9 +472,6 @@ IF /I "%NAME%" == "MPC-HC" (
 )
 
 COPY /Y /V "..\COPYING.txt"         "%PCKG_NAME%" >NUL
-COPY /Y /V "..\docs\Authors.txt"    "%PCKG_NAME%" >NUL
-COPY /Y /V "..\docs\Changelog.txt"  "%PCKG_NAME%" >NUL
-COPY /Y /V "..\docs\Readme.txt"     "%PCKG_NAME%" >NUL
 
 TITLE Creating archive %PCKG_NAME%.7z...
 START "7z" /B /WAIT "%SEVENZIP%" a -t7z "%PCKG_NAME%.7z" "%PCKG_NAME%" -m0=LZMA2^
@@ -497,14 +489,14 @@ EXIT /B
 TITLE %~nx0 Help
 ECHO.
 ECHO Usage:
-ECHO %~nx0 [Clean^|Build^|Rebuild] [x86^|x64^|Both] [Main^|Resources^|MPCHC^|IconLib^|Translations^|Filters^|API^|All] [Debug^|Release] [Lite] [Packages^|Installer^|7z] [LAVFilters] [VS2015^|VS2017] [Analyze]
+ECHO %~nx0 [Clean^|Build^|Rebuild] [x86^|x64^|Both] [Main^|Resources^|MPCHC^|IconLib^|Translations^|Filters^|API^|All] [Debug^|Release] [Lite] [Packages^|Installer^|7z] [LAVFilters] [Analyze]
 ECHO.
 ECHO Notes: You can also prefix the commands with "-", "--" or "/".
 ECHO        Debug only applies to mpc-hc.sln.
 ECHO        The arguments are not case sensitive and can be ommitted.
 ECHO. & ECHO.
 ECHO Executing %~nx0 without any arguments will use the default ones:
-ECHO "%~nx0 Build Both MPCHC Release VS2015"
+ECHO "%~nx0 Build Both MPCHC Release"
 ECHO. & ECHO.
 ECHO Examples:
 ECHO %~nx0 x86 Resources     -Builds the x86 resources
@@ -525,7 +517,7 @@ TITLE Compiling MPC-HC %COMPILER% [ERROR]
 ECHO Not all build dependencies were found.
 ECHO.
 ECHO See "docs\Compilation.md" for more information.
-CALL "%COMMON%" :SubMsg "ERROR" "Compilation failed!" & EXIT /B
+CALL "%COMMON%" :SubMsg "ERROR" "Compilation failed!" & EXIT /B 1
 
 
 :UnsupportedSwitch
@@ -535,4 +527,4 @@ ECHO.
 ECHO "%~nx0 %*"
 ECHO.
 ECHO Run "%~nx0 help" for details about the commandline switches.
-CALL "%COMMON%" :SubMsg "ERROR" "Compilation failed!" & EXIT /B
+CALL "%COMMON%" :SubMsg "ERROR" "Compilation failed!" & EXIT /B 1

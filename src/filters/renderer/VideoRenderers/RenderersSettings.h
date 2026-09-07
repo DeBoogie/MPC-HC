@@ -31,16 +31,6 @@ enum {
 #define WM_MYMOUSELAST WM_XBUTTONDBLCLK
 
 enum {
-    VIDRNDT_RM_DEFAULT,
-    VIDRNDT_RM_DX9 = 2
-};
-
-enum {
-    VIDRNDT_QT_DEFAULT,
-    VIDRNDT_QT_DX9 = 2
-};
-
-enum {
     VIDRNDT_AP_SURFACE,
     VIDRNDT_AP_TEXTURE2D,
     VIDRNDT_AP_TEXTURE3D
@@ -92,6 +82,7 @@ public:
         bool    bVMRFlushGPUBeforeVSync;
         bool    bVMRFlushGPUAfterPresent;
         bool    bVMRFlushGPUWait;
+        bool    bDesktopSizeBackBuffer;
 
         // EVR
         bool    bEVRHighColorResolution;
@@ -114,7 +105,6 @@ public:
         CString sShaderCachePath;
 
         void    SetDefault();
-        void    SetOptimal();
     };
 
     CAdvRendererSettings m_AdvRendSets;
@@ -125,6 +115,9 @@ public:
     int         iEvrBuffers;
 
     SubPicQueueSettings subPicQueueSettings;
+
+    int         subPicVerticalShift;
+    double      fontScaleOverride;
 
     CString     D3D9RenderDevice;
     void        UpdateData(bool fSave);

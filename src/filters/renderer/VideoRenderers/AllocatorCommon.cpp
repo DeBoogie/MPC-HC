@@ -23,11 +23,10 @@
 #include "../DSUtil/DSUtil.h"
 
 #include "VMR9AllocatorPresenter.h"
-#include "RM9AllocatorPresenter.h"
-#include "QT9AllocatorPresenter.h"
 #include "DXRAllocatorPresenter.h"
 #include "madVRAllocatorPresenter.h"
 #include "EVRAllocatorPresenter.h"
+#include "MPCVRAllocatorPresenter.h"
 
 bool IsVMR9InGraph(IFilterGraph* pFG)
 {
@@ -54,14 +53,12 @@ HRESULT CreateAP9(const CLSID& clsid, HWND hWnd, bool bFullscreen, ISubPicAlloca
 
     if (IsEqualCLSID(clsid, CLSID_VMR9AllocatorPresenter)) {
         *ppAP = DEBUG_NEW CVMR9AllocatorPresenter(hWnd, bFullscreen, hr, Error);
-    } else if (IsEqualCLSID(clsid, CLSID_RM9AllocatorPresenter)) {
-        *ppAP = DEBUG_NEW CRM9AllocatorPresenter(hWnd, bFullscreen, hr, Error);
-    } else if (IsEqualCLSID(clsid, CLSID_QT9AllocatorPresenter)) {
-        *ppAP = DEBUG_NEW CQT9AllocatorPresenter(hWnd, bFullscreen, hr, Error);
     } else if (IsEqualCLSID(clsid, CLSID_DXRAllocatorPresenter)) {
         *ppAP = DEBUG_NEW CDXRAllocatorPresenter(hWnd, hr, Error);
     } else if (IsEqualCLSID(clsid, CLSID_madVRAllocatorPresenter)) {
         *ppAP = DEBUG_NEW CmadVRAllocatorPresenter(hWnd, hr, Error);
+    } else if (IsEqualCLSID(clsid, CLSID_MPCVRAllocatorPresenter)) {
+        *ppAP = DEBUG_NEW CMPCVRAllocatorPresenter(hWnd, hr, Error);
     } else {
         return E_FAIL;
     }
@@ -86,12 +83,15 @@ HRESULT CreateAP9(const CLSID& clsid, HWND hWnd, bool bFullscreen, ISubPicAlloca
     return hr;
 }
 
-HRESULT CreateEVR(const CLSID& clsid, HWND hWnd, bool bFullscreen, ISubPicAllocatorPresenter** ppAP)
+HRESULT CreateEVR(const CLSID& clsid, HWND hWnd, bool bFullscreen, ISubPicAllocatorPresenter** ppAP, bool isPreview)
 {
     HRESULT hr = E_FAIL;
     if (clsid == CLSID_EVRAllocatorPresenter) {
         CString Error;
-        *ppAP = DEBUG_NEW DSObjects::CEVRAllocatorPresenter(hWnd, bFullscreen, hr, Error);
+        *ppAP = DEBUG_NEW DSObjects::CEVRAllocatorPresenter(hWnd, bFullscreen, hr, Error, isPreview);
+        if (*ppAP == nullptr) {
+            return E_OUTOFMEMORY;
+        }
         (*ppAP)->AddRef();
 
         if (FAILED(hr)) {
@@ -103,6 +103,7 @@ HRESULT CreateEVR(const CLSID& clsid, HWND hWnd, bool bFullscreen, ISubPicAlloca
         } else if (!Error.IsEmpty()) {
             MessageBox(hWnd, Error, L"Warning creating EVR Custom renderer", MB_OK | MB_ICONWARNING);
         }
+
     }
 
     return hr;

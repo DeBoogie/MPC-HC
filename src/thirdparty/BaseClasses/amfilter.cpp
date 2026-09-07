@@ -565,6 +565,11 @@ CBaseFilter::Pause()
             if (NULL == pPin) {
                 break;
             }
+#if !WIN64
+            if (pPin == (CBasePin*)0x3) { // invalid pointer value, weird x86 bug
+                break;
+            }
+#endif
 
             // Disconnected pins are not activated - this saves pins
             // worrying about this state themselves
@@ -1129,6 +1134,11 @@ CEnumPins::Next(ULONG cPins,        // place this many pins...
             ASSERT( cFetched==0 );
             return VFW_E_ENUM_OUT_OF_SYNC;
         }
+        // MPC-HC custom code begin
+        if (pPin == (CBasePin *)0x3) {
+            return E_FAIL;
+        }
+        // MPC-HC custom code end
 
         /* We only want to return this pin, if it is not in our cache */
         if (0 == m_PinCache.Find(pPin))

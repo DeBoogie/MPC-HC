@@ -2,17 +2,17 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# kasper93, 2013
-# JellyFrog, 2013-2015
-# Luna Jernberg <bittin@cafe8bitar.se>, 2016
-# Apa <sakcheen@gmail.com>, 2014
+# MPC HC <adiposegithub@gmail.com>, 2020
+# Robert Nilsson, 2020
+# Luna Jernberg <bittin@cafe8bitar.se>, 2020
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2016-01-17 21:31:34+0000\n"
-"PO-Revision-Date: 2017-08-13 20:49+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Swedish (http://www.transifex.com/mpc-hc/mpc-hc/language/sv/)\n"
+"POT-Creation-Date: 2021-08-25 14:36:40+0000\n"
+"PO-Revision-Date: 2020-01-02 07:46+0000\n"
+"Last-Translator: Luna Jernberg <bittin@cafe8bitar.se>, 2020\n"
+"Language-Team: Swedish (https://www.transifex.com/mpchc/teams/106126/sv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -28,7 +28,7 @@ msgid "&Quick Open File..."
 msgstr "&Snabböppna Fil..."
 
 msgctxt "ID_FILE_OPENMEDIA"
-msgid "&Open File..."
+msgid "&Open File/URL..."
 msgstr "Öppna &Fil..."
 
 msgctxt "ID_FILE_OPENDVDBD"
@@ -83,13 +83,13 @@ msgctxt "ID_FILE_SUBTITLES_DOWNLOAD"
 msgid "&Download Subtitles..."
 msgstr "Ladda ner undertexter"
 
-msgctxt "ID_FILE_SUBTITLES_UPLOAD"
-msgid "&Upload Subtitles..."
-msgstr "Ladda upp undertext"
-
 msgctxt "ID_FILE_PROPERTIES"
 msgid "P&roperties"
 msgstr "E&genskaper"
+
+msgctxt "ID_FILE_OPEN_LOCATION"
+msgid "Open File &Location"
+msgstr "Öppna &Filplats"
 
 msgctxt "ID_FILE_EXIT"
 msgid "E&xit"
@@ -139,10 +139,6 @@ msgctxt "ID_VIEW_NAVIGATION"
 msgid "Na&vigation"
 msgstr "Navigering"
 
-msgctxt "ID_VIEW_DEBUGSHADERS"
-msgid "&Debug Shaders"
-msgstr "&Felsök Shaders"
-
 msgctxt "POPUP"
 msgid "&Presets..."
 msgstr "&Mallar..."
@@ -159,6 +155,10 @@ msgctxt "ID_VIEW_PRESETS_NORMAL"
 msgid "&Normal"
 msgstr "&Normal"
 
+msgctxt "ID_VIEW_PRESETS_CUSTOM"
+msgid "C&ustom"
+msgstr ""
+
 msgctxt "ID_VIEW_FULLSCREEN"
 msgid "F&ull Screen"
 msgstr "He&lskärm"
@@ -166,6 +166,10 @@ msgstr "He&lskärm"
 msgctxt "POPUP"
 msgid "&Zoom"
 msgstr "&Zoom"
+
+msgctxt "ID_VIEW_ZOOM_25"
+msgid "&25%"
+msgstr "&25%"
 
 msgctxt "ID_VIEW_ZOOM_50"
 msgid "&50%"
@@ -182,10 +186,6 @@ msgstr "&200%"
 msgctxt "ID_VIEW_ZOOM_AUTOFIT"
 msgid "Auto &Fit"
 msgstr "Passa automatiskt"
-
-msgctxt "ID_VIEW_ZOOM_AUTOFIT_LARGER"
-msgid "Auto Fit (&Larger Only)"
-msgstr "Passa automatiskt (Enbart större)"
 
 msgctxt "POPUP"
 msgid "R&enderer Settings"
@@ -359,17 +359,9 @@ msgctxt "ID_VIEW_FLUSHGPU_WAIT"
 msgid "&Wait for flushes"
 msgstr "&Vänta på tömningar"
 
-msgctxt "POPUP"
-msgid "R&eset"
-msgstr "Återställ"
-
 msgctxt "ID_VIEW_RESET_DEFAULT"
 msgid "Reset to &default renderer settings"
 msgstr "Återställ till standardrenderingsinställningar"
-
-msgctxt "ID_VIEW_RESET_OPTIMAL"
-msgid "Reset to &optimal renderer settings"
-msgstr "Återställ till optimala renderingsinställningar"
 
 msgctxt "POPUP"
 msgid "Video &Frame"
@@ -409,11 +401,11 @@ msgstr "Berör Fönstret Från &Utsidan"
 
 msgctxt "POPUP"
 msgid "&Aspect Ratio"
-msgstr ""
+msgstr "&Bildförhållande"
 
 msgctxt "ID_ASPECTRATIO_DAR"
 msgid "&Default (DAR)"
-msgstr ""
+msgstr "&Standard (DAR)"
 
 msgctxt "ID_ASPECTRATIO_4_3"
 msgid "&4:3"
@@ -437,15 +429,15 @@ msgstr "1&85:100"
 
 msgctxt "ID_ASPECTRATIO_SAR"
 msgid "Assume &square pixels (SAR)"
-msgstr ""
+msgstr "Antag &fyrkantiga pixlar (SAR)"
 
 msgctxt "ID_VIEW_VF_COMPMONDESKARDIFF"
 msgid "&Correct Monitor/Desktop AR Diff"
 msgstr "Korrigera bildförhållandet mellan skärm/skrivbord"
 
 msgctxt "POPUP"
-msgid "Pa&n && Scan"
-msgstr "Pan && S&can"
+msgid "P&nS Frame Adjust"
+msgstr ""
 
 msgctxt "ID_VIEW_INCSIZE"
 msgid "&Increase Size"
@@ -490,6 +482,22 @@ msgstr "Flytta &ned"
 msgctxt "ID_PANSCAN_CENTER"
 msgid "Cen&ter"
 msgstr "Centrera"
+
+msgctxt "ID_PANSCAN_ROTATEZM"
+msgid "Rotate Cloc&kwise"
+msgstr "Rotera Medsols"
+
+msgctxt "ID_PANSCAN_ROTATEZ270"
+msgid "Rotate Counter-Clock&wise"
+msgstr "Rotera Motsols"
+
+msgctxt "ID_PANSCAN_ROTATEXM"
+msgid "&Flip Vertically"
+msgstr "&Vänd vertikalt"
+
+msgctxt "ID_PANSCAN_ROTATEYM"
+msgid "&Mirror"
+msgstr "&Spegla"
 
 msgctxt "ID_VIEW_RESET"
 msgid "Re&set"
@@ -537,11 +545,11 @@ msgstr "&Bildrutesteg"
 
 msgctxt "POPUP"
 msgid "&Repeat"
-msgstr ""
+msgstr "&Repetera"
 
 msgctxt "ID_PLAY_REPEAT_FOREVER"
 msgid "F&orever"
-msgstr ""
+msgstr "Oändligt"
 
 msgctxt "ID_PLAY_REPEAT_ONEFILE"
 msgid "&File"
@@ -550,6 +558,94 @@ msgstr "Arkiv"
 msgctxt "ID_PLAY_REPEAT_WHOLEPLAYLIST"
 msgid "&Playlist"
 msgstr "Spelningslista"
+
+msgctxt "ID_PLAY_REPEAT_AB"
+msgid "A-B (&Reset)"
+msgstr "A-B (&Återställ)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_A"
+msgid "A-B (Mark &A)"
+msgstr "A-B (Markera &A)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_B"
+msgid "A-B (Mark &B)"
+msgstr "A-B (Markera &B)"
+
+msgctxt "POPUP"
+msgid "&Playback Rate"
+msgstr "&Uppspelningshastighet"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_025"
+msgid "0.25 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_050"
+msgid "0.50 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_075"
+msgid "0.75 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_090"
+msgid "0.90 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_100"
+msgid "1.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_110"
+msgid "1.10 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_125"
+msgid "1.25 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_150"
+msgid "1.50 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_175"
+msgid "1.75 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_200"
+msgid "2.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_300"
+msgid "3.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_400"
+msgid "4.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_600"
+msgid "6.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_800"
+msgid "8.00 x"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS23"
+msgid "23.976 fps"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS24"
+msgid "24 fps"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS25"
+msgid "25 fps"
+msgstr ""
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS59"
+msgid "59.94 fps"
+msgstr ""
 
 msgctxt "ID_PLAY_DECRATE"
 msgid "&Decrease Rate"
@@ -567,6 +663,10 @@ msgctxt "ID_FILTERS"
 msgid "&Filters"
 msgstr "&Filter"
 
+msgctxt "ID_COLOR_CONTROLS"
+msgid "&Color controls..."
+msgstr ""
+
 msgctxt "ID_SHADERS"
 msgid "S&haders"
 msgstr "S&haders"
@@ -578,6 +678,10 @@ msgstr "&Ljudspår"
 msgctxt "ID_SUBTITLES"
 msgid "Su&btitle Track"
 msgstr "&Undertextspår"
+
+msgctxt "ID_SUBTITLES_SECONDARY"
+msgid "Secondary Subtitle Track"
+msgstr ""
 
 msgctxt "ID_VIDEO_STREAMS"
 msgid "Vide&o Track"
@@ -710,4 +814,3 @@ msgstr "Donera"
 msgctxt "ID_HELP_ABOUT"
 msgid "&About..."
 msgstr "&Om..."
-

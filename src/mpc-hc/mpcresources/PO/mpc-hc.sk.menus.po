@@ -2,20 +2,22 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# Marián Hikaník <podnety@mojepreklady.net>, 2013
-# Marián Hikaník <podnety@mojepreklady.net>, 2014-2016
+# MPC HC <adiposegithub@gmail.com>, 2020
+# Marián Hikaník, 2026
+# Transifex sync (Studio), 2026
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2016-01-17 21:31:34+0000\n"
-"PO-Revision-Date: 2017-08-13 20:49+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Slovak (http://www.transifex.com/mpc-hc/mpc-hc/language/sk/)\n"
+"POT-Creation-Date: 2026-07-18 21:00:08+0000\n"
+"PO-Revision-Date: 2026-08-31 14:37+0000\n"
+"Last-Translator: Transifex sync (Studio)\n"
+"Language-Team: Slovak (https://app.transifex.com/mpchc/teams/106126/sk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: sk\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n >= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
 
 msgctxt "POPUP"
 msgid "&File"
@@ -26,8 +28,8 @@ msgid "&Quick Open File..."
 msgstr "&Rýchle otvorenie súboru..."
 
 msgctxt "ID_FILE_OPENMEDIA"
-msgid "&Open File..."
-msgstr "&Otvoriť súbor..."
+msgid "&Open File/URL..."
+msgstr "&Otvoriť súbor/URL..."
 
 msgctxt "ID_FILE_OPENDVDBD"
 msgid "Open &DVD/BD..."
@@ -35,11 +37,11 @@ msgstr "Otvoriť &DVD/BD..."
 
 msgctxt "ID_FILE_OPENDEVICE"
 msgid "Open De&vice..."
-msgstr "Otvoriť za&riadenie..."
+msgstr "Ot&voriť zariadenie..."
 
 msgctxt "ID_FILE_OPENDIRECTORY"
 msgid "Open Dir&ectory..."
-msgstr "Otvoriť &priečinok..."
+msgstr "Otvoriť pri&ečinok..."
 
 msgctxt "ID_FILE_OPENDISC"
 msgid "O&pen Disc"
@@ -71,7 +73,7 @@ msgstr "Tit&ulky"
 
 msgctxt "ID_FILE_SUBTITLES_LOAD"
 msgid "&Load Subtitles..."
-msgstr "Načítať titul&ky..."
+msgstr "Načítať titu&lky..."
 
 msgctxt "ID_FILE_SUBTITLES_SAVE"
 msgid "Save S&ubtitles..."
@@ -81,13 +83,13 @@ msgctxt "ID_FILE_SUBTITLES_DOWNLOAD"
 msgid "&Download Subtitles..."
 msgstr "S&tiahnuť titulky..."
 
-msgctxt "ID_FILE_SUBTITLES_UPLOAD"
-msgid "&Upload Subtitles..."
-msgstr "&Odoslať titulky..."
-
 msgctxt "ID_FILE_PROPERTIES"
 msgid "P&roperties"
 msgstr "V&lastnosti"
+
+msgctxt "ID_FILE_OPEN_LOCATION"
+msgid "Open File &Location"
+msgstr "Otvoriť u&miestnenie súboru"
 
 msgctxt "ID_FILE_EXIT"
 msgid "E&xit"
@@ -119,7 +121,7 @@ msgstr "Š&tatistika"
 
 msgctxt "ID_VIEW_STATUS"
 msgid "St&atus"
-msgstr "Sta&v"
+msgstr "St&av"
 
 msgctxt "ID_VIEW_SUBRESYNC"
 msgid "Su&bresync"
@@ -137,13 +139,9 @@ msgctxt "ID_VIEW_NAVIGATION"
 msgid "Na&vigation"
 msgstr "Na&vigácia"
 
-msgctxt "ID_VIEW_DEBUGSHADERS"
-msgid "&Debug Shaders"
-msgstr "La&denie shaderov"
-
 msgctxt "POPUP"
 msgid "&Presets..."
-msgstr "P&redvoľby..."
+msgstr "&Predvoľby..."
 
 msgctxt "ID_VIEW_PRESETS_MINIMAL"
 msgid "&Minimal"
@@ -151,19 +149,27 @@ msgstr "&Minimum ovládačov"
 
 msgctxt "ID_VIEW_PRESETS_COMPACT"
 msgid "&Compact"
-msgstr "&Kompaktný panel"
+msgstr "&Kompaktné"
 
 msgctxt "ID_VIEW_PRESETS_NORMAL"
 msgid "&Normal"
-msgstr "&Normálne ovládače"
+msgstr "&Normálne"
+
+msgctxt "ID_VIEW_PRESETS_CUSTOM"
+msgid "C&ustom"
+msgstr "Po&užívateľské"
 
 msgctxt "ID_VIEW_FULLSCREEN"
 msgid "F&ull Screen"
-msgstr "Na &celú obrazovku"
+msgstr "Na celú obrazovk&u"
 
 msgctxt "POPUP"
 msgid "&Zoom"
 msgstr "Pribl&íženie"
+
+msgctxt "ID_VIEW_ZOOM_25"
+msgid "&25%"
+msgstr "&25 %"
 
 msgctxt "ID_VIEW_ZOOM_50"
 msgid "&50%"
@@ -181,13 +187,9 @@ msgctxt "ID_VIEW_ZOOM_AUTOFIT"
 msgid "Auto &Fit"
 msgstr "Automaticky prisp&ôsobiť"
 
-msgctxt "ID_VIEW_ZOOM_AUTOFIT_LARGER"
-msgid "Auto Fit (&Larger Only)"
-msgstr "Automaticky prispôsobiť (iba &väčšie)"
-
 msgctxt "POPUP"
 msgid "R&enderer Settings"
-msgstr "N&astavenia vykresľovania"
+msgstr "Nastavenia vykr&esľovača"
 
 msgctxt "ID_VIEW_TEARING_TEST"
 msgid "&Tearing Test"
@@ -219,15 +221,15 @@ msgstr "&16 - 235"
 
 msgctxt "POPUP"
 msgid "&Presentation"
-msgstr "Pre&zentácia"
+msgstr "&Prezentácia"
 
 msgctxt "ID_VIEW_D3DFULLSCREEN"
 msgid "D3D Fullscreen &Mode"
-msgstr "Celoobrazovkový reži&m D3D"
+msgstr "Reži&m na celú obrazovku D3D"
 
 msgctxt "ID_VIEW_FULLSCREENGUISUPPORT"
 msgid "D3D Fullscreen &GUI Support"
-msgstr "Celoobrazovkový režim D3D s podporou &GUI"
+msgstr "Na celú obrazovku D3D a podpora &GUI"
 
 msgctxt "ID_VIEW_HIGHCOLORRESOLUTION"
 msgid "10-bit &RGB Output"
@@ -335,11 +337,11 @@ msgstr "A&lternatívna funkcia VSync"
 
 msgctxt "ID_VIEW_VSYNCOFFSET_DECREASE"
 msgid "&Decrease VSync Offset"
-msgstr "&Znížiť posun funkciou VSync"
+msgstr "&Znížiť posun VSync"
 
 msgctxt "ID_VIEW_VSYNCOFFSET_INCREASE"
 msgid "&Increase VSync Offset"
-msgstr "Zvýš&iť posun funkciou VSync"
+msgstr "Zvýš&iť posun VSync"
 
 msgctxt "POPUP"
 msgid "&GPU Control"
@@ -357,21 +359,13 @@ msgctxt "ID_VIEW_FLUSHGPU_WAIT"
 msgid "&Wait for flushes"
 msgstr "&Čakať na uvoľnenie"
 
-msgctxt "POPUP"
-msgid "R&eset"
-msgstr "R&eset"
-
 msgctxt "ID_VIEW_RESET_DEFAULT"
 msgid "Reset to &default renderer settings"
-msgstr "Obnoviť pre&dvolené nastavenia vykresľovania"
-
-msgctxt "ID_VIEW_RESET_OPTIMAL"
-msgid "Reset to &optimal renderer settings"
-msgstr "Obnoviť &optimálne nastavenia vykresľovania"
+msgstr "Obnoviť pre&dvolené nastavenia vykresľovača"
 
 msgctxt "POPUP"
 msgid "Video &Frame"
-msgstr "&Okno s videom"
+msgstr "&Rámec s videom"
 
 msgctxt "ID_VIEW_VF_HALF"
 msgid "&Half Size"
@@ -442,8 +436,8 @@ msgid "&Correct Monitor/Desktop AR Diff"
 msgstr "Upraviť nastavenie AR monitora/Pra&covnej plochy"
 
 msgctxt "POPUP"
-msgid "Pa&n && Scan"
-msgstr "Úpravy o&brazu"
+msgid "P&nS Frame Adjust"
+msgstr "Prispôsobenie snímky Pan and Scan"
 
 msgctxt "ID_VIEW_INCSIZE"
 msgid "&Increase Size"
@@ -488,6 +482,22 @@ msgstr "Posunúť na&dol"
 msgctxt "ID_PANSCAN_CENTER"
 msgid "Cen&ter"
 msgstr "Vycen&trovať"
+
+msgctxt "ID_PANSCAN_ROTATEZM"
+msgid "Rotate Cloc&kwise"
+msgstr "Otočiť v smere pohybu hodinových ručičie&k"
+
+msgctxt "ID_PANSCAN_ROTATEZ270"
+msgid "Rotate Counter-Clock&wise"
+msgstr "Otočiť &proti smeru pohybu hodinových ručičiek"
+
+msgctxt "ID_PANSCAN_ROTATEXM"
+msgid "&Flip Vertically"
+msgstr "Prevrátiť &vertikálne"
+
+msgctxt "ID_PANSCAN_ROTATEYM"
+msgid "&Mirror"
+msgstr "&Zrkadlo"
 
 msgctxt "ID_VIEW_RESET"
 msgid "Re&set"
@@ -549,6 +559,94 @@ msgctxt "ID_PLAY_REPEAT_WHOLEPLAYLIST"
 msgid "&Playlist"
 msgstr "&Playlist"
 
+msgctxt "ID_PLAY_REPEAT_AB"
+msgid "A-B (&Reset)"
+msgstr "A-B (&Reset)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_A"
+msgid "A-B (Mark &A)"
+msgstr "A-B (označenie &A)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_B"
+msgid "A-B (Mark &B)"
+msgstr "A-B (označenie &B)"
+
+msgctxt "POPUP"
+msgid "&Playback Rate"
+msgstr "Rýchlosť &prehrávania"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_025"
+msgid "0.25 x"
+msgstr "0,25 x "
+
+msgctxt "ID_PLAY_PLAYBACKRATE_050"
+msgid "0.50 x"
+msgstr "0,50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_075"
+msgid "0.75 x"
+msgstr "0,75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_090"
+msgid "0.90 x"
+msgstr "0,90 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_100"
+msgid "1.00 x"
+msgstr "1,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_110"
+msgid "1.10 x"
+msgstr "1,10 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_125"
+msgid "1.25 x"
+msgstr "1,25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_150"
+msgid "1.50 x"
+msgstr "1,50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_175"
+msgid "1.75 x"
+msgstr "1,75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_200"
+msgid "2.00 x"
+msgstr "2,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_300"
+msgid "3.00 x"
+msgstr "3,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_400"
+msgid "4.00 x"
+msgstr "4,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_600"
+msgid "6.00 x"
+msgstr "6,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_800"
+msgid "8.00 x"
+msgstr "8,00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS23"
+msgid "23.976 fps"
+msgstr "23,976 sním./sek."
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS24"
+msgid "24 fps"
+msgstr "24 sním./s"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS25"
+msgid "25 fps"
+msgstr "25 sním./s"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS59"
+msgid "59.94 fps"
+msgstr "59,94 sním./sek."
+
 msgctxt "ID_PLAY_DECRATE"
 msgid "&Decrease Rate"
 msgstr "Spo&maliť prehrávanie"
@@ -565,6 +663,10 @@ msgctxt "ID_FILTERS"
 msgid "&Filters"
 msgstr "&Filtre"
 
+msgctxt "ID_COLOR_CONTROLS"
+msgid "&Color controls..."
+msgstr "Ovláda&če farby..."
+
 msgctxt "ID_SHADERS"
 msgid "S&haders"
 msgstr "S&hadery"
@@ -577,9 +679,13 @@ msgctxt "ID_SUBTITLES"
 msgid "Su&btitle Track"
 msgstr "Stopa s &titulkami"
 
+msgctxt "ID_SUBTITLES_SECONDARY"
+msgid "Secondary Subtitle Track"
+msgstr "Sekundárna stopa s titulkami"
+
 msgctxt "ID_VIDEO_STREAMS"
 msgid "Vide&o Track"
-msgstr "Stopa s &videom"
+msgstr "Stopa s vide&om"
 
 msgctxt "POPUP"
 msgid "&Volume"
@@ -587,15 +693,15 @@ msgstr "&Hlasitosť"
 
 msgctxt "ID_VOLUME_UP"
 msgid "&Up"
-msgstr "&Pridať"
+msgstr "Z&výšiť"
 
 msgctxt "ID_VOLUME_DOWN"
 msgid "&Down"
-msgstr "&Stlmiť"
+msgstr "Z&nížiť"
 
 msgctxt "ID_VOLUME_MUTE"
 msgid "&Mute"
-msgstr "&Stlmiť úplne"
+msgstr "Stl&miť"
 
 msgctxt "POPUP"
 msgid "Af&ter Playback"
@@ -619,7 +725,7 @@ msgstr "&Ukončiť"
 
 msgctxt "ID_AFTERPLAYBACK_STANDBY"
 msgid "&Stand By"
-msgstr "Uviesť do po&hotovostného režimu"
+msgstr "Uviesť do pohotovo&stného režimu"
 
 msgctxt "ID_AFTERPLAYBACK_HIBERNATE"
 msgid "&Hibernate"
@@ -631,7 +737,7 @@ msgstr "V&ypnúť počítač"
 
 msgctxt "ID_AFTERPLAYBACK_LOGOFF"
 msgid "Log &Off"
-msgstr "Od&hlásiť používateľa"
+msgstr "&Odhlásiť"
 
 msgctxt "ID_AFTERPLAYBACK_LOCK"
 msgid "&Lock"
@@ -643,11 +749,11 @@ msgstr "&Navigácia"
 
 msgctxt "ID_NAVIGATE_SKIPBACK"
 msgid "&Previous"
-msgstr "&Predchádzajúca snímka"
+msgstr "&Predchádzajúce"
 
 msgctxt "ID_NAVIGATE_SKIPFORWARD"
 msgid "&Next"
-msgstr "&Ďalšia snímka"
+msgstr "&Ďalej"
 
 msgctxt "ID_NAVIGATE_GOTO"
 msgid "&Go To..."
@@ -675,7 +781,7 @@ msgstr "Menu &uhlov videa"
 
 msgctxt "ID_NAVIGATE_CHAPTERMENU"
 msgid "&Chapter Menu"
-msgstr "Menu &sekcií"
+msgstr "Menu sek&cií"
 
 msgctxt "ID_FAVORITES"
 msgid "F&avorites"
@@ -708,4 +814,3 @@ msgstr "Po&dporiť"
 msgctxt "ID_HELP_ABOUT"
 msgid "&About..."
 msgstr "O progr&ame..."
-

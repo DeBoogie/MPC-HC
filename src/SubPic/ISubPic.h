@@ -24,6 +24,12 @@
 #include <atlbase.h>
 #include <atlcoll.h>
 #include "CoordGeom.h"
+#include "strmif.h"
+
+// to force rendering subs at a specific size
+#define DEBUG_OVERRIDE_TEXTURE_SIZE 0
+#define DEBUG_OVERRIDE_TEXTURE_SIZE_WIDTH 2560
+#define DEBUG_OVERRIDE_TEXTURE_SIZE_HEIGHT 1440
 
 #pragma pack(push, 1)
 struct SubPicDesc {
@@ -62,7 +68,7 @@ enum RelativeTo {
 interface __declspec(uuid("DA3A5B51-958C-4C28-BF66-68D7947577A2"))
 ISubPic :
 public IUnknown {
-    static const REFERENCE_TIME INVALID_TIME = -1;
+    static const REFERENCE_TIME INVALID_SUBPIC_TIME = -1;
 
     STDMETHOD_(void*, GetObject)() PURE;
 
@@ -74,7 +80,7 @@ public IUnknown {
     STDMETHOD(GetDesc)(SubPicDesc& spd /*[out]*/) PURE;
     STDMETHOD(CopyTo)(ISubPic* pSubPic /*[in]*/) PURE;
 
-    STDMETHOD(ClearDirtyRect)(DWORD color /*[in]*/) PURE;
+    STDMETHOD(ClearDirtyRect)() PURE;
     STDMETHOD(GetDirtyRect)(RECT* pDirtyRect /*[out]*/) const PURE;
     STDMETHOD(SetDirtyRect)(const RECT* pDirtyRect /*[in]*/) PURE;
 
@@ -88,7 +94,7 @@ public IUnknown {
     STDMETHOD(GetSourceAndDest)(RECT rcWindow /*[in]*/, RECT rcVideo /*[in]*/,
                                 RECT* pRcSource /*[out]*/,  RECT* pRcDest /*[out]*/,
                                 const double videoStretchFactor = 1.0 /*[in]*/,
-                                int xOffsetInPixels = 1 /*[in]*/) const PURE;
+                                int xOffsetInPixels = 0 /*[in]*/, int yOffsetInPixels = 0 /*[in]*/) const PURE;
     STDMETHOD(SetVirtualTextureSize)(const SIZE pSize, const POINT pTopLeft) PURE;
     STDMETHOD(GetRelativeTo)(RelativeTo* pRelativeTo /*[out]*/) const PURE;
     STDMETHOD(SetRelativeTo)(RelativeTo relativeTo /*[in]*/) PURE;
@@ -98,7 +104,6 @@ public IUnknown {
     STDMETHOD_(void, SetSegmentStart)(REFERENCE_TIME rtStart) PURE;
     STDMETHOD_(void, SetSegmentStop)(REFERENCE_TIME rtStop) PURE;
 
-    STDMETHOD_(bool, GetInverseAlpha)() const PURE;
     STDMETHOD_(void, SetInverseAlpha)(bool bInverted) PURE;
 };
 
@@ -121,6 +126,8 @@ public IUnknown {
     STDMETHOD(SetMaxTextureSize)(SIZE maxTextureSize) PURE;
 
     STDMETHOD(FreeStatic)() PURE;
+    
+    STDMETHOD_(void, SetInverseAlpha)(bool bInverted) PURE;
 };
 
 //
@@ -173,13 +180,15 @@ public IUnknown {
 //
 // ISubPicAllocatorPresenter
 //
+#define TARGET_FRAME 0
+#define TARGET_SCREEN 1
 
 interface __declspec(uuid("CF75B1F0-535C-4074-8869-B15F177F944E"))
 ISubPicAllocatorPresenter :
 public IUnknown {
     STDMETHOD(CreateRenderer)(IUnknown** ppRenderer) PURE;
 
-    STDMETHOD_(SIZE, GetVideoSize)(bool bCorrectAR = true) const PURE;
+    STDMETHOD_(SIZE, GetVideoSize)(bool bCorrectAR) const PURE;
     STDMETHOD_(void, SetPosition)(RECT w, RECT v) PURE;
     STDMETHOD_(bool, Paint)(bool bAll) PURE;
 
@@ -192,12 +201,17 @@ public IUnknown {
     STDMETHOD_(void, Invalidate)(REFERENCE_TIME rtInvalidate = -1) PURE;
 
     STDMETHOD(GetDIB)(BYTE * lpDib, DWORD * size) PURE;
+	STDMETHOD (GetDisplayedImage) (LPVOID* dibImage) PURE;
 
     STDMETHOD(SetVideoAngle)(Vector v) PURE;
     STDMETHOD(SetPixelShader)(LPCSTR pSrcData, LPCSTR pTarget) PURE;
 
     STDMETHOD_(bool, ResetDevice)() PURE;
     STDMETHOD_(bool, DisplayChange)() PURE;
+
+    STDMETHOD_(void, GetPosition)(RECT* windowRect, RECT* videoRect) PURE;
+
+    STDMETHOD_(void, SetVideoMediaType)(CMediaType input) PURE;
 };
 
 interface __declspec(uuid("767AEBA8-A084-488a-89C8-F6B74E53A90F"))
@@ -210,6 +224,22 @@ public ISubPicAllocatorPresenter {
     STDMETHOD(SetIsRendering)(bool bIsRendering) PURE;
 
     STDMETHOD(SetDefaultVideoAngle)(Vector v) PURE;
+};
+
+
+interface __declspec(uuid("AD863F43-83F9-4B8E-962C-426F2BDBEAEF"))
+ISubPicAllocatorPresenter3 :
+public ISubPicAllocatorPresenter2 {
+	STDMETHOD (SetRotation) (int rotation) PURE;
+	STDMETHOD_(int, GetRotation) () PURE;
+	STDMETHOD (SetFlip) (bool flip) PURE;
+	STDMETHOD_(bool, GetFlip) () PURE;
+	STDMETHOD (GetVideoFrame) (BYTE* lpDib, DWORD* size) PURE;
+	STDMETHOD_(int, GetPixelShaderMode) () PURE;
+	STDMETHOD (ClearPixelShaders) (int target) PURE;
+	STDMETHOD (AddPixelShader) (int target, LPCWSTR name, LPCSTR profile, LPCSTR sourceCode) PURE;
+	STDMETHOD_(bool, ResizeDevice) () PURE;
+    STDMETHOD_(bool, ToggleStats) () PURE;
 };
 
 //
@@ -225,6 +255,7 @@ public IPersist {
     STDMETHOD(SetStream)(int iStream) PURE;
     STDMETHOD(Reload)() PURE;
     STDMETHOD(SetSourceTargetInfo)(CString yuvMatrix, int targetBlackLevel, int targetWhiteLevel) PURE;
+    virtual CString GetPath() { return _T(""); }
 
     // TODO: get rid of IPersist to identify type and use only
     // interface functions to modify the settings of the substream

@@ -71,6 +71,8 @@ public:
     CFileAssoc& operator=(const CFileAssoc&) = delete;
     ~CFileAssoc();
 
+    void LoadAAR();
+
     std::shared_ptr<const IconLib> GetIconLib() const;
 
     void SetNoRecentDocs(bool bNoRecentDocs, bool bUpdateAssocs = false);
@@ -79,11 +81,11 @@ public:
 
     bool Register(CString ext, CString strLabel, bool bRegister, bool bRegisterContextMenuEntries, bool bAssociatedWithIcon);
     bool IsRegistered(CString ext) const;
-    bool AreRegisteredFileContextMenuEntries(CString strExt) const;
+    bool HasEnqueueContextMenuEntry(CString strExt) const;
 
     bool Register(const CMediaFormatCategory& mfc, bool bRegister, bool bRegisterContextMenuEntries, bool bAssociatedWithIcon);
     reg_state_t IsRegistered(const CMediaFormatCategory& mfc) const;
-    reg_state_t AreRegisteredFileContextMenuEntries(const CMediaFormatCategory& mfc) const;
+    reg_state_t HasAnyEnqueueContextMenuEntries(const CMediaFormatCategory& mfc) const;
 
     bool RegisterFolderContextMenuEntries(bool bRegister);
     bool AreRegisteredFolderContextMenuEntries() const;
@@ -92,7 +94,7 @@ public:
     bool IsAutoPlayRegistered(autoplay_t ap) const;
 
     bool GetAssociatedExtensions(const CMediaFormats& mf, CAtlList<CString>& exts) const;
-    bool GetAssociatedExtensionsFromRegistry(CAtlList<CString>& exts) const;
+    bool GetAssociatedExtensionsFromRegistry(CAtlList<CString>& exts);
 
     bool ReAssocIcons(const CAtlList<CString>& exts);
 
@@ -130,7 +132,7 @@ protected:
     CComPtr<IApplicationAssociationRegistration> m_pAAR;
 
     std::mutex m_checkIconsAssocMutex;
-    ::CEvent m_checkIconsAssocInactiveEvent;
+    ATL::CEvent m_checkIconsAssocInactiveEvent;
 
     std::array<Handler, 4> m_handlers;
 };

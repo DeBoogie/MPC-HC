@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2017 see Authors.txt
+ * (C) 2006-2018 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -21,18 +21,10 @@
 
 #include "stdafx.h"
 #include "RenderersSettings.h"
-#include "../../../mpc-hc/AppSettings.h"
-#include "../../../mpc-hc/mplayerc.h"
+#include <VersionHelpers.h>
 #include <mpc-hc_config.h>
 #include <d3d9.h>
-#include <d3d10.h>
-#include <dxgi.h>
-#include <d3dx9.h>
-
-void CRenderersSettings::UpdateData(bool fSave)
-{
-    AfxGetAppSettings().UpdateRenderersData(fSave);
-}
+#include "d3dx9/d3dx9.h"
 
 void CRenderersSettings::CAdvRendererSettings::SetDefault()
 {
@@ -64,38 +56,7 @@ void CRenderersSettings::CAdvRendererSettings::SetDefault()
     fTargetSyncOffset                 = 12.0;
     fControlLimit                     = 2.0;
     bCacheShaders                     = false;
-}
-
-void CRenderersSettings::CAdvRendererSettings::SetOptimal()
-{
-    bVMR9AlterativeVSync              = true;
-    iVMR9VSyncOffset                  = 0;
-    bVMR9VSyncAccurate                = true;
-    bVMR9FullscreenGUISupport         = false;
-    bVMR9VSync                        = true;
-    bVMR9FullFloatingPointProcessing  = false;
-    bVMR9HalfFloatingPointProcessing  = false;
-    bVMR9ColorManagementEnable        = false;
-    iVMR9ColorManagementInput         = VIDEO_SYSTEM_UNKNOWN;
-    iVMR9ColorManagementAmbientLight  = AMBIENT_LIGHT_BRIGHT;
-    iVMR9ColorManagementIntent        = COLOR_RENDERING_INTENT_PERCEPTUAL;
-    bVMRDisableDesktopComposition     = true;
-    bVMRFlushGPUBeforeVSync           = true;
-    bVMRFlushGPUAfterPresent          = true;
-    bVMRFlushGPUWait                  = false;
-    bEVRHighColorResolution           = false;
-    bEVRForceInputHighColorResolution = false;
-    bEVREnableFrameTimeCorrection     = false;
-    iEVROutputRange                   = 0;
-    bSynchronizeVideo                 = false;
-    bSynchronizeDisplay               = false;
-    bSynchronizeNearest               = true;
-    iLineDelta                        = 0;
-    iColumnDelta                      = 0;
-    fCycleDelta                       = 0.0012;
-    fTargetSyncOffset                 = 12.0;
-    fControlLimit                     = 2.0;
-    bCacheShaders                     = false;
+    bDesktopSizeBackBuffer            = false;
 }
 
 /////////////////////////////////////////////////////////////////////////////

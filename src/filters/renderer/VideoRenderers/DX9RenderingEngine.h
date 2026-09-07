@@ -23,9 +23,7 @@
 #include "AllocatorCommon.h"
 #include "RenderersSettings.h"
 #include <d3d9.h>
-#include <d3d10.h>
-#include <dxgi.h>
-#include <d3dx9.h>
+#include "d3dx9/d3dx9.h"
 #include "../SubPic/SubPicAllocatorPresenterImpl.h"
 
 
@@ -53,6 +51,7 @@ namespace DSObjects
         D3DFORMAT                   m_BackbufferType;
         D3DFORMAT                   m_DisplayType;
         CSize                       m_ScreenSize;
+        CSize                       m_BackBufferSize;
         int                         m_nNbDXSurface;                 // Total number of DX Surfaces
         int                         m_nCurSurface;                  // Surface currently displayed
 
@@ -170,7 +169,9 @@ namespace DSObjects
         HRESULT TextureResizeBilinear(IDirect3DTexture9* pTexture, const Vector dst[4], const CRect& srcRect);
         HRESULT TextureResizeBicubic1pass(IDirect3DTexture9* pTexture, const Vector dst[4], const CRect& srcRect);
         //HRESULT TextureResizeBicubic2pass(IDirect3DTexture9* pTexture, const Vector dst[4], const CRect &srcRect);
-
+    protected:
+        HRESULT Resize(IDirect3DTexture9* pTexture, const CRect& srcRect, const CRect& destRect);
+    private:
         // Final pass
         HRESULT InitFinalPass();
         void    CleanupFinalPass();

@@ -26,13 +26,15 @@
 #include "PPageFileInfoRes.h"
 #include "PPageFileMediaInfo.h"
 #include <afxdlgs.h>
-
+#include "CMPCThemePropertySheet.h"
+#include "CMPCThemeButton.h"
+#include "CMPCThemeResizablePropertySheet.h"
 
 class CMainFrame;
 
 // CPPageFileInfoSheet
 
-class CPPageFileInfoSheet : public CPropertySheet
+class CPPageFileInfoSheet : public CMPCThemeResizablePropertySheet
 {
     DECLARE_DYNAMIC(CPPageFileInfoSheet)
 
@@ -41,10 +43,10 @@ private:
     CPPageFileInfoDetails m_details;
     CPPageFileInfoRes m_res;
     CPPageFileMediaInfo m_mi;
-    CButton m_Button_MI;
+    CMPCThemeButton m_Button_MI;
 
 public:
-    CPPageFileInfoSheet(CString path, CMainFrame* pMainFrame, CWnd* pParentWnd);
+    CPPageFileInfoSheet(CString path, CString ydlsrc, CMainFrame* pMainFrame, CWnd* pParentWnd);
     virtual ~CPPageFileInfoSheet();
 
     afx_msg void OnSaveAs();

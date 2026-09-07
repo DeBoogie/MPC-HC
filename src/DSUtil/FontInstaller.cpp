@@ -77,6 +77,14 @@ void CFontInstaller::UninstallFonts()
         }
 
         m_files.RemoveAll();
+		
+        pos = m_tempfonts.GetHeadPosition();
+        while (pos) {
+            CString fn = m_tempfonts.GetNext(pos);
+            pRemoveFontResourceEx(fn, FR_PRIVATE, 0);
+        }
+		
+        m_tempfonts.RemoveAll();
     }
 }
 
@@ -118,4 +126,14 @@ bool CFontInstaller::InstallFontFile(const void* pData, UINT len)
 
     DeleteFile(fn);
     return false;
+}
+
+bool CFontInstaller::InstallTempFontFile(LPCTSTR fn)
+{
+	if (pAddFontResourceEx && pAddFontResourceEx(fn, FR_PRIVATE, 0) > 0) {
+		m_tempfonts.AddTail(fn);
+		return true;
+	}
+
+	return false;
 }

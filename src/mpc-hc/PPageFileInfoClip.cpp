@@ -31,17 +31,20 @@
 
 // CPPageFileInfoClip dialog
 
-IMPLEMENT_DYNAMIC(CPPageFileInfoClip, CPropertyPage)
-CPPageFileInfoClip::CPPageFileInfoClip(CString path, IFilterGraph* pFG, IFileSourceFilter* pFSF, IDvdInfo2* pDVDI)
-    : CPropertyPage(CPPageFileInfoClip::IDD, CPPageFileInfoClip::IDD)
+IMPLEMENT_DYNAMIC(CPPageFileInfoClip, CMPCThemeResizablePropertyPage)
+CPPageFileInfoClip::CPPageFileInfoClip(CString path, CString ydlsrc, IFilterGraph* pFG, IFileSourceFilter* pFSF, IDvdInfo2* pDVDI)
+    : CMPCThemeResizablePropertyPage(CPPageFileInfoClip::IDD, CPPageFileInfoClip::IDD)
     , m_hIcon(nullptr)
     , m_fn(path)
+    , m_ydlsrc(ydlsrc)
+    , m_displayFn()
     , m_path(path)
     , m_clip(StrRes(IDS_AG_NONE))
     , m_author(StrRes(IDS_AG_NONE))
     , m_copyright(StrRes(IDS_AG_NONE))
     , m_rating(StrRes(IDS_AG_NONE))
     , m_location(StrRes(IDS_AG_NONE))
+    , m_displayLocation(StrRes(IDS_AG_NONE))
 {
     if (pFSF) {
         CComHeapPtr<OLECHAR> pFN;
@@ -56,41 +59,33 @@ CPPageFileInfoClip::CPPageFileInfoClip(CString path, IFilterGraph* pFG, IFileSou
         }
     }
 
-    bool bFound = false;
-    BeginEnumFilters(pFG, pEF, pBF) {
-        if (CComQIPtr<IAMMediaContent, &IID_IAMMediaContent> pAMMC = pBF) {
-            CComBSTR bstr;
-            if (SUCCEEDED(pAMMC->get_Title(&bstr)) && bstr.Length()) {
-                m_clip = bstr.m_str;
-                bFound = true;
-            }
-            bstr.Empty();
-            if (SUCCEEDED(pAMMC->get_AuthorName(&bstr)) && bstr.Length()) {
-                m_author = bstr.m_str;
-                bFound = true;
-            }
-            bstr.Empty();
-            if (SUCCEEDED(pAMMC->get_Copyright(&bstr)) && bstr.Length()) {
-                m_copyright = bstr.m_str;
-                bFound = true;
-            }
-            bstr.Empty();
-            if (SUCCEEDED(pAMMC->get_Rating(&bstr)) && bstr.Length()) {
-                m_rating = bstr.m_str;
-                bFound = true;
-            }
-            bstr.Empty();
-            if (SUCCEEDED(pAMMC->get_Description(&bstr)) && bstr.Length()) {
-                m_desc = bstr.m_str;
-                bFound = true;
-            }
-            bstr.Empty();
-            if (bFound) {
-                break;
-            }
+    CComQIPtr<IAMMediaContent, &IID_IAMMediaContent> pAMMC = pFSF;
+    if (pAMMC) {
+        CComBSTR bstr;
+        if (SUCCEEDED(pAMMC->get_Title(&bstr)) && bstr.Length()) {
+            m_clip = bstr.m_str;
+            m_clip.Trim();
         }
+        bstr.Empty();
+        if (SUCCEEDED(pAMMC->get_AuthorName(&bstr)) && bstr.Length()) {
+            m_author = bstr.m_str;
+        }
+        bstr.Empty();
+        if (SUCCEEDED(pAMMC->get_Copyright(&bstr)) && bstr.Length()) {
+            m_copyright = bstr.m_str;
+        }
+        bstr.Empty();
+        if (SUCCEEDED(pAMMC->get_Rating(&bstr)) && bstr.Length()) {
+            m_rating = bstr.m_str;
+        }
+        bstr.Empty();
+        if (SUCCEEDED(pAMMC->get_Description(&bstr)) && bstr.Length()) {
+            m_desc = bstr.m_str;
+            m_desc.Replace(L"\r\n", L"\n"); //Replace existing \r\n to \n
+            m_desc.Replace(L"\n", L"\r\n");
+        }
+        bstr.Empty();
     }
-    EndEnumFilters;
 }
 
 CPPageFileInfoClip::~CPPageFileInfoClip()
@@ -104,12 +99,12 @@ void CPPageFileInfoClip::DoDataExchange(CDataExchange* pDX)
 {
     __super::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_DEFAULTICON, m_icon);
-    DDX_Text(pDX, IDC_EDIT1, m_fn);
+    DDX_Text(pDX, IDC_EDIT1, m_displayFn);
     DDX_Text(pDX, IDC_EDIT4, m_clip);
     DDX_Text(pDX, IDC_EDIT3, m_author);
     DDX_Text(pDX, IDC_EDIT2, m_copyright);
     DDX_Text(pDX, IDC_EDIT5, m_rating);
-    DDX_Text(pDX, IDC_EDIT6, m_location);
+    DDX_Text(pDX, IDC_EDIT6, m_displayLocation);
     DDX_Control(pDX, IDC_EDIT6, m_locationCtrl);
     DDX_Text(pDX, IDC_EDIT7, m_desc);
 }
@@ -127,7 +122,7 @@ BOOL CPPageFileInfoClip::PreTranslateMessage(MSG* pMsg)
     return __super::PreTranslateMessage(pMsg);
 }
 
-BEGIN_MESSAGE_MAP(CPPageFileInfoClip, CPropertyPage)
+BEGIN_MESSAGE_MAP(CPPageFileInfoClip, CMPCThemeResizablePropertyPage)
 END_MESSAGE_MAP()
 
 // CPPageFileInfoClip message handlers
@@ -143,7 +138,11 @@ BOOL CPPageFileInfoClip::OnInitDialog()
     m_fn.TrimRight('/');
     int i = std::max(m_fn.ReverseFind('\\'), m_fn.ReverseFind('/'));
     if (i >= 0 && i < m_fn.GetLength() - 1) {
-        m_location = m_fn.Left(i);
+        if (PathUtils::IsURL(m_fn)) {
+            m_location = m_fn;
+        } else {
+            m_location = m_fn.Left(i);
+        }
         m_fn = m_fn.Mid(i + 1);
 
         if (m_location.GetLength() == 2 && m_location[1] == ':') {
@@ -156,6 +155,17 @@ BOOL CPPageFileInfoClip::OnInitDialog()
         m_icon.SetIcon(m_hIcon);
     }
 
+    if (!m_ydlsrc.IsEmpty()) {
+        m_displayFn = m_ydlsrc;
+        m_displayLocation = UrlDecodeWithUTF8(m_location, true);
+    } else if (PathUtils::IsURL(m_path)) {
+        m_displayFn = UrlDecodeWithUTF8(ShortenURL(m_fn, 200));
+        m_displayLocation = UrlDecodeWithUTF8(m_location, true);
+    } else {
+        m_displayFn = m_fn;
+        m_displayLocation = m_location;
+    }
+
     m_tooltip.Create(this, TTS_NOPREFIX | TTS_ALWAYSTIP);
 
     m_tooltip.SetDelayTime(TTDT_INITIAL, 0);
@@ -165,6 +175,27 @@ BOOL CPPageFileInfoClip::OnInitDialog()
     if (PathUtils::Exists(m_path)) {
         m_tooltip.AddTool(&m_locationCtrl, IDS_TOOLTIP_EXPLORE_TO_FILE);
     }
+
+    //we have multiple IDC_STATIC, we'll get them by window
+    CWnd* pChild = GetWindow(GW_CHILD);
+    while (pChild) {
+        if (pChild->GetDlgCtrlID() == IDC_STATIC) {
+            AddAnchor(pChild->GetSafeHwnd(), TOP_LEFT);
+        }
+        pChild = pChild->GetNextWindow();
+    }
+
+    AddAnchor(IDC_DEFAULTICON, TOP_LEFT);
+    AddAnchor(IDC_EDIT1, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_EDIT2, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_EDIT3, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_EDIT4, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_EDIT5, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_EDIT6, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_EDIT7, TOP_LEFT, BOTTOM_RIGHT);
+    AddAnchor(IDC_STATIC1, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_STATIC2, TOP_LEFT, TOP_RIGHT);
+    AddAnchor(IDC_STATIC3, TOP_LEFT, TOP_RIGHT);
 
     UpdateData(FALSE);
 

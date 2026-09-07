@@ -22,17 +22,19 @@
 
 struct SubPicQueueSettings {
     int  nSize;
-    int  nMaxRes;
+    int  nMaxResX;
+    int  nMaxResY;
     bool bDisableSubtitleAnimation;
     int  nRenderAtWhenAnimationIsDisabled;
     int  nAnimationRate;
     bool bAllowDroppingSubpic;
 
-    SubPicQueueSettings(int nSize, int nMaxRes,
+    SubPicQueueSettings(int nSize, int nMaxResX, int nMaxResY,
                         bool bDisableSubtitleAnimation, int nRenderAtWhenAnimationIsDisabled, int nAnimationRate,
                         bool bAllowDroppingSubpic)
         : nSize(nSize)
-        , nMaxRes(nMaxRes)
+        , nMaxResX(nMaxResX)
+        , nMaxResY(nMaxResY)
         , bDisableSubtitleAnimation(bDisableSubtitleAnimation)
         , nRenderAtWhenAnimationIsDisabled(nRenderAtWhenAnimationIsDisabled)
         , nAnimationRate(nAnimationRate)
@@ -40,6 +42,6 @@ struct SubPicQueueSettings {
     {};
 
     SubPicQueueSettings()
-        : SubPicQueueSettings(10, 0, false, 50, 100, true)
+        : SubPicQueueSettings(10, 2560, 1440, false, 50, 100, true)
     {};
 };

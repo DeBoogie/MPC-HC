@@ -43,6 +43,24 @@
 
 #define EndEnumDescriptors }}
 
+#define BeginEnumDescriptorsATSC(gb, nType, nLength, bits)          \
+{                                                                   \
+    BYTE DescBuffer[256];                                           \
+    size_t nLimit = (size_t)gb.BitRead(bits) + gb.GetPos();         \
+    while (gb.GetPos() < nLimit) {                                  \
+        MPEG2_DESCRIPTOR nType = (MPEG2_DESCRIPTOR)gb.BitRead(8);   \
+        WORD nLength = (WORD)gb.BitRead(8);
+
+
+void UTF16BE2LE(BYTE* in, int len) {
+    for (int i = 0; i < len; i+=2) {
+        BYTE in0 = in[i];
+        in[i] = in[i+1];
+        in[i+1] = in0;
+    }
+    in[len] = 0;
+    in[len + 1] = 0;
+}
 
 CMpeg2DataParser::CMpeg2DataParser(IBaseFilter* pFilter)
 {
@@ -78,7 +96,7 @@ CStringW CMpeg2DataParser::ConvertString(BYTE* pBuffer, size_t uLength)
         28591,  // 12 - ??? - KSX1001-2004 - Korean Character Set
         20936,  // 13 - Chinese Simplified (GB2312-80)
         950,    // 14 - Chinese Traditional (Big5)
-        28591,  // 15 - ??? - UTF-8 encoding of ISO/IEC 10646 - Basic Multilingual Plane (BMP)
+        65001,  // 15 - UTF-8 encoding of ISO/IEC 10646 - Basic Multilingual Plane (BMP)
         28591,  // 16 - reserved
         28591,  // 17 - reserved
         28591,  // 18 - reserved
@@ -203,30 +221,33 @@ CStringW CMpeg2DataParser::ConvertString(BYTE* pBuffer, size_t uLength)
     return strResult;
 }
 
-DVB_STREAM_TYPE CMpeg2DataParser::ConvertToDVBType(PES_STREAM_TYPE nType)
+BDA_STREAM_TYPE CMpeg2DataParser::ConvertToDVBType(PES_STREAM_TYPE nType)
 {
     switch (nType) {
         case VIDEO_STREAM_MPEG1:
         case VIDEO_STREAM_MPEG2:
-            return DVB_MPV;
+            return BDA_MPV;
         case AUDIO_STREAM_MPEG1:
         case AUDIO_STREAM_MPEG2:
-            return DVB_MPA;
+            return BDA_MPA;
         case VIDEO_STREAM_H264:
-            return DVB_H264;
+            return BDA_H264;
         case VIDEO_STREAM_HEVC:
-            return DVB_HEVC;
+            return BDA_HEVC;
         case AUDIO_STREAM_AC3:
-            return DVB_AC3;
+            return BDA_AC3;
         case AUDIO_STREAM_AC3_PLUS:
-            return DVB_EAC3;
+        case AUDIO_STREAM_EAC3_ATSC:
+            return BDA_EAC3;
+        case AUDIO_STREAM_AAC:
+            return BDA_ADTS;
         case AUDIO_STREAM_AAC_LATM:
-            return DVB_LATM;
+            return BDA_LATM;
         case SUBTITLE_STREAM:
-            return DVB_SUBTITLE;
+            return BDA_SUBTITLE;
     }
 
-    return DVB_UNKNOWN;
+    return BDA_UNKNOWN;
 }
 
 HRESULT CMpeg2DataParser::ParseSIHeader(CGolombBuffer& gb, DVB_SI SIType, WORD& wSectionLength, WORD& wTSID)
@@ -234,11 +255,14 @@ HRESULT CMpeg2DataParser::ParseSIHeader(CGolombBuffer& gb, DVB_SI SIType, WORD& 
     if (gb.BitRead(8) != SIType) {
         return ERROR_INVALID_DATA;              // table_id
     }
-    gb.BitRead(1);                              // section_syntax_indicator
-    gb.BitRead(1);                              // reserved_future_use
-    gb.BitRead(2);                              // reserved
-    wSectionLength = (WORD)gb.BitRead(12);      // section_length
-    wTSID = (WORD)gb.BitRead(16);               // transport_stream_id
+    // The BDA demux hands us a SECTION/LONG_SECTION struct (mpeg2structs.h), not
+    // raw wire bytes: Header.W and TableIdExtension have already been swapped to
+    // host order for us, which is what the SDK's SWAP_MPEG_SECTION_HEADER_BYTES
+    // macro does. Read those two as little-endian WORDs; everything from
+    // RemainingData onwards is untouched wire payload and stays big-endian.
+    WORD wHeader = (WORD)gb.ReadShortLE();      // section_syntax_indicator, reserved, section_length
+    wSectionLength = wHeader & 0x0FFF;          // section_length
+    wTSID = (WORD)gb.ReadShortLE();             // transport_stream_id
     gb.BitRead(2);                              // reserved
     gb.BitRead(5);                              // version_number
     gb.BitRead(1);                              // current_next_indicator
@@ -248,7 +272,7 @@ HRESULT CMpeg2DataParser::ParseSIHeader(CGolombBuffer& gb, DVB_SI SIType, WORD& 
     return S_OK;
 }
 
-HRESULT CMpeg2DataParser::ParseSDT(ULONG ulFrequency, ULONG ulBandwidth)
+HRESULT CMpeg2DataParser::ParseSDT(ULONG ulFrequency, ULONG ulBandwidth, ULONG ulSymbolRate)
 {
     HRESULT hr;
     CComPtr<ISectionList> pSectionList;
@@ -258,6 +282,10 @@ HRESULT CMpeg2DataParser::ParseSDT(ULONG ulFrequency, ULONG ulBandwidth)
     WORD wONID;
     WORD wSectionLength;
     WORD serviceType = 0;
+
+    if (!m_pData) {
+        return E_FAIL;
+    }
 
     CheckNoLog(m_pData->GetSection(PID_SDT, SI_SDT, &m_Filter, 15000, &pSectionList));
     CheckNoLog(pSectionList->GetSectionData(0, &dwLength, &data));
@@ -271,9 +299,10 @@ HRESULT CMpeg2DataParser::ParseSDT(ULONG ulFrequency, ULONG ulBandwidth)
     gb.BitRead(8);                                              // reserved_future_use
 
     while (gb.GetSize() - gb.GetPos() > 4) {
-        CDVBChannel Channel;
+        CBDAChannel Channel;
         Channel.SetFrequency(ulFrequency);
         Channel.SetBandwidth(ulBandwidth);
+        Channel.SetSymbolRate(ulSymbolRate);
         Channel.SetTSID(wTSID);
         Channel.SetONID(wONID);
         Channel.SetSID((ULONG)gb.BitRead(16));                  // service_id   uimsbf
@@ -326,6 +355,143 @@ HRESULT CMpeg2DataParser::ParseSDT(ULONG ulFrequency, ULONG ulBandwidth)
     return S_OK;
 }
 
+//supports Master Guide Table; see ATSC A/65:2013
+HRESULT CMpeg2DataParser::ParseMGT(enum DVB_SI &vctType)
+{
+    vctType = SI_undef;
+    HRESULT hr;
+    CComPtr<ISectionList> pSectionList;
+    DWORD dwLength;
+    PSECTION data;
+    WORD wTSID;
+    WORD wSectionLength;
+
+    hr = m_pData->GetSection(PID_PSIP, TID_MGT, &m_Filter, 15000, &pSectionList);
+    CheckNoLog(hr);
+    CheckNoLog(pSectionList->GetSectionData(0, &dwLength, &data));
+
+    CGolombBuffer gb((BYTE*)data, dwLength);
+
+    CheckNoLog(ParseSIHeader(gb, TID_MGT, wSectionLength, wTSID));
+    gb.BitRead(8);
+    uint16_t num_tables = gb.BitRead(16);
+
+    for (uint8_t i = 0; i < num_tables; i++) {
+        uint16_t table_type = gb.BitRead(16); //table_type
+        
+        gb.BitRead(3);  //reserved
+        uint16_t table_type_PID = gb.BitRead(13); //table_type_PID
+        if (table_type_PID == PID_PSIP) { //expect to find TVCT table with PID_PSIP id
+            if (table_type == TT_TVCT_C0 || table_type == TT_TVCT_C1) {
+                vctType = (DVB_SI)TID_TVCT;
+            } else if (table_type == TT_CVCT_C0 || table_type == TT_CVCT_C1) {
+                vctType = (DVB_SI)TID_CVCT;
+            }
+        }
+        gb.BitRead(3);  //reserved
+        gb.BitRead(5);  //table_type_version_number
+        gb.BitRead(32); //number_bytes
+        gb.BitRead(4);  //reserved
+
+        BeginEnumDescriptorsATSC(gb, nType, nLength, 12) {          // for (i=0;i<N;i++) {
+            SkipDescriptor(gb, nType, nLength);                     // descriptor()
+        }
+        EndEnumDescriptors;
+    }
+
+    return S_OK;
+}
+
+//supports Terrestrial Virtual Channel Table and Cable Virtual Channel Table; see ATSC A/65:2013
+HRESULT CMpeg2DataParser::ParseVCT(ULONG ulFrequency, ULONG ulBandwidth, ULONG ulSymbolRate, enum DVB_SI vctType)
+{
+    HRESULT hr;
+    CComPtr<ISectionList> pSectionList;
+    DWORD dwLength;
+    PSECTION data;
+    WORD wTSID;
+    WORD wSectionLength;
+    WORD serviceType = 0;
+
+    hr = m_pData->GetSection(PID_PSIP, vctType, &m_Filter, 15000, &pSectionList);
+    CheckNoLog(hr);
+    CheckNoLog(pSectionList->GetSectionData(0, &dwLength, &data));
+
+    CGolombBuffer gb((BYTE*)data, dwLength);
+
+    CheckNoLog(ParseSIHeader(gb, vctType, wSectionLength, wTSID));
+    gb.BitRead(8); //protocol_version
+    uint8_t num_channels = gb.BitRead(8);
+
+    const int SHORT_NAME_LEN = 7*2;
+    BYTE short_name[SHORT_NAME_LEN+2];
+
+    for (uint8_t i = 0; i < num_channels; i++) {
+        gb.ReadBuffer(short_name, SHORT_NAME_LEN); //short_name
+        UTF16BE2LE(short_name, SHORT_NAME_LEN);
+        CStringW shortName((wchar_t*)short_name);
+        gb.BitRead(4); //reserved
+        uint16_t major_channel_number = gb.BitRead(10); //major_channel_number
+        uint16_t minor_channel_number = gb.BitRead(10); //minor_channel_number
+        gb.BitRead(8); //modulation_mode
+        gb.BitRead(32); //carrier_frequency
+        uint16_t channel_TSID=gb.BitRead(16); //channel_TSID
+        uint16_t program_number=gb.BitRead(16); //program_number
+        gb.BitRead(2); //ETM_location
+        uint8_t access_controlled = (uint8_t)gb.BitRead(1); //access_controlled
+        uint8_t hidden = (uint8_t)gb.BitRead(1); //hidden
+        gb.BitRead(2); //TVCT: reserved(1), CVCT: path_select(1) / out_of_band(1)
+        gb.BitRead(1); //hide_guide
+        gb.BitRead(3); //reserved
+        serviceType = gb.BitRead(6); //service_type
+        uint16_t source_id=gb.BitRead(16); //source_id
+        gb.BitRead(6); //reserved
+        BeginEnumDescriptorsATSC(gb, nType, nLength, 10) {          // for (i=0;i<N;i++) {
+            SkipDescriptor(gb, nType, nLength);                     // descriptor()
+        }
+        EndEnumDescriptors;
+
+        CBDAChannel Channel;
+        CStringW name;
+        name.Format(L"%d.%d - %s", major_channel_number, minor_channel_number, shortName);
+        Channel.SetName(name);
+        Channel.SetFrequency(ulFrequency);
+        Channel.SetBandwidth(ulBandwidth);
+        Channel.SetSymbolRate(ulSymbolRate);
+        Channel.SetTSID(channel_TSID);
+        Channel.SetONID(0); //ATSC doesn't apply
+        Channel.SetSID(program_number);
+        // The virtual channel number is the identity a viewer knows a station
+        // by, and is what the scan list and channel ordering should key on.
+        // Without this every ATSC channel carries number 0 and the scan list is
+        // left in discovery order.
+        Channel.SetATSCNumber(major_channel_number, minor_channel_number);
+        // access_controlled is the ATSC equivalent of the DVB free_CA_mode
+        // flag; without it every ATSC service reports as unencrypted.
+        Channel.SetEncrypted(!!access_controlled);
+
+        if (!Channels.Lookup(Channel.GetSID())) {
+            if (hidden) {
+                // Not intended for viewers - typically test or data services.
+                // Receivers omit these, and so does the DVB path via the
+                // service descriptor.
+                BDA_LOG(_T("ATSC: Skipping hidden service: %-20s %lu"), Channel.GetName(), Channel.GetSID());
+            } else {
+                switch (serviceType) {
+                case ATSC_DIGITAL_TV:
+                    Channels[Channel.GetSID()] = Channel;
+                    break;
+                default:
+                    BDA_LOG(_T("ATSC: Skipping not supported service: %-20s %lu"), Channel.GetName(), Channel.GetSID());
+                    break;
+                }
+            }
+        }
+    }
+
+    return S_OK;
+}
+
 HRESULT CMpeg2DataParser::ParsePAT()
 {
     HRESULT hr;
@@ -359,7 +525,7 @@ HRESULT CMpeg2DataParser::ParsePAT()
     return S_OK;
 }
 
-HRESULT CMpeg2DataParser::ParsePMT(CDVBChannel& Channel)
+HRESULT CMpeg2DataParser::ParsePMT(CBDAChannel& Channel)
 {
     HRESULT hr;
     CComPtr<ISectionList> pSectionList;
@@ -368,8 +534,8 @@ HRESULT CMpeg2DataParser::ParsePMT(CDVBChannel& Channel)
     WORD wTSID;
     WORD wSectionLength;
 
-    Channel.SetVideoFps(DVB_FPS_NONE);
-    Channel.SetVideoChroma(DVB_Chroma_NONE);
+    Channel.SetVideoFps(BDA_FPS_NONE);
+    Channel.SetVideoChroma(BDA_Chroma_NONE);
 
     CheckNoLog(m_pData->GetSection((PID)Channel.GetPMT(), SI_PMT, &m_Filter, 15000, &pSectionList));
     CheckNoLog(pSectionList->GetSectionData(0, &dwLength, &data));
@@ -390,7 +556,7 @@ HRESULT CMpeg2DataParser::ParsePMT(CDVBChannel& Channel)
 
     while (gb.GetSize() - gb.GetPos() > 4) {
         PES_STREAM_TYPE pes_stream_type;
-        DVB_STREAM_TYPE dvb_stream_type;
+        BDA_STREAM_TYPE dvb_stream_type;
         WORD wPID;
         CString strLanguage;
 
@@ -424,13 +590,13 @@ HRESULT CMpeg2DataParser::ParsePMT(CDVBChannel& Channel)
                     break;
                 case DT_VIDEO_STREAM: {
                     gb.BitRead(1);                      // multiple_frame_rate_flag
-                    Channel.SetVideoFps((DVB_FPS_TYPE) gb.BitRead(4));
+                    Channel.SetVideoFps((BDA_FPS_TYPE) gb.BitRead(4));
                     UINT MPEG_1_only_flag  = (UINT) gb.BitRead(1);
                     gb.BitRead(1);                      // constrained_parameter_flag
                     gb.BitRead(1);                      // still_picture_flag
                     if (!MPEG_1_only_flag) {
                         gb.BitRead(8);                  // profile_and_level_indicator
-                        Channel.SetVideoChroma((DVB_CHROMA_TYPE) gb.BitRead(2));
+                        Channel.SetVideoChroma((BDA_CHROMA_TYPE) gb.BitRead(2));
                         gb.BitRead(1);                  // frame_rate_extension_flag
                         gb.BitRead(5);                  // Reserved
                     }
@@ -439,7 +605,7 @@ HRESULT CMpeg2DataParser::ParsePMT(CDVBChannel& Channel)
                 case DT_TARGET_BACKGROUND_GRID:
                     Channel.SetVideoWidth((ULONG) gb.BitRead(14));
                     Channel.SetVideoHeight((ULONG) gb.BitRead(14));
-                    Channel.SetVideoAR((DVB_AspectRatio_TYPE) gb.BitRead(4));
+                    Channel.SetVideoAR((BDA_AspectRatio_TYPE) gb.BitRead(4));
                     break;
                 default:
                     SkipDescriptor(gb, nType, nLength);
@@ -447,21 +613,21 @@ HRESULT CMpeg2DataParser::ParsePMT(CDVBChannel& Channel)
             }
         }
         EndEnumDescriptors;
-        if ((dvb_stream_type = ConvertToDVBType(pes_stream_type)) != DVB_UNKNOWN) {
+        if ((dvb_stream_type = ConvertToDVBType(pes_stream_type)) != BDA_UNKNOWN) {
             Channel.AddStreamInfo(wPID, dvb_stream_type, pes_stream_type, strLanguage);
         }
     }
-    if ((Channel.GetVideoType() == DVB_MPV) && (Channel.GetVideoPID())) {
-        if (Channel.GetVideoFps() == DVB_FPS_NONE) {
-            Channel.SetVideoFps(DVB_FPS_25_0);
+    if ((Channel.GetVideoType() == BDA_MPV) && (Channel.GetVideoPID())) {
+        if (Channel.GetVideoFps() == BDA_FPS_NONE) {
+            Channel.SetVideoFps(BDA_FPS_25_0);
         }
         if ((Channel.GetVideoWidth() == 0) && (Channel.GetVideoHeight() == 0)) {
             Channel.SetVideoWidth(720);
             Channel.SetVideoHeight(576);
         }
-    } else if ((Channel.GetVideoType() == DVB_H264 || Channel.GetVideoType() == DVB_HEVC) && (Channel.GetVideoPID())) {
-        if (Channel.GetVideoFps() == DVB_FPS_NONE) {
-            Channel.SetVideoFps(DVB_FPS_25_0);
+    } else if ((Channel.GetVideoType() == BDA_H264 || Channel.GetVideoType() == BDA_HEVC) && (Channel.GetVideoPID())) {
+        if (Channel.GetVideoFps() == BDA_FPS_NONE) {
+            Channel.SetVideoFps(BDA_FPS_25_0);
         }
     }
 
@@ -471,7 +637,7 @@ HRESULT CMpeg2DataParser::ParsePMT(CDVBChannel& Channel)
 
 HRESULT CMpeg2DataParser::SetTime(CGolombBuffer& gb, EventDescriptor& NowNext)
 {
-    wchar_t descBuffer[10];
+    wchar_t descBuffer[6];
     time_t  tNow, tTime;
     tm      tmTime;
     long    timezone;
@@ -502,7 +668,7 @@ HRESULT CMpeg2DataParser::SetTime(CGolombBuffer& gb, EventDescriptor& NowNext)
 
     localtime_s(&tmTime, &tTime);
     wcsftime(descBuffer, 6, L"%H:%M", &tmTime);
-    descBuffer[6] = '\0';
+    descBuffer[5] = '\0';
     NowNext.strStartTime = descBuffer;
 
     // Duration:
@@ -516,7 +682,7 @@ HRESULT CMpeg2DataParser::SetTime(CGolombBuffer& gb, EventDescriptor& NowNext)
     tTime += NowNext.duration;
     localtime_s(&tmTime, &tTime);
     wcsftime(descBuffer, 6, L"%H:%M", &tmTime);
-    descBuffer[6] = '\0';
+    descBuffer[5] = '\0';
     NowNext.strEndTime = descBuffer;
 
     return S_OK;
@@ -527,7 +693,6 @@ HRESULT CMpeg2DataParser::ParseEIT(ULONG ulSID, EventDescriptor& NowNext)
     HRESULT hr = S_OK;
     DWORD dwLength;
     PSECTION data;
-    ULONG ulGetSID;
     EventInformationSection InfoEvent;
     NowNext = EventDescriptor();
 
@@ -539,12 +704,14 @@ HRESULT CMpeg2DataParser::ParseEIT(ULONG ulSID, EventDescriptor& NowNext)
         CGolombBuffer gb((BYTE*)data, dwLength);
 
         InfoEvent.TableID = (UINT8)gb.BitRead(8);
-        InfoEvent.SectionSyntaxIndicator = (WORD)gb.BitRead(1);
-        gb.BitRead(3);
-        InfoEvent.SectionLength = (WORD)gb.BitRead(12);
-        ulGetSID  = (ULONG)gb.BitRead(8);
-        ulGetSID += 0x100 * (ULONG)gb.BitRead(8);
-        InfoEvent.ServiceId = ulGetSID; // This is really strange, ServiceID should be uimsbf ???
+        // Same host-order header as ParseSIHeader: the BDA demux has already
+        // byte-swapped Header.W and TableIdExtension, so read them as
+        // little-endian WORDs. The hand-rolled little-endian service id this
+        // replaces was correct, and was why it looked "strange" here.
+        WORD wEitHeader = (WORD)gb.ReadShortLE();
+        InfoEvent.SectionSyntaxIndicator = (WORD)(wEitHeader >> 15);
+        InfoEvent.SectionLength = (WORD)(wEitHeader & 0x0FFF);
+        InfoEvent.ServiceId = (ULONG)(WORD)gb.ReadShortLE();
         if (InfoEvent.ServiceId == ulSID) {
             gb.BitRead(2);
             InfoEvent.VersionNumber = (UINT8)gb.BitRead(5);

@@ -53,10 +53,20 @@ UpdateChecker::~UpdateChecker()
 
 Update_Status UpdateChecker::IsUpdateAvailable(const Version& currentVersion)
 {
+    Update_Status update_status = IsUpdateAvailable(currentVersion, false);
+    if (update_status == UPDATER_ERROR) update_status = IsUpdateAvailable(currentVersion, true);
+    return update_status;
+}
+
+Update_Status UpdateChecker::IsUpdateAvailable(const Version& currentVersion, bool useBackupURL)
+{
     Update_Status updateAvailable = UPDATER_LATEST_STABLE;
 
     try {
         CInternetSession internet;
+        internet.SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, 5000);
+        internet.SetOption(INTERNET_OPTION_RECEIVE_TIMEOUT, 5000);
+        internet.SetOption(INTERNET_OPTION_SEND_TIMEOUT, 5000);
 
 #pragma warning(push)
 #pragma warning(disable: 4996)
@@ -90,7 +100,11 @@ Update_Status UpdateChecker::IsUpdateAvailable(const Version& currentVersion)
         CString headers;
         headers.Format(headersFmt, osVersionStr.GetString());
 
-        CHttpFile* versionFile = (CHttpFile*) internet.OpenURL(versionFileURL,
+        CString fileURL;
+        if (useBackupURL) fileURL = BACKUP_UPDATE_URL;
+        else fileURL = versionFileURL;
+
+        CHttpFile* versionFile = (CHttpFile*) internet.OpenURL(fileURL,
                                                                1,
                                                                INTERNET_FLAG_TRANSFER_ASCII | INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_RELOAD,
                                                                headers,
@@ -255,8 +269,12 @@ static UINT RunCheckForUpdateThread(LPVOID pParam)
         if (!autoCheck || status == UPDATER_UPDATE_AVAILABLE) {
             UpdateCheckerDlg dlg(status, updateChecker.GetLatestVersion());
 
-            if (dlg.DoModal() == IDC_UPDATE_IGNORE_BUTTON) {
-                updateChecker.IgnoreLatestVersion();
+            try {
+                if (dlg.DoModal() == IDC_UPDATE_IGNORE_BUTTON) {
+                    updateChecker.IgnoreLatestVersion();
+                }
+            } catch (...) {
+                AfxGetAppSettings().nUpdaterAutoCheck = AUTOUPDATE_DISABLE;
             }
         }
     }

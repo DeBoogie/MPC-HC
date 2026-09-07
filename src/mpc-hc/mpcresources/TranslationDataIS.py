@@ -19,8 +19,8 @@ from TranslationData import *
 
 
 class TranslationDataIS(TranslationData):
-    sectionEntry = re.compile(ur'^\[(.*)\]\r\n', re.UNICODE)
-    stringEntry = re.compile(ur'^en\.([^=]+)=(.+)\r\n', re.UNICODE)
+    sectionEntry = re.compile(r'^\[(.*)\]\r\n', re.UNICODE)
+    stringEntry = re.compile(r'^en\.([^=]+)=(.+)\r\n', re.UNICODE)
 
     def loadFromIS(self, filename):
         self.empty()
@@ -31,7 +31,7 @@ class TranslationDataIS(TranslationData):
                 match = TranslationDataIS.stringEntry.match(line)
                 if section and match:
                     if match.group(1) != u'langid':
-                        self.strings[(section + '_' + match.group(1), match.group(2).replace(u'%n', ur'\n'))] = ''
+                        self.strings[(section + '_' + match.group(1), match.group(2).replace(u'%n', r'\n'))] = ''
                 else:
                     match = TranslationDataIS.sectionEntry.match(line)
                     if match:
@@ -77,11 +77,11 @@ class TranslationDataIS(TranslationData):
             match = TranslationDataIS.stringEntry.match(line)
             if match:
                 if match.group(1) != u'langid':
-                    s = self.strings.get((section + '_' + match.group(1), match.group(2).replace(u'%n', ur'\n')))
+                    s = self.strings.get((section + '_' + match.group(1), match.group(2).replace(u'%n', r'\n')))
                     if not s:
                         s = match.group(2)
                     line = '%s.%s=%s\r\n' % (
-                        config.get('Info', 'langShortName'), match.group(1), s.replace(ur'\n', u'%n'))
+                        config.get('Info', 'langShortName'), match.group(1), s.replace(r'\n', u'%n'))
                 else:
                     line = '%s.langid=%0.8d\r\n' % (
                         config.get('Info', 'langShortName'), config.getint('Info', 'langId'))

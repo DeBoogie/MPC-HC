@@ -21,28 +21,23 @@
 #pragma once
 
 #include <afxcmn.h>
-#include "PPageBase.h"
+#include "CMPCThemePPageBase.h"
+#include "CMPCThemeButton.h"
+#include "CMPCThemeRadioOrCheck.h"
+#include "CMPCThemeEdit.h"
+#include "CMPCThemeSpinButtonCtrl.h"
 
 
 // CPPageMisc dialog
 
-class CPPageMisc : public CPPageBase
+class CPPageMisc : public CMPCThemePPageBase
 {
     DECLARE_DYNAMIC(CPPageMisc)
 
 private:
-    int m_iBrightness;
-    int m_iContrast;
-    int m_iHue;
-    int m_iSaturation;
-    CString m_sBrightness;
-    CString m_sContrast;
-    CString m_sHue;
-    CString m_sSaturation;
-
-    CButton m_updaterAutoCheckCtrl;
-    CEdit m_updaterDelayCtrl;
-    CSpinButtonCtrl m_updaterDelaySpin;
+    CMPCThemeRadioOrCheck m_updaterAutoCheckCtrl;
+    CMPCThemeEdit m_updaterDelayCtrl;
+    CMPCThemeSpinButtonCtrl m_updaterDelaySpin;
 
     int m_nUpdaterAutoCheck;
     int m_nUpdaterDelay;
@@ -62,19 +57,14 @@ protected:
     DECLARE_MESSAGE_MAP()
 
 public:
-    CSliderCtrl m_SliContrast;
-    CSliderCtrl m_SliBrightness;
-    CSliderCtrl m_SliHue;
-    CSliderCtrl m_SliSaturation;
-    CButton m_ExportKeys;
-    afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
-    afx_msg void OnBnClickedReset();
+    CMPCThemeButton m_ExportKeys;
 
     afx_msg void OnUpdateDelayEditBox(CCmdUI* pCmdUI);
 
     afx_msg void OnResetSettings();
     afx_msg void OnExportSettings();
     afx_msg void OnExportKeys();
+    afx_msg void OnColorControls();
 
-    virtual void OnCancel();
+    void AdjustDynamicWidgets();
 };

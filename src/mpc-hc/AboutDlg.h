@@ -20,20 +20,17 @@
 
 #pragma once
 
-#include <afxwin.h>
 #include "resource.h"
+#include "CMPCThemeDialog.h"
 
-class CAboutDlg : public CDialog
+class CAboutDlg : public CMPCThemeDialog
 {
     CStatic m_icon;
 
     CString m_appname;
-    CString m_credits;
-    CString m_AuthorsPath;
     CString m_homepage;
 
     CString m_strBuildNumber;
-    CString m_MPCCompiler;
     CString m_LAVFilters;
 #ifndef MPCHC_LITE
     CString m_LAVFiltersVersion;
@@ -45,11 +42,9 @@ class CAboutDlg : public CDialog
 
 public:
     CAboutDlg();
+    virtual ~CAboutDlg();
 
     virtual BOOL OnInitDialog();
-
-    afx_msg void OnHomepage(NMHDR* pNMHDR, LRESULT* pResult);
-    afx_msg void OnAuthors(NMHDR* pNMHDR, LRESULT* pResult);
 
     // Dialog Data
     //{{AFX_DATA(CAboutDlg)
@@ -65,9 +60,8 @@ protected:
     // Implementation
 protected:
     //{{AFX_MSG(CAboutDlg)
-    // No message handlers
+    afx_msg void OnCopyToClipboard();
+    afx_msg void OnHomepage(NMHDR* pNMHDR, LRESULT* pResult);
     //}}AFX_MSG
     DECLARE_MESSAGE_MAP()
-
-    afx_msg void OnCopyToClipboard();
 };

@@ -70,10 +70,14 @@ private:
     CPoint m_beginDragPoint;
     CPoint m_hideCursorPoint;
     bool m_bLeftDown;
+    bool m_bLeftUpDelayed;
+    CPoint m_LeftUpPoint;
     bool m_bLeftDoubleStarted;
     CPoint m_leftDoubleStartPoint;
-    int m_leftDoubleStartTime;
+    LONG m_leftDoubleStartTime;
     int m_popupMenuUninitTime;
+    int m_doubleclicktime;
+    bool m_bWaitingRButtonUp = false;
 
     std::pair<bool, CPoint> m_switchingToFullscreen;
 
@@ -88,8 +92,8 @@ private:
 
     CPoint GetVideoPoint(const CPoint& point) const;
     bool IsOnFullscreenWindow() const;
-    bool OnButton(UINT id, const CPoint& point, bool bOnFullscreen);
-    bool OnButton(UINT id, const CPoint& point);
+    WORD AssignedMouseToCmd(UINT mouseValue, UINT nFlags);
+    bool OnButton(UINT id, const CPoint& point, int nFlags=0);
     bool SelectCursor(const CPoint& screenPoint, const CPoint& clientPoint, UINT nFlags);
     void SetCursor(UINT nFlags, const CPoint& screenPoint, const CPoint& clientPoint);
     void SetCursor(UINT nFlags, const CPoint& clientPoint);
@@ -103,6 +107,9 @@ private:
     void MVRMove(UINT nFlags, const CPoint& point);
     bool MVRDown(UINT nFlags, const CPoint& point);
     bool MVRUp(UINT nFlags, const CPoint& point);
+
+    void PerformDelayedLeftUp();
+    static void CALLBACK OnTimerLeftUp(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime);
 
 protected:
     void InternalOnLButtonDown(UINT nFlags, const CPoint& point);
@@ -121,6 +128,8 @@ protected:
     void InternalOnMouseMove(UINT nFlags, const CPoint& point);
     void InternalOnMouseLeave();
     void InternalOnDestroy();
+public:
+    BOOL OnMouseHWheelImpl(UINT nFlags, short zDelta, const CPoint& point);
 };
 
 class CMouseWnd : public CWnd, public CMouse
@@ -149,6 +158,7 @@ private:
     void OnXButtonDblClk(UINT nFlags, UINT nButton, CPoint point);
 
     BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint point);
+    void OnMouseHWheel(UINT nFlags, short zDelta, CPoint point);
 
     BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
 

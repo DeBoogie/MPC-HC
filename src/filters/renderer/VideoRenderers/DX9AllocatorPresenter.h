@@ -22,12 +22,10 @@
 #pragma once
 
 #include "DX9RenderingEngine.h"
+#include <evr9.h>
 
 #define VMRBITMAP_UPDATE    0x80000000
 #define NB_JITTER           126
-
-extern bool g_bNoDuration;
-extern bool g_bExternalSubtitleTime;
 
 class CFocusThread;
 
@@ -48,26 +46,23 @@ namespace DSObjects
         int     m_OrderedPaint;
         int     m_VSyncMode;
         bool    m_bDesktopCompositionDisabled;
-        bool    m_bIsFullscreen;
+        bool    m_bIsFullscreen, fullScreenChanged;
         bool    m_bNeedCheckSample;
         DWORD   m_MainThreadId;
-
+        bool    m_bIsPreview;
         bool    m_bIsRendering;
 
         CRenderersSettings::CAdvRendererSettings m_LastRendererSettings;
 
         HMODULE m_hDWMAPI;
-        HMODULE m_hD3D9;
 
         HRESULT(__stdcall* m_pDwmIsCompositionEnabled)(__out BOOL* pfEnabled);
         HRESULT(__stdcall* m_pDwmEnableComposition)(UINT uCompositionAction);
-        HRESULT(__stdcall* m_pDirect3DCreate9Ex)(UINT SDKVersion, IDirect3D9Ex**);
-        decltype(&Direct3DCreate9) m_pDirect3DCreate9;
 
         CCritSec m_RenderLock;
         CComPtr<IDirectDraw> m_pDirectDraw;
 
-        void LockD3DDevice() {
+        HANDLE LockD3DDevice() {
             if (m_pD3DDev) {
                 _RTL_CRITICAL_SECTION* pCritSec = (_RTL_CRITICAL_SECTION*)((size_t)m_pD3DDev.p + sizeof(size_t));
 
@@ -75,18 +70,20 @@ namespace DSObjects
                         && !IsBadReadPtr(pCritSec->DebugInfo, sizeof(*(pCritSec->DebugInfo))) && !IsBadWritePtr(pCritSec->DebugInfo, sizeof(*(pCritSec->DebugInfo)))) {
                     if (pCritSec->DebugInfo->CriticalSection == pCritSec) {
                         EnterCriticalSection(pCritSec);
+                        return pCritSec->OwningThread;
                     }
                 }
             }
+            return 0;
         }
 
-        void UnlockD3DDevice() {
+        void UnlockD3DDevice(HANDLE& lockOwner) {
             if (m_pD3DDev) {
                 _RTL_CRITICAL_SECTION* pCritSec = (_RTL_CRITICAL_SECTION*)((size_t)m_pD3DDev.p + sizeof(size_t));
 
                 if (!IsBadReadPtr(pCritSec, sizeof(*pCritSec)) && !IsBadWritePtr(pCritSec, sizeof(*pCritSec))
                         && !IsBadReadPtr(pCritSec->DebugInfo, sizeof(*(pCritSec->DebugInfo))) && !IsBadWritePtr(pCritSec->DebugInfo, sizeof(*(pCritSec->DebugInfo)))) {
-                    if (pCritSec->DebugInfo->CriticalSection == pCritSec) {
+                    if (pCritSec->DebugInfo->CriticalSection == pCritSec && pCritSec->OwningThread == lockOwner) {
                         LeaveCriticalSection(pCritSec);
                     }
                 }
@@ -98,9 +95,13 @@ namespace DSObjects
         CComPtr<IDirect3DSurface9>      m_pOSDSurface;
         CComPtr<ID3DXLine>              m_pLine;
         CComPtr<ID3DXFont>              m_pFont;
+        bool                            m_bAlphaBitmapEnable = false;
+        CComPtr<IDirect3DTexture9>      m_pAlphaBitmapTexture;
+        MFVideoAlphaBitmapParams        m_AlphaBitmapParams = {};
+
         CComPtr<ID3DXSprite>            m_pSprite;
 
-        bool SettingsNeedResetDevice();
+        bool SettingsNeedResetDevice(CRenderersSettings& r);
 
         virtual HRESULT CreateDevice(CString& _Error);
         virtual HRESULT AllocSurfaces();
@@ -111,8 +112,8 @@ namespace DSObjects
         DWORD GetVertexProcessing();
 
         bool GetVBlank(int& _ScanLine, int& _bInVBlank, bool _bMeasureTime);
-        bool WaitForVBlankRange(int& _RasterStart, int _RasterEnd, bool _bWaitIfInside, bool _bNeedAccurate, bool _bMeasure, bool& _bTakenLock);
-        bool WaitForVBlank(bool& _Waited, bool& _bTakenLock);
+        bool WaitForVBlankRange(int& _RasterStart, int _RasterEnd, bool _bWaitIfInside, bool _bNeedAccurate, bool _bMeasure, HANDLE& lockOwner);
+        bool WaitForVBlank(bool& _Waited, HANDLE& lockOwner);
         int GetVBlackPos();
         void CalculateJitter(LONGLONG PerformanceCounter);
         virtual void OnVBlankFinished(bool bAll, LONGLONG PerformanceCounter) {}
@@ -235,7 +236,6 @@ namespace DSObjects
         double                  m_DetectedFrameTimeHistoryHistory[500];
         int                     m_DetectedFrameTimePos;
         int                     m_bInterlaced;
-        FF_FIELD_TYPE           m_nFrameType;
 
         int                     m_VBlankEndWait;
         int                     m_VBlankStartWait;
@@ -289,7 +289,7 @@ namespace DSObjects
         HWND                    m_hFocusWindow;
 
     public:
-        CDX9AllocatorPresenter(HWND hWnd, bool bFullscreen, HRESULT& hr, bool bIsEVR, CString& _Error);
+        CDX9AllocatorPresenter(HWND hWnd, bool bFullscreen, HRESULT& hr, bool bIsEVR, CString& _Error, bool isPreview = false);
         ~CDX9AllocatorPresenter();
 
         // ISubPicAllocatorPresenter

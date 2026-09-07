@@ -57,11 +57,14 @@ public:
     void Start(CWnd* pWnd, IMadVRTextOsd* pMVTO);
     void Stop();
 
+    void DisplayTime(LPCTSTR strTime);
     void DisplayMessage(OSD_MESSAGEPOS nPos, LPCTSTR strMsg, int nDuration = 5000, int iFontSize = 0, CString fontName = _T(""));
     void DebugMessage(LPCTSTR format, ...);
+    void ClearTime();
     void ClearMessage(bool hide = false);
     void HideMessage(bool hide);
     void EnableShowMessage(bool enabled = true);
+    bool CanShowMessage();
 
     __int64 GetPos() const;
     void SetPos(__int64 pos);
@@ -104,6 +107,9 @@ private:
     CBrush  m_debugBrushBack;
     int     m_iFontSize;
     CString m_fontName;
+
+    CStringW currentTime;
+    DWORD   timerExpires, timerExpiresForTime;
 
     CRect    m_rectWnd;
     COLORREF m_colors[OSD_LAST];

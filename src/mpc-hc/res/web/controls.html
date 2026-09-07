@@ -1,17 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8">
         <title>MPC-HC WebServer - Controls</title>
-        <link rel="stylesheet" href="default.css">
-        <link rel="icon" href="favicon.ico">
+        <meta name="viewport" content="width=device-width">
+        <meta name="color-scheme" content="light dark">
+        <link rel="stylesheet" href="/default.css">
+        <link rel="icon" href="/favicon.ico">
         <script src="javascript.js"></script>
     </head>
 <body onload='controlsInit("[filepatharg]", [position], [duration], [state], [playbackrate], [reloadtime], [volumelevel], [muted])' class="page-controls">
-<!--[if lt IE 8]>
-    <div class="browser-warning"><strong>Warning!</strong> You are using an <strong>outdated</strong> browser.
-    Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
-<![endif]-->
 <noscript>
     <p>
         <strong>JavaScript is disabled; some components may not work</strong>
@@ -815,8 +813,8 @@
                                         <tr>
                                             <td class="text-center">
                                                 <form action="[commandpath]" method="post">
-                                                    <input type="hidden" name="[wmcname]" value="886">
-                                                    <input type="submit" value="Options" name="submit" onclick="postForm(886,'null',0); return false;">
+                                                    <input type="hidden" name="[wmcname]" value="815">
+                                                    <input type="submit" value="Options" name="submit" onclick="postForm(815,'null',0); return false;">
                                                 </form>
                                             </td>
                                         </tr>
@@ -1015,39 +1013,6 @@
                             <form action="[commandpath]" method="post">
                                 <input type="hidden" name="[wmcname]" value="954">
                                 <input type="submit" value="Subtitle &gt;" name="submit" onclick="postForm(954,'null',0); return false;">
-                            </form>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-            <td width="20">&nbsp;</td>
-            <td>
-                <!-- p TODO -->OGM Audio/Subtitles
-                <table border="1" cellspacing="1" cellpadding="4">
-                    <tr>
-                        <td>
-                            <form action="[commandpath]" method="post">
-                                <input type="hidden" name="[wmcname]" value="958">
-                                <input type="submit" value="&lt; Audio" name="submit" onclick="postForm(958,'null',0); return false;">
-                            </form>
-                        </td>
-                        <td>
-                            <form action="[commandpath]" method="post">
-                                <input type="hidden" name="[wmcname]" value="957">
-                                <input type="submit" value="Audio &gt;" name="submit" onclick="postForm(957,'null',0); return false;">
-                            </form>
-                        </td>
-                        <td>&nbsp;</td>
-                        <td>
-                            <form action="[commandpath]" method="post">
-                                <input type="hidden" name="[wmcname]" value="960">
-                                <input type="submit" value="&lt; Subtitle" name="submit" onclick="postForm(960,'null',0); return false;">
-                            </form>
-                        </td>
-                        <td>
-                            <form action="[commandpath]" method="post">
-                                <input type="hidden" name="[wmcname]" value="959">
-                                <input type="submit" value="Subtitle &gt;" name="submit" onclick="postForm(959,'null',0); return false;">
                             </form>
                         </td>
                     </tr>

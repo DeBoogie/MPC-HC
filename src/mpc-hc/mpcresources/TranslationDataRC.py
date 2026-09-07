@@ -60,13 +60,13 @@ END
 
 
 class TranslationDataRC(TranslationData):
-    dialogStart = re.compile(ur'^([^ ]+) DIALOGEX \d+, \d+, \d+, \d+\r\n', re.UNICODE)
-    menuStart = re.compile(ur'^([^ ]+) MENU\r\n', re.UNICODE)
-    stringTableStart = re.compile(ur'^STRINGTABLE\r\n', re.UNICODE)
-    dialogEntry = re.compile(ur'^\s*[^ ]+\s+"((?:[^"]|"")+)"(?:\s*,\s*([^, ]+)\s*,)?', re.UNICODE)
-    menuEntry = re.compile(ur'^\s*(?:POPUP|MENUITEM) "((?:[^"]|"")+)"(?:\s*,\s*([^, ]+)\r\n)?', re.UNICODE)
-    stringTableEntry = re.compile(ur'^\s*([^ ]+)\s*(?:\s+"((?:[^"]|"")+)")?\r\n', re.UNICODE)
-    excludedStrings = re.compile(ur'(?:http://|\.\.\.|\d+)$', re.UNICODE | re.IGNORECASE)
+    dialogStart = re.compile(r'^([^ ]+) DIALOGEX \d+, \d+, \d+, \d+\r\n', re.UNICODE)
+    menuStart = re.compile(r'^([^ ]+) MENU\r\n', re.UNICODE)
+    stringTableStart = re.compile(r'^STRINGTABLE\r\n', re.UNICODE)
+    dialogEntry = re.compile(r'^\s*[^ ]+\s+"((?:[^"]|"")+)"(?:\s*,\s*([^, ]+)\s*,)?', re.UNICODE)
+    menuEntry = re.compile(r'^\s*(?:POPUP|MENUITEM) "((?:[^"]|"")+)"(?:\s*,\s*([^, ]+)\r\n)?', re.UNICODE)
+    stringTableEntry = re.compile(r'^\s*([^ ]+)\s*(?:\s+"((?:[^"]|"")+)")?\r\n', re.UNICODE)
+    excludedStrings = re.compile(r'(?:http://|\.\.\.|\d+)$', re.UNICODE | re.IGNORECASE)
     versionInfo = versionInfo.replace('\n', '\r\n')
 
     def loadFromRC(self, filename):
@@ -144,7 +144,7 @@ class TranslationDataRC(TranslationData):
 
     def translateRC(self, filenameBase, filenameRC):
         config = ConfigParser.RawConfigParser()
-        config.readfp(codecs.open('cfg\\' + filenameRC + '.cfg', 'r', 'utf8'))
+        config.read_file(codecs.open('cfg\\' + filenameRC + '.cfg', 'r', 'utf8'))
 
         with codecs.open(filenameBase, 'r', detectEncoding(filenameBase)) as fBase, \
                 codecs.open(filenameRC + '.rc', 'w', 'utf16') as fOut:

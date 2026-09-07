@@ -26,6 +26,93 @@
 
 #define __DUMMY__ _T("*.*")
 
+namespace FileDialogUtils
+{
+    static void AppendPath(IShellItem* pItem, CAtlList<CString>& paths)
+    {
+        CComHeapPtr<WCHAR> path;
+        if (SUCCEEDED(pItem->GetDisplayName(SIGDN_FILESYSPATH, &path))) {
+            paths.AddTail(CString(path));
+        }
+    }
+
+    // Fallback for the old style dialog. The buffer holds a sequence of null terminated
+    // strings: either a single full path, or the folder followed by one bare file name
+    // per selected file. Note that the MSDN example for CFileDialog gets the first case
+    // wrong, it reports the path as the folder and then finds no files at all.
+    static void ParseOFNBuffer(const OPENFILENAME& ofn, CAtlList<CString>& paths)
+    {
+        const TCHAR* p = ofn.lpstrFile;
+        if (!p) {
+            return;
+        }
+
+        size_t remaining = ofn.nMaxFile;
+        size_t len = _tcsnlen(p, remaining);
+        if (len == 0 || len >= remaining) {
+            return;
+        }
+
+        CString folder(p, (int)len);
+        p += len + 1;
+        remaining -= len + 1;
+
+        len = _tcsnlen(p, remaining);
+        if (len == 0) {
+            // only one string, so it is a full path rather than a folder
+            paths.AddTail(folder);
+            return;
+        }
+
+        if (folder[folder.GetLength() - 1] != _T('\\')) {
+            folder += _T('\\');
+        }
+        while (len > 0 && len < remaining) {
+            paths.AddTail(folder + CString(p, (int)len));
+            p += len + 1;
+            remaining -= len + 1;
+            len = _tcsnlen(p, remaining);
+        }
+    }
+
+    bool GetSelectedPaths(CFileDialog& fd, CAtlList<CString>& paths)
+    {
+        // Read the result from the shell interface the dialog is built on. Unlike the
+        // OPENFILENAME buffer and CFileDialog::GetNextPathName(), IShellItem has no
+        // path length limit of its own.
+        CComPtr<IFileOpenDialog> pOpenDlg;
+        pOpenDlg.Attach(fd.GetIFileOpenDialog());
+        if (pOpenDlg) {
+            CComPtr<IShellItemArray> pItems;
+            if (SUCCEEDED(pOpenDlg->GetResults(&pItems)) && pItems) {
+                DWORD count = 0;
+                if (SUCCEEDED(pItems->GetCount(&count))) {
+                    for (DWORD i = 0; i < count; i++) {
+                        CComPtr<IShellItem> pItem;
+                        if (SUCCEEDED(pItems->GetItemAt(i, &pItem))) {
+                            AppendPath(pItem, paths);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (paths.IsEmpty()) {
+            // old style dialog, or a selection with no file system path (COpenFileDlg
+            // substitutes "*.*" when a directory was picked)
+            ParseOFNBuffer(fd.GetOFN(), paths);
+        }
+
+        return !paths.IsEmpty();
+    }
+
+    CString GetSelectedPath(CFileDialog& fd)
+    {
+        CAtlList<CString> paths;
+        return GetSelectedPaths(fd, paths) ? paths.GetHead() : CString();
+    }
+}
+
 bool COpenFileDlg::m_fAllowDirSelection = false;
 WNDPROC COpenFileDlg::m_wndProc = nullptr;
 

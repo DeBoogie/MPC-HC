@@ -2,7 +2,9 @@
 
 void Unpack::CopyString20(uint Length,uint Distance)
 {
-  LastDist=OldDist[OldDistPtr++ & 3]=Distance;
+  LastDist=Distance;
+  OldDist[OldDistPtr++]=Distance;
+  OldDistPtr = OldDistPtr & 3; // Needed if RAR 1.5 file is called after RAR 2.0.
   LastLength=Length;
   DestUnpSize-=Length;
   CopyString(Length,Distance);
@@ -34,6 +36,9 @@ void Unpack::Unpack20(bool Solid)
   while (DestUnpSize>=0)
   {
     UnpPtr&=MaxWinMask;
+
+    FirstWinDone|=(PrevPtr>UnpPtr);
+    PrevPtr=UnpPtr;
 
     if (Inp.InAddr>ReadTop-30)
       if (!UnpReadBuf())
@@ -108,7 +113,7 @@ void Unpack::Unpack20(bool Solid)
     }
     if (Number<261)
     {
-      uint Distance=OldDist[(OldDistPtr-(Number-256)) & 3];
+      uint Distance=(uint)OldDist[(OldDistPtr-(Number-256)) & 3];
       uint LengthNumber=DecodeNumber(Inp,&BlockTables.RD);
       uint Length=LDecode[LengthNumber]+2;
       if ((Bits=LBits[LengthNumber])>0)
@@ -154,7 +159,11 @@ void Unpack::UnpWriteBuf20()
   {
     UnpIO->UnpWrite(&Window[WrPtr],-(int)WrPtr & MaxWinMask);
     UnpIO->UnpWrite(Window,UnpPtr);
-    UnpAllBuf=true;
+    
+    // 2024.12.24: Before 7.10 we set "UnpAllBuf=true" here. It was needed for
+    // Pack::PrepareSolidAppend(). Since both UnpAllBuf and FirstWinDone
+    // variables indicate the same thing and we set FirstWinDone in other place
+    // anyway, we replaced UnpAllBuf with FirstWinDone and removed this code.
   }
   else
     UnpIO->UnpWrite(&Window[WrPtr],UnpPtr-WrPtr);
@@ -248,7 +257,7 @@ bool Unpack::ReadTables20()
     MakeDecodeTables(&Table[NC20],&BlockTables.DD,DC20);
     MakeDecodeTables(&Table[NC20+DC20],&BlockTables.RD,RC20);
   }
-  memcpy(UnpOldTable20,Table,sizeof(UnpOldTable20));
+  memcpy(UnpOldTable20,Table,TableSize);
   return true;
 }
 

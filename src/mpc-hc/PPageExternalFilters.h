@@ -21,12 +21,16 @@
 
 #pragma once
 
-#include "PPageBase.h"
+#include "CMPCThemePPageBase.h"
 #include "FloatEdit.h"
 #include "DropTarget.h"
+#include "CMPCThemePlayerListCtrl.h"
+#include "CMPCThemeTreeCtrl.h"
 
+bool IsExternalVideoRenderer(CLSID clsid);
+bool IgnoreExternalFilter(CLSID clsid);
 
-class CPPageExternalFiltersListBox : public CListCtrl
+class CPPageExternalFiltersListBox : public CMPCThemePlayerListCtrl
 {
     DECLARE_DYNAMIC(CPPageExternalFiltersListBox)
 
@@ -45,7 +49,7 @@ protected:
 
 // CPPageExternalFilters dialog
 
-class CPPageExternalFilters : public CPPageBase, public CDropClient
+class CPPageExternalFilters : public CMPCThemePPageBase, public CDropClient
 {
     DECLARE_DYNAMIC(CPPageExternalFilters)
 
@@ -62,8 +66,8 @@ private:
 
     CPPageExternalFiltersListBox m_filters;
     int m_iLoadType;
-    CHexEdit m_dwMerit;
-    CTreeCtrl m_tree;
+    CMPCThemeHexEdit m_dwMerit;
+    CMPCThemeTreeCtrl m_tree;
 
     CDropTarget m_dropTarget;
     void OnDropFiles(CAtlList<CString>& slFiles, DROPEFFECT) override;

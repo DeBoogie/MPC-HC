@@ -21,12 +21,13 @@
 
 #pragma once
 
-#include "PPageBase.h"
-
+#include "CMPCThemePPageBase.h"
+#include "CMPCThemeComboBox.h"
+#include "CMPCThemeSpinButtonCtrl.h"
 
 // CPPageTweaks dialog
 
-class CPPageTweaks : public CPPageBase
+class CPPageTweaks : public CMPCThemePPageBase
 {
     DECLARE_DYNAMIC(CPPageTweaks)
 
@@ -39,23 +40,13 @@ public:
     int m_nJumpDistS;
     int m_nJumpDistM;
     int m_nJumpDistL;
-    BOOL m_fNotifySkype;
 
     BOOL m_fPreventMinimize;
-    BOOL m_bUseEnhancedTaskBar;
     BOOL m_fUseSearchInFolder;
-    BOOL m_fUseTimeTooltip;
     BOOL m_bHideWindowedMousePointer;
-    CComboBox m_TimeTooltipPosition;
-    CComboBox m_FontSize;
-    CComboBox m_FontType;
-    CComboBox m_FastSeekMethod;
-    int m_nOSDSize;
-    CString m_strOSDFont;
+    CMPCThemeComboBox m_FastSeekMethod;
 
     BOOL m_fFastSeek;
-    BOOL m_fShowChapters;
-
     BOOL m_fLCDSupport;
 
 protected:
@@ -69,6 +60,4 @@ public:
     afx_msg BOOL OnToolTipNotify(UINT id, NMHDR* pNMH, LRESULT* pResult);
     afx_msg void OnUpdateFastSeek(CCmdUI* pCmdUI);
     afx_msg void OnBnClickedButton1();
-    afx_msg void OnUseTimeTooltipClicked();
-    afx_msg void OnChngOSDCombo();
 };

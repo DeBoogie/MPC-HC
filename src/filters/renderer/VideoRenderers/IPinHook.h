@@ -21,8 +21,6 @@
 
 #pragma once
 
-#include <videoacc.h>
-
 interface IPinC;
 
 typedef struct IPinCVtbl {
@@ -74,114 +72,11 @@ interface IMemInputPinC
     CONST_VTBL struct IMemInputPinCVtbl* lpVtbl;
 };
 
-extern bool HookNewSegmentAndReceive(IPinC* pPinC, IMemInputPinC* pMemInputPin);
-extern void UnhookNewSegmentAndReceive();
+extern bool HookNewSegment(IPinC* pPinC);
+extern bool HookReceive(IMemInputPinC* pMemInputPin);
+extern void UnhookNewSegment();
+extern void UnhookReceive();
 extern REFERENCE_TIME g_tSegmentStart, g_tSampleStart, g_rtTimePerFrame;
 
-extern void HookWorkAround10BitBug(IBaseFilter* pBF);
-extern void UnhookWorkAround10BitBug();
-
-//
-
-interface IAMVideoAcceleratorC;
-
-typedef struct IAMVideoAcceleratorCVtbl {
-    BEGIN_INTERFACE
-
-    HRESULT(STDMETHODCALLTYPE* QueryInterface)(
-        IAMVideoAcceleratorC* This,
-        /* [in] */ REFIID riid,
-        /* [iid_is][out] */ void** ppvObject);
-
-    ULONG(STDMETHODCALLTYPE* AddRef)(
-        IAMVideoAcceleratorC* This);
-
-    ULONG(STDMETHODCALLTYPE* Release)(
-        IAMVideoAcceleratorC* This);
-
-    HRESULT(STDMETHODCALLTYPE* GetVideoAcceleratorGUIDs)(
-        IAMVideoAcceleratorC* This,
-        /* [out][in] */ LPDWORD pdwNumGuidsSupported,
-        /* [out][in] */ LPGUID pGuidsSupported);
-
-    HRESULT(STDMETHODCALLTYPE* GetUncompFormatsSupported)(
-        IAMVideoAcceleratorC* This,
-        /* [in] */ const GUID* pGuid,
-        /* [out][in] */ LPDWORD pdwNumFormatsSupported,
-        /* [out][in] */ LPDDPIXELFORMAT pFormatsSupported);
-
-    HRESULT(STDMETHODCALLTYPE* GetInternalMemInfo)(
-        IAMVideoAcceleratorC* This,
-        /* [in] */ const GUID* pGuid,
-        /* [in] */ const AMVAUncompDataInfo* pamvaUncompDataInfo,
-        /* [out][in] */ LPAMVAInternalMemInfo pamvaInternalMemInfo);
-
-    HRESULT(STDMETHODCALLTYPE* GetCompBufferInfo)(
-        IAMVideoAcceleratorC* This,
-        /* [in] */ const GUID* pGuid,
-        /* [in] */ const AMVAUncompDataInfo* pamvaUncompDataInfo,
-        /* [out][in] */ LPDWORD pdwNumTypesCompBuffers,
-        /* [out] */ LPAMVACompBufferInfo pamvaCompBufferInfo);
-
-    HRESULT(STDMETHODCALLTYPE* GetInternalCompBufferInfo)(
-        IAMVideoAcceleratorC* This,
-        /* [out][in] */ LPDWORD pdwNumTypesCompBuffers,
-        /* [out] */ LPAMVACompBufferInfo pamvaCompBufferInfo);
-
-    HRESULT(STDMETHODCALLTYPE* BeginFrame)(
-        IAMVideoAcceleratorC* This,
-        /* [in] */ const AMVABeginFrameInfo* amvaBeginFrameInfo);
-
-    HRESULT(STDMETHODCALLTYPE* EndFrame)(
-        IAMVideoAcceleratorC* This,
-        /* [in] */ const AMVAEndFrameInfo* pEndFrameInfo);
-
-    HRESULT(STDMETHODCALLTYPE* GetBuffer)(
-        IAMVideoAcceleratorC* This,
-        /* [in] */ DWORD dwTypeIndex,
-        /* [in] */ DWORD dwBufferIndex,
-        /* [in] */ BOOL bReadOnly,
-        /* [out] */ LPVOID* ppBuffer,
-        /* [out] */ LONG* lpStride);
-
-    HRESULT(STDMETHODCALLTYPE* ReleaseBuffer)(
-        IAMVideoAcceleratorC* This,
-        /* [in] */ DWORD dwTypeIndex,
-        /* [in] */ DWORD dwBufferIndex);
-
-    HRESULT(STDMETHODCALLTYPE* Execute)(
-        IAMVideoAcceleratorC* This,
-        /* [in] */ DWORD dwFunction,
-        /* [in] */ LPVOID lpPrivateInputData,
-        /* [in] */ DWORD cbPrivateInputData,
-        /* [in] */ LPVOID lpPrivateOutputDat,
-        /* [in] */ DWORD cbPrivateOutputData,
-        /* [in] */ DWORD dwNumBuffers,
-        /* [in] */ const AMVABUFFERINFO* pamvaBufferInfo);
-
-    HRESULT(STDMETHODCALLTYPE* QueryRenderStatus)(
-        IAMVideoAcceleratorC* This,
-        /* [in] */ DWORD dwTypeIndex,
-        /* [in] */ DWORD dwBufferIndex,
-        /* [in] */ DWORD dwFlags);
-
-    HRESULT(STDMETHODCALLTYPE* DisplayFrame)(
-        IAMVideoAcceleratorC* This,
-        /* [in] */ DWORD dwFlipToIndex,
-        /* [in] */ IMediaSample* pMediaSample);
-
-    END_INTERFACE
-} IAMVideoAcceleratorCVtbl;
-
-interface IAMVideoAcceleratorC
-{
-    CONST_VTBL struct IAMVideoAcceleratorCVtbl* lpVtbl;
-};
-
-void HookAMVideoAccelerator(IAMVideoAcceleratorC* pAMVideoAcceleratorC);
-
-// DXVA2 hooks
-void HookDirectXVideoDecoderService(void* pIDirectXVideoDecoderService);
-LPCTSTR GetDXVADecoderDescription();
-LPCTSTR GetDXVAVersion();
-void ClearDXVAState();
+extern bool HookReceiveConnection(IBaseFilter* pBF);
+extern void UnhookReceiveConnection();

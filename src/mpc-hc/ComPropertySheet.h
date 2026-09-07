@@ -21,8 +21,8 @@
 
 #pragma once
 
-#include "ComPropertyPage.h"
-
+#include "CMPCThemeComPropertyPage.h"
+#include "CMPCThemeUtil.h"
 
 interface IComPropertyPageDirty
 {
@@ -31,13 +31,15 @@ interface IComPropertyPageDirty
 
 // CComPropertySheet
 
-class CComPropertySheet : public CPropertySheet, public IComPropertyPageDirty
+class CComPropertySheet : public CPropertySheet
+    , public IComPropertyPageDirty
+    , public CMPCThemeUtil
 {
     DECLARE_DYNAMIC(CComPropertySheet)
 
     CComPtr<IPropertyPageSite> m_pSite;
     CInterfaceList<ISpecifyPropertyPages> m_spp;
-    CAutoPtrList<CComPropertyPage> m_pages;
+    CAutoPtrList<CMPCThemeComPropertyPage> m_pages;
     CSize m_size;
 
 public:
@@ -45,7 +47,7 @@ public:
     CComPropertySheet(LPCTSTR pszCaption, CWnd* pParentWnd = nullptr, UINT iSelectPage = 0);
     virtual ~CComPropertySheet();
 
-    int AddPages(ISpecifyPropertyPages* pSPP, ULONG uIgnorePage = ULONG(-1));
+    int AddPages(ISpecifyPropertyPages* pSPP, bool internalfilter = false, ULONG uIgnorePage = ULONG(-1));
     bool AddPage(IPropertyPage* pPage, IUnknown* pUnk);
 
     void OnActivated(CPropertyPage* pPage);
@@ -58,6 +60,10 @@ public:
     }
 
     virtual BOOL OnInitDialog();
+    void fulfillThemeReqs();
+    virtual INT_PTR DoModal(); //override to handle RTL without using SetWindowLongPtr
+
+    afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 
 protected:
     DECLARE_MESSAGE_MAP()

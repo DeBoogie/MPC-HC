@@ -24,7 +24,8 @@
 #include "ComPropertySheet.h"
 #include "DSUtil.h"
 #include "../filters/InternalPropertyPage.h"
-
+#include "CMPCTheme.h"
+#include "CMPCThemeUtil.h"
 
 // CComPropertyPageSite
 
@@ -88,7 +89,7 @@ CComPropertySheet::~CComPropertySheet()
 {
 }
 
-int CComPropertySheet::AddPages(ISpecifyPropertyPages* pSPP, ULONG uIgnorePage /*= -1*/)
+int CComPropertySheet::AddPages(ISpecifyPropertyPages* pSPP, bool internalfilter /*= false*/, ULONG uIgnorePage /*= -1*/)
 {
     if (!pSPP) {
         return 0;
@@ -120,11 +121,15 @@ int CComPropertySheet::AddPages(ISpecifyPropertyPages* pSPP, ULONG uIgnorePage /
             hr = pSPP2->CreatePage(caGUID.pElems[i], &pPage);
         }
 
+        if (FAILED(hr) && internalfilter && !pPage && pPersist) {
+            hr = LoadExternalPropertyPage(pPersist, caGUID.pElems[i], &pPage);
+        }
+
         if (FAILED(hr) && !pPage) {
             hr = pPage.CoCreateInstance(caGUID.pElems[i]);
         }
 
-        if (FAILED(hr) && !pPage && pPersist) {
+        if (FAILED(hr) && !internalfilter && !pPage && pPersist) {
             hr = LoadExternalPropertyPage(pPersist, caGUID.pElems[i], &pPage);
         }
 
@@ -153,7 +158,7 @@ bool CComPropertySheet::AddPage(IPropertyPage* pPage, IUnknown* pUnk)
     pPage->GetPageInfo(&ppi);
     m_size.cx = std::max(m_size.cx, ppi.size.cx);
     m_size.cy = std::max(m_size.cy, ppi.size.cy);
-    CAutoPtr<CComPropertyPage> p(DEBUG_NEW CComPropertyPage(pPage));
+    CAutoPtr<CMPCThemeComPropertyPage> p(DEBUG_NEW CMPCThemeComPropertyPage(pPage));
     __super::AddPage(p);
     m_pages.AddTail(p);
 
@@ -200,12 +205,15 @@ void CComPropertySheet::OnActivated(CPropertyPage* pPage)
 
     CRect r = CRect(CPoint(0, 0), bounds.Size());
     pTC->AdjustRect(TRUE, r);
+
+    CSize diff = r.Size() - tws;
+    MoveWindow(CRect(wr.TopLeft(), ws + diff));
+
     r.SetRect(twr.TopLeft(), twr.TopLeft() + r.Size());
     ScreenToClient(r);
     pTC->MoveWindow(r);
     pTC->ModifyStyle(TCS_MULTILINE, TCS_SINGLELINE);
-
-    CSize diff = r.Size() - tws;
+    pTC->GetWindowRect(twr);
 
     if (!bounds.IsRectEmpty()) {
         if (CWnd* pChild = pPage->GetWindow(GW_CHILD)) {
@@ -226,13 +234,13 @@ void CComPropertySheet::OnActivated(CPropertyPage* pPage)
         }
     }
 
-    MoveWindow(CRect(wr.TopLeft(), ws + diff));
 
     Invalidate();
 }
 
 
 BEGIN_MESSAGE_MAP(CComPropertySheet, CPropertySheet)
+    ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 
@@ -246,5 +254,36 @@ BOOL CComPropertySheet::OnInitDialog()
         CenterWindow();
     }
 
+    fulfillThemeReqs();
+    CMPCThemeUtil::enableWindows10DarkFrame(this);
     return bResult;
+}
+
+void CComPropertySheet::fulfillThemeReqs()
+{
+    if (AppNeedsThemedControls()) {
+        CMPCThemeUtil::fulfillThemeReqs((CWnd*)this);
+    }
+}
+
+HBRUSH CComPropertySheet::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+    if (AppNeedsThemedControls()) {
+        LRESULT lResult;
+        if (pWnd->SendChildNotifyLastMsg(&lResult)) {
+            return (HBRUSH)lResult;
+        }
+        pDC->SetTextColor(CMPCTheme::TextFGColor);
+        pDC->SetBkColor(CMPCTheme::ControlAreaBGColor);
+        return controlAreaBrush;
+    } else {
+        HBRUSH hbr = __super::OnCtlColor(pDC, pWnd, nCtlColor);
+        return hbr;
+    }
+}
+
+
+INT_PTR CComPropertySheet::DoModal() {
+    PreDoModalRTL(&m_psh);
+    return __super::DoModal();
 }

@@ -28,21 +28,16 @@
 
 // CPPageTweaks dialog
 
-IMPLEMENT_DYNAMIC(CPPageTweaks, CPPageBase)
+IMPLEMENT_DYNAMIC(CPPageTweaks, CMPCThemePPageBase)
 CPPageTweaks::CPPageTweaks()
-    : CPPageBase(CPPageTweaks::IDD, CPPageTweaks::IDD)
+    : CMPCThemePPageBase(CPPageTweaks::IDD, CPPageTweaks::IDD)
     , m_nJumpDistS(0)
     , m_nJumpDistM(0)
     , m_nJumpDistL(0)
-    , m_fNotifySkype(TRUE)
     , m_fPreventMinimize(FALSE)
-    , m_bUseEnhancedTaskBar(TRUE)
     , m_fUseSearchInFolder(FALSE)
-    , m_fUseTimeTooltip(TRUE)
     , m_bHideWindowedMousePointer(TRUE)
-    , m_nOSDSize(0)
     , m_fFastSeek(FALSE)
-    , m_fShowChapters(TRUE)
     , m_fLCDSupport(FALSE)
 {
 }
@@ -57,28 +52,12 @@ void CPPageTweaks::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT1, m_nJumpDistS);
     DDX_Text(pDX, IDC_EDIT2, m_nJumpDistM);
     DDX_Text(pDX, IDC_EDIT3, m_nJumpDistL);
-    DDX_Check(pDX, IDC_CHECK4, m_fNotifySkype);
     DDX_Check(pDX, IDC_CHECK6, m_fPreventMinimize);
-    DDX_Check(pDX, IDC_CHECK_ENHANCED_TASKBAR, m_bUseEnhancedTaskBar);
     DDX_Check(pDX, IDC_CHECK7, m_fUseSearchInFolder);
-    DDX_Check(pDX, IDC_CHECK8, m_fUseTimeTooltip);
-    DDX_Control(pDX, IDC_COMBO3, m_TimeTooltipPosition);
-    DDX_Control(pDX, IDC_COMBO1, m_FontType);
-    DDX_Control(pDX, IDC_COMBO2, m_FontSize);
     DDX_Control(pDX, IDC_COMBO4, m_FastSeekMethod);
     DDX_Check(pDX, IDC_FASTSEEK_CHECK, m_fFastSeek);
-    DDX_Check(pDX, IDC_CHECK2, m_fShowChapters);
     DDX_Check(pDX, IDC_CHECK_LCD, m_fLCDSupport);
     DDX_Check(pDX, IDC_CHECK3, m_bHideWindowedMousePointer);
-}
-
-int CALLBACK EnumFontProc(ENUMLOGFONT FAR* lf, NEWTEXTMETRIC FAR* tm, int FontType, LPARAM dwData)
-{
-    CAtlArray<CString>* fntl = (CAtlArray<CString>*)dwData;
-    if (FontType == TRUETYPE_FONTTYPE) {
-        fntl->Add(lf->elfFullName);
-    }
-    return 1; /* Continue the enumeration */
 }
 
 BOOL CPPageTweaks::OnInitDialog()
@@ -92,68 +71,22 @@ BOOL CPPageTweaks::OnInitDialog()
     m_nJumpDistS = s.nJumpDistS;
     m_nJumpDistM = s.nJumpDistM;
     m_nJumpDistL = s.nJumpDistL;
-    m_fNotifySkype = s.bNotifySkype;
 
     m_fPreventMinimize = s.fPreventMinimize;
 
-    m_bUseEnhancedTaskBar = s.bUseEnhancedTaskBar;
-    if (!IsWindows7OrGreater()) {
-        GetDlgItem(IDC_CHECK_ENHANCED_TASKBAR)->EnableWindow(FALSE);
-    }
-
     m_fUseSearchInFolder = s.fUseSearchInFolder;
 
-    m_fUseTimeTooltip = s.fUseTimeTooltip;
-    m_TimeTooltipPosition.AddString(ResStr(IDS_TIME_TOOLTIP_ABOVE));
-    m_TimeTooltipPosition.AddString(ResStr(IDS_TIME_TOOLTIP_BELOW));
-    m_TimeTooltipPosition.SetCurSel(s.nTimeTooltipPosition);
-    m_TimeTooltipPosition.EnableWindow(m_fUseTimeTooltip);
-
-    m_nOSDSize = s.nOSDSize;
-    m_strOSDFont = s.strOSDFont;
 
     m_fFastSeek = s.bFastSeek;
     m_FastSeekMethod.AddString(ResStr(IDS_FASTSEEK_LATEST));
     m_FastSeekMethod.AddString(ResStr(IDS_FASTSEEK_NEAREST));
     m_FastSeekMethod.SetCurSel(s.eFastSeekMethod);
-
-    m_fShowChapters = s.fShowChapters;
-
     m_bHideWindowedMousePointer = s.bHideWindowedMousePointer;
 
     m_fLCDSupport = s.fLCDSupport;
 
-    m_FontType.Clear();
-    m_FontSize.Clear();
-    HDC dc = CreateDC(_T("DISPLAY"), nullptr, nullptr, nullptr);
-    CAtlArray<CString> fntl;
-    EnumFontFamilies(dc, nullptr, (FONTENUMPROC)EnumFontProc, (LPARAM)&fntl);
-    DeleteDC(dc);
-    for (size_t i = 0; i < fntl.GetCount(); ++i) {
-        if (i > 0 && fntl[i - 1] == fntl[i]) {
-            continue;
-        }
-        m_FontType.AddString(fntl[i]);
-    }
-    CorrectComboListWidth(m_FontType);
-    int iSel = m_FontType.FindStringExact(0, m_strOSDFont);
-    if (iSel == CB_ERR) {
-        iSel = 0;
-    }
-    m_FontType.SetCurSel(iSel);
-
-    CString str;
-    for (int i = 10; i < 26; ++i) {
-        str.Format(_T("%d"), i);
-        m_FontSize.AddString(str);
-        if (m_nOSDSize == i) {
-            iSel = i;
-        }
-    }
-    m_FontSize.SetCurSel(iSel - 10);
-
     CreateToolTip();
-    EnableToolTips(TRUE);
+    EnableThemedDialogTooltips(this);
 
     UpdateData(FALSE);
 
@@ -170,46 +103,23 @@ BOOL CPPageTweaks::OnApply()
     s.nJumpDistS = m_nJumpDistS;
     s.nJumpDistM = m_nJumpDistM;
     s.nJumpDistL = m_nJumpDistL;
-    s.bNotifySkype = !!m_fNotifySkype;
 
     s.fPreventMinimize = !!m_fPreventMinimize;
-    s.bUseEnhancedTaskBar = !!m_bUseEnhancedTaskBar;
     s.fUseSearchInFolder = !!m_fUseSearchInFolder;
-    s.fUseTimeTooltip = !!m_fUseTimeTooltip;
-    s.nTimeTooltipPosition = m_TimeTooltipPosition.GetCurSel();
-    s.nOSDSize = m_nOSDSize;
-    m_FontType.GetLBText(m_FontType.GetCurSel(), s.strOSDFont);
-
-    s.bFastSeek = !!m_fFastSeek;
-    s.eFastSeekMethod = static_cast<decltype(s.eFastSeekMethod)>(m_FastSeekMethod.GetCurSel());
 
     s.bHideWindowedMousePointer = !!m_bHideWindowedMousePointer;
 
-    s.fShowChapters = !!m_fShowChapters;
 
     s.fLCDSupport = !!m_fLCDSupport;
 
-    CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
-    if (m_bUseEnhancedTaskBar) {
-        pFrame->CreateThumbnailToolbar();
-    }
-    pFrame->UpdateThumbarButton();
-
-    // There is no main frame when the option dialog is displayed stand-alone
-    if (CMainFrame* pMainFrame = AfxGetMainFrame()) {
-        pMainFrame->UpdateControlState(CMainFrame::UPDATE_SKYPE);
-        pMainFrame->UpdateControlState(CMainFrame::UPDATE_SEEKBAR_CHAPTERS);
-    }
-
+    s.bFastSeek = !!m_fFastSeek;
+    s.eFastSeekMethod = static_cast<decltype(s.eFastSeekMethod)>(m_FastSeekMethod.GetCurSel());
     return __super::OnApply();
 }
 
-BEGIN_MESSAGE_MAP(CPPageTweaks, CPPageBase)
+BEGIN_MESSAGE_MAP(CPPageTweaks, CMPCThemePPageBase)
     ON_UPDATE_COMMAND_UI(IDC_COMBO4, OnUpdateFastSeek)
     ON_BN_CLICKED(IDC_BUTTON1, OnBnClickedButton1)
-    ON_BN_CLICKED(IDC_CHECK8, OnUseTimeTooltipClicked)
-    ON_CBN_SELCHANGE(IDC_COMBO1, OnChngOSDCombo)
-    ON_CBN_SELCHANGE(IDC_COMBO2, OnChngOSDCombo)
     ON_NOTIFY_EX(TTN_NEEDTEXT, 0, OnToolTipNotify)
 END_MESSAGE_MAP()
 
@@ -231,24 +141,6 @@ void CPPageTweaks::OnBnClickedButton1()
     SetModified();
 }
 
-void CPPageTweaks::OnChngOSDCombo()
-{
-    CString str;
-    m_nOSDSize = m_FontSize.GetCurSel() + 10;
-    m_FontType.GetLBText(m_FontType.GetCurSel(), str);
-    if (CMainFrame* pMainFrame = AfxGetMainFrame()) {
-        pMainFrame->m_OSD.DisplayMessage(OSD_TOPLEFT, _T("Test"), 2000, m_nOSDSize, str);
-    }
-    SetModified();
-}
-
-void CPPageTweaks::OnUseTimeTooltipClicked()
-{
-    m_TimeTooltipPosition.EnableWindow(IsDlgButtonChecked(IDC_CHECK8));
-
-    SetModified();
-}
-
 BOOL CPPageTweaks::OnToolTipNotify(UINT id, NMHDR* pNMH, LRESULT* pResult)
 {
     LPTOOLTIPTEXT pTTT = reinterpret_cast<LPTOOLTIPTEXT>(pNMH);
@@ -261,15 +153,13 @@ BOOL CPPageTweaks::OnToolTipNotify(UINT id, NMHDR* pNMH, LRESULT* pResult)
     BOOL bRet = FALSE;
 
     switch (nID) {
-        case IDC_COMBO1:
-            bRet = FillComboToolTip(m_FontType, pTTT);
-            break;
-        case IDC_COMBO3:
-            bRet = FillComboToolTip(m_TimeTooltipPosition, pTTT);
-            break;
         case IDC_COMBO4:
             bRet = FillComboToolTip(m_FastSeekMethod, pTTT);
             break;
+    }
+
+    if (bRet) {
+        PlaceThemedDialogTooltip(nID);
     }
 
     return bRet;

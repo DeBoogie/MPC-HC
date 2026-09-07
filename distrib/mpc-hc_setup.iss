@@ -1,4 +1,4 @@
-; (C) 2009-2017 see Authors.txt
+; (C) 2009-2018 see Authors.txt
 ;
 ; This file is part of MPC-HC.
 ;
@@ -20,8 +20,8 @@
 ; Inno Setup Unicode: http://www.jrsoftware.org/isdl.php
 
 
-#if VER < EncodeVer(5,5,9)
-  #error Update your Inno Setup version (5.5.9 or newer)
+#if VER < EncodeVer(6,3,2)
+  #error Update your Inno Setup version (6.3.2 or newer)
 #endif
 
 #ifndef UNICODE
@@ -29,7 +29,6 @@
 #endif
 
 ; If you want to compile the 64-bit version define "x64build" (uncomment the define below or use build.bat)
-;#define VS2015
 ;#define x64Build
 ;#define MPCHC_LITE
 
@@ -41,8 +40,10 @@
     #define localize = "true"
   #endif
 #endif
-#define sse2_required
 
+#if GetEnv('MPC_DRDUMP') == '1'
+#define USE_DRDUMP_CRASH_REPORTER 1
+#endif
 
 ; From now on you shouldn't need to change anything
 
@@ -61,11 +62,7 @@
 #define app_vername     = app_name + " " + app_ver
 #define quick_launch    "{userappdata}\Microsoft\Internet Explorer\Quick Launch"
 
-#if defined(VS2015)
-  #define base_bindir   = "..\bin15"
-#else
-  #define base_bindir   = "..\bin"
-#endif
+#define base_bindir     = "..\bin"
 
 #ifdef x64Build
   #define bindir        = AddBackslash(base_bindir) + "mpc-hc_x64"
@@ -73,19 +70,23 @@
   #define mpchc_ini     = "mpc-hc64.ini"
   #define lavfiltersdir = "LAVFilters64"
   #define OutFilename   = app_name + "." + app_ver + ".x64"
+  #define platform      = "x64"
+  #define mpcvr_ax      = "MpcVideoRenderer64.ax"
+  #define mediainfo_dll = "..\distrib\x64\MediaInfo.dll"
 #else
   #define bindir        = AddBackslash(base_bindir) + "mpc-hc_x86"
   #define mpchc_exe     = "mpc-hc.exe"
   #define mpchc_ini     = "mpc-hc.ini"
   #define lavfiltersdir = "LAVFilters"
   #define OutFilename   = app_name + "." + app_ver + ".x86"
+  #define platform      = "x86"
+  #define mpcvr_ax      = "MpcVideoRenderer.ax"
+  #define mediainfo_dll = "..\distrib\x86\MediaInfo.dll"
 #endif
 
 #if defined(MPCHC_LITE)
   #define bindir        = bindir + " Lite"
 #endif
-
-#define crashreporter_dir = AddBackslash(bindir) + "CrashReporter"
 
 #ifnexist AddBackslash(bindir) + mpchc_exe
   #error Compile MPC-HC first
@@ -97,10 +98,6 @@
   #else
     #define OutFilename  = OutFilename + ".en"
   #endif
-#endif
-
-#if defined(VS2015)
-  #define OutFilename    = OutFilename + ".VS2015"
 #endif
 
 #if MPC_NIGHTLY_RELEASE
@@ -119,13 +116,29 @@
   #define FullAppNameVer = FullAppNameVer + " " + "(64-bit)"
 #endif
 
+#ifexist "..\distrib\mpcvr\MpcVideoRenderer.ax"
+#define INCLUDE_MPCVR = true
+#else
+#define INCLUDE_MPCVR = false
+#endif
+
+#ifexist mediainfo_dll
+	#if !defined(MPCHC_LITE)
+#define INCLUDE_MEDIAINFO = true
+	#else
+#define INCLUDE_MEDIAINFO = false
+	#endif
+#else
+#define INCLUDE_MEDIAINFO = false
+#endif
+
 
 [Setup]
 #ifdef x64Build
 AppId                     = {{2ACBF1FA-F5C3-4B19-A774-B22A31F231B9}
 DefaultGroupName          = {#app_name} x64
-ArchitecturesAllowed      = x64
-ArchitecturesInstallIn64BitMode = x64
+ArchitecturesAllowed      = x64compatible
+ArchitecturesInstallIn64BitMode = x64compatible
 #else
 AppId                     = {{2624B969-7135-4EB1-B0F6-2D8C397B45F7}
 DefaultGroupName          = {#app_name}
@@ -136,9 +149,6 @@ AppVersion                = {#app_ver}
 AppVerName                = {#app_vername}
 AppPublisher              = MPC-HC Team
 AppPublisherURL           = {#WEBSITE_URL}
-AppSupportURL             = {#TRAC_URL}
-AppUpdatesURL             = {#WEBSITE_URL}
-AppContact                = {#WEBSITE_URL}contact-us/
 AppCopyright              = {#copyright_str}
 VersionInfoVersion        = {#app_ver}
 UninstallDisplayIcon      = {app}\{#mpchc_exe}
@@ -148,7 +158,6 @@ DefaultDirName            = {code:GetInstallFolder}
 LicenseFile               = ..\COPYING.txt
 OutputDir                 = .
 SetupIconFile             = ..\src\mpc-hc\res\icon.ico
-AppReadmeFile             = {app}\Readme.txt
 WizardImageFile           = WizardImageFile.bmp
 WizardSmallImageFile      = WizardSmallImageFile.bmp
 Compression               = lzma2/ultra
@@ -158,7 +167,7 @@ AllowNoIcons              = yes
 ShowTasksTreeLines        = yes
 DisableDirPage            = auto
 DisableProgramGroupPage   = auto
-MinVersion                = 6.0
+MinVersion                = 6.1
 CloseApplications         = true
 #ifexist "..\signinfo.txt"
 SignTool                  = MySignTool
@@ -177,7 +186,6 @@ Name: ca;    MessagesFile: compiler:Languages\Catalan.isl
 Name: cs;    MessagesFile: compiler:Languages\Czech.isl
 Name: da;    MessagesFile: compiler:Languages\Danish.isl
 Name: de;    MessagesFile: compiler:Languages\German.isl
-Name: el;    MessagesFile: compiler:Languages\Greek.isl
 Name: en_GB; MessagesFile: Languages\EnglishBritish.isl
 Name: es;    MessagesFile: compiler:Languages\Spanish.isl
 Name: eu;    MessagesFile: Languages\Basque.isl
@@ -187,7 +195,7 @@ Name: gl;    MessagesFile: Languages\Galician.isl
 Name: he;    MessagesFile: compiler:Languages\Hebrew.isl
 Name: hr;    MessagesFile: Languages\Croatian.isl
 Name: hu;    MessagesFile: compiler:Languages\Hungarian.isl
-Name: hy;    MessagesFile: compiler:Languages\Armenian.islu
+Name: hy;    MessagesFile: compiler:Languages\Armenian.isl
 Name: id;    MessagesFile: Languages\Indonesian.isl
 Name: it;    MessagesFile: compiler:Languages\Italian.isl
 Name: ja;    MessagesFile: compiler:Languages\Japanese.isl
@@ -197,11 +205,11 @@ Name: ms_MY; MessagesFile: Languages\Malaysian.isl
 Name: nl;    MessagesFile: compiler:Languages\Dutch.isl
 Name: pl;    MessagesFile: compiler:Languages\Polish.isl
 Name: pt_BR; MessagesFile: compiler:Languages\BrazilianPortuguese.isl
+Name: pt_PT; MessagesFile: compiler:Languages\Portuguese.isl
 Name: ro;    MessagesFile: Languages\Romanian.isl
 Name: ru;    MessagesFile: compiler:Languages\Russian.isl
 Name: sk;    MessagesFile: Languages\Slovak.isl
 Name: sl;    MessagesFile: compiler:Languages\Slovenian.isl
-Name: sr;    MessagesFile: compiler:Languages\SerbianCyrillic.isl
 Name: sv;    MessagesFile: Languages\Swedish.isl
 Name: th_TH; MessagesFile: Languages\Thai.isl
 Name: tt;    MessagesFile: Languages\Tatar.isl
@@ -214,10 +222,6 @@ Name: zh_TW; MessagesFile: Languages\ChineseTraditional.isl
 
 ; Include installer's custom messages
 #include "custom_messages.iss"
-
-
-[Messages]
-BeveledLabel={#FullAppNameVer}
 
 
 [Types]
@@ -242,30 +246,36 @@ Name: reset_settings;     Description: {cm:tsk_ResetSettings};     GroupDescript
 
 
 [Files]
-#if localize == "true"
-Source: {#bindir}\Lang\mpcresources.??.dll;     DestDir: {app}\Lang; Components: mpcresources; Flags: ignoreversion
-Source: {#bindir}\Lang\mpcresources.??_??.dll;  DestDir: {app}\Lang; Components: mpcresources; Flags: ignoreversion
-#endif
-#ifndef MPCHC_LITE
-Source: {#bindir}\{#lavfiltersdir}\*.dll;       DestDir: {app}\{#lavfiltersdir}; Components: main; Flags: ignoreversion
-Source: {#bindir}\{#lavfiltersdir}\*.ax;        DestDir: {app}\{#lavfiltersdir}; Components: main; Flags: ignoreversion
-Source: {#bindir}\{#lavfiltersdir}\*.manifest;  DestDir: {app}\{#lavfiltersdir}; Components: main; Flags: ignoreversion
-#endif
-Source: {#bindir}\d3dcompiler_{#MPC_D3D_COMPILER_VERSION}.dll; DestDir: {app}; Components: main; Flags: ignoreversion
-Source: {#bindir}\d3dx9_{#MPC_DX_SDK_NUMBER}.dll;       DestDir: {app}; Components: main; Flags: ignoreversion
-Source: {#bindir}\mpciconlib.dll;               DestDir: {app}; Components: mpciconlib;   Flags: ignoreversion
-Source: {#bindir}\{#mpchc_exe};                 DestDir: {app}; Components: main;         Flags: ignoreversion
-Source: ..\COPYING.txt;                         DestDir: {app}; Components: main;         Flags: ignoreversion
-Source: ..\docs\Authors.txt;                    DestDir: {app}; Components: main;         Flags: ignoreversion
-Source: ..\docs\Changelog.txt;                  DestDir: {app}; Components: main;         Flags: ignoreversion
-Source: ..\docs\Readme.txt;                     DestDir: {app}; Components: main;         Flags: ignoreversion
-Source: ..\src\mpc-hc\res\shaders\external\*.hlsl; DestDir: {app}\Shaders; Components: main; Flags: ignoreversion
-#ifexist AddBackslash(crashreporter_dir) + "crashrpt.dll"
-Source: {#crashreporter_dir}\CrashReporterDialog.dll; DestDir: {app}\CrashReporter; Components: main; Flags: ignoreversion
-Source: {#crashreporter_dir}\crashrpt.dll;            DestDir: {app}\CrashReporter; Components: main; Flags: ignoreversion
-Source: {#crashreporter_dir}\dbghelp.dll;             DestDir: {app}\CrashReporter; Components: main; Flags: ignoreversion
-Source: {#crashreporter_dir}\sendrpt.exe;             DestDir: {app}\CrashReporter; Components: main; Flags: ignoreversion
-#endif
+Source: {#bindir}\{#mpchc_exe};                    DestDir: {app};                  Components: main;         Flags: ignoreversion
+	#if localize == "true"
+Source: {#bindir}\Lang\mpcresources.??.dll;        DestDir: {app}\Lang;             Components: mpcresources; Flags: ignoreversion
+Source: {#bindir}\Lang\mpcresources.??_??.dll;     DestDir: {app}\Lang;             Components: mpcresources; Flags: ignoreversion
+	#endif
+Source: {#bindir}\mpciconlib.dll;                  DestDir: {app};                  Components: mpciconlib;   Flags: ignoreversion
+	#ifndef MPCHC_LITE
+Source: {#bindir}\{#lavfiltersdir}\*.dll;          DestDir: {app}\{#lavfiltersdir}; Components: main;         Flags: ignoreversion
+Source: {#bindir}\{#lavfiltersdir}\*.ax;           DestDir: {app}\{#lavfiltersdir}; Components: main;         Flags: ignoreversion
+Source: {#bindir}\{#lavfiltersdir}\*.manifest;     DestDir: {app}\{#lavfiltersdir}; Components: main;         Flags: ignoreversion
+	#endif
+	#if INCLUDE_MPCVR
+Source: ..\distrib\mpcvr\{#mpcvr_ax};              DestDir: {app}\MPCVR;            Components: main;         Flags: ignoreversion
+	#endif
+Source: {#platform}\d3dcompiler_{#MPC_D3D_COMPILER_VERSION}.dll; DestDir: {app};    Components: main;         Flags: ignoreversion
+Source: {#platform}\d3dx9_{#MPC_DX_SDK_NUMBER}.dll;              DestDir: {app};    Components: main;         Flags: ignoreversion
+	#if INCLUDE_MEDIAINFO
+Source: {#platform}\mediainfo.dll;                 DestDir: {app};                  Components: main;         Flags: ignoreversion
+	#endif
+Source: ..\src\mpc-hc\res\shaders\dx9\*.hlsl;      DestDir: {app}\Shaders;          Components: main;         Flags: onlyifdoesntexist
+Source: ..\src\mpc-hc\res\shaders\dx11\*.hlsl;     DestDir: {app}\Shaders11;        Components: main;         Flags: onlyifdoesntexist
+Source: ..\distrib\Toolbars\*.*;                   DestDir: {app}\Toolbars;         Components: main;         Flags: onlyifdoesntexist recursesubdirs
+Source: ..\COPYING.txt;                            DestDir: {app};                  Components: main;         Flags: ignoreversion
+Source: ..\docs\Authors.txt;                       DestDir: {app};                  Components: main;         Flags: ignoreversion
+	#if USE_DRDUMP_CRASH_REPORTER
+Source: {#platform}\crashrpt.dll;                  DestDir: {app}\CrashReporter;    Components: main;         Flags: ignoreversion
+Source: {#platform}\dbghelp.dll;                   DestDir: {app}\CrashReporter;    Components: main;         Flags: ignoreversion
+Source: {#platform}\sendrpt.exe;                   DestDir: {app}\CrashReporter;    Components: main;         Flags: ignoreversion
+Source: CrashReporter_LICENSE.txt;                 DestDir: {app}\CrashReporter;    Components: main;         Flags: ignoreversion
+	#endif
 
 
 [Icons]
@@ -280,15 +290,11 @@ Name: {commondesktop}\{#app_name};               Filename: {app}\{#mpchc_exe}; C
 Name: {userdesktop}\{#app_name};                 Filename: {app}\{#mpchc_exe}; Comment: {#app_vername}; WorkingDir: {app}; IconFilename: {app}\{#mpchc_exe}; IconIndex: 0; Tasks: desktopicon\user
 Name: {#quick_launch}\{#app_name};               Filename: {app}\{#mpchc_exe}; Comment: {#app_vername}; WorkingDir: {app}; IconFilename: {app}\{#mpchc_exe}; IconIndex: 0; Tasks: quicklaunchicon
 #endif
-Name: {group}\Changelog;                         Filename: {app}\Changelog.txt; Comment: {cm:ViewChangelog};                WorkingDir: {app}
-Name: {group}\{cm:ProgramOnTheWeb,{#app_name}};  Filename: {#WEBSITE_URL}
 Name: {group}\{cm:UninstallProgram,{#app_name}}; Filename: {uninstallexe};      Comment: {cm:UninstallProgram,{#app_name}}; WorkingDir: {app}
 
 
 [Run]
 Filename: {app}\{#mpchc_exe};                    Description: {cm:LaunchProgram,{#app_name}}; WorkingDir: {app}; Flags: nowait postinstall skipifsilent unchecked
-Filename: {app}\Changelog.txt;                   Description: {cm:ViewChangelog};             WorkingDir: {app}; Flags: nowait postinstall skipifsilent unchecked shellexec
-Filename: {#TOOLBARS_URL};                       Description: {cm:run_DownloadToolbarImages};                    Flags: nowait postinstall skipifsilent unchecked shellexec
 
 
 [InstallDelete]
@@ -296,8 +302,10 @@ Type: files; Name: {userdesktop}\{#app_name}.lnk;   Check: not IsTaskSelected('d
 Type: files; Name: {commondesktop}\{#app_name}.lnk; Check: not IsTaskSelected('desktopicon\common') and IsUpgrade()
 Type: files; Name: {#quick_launch}\{#app_name}.lnk; Check: not IsTaskSelected('quicklaunchicon')    and IsUpgrade(); OnlyBelowVersion: 6.01
 Type: files; Name: {app}\AUTHORS;                   Check: IsUpgrade()
-Type: files; Name: {app}\ChangeLog;                 Check: IsUpgrade()
 Type: files; Name: {app}\COPYING;                   Check: IsUpgrade()
+	#if !USE_DRDUMP_CRASH_REPORTER
+Type: filesandordirs; Name: {app}\CrashReporter;    Check: IsUpgrade()
+	#endif
 
 ; old shortcuts
 #ifdef x64Build
@@ -318,7 +326,44 @@ Type: files; Name: {userdesktop}\Media Player Classic - Home Cinema.lnk;   Check
 Type: files; Name: {commondesktop}\Media Player Classic - Home Cinema.lnk; Check: not IsTaskSelected('desktopicon\common') and IsUpgrade()
 Type: files; Name: {#quick_launch}\Media Player Classic - Home Cinema.lnk; Check: not IsTaskSelected('quicklaunchicon')    and IsUpgrade(); OnlyBelowVersion: 6.01
 
+; Old ffmpeg dlls from LAV Filters
+Type: files; Name: {app}\{#lavfiltersdir}\avcodec-lav-62.dll;   Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avcodec-lav-61.dll;   Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avcodec-lav-60.dll;   Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avcodec-lav-59.dll;   Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avcodec-lav-58.dll;   Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avcodec-lav-57.dll;   Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avfilter-lav-11.dll;  Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avfilter-lav-10.dll;  Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avfilter-lav-9.dll;   Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avfilter-lav-8.dll;   Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avfilter-lav-7.dll;   Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avformat-lav-62.dll;  Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avformat-lav-61.dll;  Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avformat-lav-60.dll;  Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avformat-lav-59.dll;  Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avformat-lav-58.dll;  Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avformat-lav-57.dll;  Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avutil-lav-60.dll;    Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avutil-lav-59.dll;    Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avutil-lav-58.dll;    Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avutil-lav-57.dll;    Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avutil-lav-56.dll;    Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avutil-lav-55.dll;    Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\swresample-lav-6.dll; Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\swresample-lav-5.dll; Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\swresample-lav-4.dll; Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\swscale-lav-9.dll;    Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\swscale-lav-8.dll;    Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\swscale-lav-7.dll;    Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\swscale-lav-6.dll;    Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\swscale-lav-5.dll;    Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\swscale-lav-4.dll;    Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avresample-lav-4.dll; Check: IsUpgrade()
+Type: files; Name: {app}\{#lavfiltersdir}\avresample-lav-3.dll; Check: IsUpgrade()
+
 #ifdef x64Build
+; Super old LAV files
 Type: files; Name: {app}\LAVFilters\avcodec-lav-??.dll;                    Check: IsUpgrade()
 Type: files; Name: {app}\LAVFilters\avfilter-lav-?.dll;                    Check: IsUpgrade()
 Type: files; Name: {app}\LAVFilters\avformat-lav-??.dll;                   Check: IsUpgrade()
@@ -371,11 +416,8 @@ Type: files; Name: {app}\Lang\mpcresources.ua.dll
 
 
 [Code]
-#if defined(sse2_required)
 function IsProcessorFeaturePresent(Feature: Integer): Boolean;
 external 'IsProcessorFeaturePresent@kernel32.dll stdcall';
-#endif
-
 
 function GetInstallFolder(Default: String): String;
 var
@@ -394,17 +436,11 @@ begin
   end;
 end;
 
-
-#if defined(sse2_required)
-
 function Is_SSE2_Supported(): Boolean;
 begin
   // PF_XMMI64_INSTRUCTIONS_AVAILABLE
   Result := IsProcessorFeaturePresent(10);
 end;
-
-#endif
-
 
 function IsUpgrade(): Boolean;
 var
@@ -436,7 +472,13 @@ end;
 
 
 procedure CleanUpSettingsAndFiles();
+var
+  ResultCode: Integer;
 begin
+  try
+    Exec(ExpandConstant('{app}\{#mpchc_exe}'), '/unregall', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  except
+  end;
   DeleteFile(ExpandConstant('{app}\{#mpchc_ini}'));
   DelTree(ExpandConstant('{userappdata}\MPC-HC\ShaderCache'), True, True, True);  
   DeleteFile(ExpandConstant('{userappdata}\MPC-HC\default.mpcpl'));
@@ -444,6 +486,11 @@ begin
   RegDeleteKeyIncludingSubkeys(HKCU, 'Software\MPC-HC\Filters');
   RegDeleteKeyIncludingSubkeys(HKCU, 'Software\MPC-HC\MPC-HC');
   RegDeleteKeyIfEmpty(HKCU, 'Software\MPC-HC');
+
+  #if INCLUDE_MPCVR
+  RegDeleteKeyIncludingSubkeys(HKCU, 'Software\MPC-BE Filters\MPC Video Renderer');
+  RegDeleteKeyIfEmpty(HKCU, 'Software\MPC-BE Filters');  
+  #endif
 end;
 
 
@@ -509,16 +556,8 @@ function InitializeSetup(): Boolean;
 begin
     Result := True;
 
-#if defined(sse2_required)
     if not Is_SSE2_Supported() then begin
       SuppressibleMsgBox(CustomMessage('msg_simd_sse2'), mbCriticalError, MB_OK, MB_OK);
       Result := False;
     end;
-#elif defined(sse_required)
-    if not Is_SSE_Supported() then begin
-      SuppressibleMsgBox(CustomMessage('msg_simd_sse'), mbCriticalError, MB_OK, MB_OK);
-      Result := False;
-    end;
-#endif
-
 end;

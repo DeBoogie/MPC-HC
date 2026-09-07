@@ -22,10 +22,10 @@
 
 #include "SubtitlesProviders.h"
 #include "VersionInfo.h"
-
+#include "rapidjson/include/rapidjson/document.h"
 #include "XmlRpc4Win/TimXmlRpc.h"
 
-#define DEFINE_SUBTITLESPROVIDER_BEGIN(P, U, I, F)                                     \
+#define DEFINE_SUBTITLESPROVIDER_BEGIN(P, N, U, I, F)                                  \
 class P final : public SubtitlesProvider {                                             \
 public:                                                                                \
     P(SubtitlesProviders* pOwner)                                                      \
@@ -40,6 +40,7 @@ public:                                                                         
     }                                                                                  \
 private:                                                                               \
     virtual std::string Name() const override { return #P; }                           \
+    virtual std::string DisplayName() const override { return N; }                     \
     virtual std::string Url() const override { return U; }                             \
     virtual const std::set<std::string>& Languages() const override;                   \
     virtual bool Flags(DWORD dwFlags) const override { return (dwFlags & (F)) == dwFlags; }  \
@@ -50,7 +51,8 @@ private:                                                                        
 #define DEFINE_SUBTITLESPROVIDER_END                                                   \
 };
 
-DEFINE_SUBTITLESPROVIDER_BEGIN(OpenSubtitles, "https://api.opensubtitles.org", IDI_OPENSUBTITLES, SPF_LOGIN | SPF_HASH | SPF_UPLOAD)
+#if 0
+DEFINE_SUBTITLESPROVIDER_BEGIN(OpenSubtitles, "OpenSubtitles.org", "https://api.opensubtitles.org", IDI_OPENSUBTITLES, SPF_LOGIN | SPF_HASH | SPF_UPLOAD)
 void Initialize() override;
 bool NeedLogin() override;
 SRESULT Login(const std::string& sUserName, const std::string& sPassword) override;
@@ -60,31 +62,37 @@ SRESULT Upload(const SubtitlesInfo& pSubtitlesInfo) override;
 std::unique_ptr<XmlRpcClient> xmlrpc;
 XmlRpcValue token;
 DEFINE_SUBTITLESPROVIDER_END
+#endif
 
-DEFINE_SUBTITLESPROVIDER_BEGIN(SubDB, "http://api.thesubdb.com", IDI_SUBDB, SPF_HASH | SPF_UPLOAD)
-SRESULT Hash(SubtitlesInfo& pFileInfo) override;
-SRESULT Upload(const SubtitlesInfo& pSubtitlesInfo) override;
-std::string UserAgent() const override
-{
-    return SubtitlesProvidersUtils::StringFormat("SubDB/1.0 (MPC-HC/%s; https://mpc-hc.org/)",
-                                                 VersionInfo::GetVersionString().GetString());
-}
-DEFINE_SUBTITLESPROVIDER_END
-
-DEFINE_SUBTITLESPROVIDER_BEGIN(podnapisi, "https://www.podnapisi.net", IDI_PODNAPISI, SPF_SEARCH)
+DEFINE_SUBTITLESPROVIDER_BEGIN(OpenSubtitles2, "OpenSubtitles.com", "https://www.opensubtitles.com", IDI_OPENSUBTITLES, SPF_LOGIN | SPF_HASH)
+void Initialize() override;
+bool NeedLogin() override;
 SRESULT Login(const std::string& sUserName, const std::string& sPassword) override;
+SRESULT LogOut() override;
 SRESULT Hash(SubtitlesInfo& pFileInfo) override;
+bool UseForAutoDownload() override;
+
+struct Response {
+    DWORD code = 0;
+    std::string text;
+};
+
+bool CallAPI(CHttpFile* httpFile, CString& headers, std::string& body, Response& response);
+bool CallAPI(CHttpFile* httpFile, CString& headers, Response& response);
+bool CallAPIResponse(CHttpFile* httpFile, Response& response);
+bool GetOptionalValue(const rapidjson::Value& node, const char* path, std::string& result);
+bool GetOptionalValue(const rapidjson::Value& node, const char* path, int& result);
+bool GetOptionalValue(const rapidjson::Value& node, const char* path, double& result);
+
+CString token;
+static constexpr TCHAR* APIKEY = _T("s2GJfwwPNA74kkeXudFAdiHIqTDjgrmq");
 DEFINE_SUBTITLESPROVIDER_END
 
-#ifdef MPCHC_DISABLED_SUBTITLES_PROVIDER
-DEFINE_SUBTITLESPROVIDER_BEGIN(titlovi, "http://www.titlovi.com", IDI_TITLOVI, SPF_SEARCH)
-DEFINE_SUBTITLESPROVIDER_END
+#define USE_PODNAPISI 0
 
-DEFINE_SUBTITLESPROVIDER_BEGIN(ysubs, "http://www.yifysubtitles.com", IDI_YSUBS, SPF_SEARCH)
-DEFINE_SUBTITLESPROVIDER_END
-#endif // MPCHC_DISABLED_SUBTITLES_PROVIDER
-
-DEFINE_SUBTITLESPROVIDER_BEGIN(Napisy24, "https://napisy24.pl/", IDI_N24, SPF_HASH | SPF_SEARCH)
+#if USE_PODNAPISI
+DEFINE_SUBTITLESPROVIDER_BEGIN(podnapisi, "Podnapisi", "https://www.podnapisi.net", IDI_PODNAPISI, SPF_SEARCH)
+SRESULT Login(const std::string& sUserName, const std::string& sPassword) override;
 SRESULT Hash(SubtitlesInfo& pFileInfo) override;
 DEFINE_SUBTITLESPROVIDER_END
 
@@ -113,31 +121,12 @@ static const struct {
     { /*54*/ "id", "Indonesian" },              { /*55*/ "ms", "Malay" },                  { /*56*/ "si", "Sinhala" },
     { /*57*/ "kl", "Greenlandic" },             { /*58*/ "kk", "Kazakh" },                 { /*59*/ "bn", "Bengali" },
 };
+#endif
 
-#ifdef MPCHC_DISABLED_SUBTITLES_PROVIDER
-static const struct {
-    const char* code;
-    const char* name;
-} titlovi_languages[] = {
-    { "hr", "hr" }, { "sr", "sr" }, { "rs", "sr" }, { "si", "sl" }, { "ba", "bs" }, { "en", "en" }, { "mk", "mk" },
-};
+#define USE_NAPISY24 0
 
-static const struct {
-    const char* code;
-    const char* name;
-} ysubs_languages[] = {
-    { "sq", "albanian" },                       { "ar", "arabic" },                        { "bn", "bengali" },
-    { "pb", "brazilian-portuguese" },           { "bg", "bulgarian" },                     { "zh", "chinese" },
-    { "hr", "croatian" },                       { "cs", "czech" },                         { "da", "danish" },
-    { "nl", "dutch" },                          { "en", "english" },                       { "fa", "farsi-persian" },
-    { "fi", "finnish" },                        { "fr", "french" },                        { "de", "german" },
-    { "el", "greek" },                          { "he", "hebrew" },                        { "hu", "hungarian" },
-    { "id", "indonesian" },                     { "it", "italian" },                       { "ja", "japanese" },
-    { "ko", "korean" },                         { "lt", "lithuanian" },                    { "mk", "macedonian" },
-    { "ms", "malay" },                          { "no", "norwegian" },                     { "pl", "polish" },
-    { "pt", "portuguese" },                     { "ro", "romanian" },                      { "ru", "russian" },
-    { "sr", "serbian" },                        { "sl", "slovenian" },                     { "es", "spanish" },
-    { "sv", "swedish" },                        { "th", "thai" },                          { "tr", "turkish" },
-    { "ur", "urdu" },                           { "vi", "vietnamese" },
-};
-#endif // MPCHC_DISABLED_SUBTITLES_PROVIDER
+#if USE_NAPISY24
+DEFINE_SUBTITLESPROVIDER_BEGIN(Napisy24, "Napisy24", "https://napisy24.pl/", IDI_N24, SPF_HASH | SPF_SEARCH)
+SRESULT Hash(SubtitlesInfo& pFileInfo) override;
+DEFINE_SUBTITLESPROVIDER_END
+#endif

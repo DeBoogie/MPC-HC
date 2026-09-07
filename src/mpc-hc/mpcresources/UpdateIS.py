@@ -24,7 +24,7 @@ def UpdateIS(normalizePOFile=True):
     translationsConfigAndData = []
     for cfgPath in glob.glob(r'cfg\*.cfg'):
         config = ConfigParser.RawConfigParser({'installerIsTranslated': 'True'})
-        config.readfp(codecs.open(cfgPath, 'r', 'utf8'))
+        config.read_file(codecs.open(cfgPath, 'r', 'utf8'))
 
         if config.getboolean('Info', 'installerIsTranslated'):
             poPath = r'PO\mpc-hc.installer.' + config.get('Info', 'langShortName')

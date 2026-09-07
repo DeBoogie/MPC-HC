@@ -22,21 +22,22 @@
 #pragma once
 
 #include "resource.h"
-#include "ResizableLib/ResizableDialog.h"
-
+#include "CMPCThemeResizableDialog.h"
+#include "CMPCThemeStatic.h"
+#include "CMPCThemeComboBox.h"
 
 // COpenDlg dialog
 
-class COpenDlg : public CResizableDialog
+class COpenDlg : public CMPCThemeResizableDialog
 {
     //  DECLARE_DYNAMIC(COpenDlg)
 private:
     CStatic m_icon;
-    CComboBox m_cbMRU;
+    CMPCThemeComboBox m_cbMRU;
     CString m_path;
-    CComboBox m_cbMRUDub;
+    CMPCThemeComboBox m_cbMRUDub;
     CString m_pathDub;
-    CStatic m_labelDub;
+    CMPCThemeStatic m_labelDub;
     BOOL m_bAppendToPlaylist;
 
     bool m_bMultipleFiles;
@@ -52,6 +53,10 @@ public:
     const CAtlList<CString>& GetFileNames() const { return m_fns; }
     bool HasMultipleFiles() const { return m_bMultipleFiles; }
     bool GetAppendToPlaylist() const { return !!m_bAppendToPlaylist; }
+
+    UINT GetDialogTemplateID() const override { return IDD; }
+    void SetupAnchors() override;
+    TrackSizeConstraints GetTrackSizeConstraints() const override;
 
 protected:
     virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

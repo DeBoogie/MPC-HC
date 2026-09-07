@@ -66,25 +66,17 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release Lite|x64'">$(SolutionDir)bin\mpc-hc_x64 Lite\</OutDir>
     <TargetName Condition="'$(Platform)'=='x64'">$(ProjectName)64</TargetName>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(PlatformToolsetVersion)'=='140'">
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)bin15\mpc-hc_x86_$(Configuration)\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug Lite|Win32'">$(SolutionDir)bin15\mpc-hc_x86_$(Configuration)\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)bin15\mpc-hc_x64_$(Configuration)\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug Lite|x64'">$(SolutionDir)bin15\mpc-hc_x64_$(Configuration)\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)bin15\mpc-hc_x86\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release Lite|Win32'">$(SolutionDir)bin15\mpc-hc_x86 Lite\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)bin15\mpc-hc_x64\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release Lite|x64'">$(SolutionDir)bin15\mpc-hc_x64 Lite\</OutDir>
-  </PropertyGroup>
   <ItemDefinitionGroup>
     <ResourceCompile>
       <AdditionalIncludeDirectories>..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>delayimp.lib;dsound.lib;dxguid.lib;GdiPlus.lib;Psapi.lib;SetupAPI.lib;UxTheme.lib;Vfw32.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>crypt32.lib;delayimp.lib;dsound.lib;dxguid.lib;GdiPlus.lib;Psapi.lib;SetupAPI.lib;UxTheme.lib;Vfw32.lib;Winmm.lib;dwmapi.lib;strmiids.lib;Uuid.Lib;Version.lib;Bcrypt.lib;RuntimeObject.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>psapi.dll;api-ms-win-shcore-stream-winrt-l1-1-0.dll;api-ms-win-core-winrt-l1-1-0.dll;api-ms-win-core-winrt-string-l1-1-0.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <SupportUnloadOfDelayLoadedDLL>true</SupportUnloadOfDelayLoadedDLL>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\include;..\DSUtil;..\filters\renderer\VideoRenderers;..\thirdparty;..\thirdparty\MediaInfo\library\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\DSUtil;..\filters\renderer\VideoRenderers;..\thirdparty;..\thirdparty\AudioTools;..\thirdparty\MediaInfo\library\Source;..\thirdparty\freetype2\freetype2\include;..\thirdparty\ResizableLib\ResizableLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Manifest>
       <AdditionalManifestFiles>$(ProjectDir)res\mpc-hc.exe.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
@@ -93,31 +85,36 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Platform)'=='x64'">
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>strmiids.lib;Uuid.Lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib64;$(SolutionDir)src\thirdparty\LAVFilters\src\thirdparty\64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Platform)'=='Win32'">
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>QTMLClient.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib;$(SolutionDir)src\thirdparty\LAVFilters\src\thirdparty\32\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="$(Configuration.Contains('Release'))">
     <Link>
-      <AdditionalLibraryDirectories Condition="'$(PlatformToolsetVersion)'!='140'">$(SolutionDir)bin\lib\Release_$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalLibraryDirectories Condition="'$(PlatformToolsetVersion)'=='140'">$(SolutionDir)bin15\lib\Release_$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)bin\lib\Release_$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib;vcruntime.lib;ucrt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
+    <ClCompile>
+      <DisableSpecificWarnings>26812</DisableSpecificWarnings>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(MPC_DRDUMP)' == '1'">USE_DRDUMP_CRASH_REPORTER=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="$(Configuration.Contains('Debug'))">
+    <ClCompile>
+      <DisableSpecificWarnings>26812</DisableSpecificWarnings>
+    </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories Condition="'$(PlatformToolsetVersion)'!='140'">$(SolutionDir)bin\lib\Debug_$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalLibraryDirectories Condition="'$(PlatformToolsetVersion)'=='140'">$(SolutionDir)bin15\lib\Debug_$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)bin\lib\Debug_$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="$(Configuration.Contains('Lite'))">
     <Link>
-      <AdditionalDependencies>AudioSwitcher.lib;BaseClasses.lib;BaseMuxer.lib;BufferFilter.lib;CmdUI.lib;DeCSS.lib;DSMMuxer.lib;DSUtil.lib;Filters.lib;kasumi.lib;LCDUI.lib;lcms2.lib;MatroskaMuxer.lib;ResizableLib.lib;sizecbar.lib;StreamDriveThru.lib;SubPic.lib;Subtitles.lib;SubtitleSource.lib;SyncClock.lib;system.lib;TreePropSheet.lib;unrar.lib;VideoRenderers.lib;WavDest.lib;zlib.lib;minhook.lib;tinyxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>AudioSwitcher.lib;BaseClasses.lib;BaseMuxer.lib;BufferFilter.lib;CmdUI.lib;DeCSS.lib;DSMMuxer.lib;DSUtil.lib;Filters.lib;LCDUI.lib;lcms2.lib;MatroskaMuxer.lib;ResizableLib.lib;sizecbar.lib;StreamDriveThru.lib;SubPic.lib;Subtitles.lib;SubtitleSource.lib;SyncClock.lib;TreePropSheet.lib;unrar.lib;VideoRenderers.lib;WavDest.lib;zlib.lib;minhook.lib;tinyxml2.lib;RARFileSource.lib;MpcAudioRenderer.lib;AudioTools.lib;ffmpeg.lib;freetype2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>MPCHC_LITE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -126,22 +123,82 @@
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="$(Configuration.Contains('Lite')) and '$(Platform)'=='x64'">
+    <PostBuildEvent>
+      <Command>if not exist "$(OutDir)Lang" if exist "$(SolutionDir)bin\mpc-hc_x64\Lang" mklink /J "$(OutDir)Lang" "$(SolutionDir)bin\mpc-hc_x64\Lang"
+if not exist "$(OutDir)LAVFilters64" if exist "$(SolutionDir)bin\mpc-hc_x64\LAVFilters64" mklink /J "$(OutDir)LAVFilters64" "$(SolutionDir)bin\mpc-hc_x64\LAVFilters64"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="$(Configuration.Contains('Lite')) and '$(Platform)'=='Win32'">
+    <PostBuildEvent>
+      <Command>if not exist "$(OutDir)Lang" if exist "$(SolutionDir)bin\mpc-hc_x86\Lang" mklink /J "$(OutDir)Lang" "$(SolutionDir)bin\mpc-hc_x86\Lang"
+if not exist "$(OutDir)LAVFilters" if exist "$(SolutionDir)bin\mpc-hc_x86\LAVFilters" mklink /J "$(OutDir)LAVFilters" "$(SolutionDir)bin\mpc-hc_x86\LAVFilters"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="!$(Configuration.Contains('Lite'))">
     <Link>
       <AdditionalDependencies>RARFileSource.res;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ClCompile>
-      <AdditionalIncludeDirectories>..\thirdparty\ZenLib\library\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\thirdparty\MessageBoxDialog\MessageBoxDialog.cpp" />
+    <ClCompile Include="..\thirdparty\XeScrollBar\XeScrollBarBase.cpp" />
     <ClCompile Include="AboutDlg.cpp" />
+    <ClCompile Include="AddCommandDlg.cpp" />
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="AuthDlg.cpp" />
     <ClCompile Include="BaseGraph.cpp" />
+    <ClCompile Include="CMPCThemeButton.cpp" />
+    <ClCompile Include="CMPCThemeFrameUtil.cpp" />
+    <ClCompile Include="CMPCThemeFrameWnd.cpp" />
+    <ClCompile Include="CMPCThemeInternalPropertyPageWnd.cpp" />
+    <ClCompile Include="CMPCThemeMiniDockFrameWnd.cpp" />
+    <ClCompile Include="CMPCThemeModelessResizableDialog.cpp" />
+    <ClCompile Include="CMPCThemeProgressCtrl.cpp" />
+    <ClCompile Include="CMPCThemePropPageButton.cpp" />
+    <ClCompile Include="CMPCThemeResizablePropertyPage.cpp" />
+    <ClCompile Include="CMPCThemeResizablePropertySheet.cpp" />
+    <ClCompile Include="CMPCThemeScrollBarRenderer.cpp" />
+    <ClCompile Include="CMPCThemeTitleBarControlButton.cpp" />
+    <ClCompile Include="CMPCThemeUtil.cpp" />
+    <ClCompile Include="CMPCThemeComboBox.cpp" />
+    <ClCompile Include="CMPCThemeDialog.cpp" />
+    <ClCompile Include="CMPCThemeDockBar.cpp" />
+    <ClCompile Include="CMPCThemeEdit.cpp" />
+    <ClCompile Include="CMPCThemeHeaderCtrl.cpp" />
+    <ClCompile Include="CMPCThemeInlineEdit.cpp" />
+    <ClCompile Include="CMPCThemeGroupBox.cpp" />
+    <ClCompile Include="CMPCThemeLinkCtrl.cpp" />
+    <ClCompile Include="CMPCThemeListBox.cpp" />
+    <ClCompile Include="CMPCThemeMenu.cpp" />
+    <ClCompile Include="CMPCThemePlayerListCtrl.cpp" />
+    <ClCompile Include="CMPCThemePPageBase.cpp" />
+    <ClCompile Include="CMPCThemePropPageFrame.cpp" />
+    <ClCompile Include="CMPCThemeRadioOrCheck.cpp" />
+    <ClCompile Include="CMPCThemeScrollBar.cpp" />
+    <ClCompile Include="CMPCThemeScrollBarHelper.cpp" />
+    <ClCompile Include="CMPCThemeSliderCtrl.cpp" />
+    <ClCompile Include="CMPCThemeSpinButtonCtrl.cpp" />
+    <ClCompile Include="CMPCThemeStatic.cpp" />
+    <ClCompile Include="CMPCThemeStaticLink.cpp" />
+    <ClCompile Include="CMPCTheme.cpp" />
+    <ClCompile Include="CMPCThemeToolTipCtrl.cpp" />
+    <ClCompile Include="CMPCThemeTreeCtrl.cpp" />
     <ClCompile Include="ChildView.cpp" />
     <ClCompile Include="CmdLineHelpDlg.cpp" />
+    <ClCompile Include="CMPCThemeCmdUIDialog.cpp" />
+    <ClCompile Include="CMPCThemeComPropertyPage.cpp" />
+    <ClCompile Include="CMPCThemeMaskedEdit.cpp" />
+    <ClCompile Include="CMPCThemeMsgBox.cpp" />
+    <ClCompile Include="CMPCThemePlayerBar.cpp" />
+    <ClCompile Include="CMPCThemePropertyPage.cpp" />
+    <ClCompile Include="CMPCThemePropertySheet.cpp" />
+    <ClCompile Include="CMPCThemeResizableDialog.cpp" />
+    <ClCompile Include="CMPCThemeStatusBar.cpp" />
+    <ClCompile Include="CMPCThemeTabCtrl.cpp" />
     <ClCompile Include="ColorButton.cpp" />
+    <ClCompile Include="ColorControlsDlg.cpp" />
+    <ClCompile Include="ColorProfileUtil.cpp" />
     <ClCompile Include="ComPropertyPage.cpp" />
     <ClCompile Include="ComPropertySheet.cpp" />
     <ClCompile Include="CoverArt.cpp" />
@@ -149,6 +206,7 @@
     <ClCompile Include="CShockwaveFlash.cpp" />
     <ClCompile Include="DebugShadersDlg.cpp" />
     <ClCompile Include="DeinterlacerFilter.cpp" />
+    <ClCompile Include="DpiAwareResizableDialog.cpp" />
     <ClCompile Include="DpiHelper.cpp" />
     <ClCompile Include="DVBChannel.cpp" />
     <ClCompile Include="EditListEditor.cpp" />
@@ -165,21 +223,25 @@
     <ClCompile Include="FileAssoc.cpp" />
     <ClCompile Include="DropTarget.cpp" />
     <ClCompile Include="FreeviewEPGDecode.cpp" />
+    <ClCompile Include="GPUInfo.cpp" />
     <ClCompile Include="ImageGrayer.cpp" />
     <ClCompile Include="MainFrmControls.cpp" />
-    <ClCompile Include="MediaPositionList.cpp" />
     <ClCompile Include="FloatEdit.cpp" />
     <ClCompile Include="FullscreenWnd.cpp" />
     <ClCompile Include="GoToDlg.cpp" />
     <ClCompile Include="GraphThread.cpp" />
+    <ClCompile Include="HistoryDlg.cpp" />
     <ClCompile Include="Ifo.cpp" />
     <ClCompile Include="KeyProvider.cpp" />
     <ClCompile Include="LcdSupport.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MediaFormats.cpp" />
     <ClCompile Include="MediaTypesDlg.cpp" />
+    <ClCompile Include="ModelessResizableDialog.cpp" />
     <ClCompile Include="Monitors.cpp" />
     <ClCompile Include="MouseTouch.cpp" />
+    <ClCompile Include="MouseWndWithArtView.cpp" />
+    <ClCompile Include="MPCFolderPickerDialog.cpp" />
     <ClCompile Include="MPCPngImage.cpp" />
     <ClCompile Include="Mpeg2SectionData.cpp" />
     <ClCompile Include="mplayerc.cpp" />
@@ -187,6 +249,7 @@
     <ClCompile Include="OpenDirHelper.cpp" />
     <ClCompile Include="OpenDlg.cpp" />
     <ClCompile Include="OpenFileDlg.cpp" />
+    <ClCompile Include="OSD.cpp" />
     <ClCompile Include="PlayerBar.cpp" />
     <ClCompile Include="PlayerCaptureBar.cpp" />
     <ClCompile Include="PlayerCaptureDialog.cpp" />
@@ -195,6 +258,7 @@
     <ClCompile Include="PlayerNavigationBar.cpp" />
     <ClCompile Include="PlayerNavigationDialog.cpp" />
     <ClCompile Include="PlayerPlaylistBar.cpp" />
+    <ClCompile Include="PlayerPreView.cpp" />
     <ClCompile Include="PlayerSeekBar.cpp" />
     <ClCompile Include="PlayerStatusBar.cpp" />
     <ClCompile Include="PlayerSubresyncBar.cpp" />
@@ -202,6 +266,7 @@
     <ClCompile Include="Playlist.cpp" />
     <ClCompile Include="PnSPresetsDlg.cpp" />
     <ClCompile Include="PPageAccelTbl.cpp" />
+    <ClCompile Include="Profile.cpp" />
     <ClCompile Include="PPageAdvanced.cpp" />
     <ClCompile Include="PPageAudioRenderer.cpp" />
     <ClCompile Include="PPageAudioSwitcher.cpp" />
@@ -219,6 +284,7 @@
     <ClCompile Include="PPageInternalFilters.cpp" />
     <ClCompile Include="PPageLogo.cpp" />
     <ClCompile Include="PPageMisc.cpp" />
+    <ClCompile Include="PPageMouse.cpp" />
     <ClCompile Include="PPageOutput.cpp" />
     <ClCompile Include="PPagePlayback.cpp" />
     <ClCompile Include="PPagePlayer.cpp" />
@@ -227,14 +293,13 @@
     <ClCompile Include="PPageSubMisc.cpp" />
     <ClCompile Include="PPageSubStyle.cpp" />
     <ClCompile Include="PPageSubtitles.cpp" />
-    <ClCompile Include="PPageSync.cpp" />
+    <ClCompile Include="PPageVideoRenderer.cpp" />
+    <ClCompile Include="PPageTheme.cpp" />
+    <ClCompile Include="PPageToolBar.cpp" />
+    <ClCompile Include="PPageToolBarLayout.cpp" />
     <ClCompile Include="PPageTweaks.cpp" />
     <ClCompile Include="PPageWebServer.cpp" />
-    <ClCompile Include="QuicktimeGraph.cpp">
-      <ExcludedFromBuild Condition="'$(PlatForm)'=='x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="RealMediaGraph.cpp" />
-    <ClCompile Include="RealMediaWindowlessSite.cpp" />
+    <ClCompile Include="RarEntrySelectorDialog.cpp" />
     <ClCompile Include="RegFilterChooserDlg.cpp" />
     <ClCompile Include="SaveDlg.cpp" />
     <ClCompile Include="SaveImageDialog.cpp" />
@@ -244,7 +309,8 @@
     <ClCompile Include="SelectMediaType.cpp" />
     <ClCompile Include="Shaders.cpp" />
     <ClCompile Include="ShockwaveGraph.cpp" />
-    <ClCompile Include="SkypeMoodMsgHandler.cpp" />
+    <ClCompile Include="MediaTransControls.cpp" />
+    <ClCompile Include="STB_Image.cpp" />
     <ClCompile Include="SVGImage.cpp" />
     <ClCompile Include="Translations.cpp" />
     <ClCompile Include="StaticLink.cpp" />
@@ -256,31 +322,84 @@
     <ClCompile Include="SubtitlesProvider.cpp" />
     <ClCompile Include="SubtitlesProviders.cpp" />
     <ClCompile Include="SubtitlesProvidersUtils.cpp" />
-    <ClCompile Include="SubtitleUpDlg.cpp" />
     <ClCompile Include="TextPassThruFilter.cpp" />
     <ClCompile Include="TunerScanDlg.cpp" />
     <ClCompile Include="UpdateChecker.cpp" />
     <ClCompile Include="UpdateCheckerDlg.cpp" />
     <ClCompile Include="VersionInfo.cpp" />
     <ClCompile Include="vkCodes.cpp" />
-    <ClCompile Include="VMROSD.cpp" />
     <ClCompile Include="VolumeCtrl.cpp" />
     <ClCompile Include="WebClientSocket.cpp" />
     <ClCompile Include="WebServer.cpp" />
     <ClCompile Include="WebServerSocket.cpp" />
+    <ClCompile Include="WicUtils.cpp" />
     <ClCompile Include="WinHotkeyCtrl.cpp" />
     <ClCompile Include="..\thirdparty\XmlRpc4Win\TimXmlRpc.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="YoutubeDL.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\mpc-hc_config.h" />
+    <ClInclude Include="..\thirdparty\MessageBoxDialog\MessageBoxDialog.h" />
+    <ClInclude Include="..\thirdparty\XeScrollBar\xescrollbarbase.h" />
     <ClInclude Include="AboutDlg.h" />
+    <ClInclude Include="AddCommandDlg.h" />
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="AuthDlg.h" />
     <ClInclude Include="BaseGraph.h" />
+    <ClInclude Include="CMPCThemeButton.h" />
+    <ClInclude Include="CMPCThemeFrameUtil.h" />
+    <ClInclude Include="CMPCThemeFrameWnd.h" />
+    <ClInclude Include="CMPCThemeInternalPropertyPageWnd.h" />
+    <ClInclude Include="CMPCThemeMiniDockFrameWnd.h" />
+    <ClInclude Include="CMPCThemeModelessResizableDialog.h" />
+    <ClInclude Include="CMPCThemeProgressCtrl.h" />
+    <ClInclude Include="CMPCThemePropPageButton.h" />
+    <ClInclude Include="CMPCThemeResizablePropertyPage.h" />
+    <ClInclude Include="CMPCThemeResizablePropertySheet.h" />
+    <ClInclude Include="CMPCThemeScrollBarRenderer.h" />
+    <ClInclude Include="CMPCThemeTitleBarControlButton.h" />
+    <ClInclude Include="CMPCThemeUtil.h" />
+    <ClInclude Include="CMPCThemeComboBox.h" />
+    <ClInclude Include="CMPCThemeDialog.h" />
+    <ClInclude Include="CMPCThemeDockBar.h" />
+    <ClInclude Include="CMPCThemeEdit.h" />
+    <ClInclude Include="CMPCThemeHeaderCtrl.h" />
+    <ClInclude Include="CMPCThemeInlineEdit.h" />
+    <ClInclude Include="CMPCThemeGroupBox.h" />
+    <ClInclude Include="CMPCThemeLinkCtrl.h" />
+    <ClInclude Include="CMPCThemeListBox.h" />
+    <ClInclude Include="CMPCThemeMenu.h" />
+    <ClInclude Include="CMPCThemePlayerListCtrl.h" />
+    <ClInclude Include="CMPCThemePPageBase.h" />
+    <ClInclude Include="CMPCThemePropPageFrame.h" />
+    <ClInclude Include="CMPCThemeRadioOrCheck.h" />
+    <ClInclude Include="CMPCThemeScrollBar.h" />
+    <ClInclude Include="CMPCThemeScrollBarHelper.h" />
+    <ClInclude Include="CMPCThemeSliderCtrl.h" />
+    <ClInclude Include="CMPCThemeSpinButtonCtrl.h" />
+    <ClInclude Include="CMPCThemeStatic.h" />
+    <ClInclude Include="CMPCThemeStaticLink.h" />
+    <ClInclude Include="CMPCTheme.h" />
+    <ClInclude Include="CMPCThemeToolTipCtrl.h" />
+    <ClInclude Include="CMPCThemeTreeCtrl.h" />
     <ClInclude Include="ChildView.h" />
     <ClInclude Include="CmdLineHelpDlg.h" />
+    <ClInclude Include="CMPCThemeCmdUIDialog.h" />
+    <ClInclude Include="CMPCThemeComPropertyPage.h" />
+    <ClInclude Include="CMPCThemeMaskedEdit.h" />
+    <ClInclude Include="CMPCThemeMsgBox.h" />
+    <ClInclude Include="CMPCThemePlayerBar.h" />
+    <ClInclude Include="CMPCThemePropertyPage.h" />
+    <ClInclude Include="CMPCThemePropertySheet.h" />
+    <ClInclude Include="CMPCThemeResizableDialog.h" />
+    <ClInclude Include="CMPCThemeStatusBar.h" />
+    <ClInclude Include="CMPCThemeTabCtrl.h" />
+    <ClInclude Include="CMPCThemeWin10Api.h" />
     <ClInclude Include="ColorButton.h" />
+    <ClInclude Include="ColorControlsDlg.h" />
+    <ClInclude Include="ColorProfileUtil.h" />
     <ClInclude Include="ComPropertyPage.h" />
     <ClInclude Include="ComPropertySheet.h" />
     <ClInclude Include="CoverArt.h" />
@@ -288,6 +407,7 @@
     <ClInclude Include="CShockwaveFlash.h" />
     <ClInclude Include="DebugShadersDlg.h" />
     <ClInclude Include="DeinterlacerFilter.h" />
+    <ClInclude Include="DpiAwareResizableDialog.h" />
     <ClInclude Include="DpiHelper.h" />
     <ClInclude Include="DVBChannel.h" />
     <ClInclude Include="EditListEditor.h" />
@@ -308,7 +428,11 @@
     <ClInclude Include="FreeviewEPGDecode.h" />
     <ClInclude Include="FullscreenWnd.h" />
     <ClInclude Include="GoToDlg.h" />
+    <ClInclude Include="GPUInfo.h" />
     <ClInclude Include="GraphThread.h" />
+    <ClInclude Include="HistoryDlg.h" />
+    <ClInclude Include="MemoryDCBuffer.h" />
+    <ClInclude Include="MediaTransControls.h" />
     <ClInclude Include="Ifo.h" />
     <ClInclude Include="IGraphBuilder2.h" />
     <ClInclude Include="ImageGrayer.h" />
@@ -319,18 +443,22 @@
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MainFrmControls.h" />
     <ClInclude Include="MediaFormats.h" />
-    <ClInclude Include="MediaPositionList.h" />
     <ClInclude Include="MediaTypesDlg.h" />
+    <ClInclude Include="ModelessResizableDialog.h" />
     <ClInclude Include="Monitors.h" />
     <ClInclude Include="MouseTouch.h" />
+    <ClInclude Include="MouseWndWithArtView.h" />
     <ClInclude Include="MpcApi.h" />
+    <ClInclude Include="MPCFolderPickerDialog.h" />
     <ClInclude Include="MPCPngImage.h" />
     <ClInclude Include="Mpeg2SectionData.h" />
     <ClInclude Include="mplayerc.h" />
+    <ClInclude Include="Profile.h" />
     <ClInclude Include="MultiMonitor.h" />
     <ClInclude Include="OpenDirHelper.h" />
     <ClInclude Include="OpenDlg.h" />
     <ClInclude Include="OpenFileDlg.h" />
+    <ClInclude Include="OSD.h" />
     <ClInclude Include="PlayerBar.h" />
     <ClInclude Include="PlayerCaptureBar.h" />
     <ClInclude Include="PlayerCaptureDialog.h" />
@@ -339,6 +467,7 @@
     <ClInclude Include="PlayerNavigationBar.h" />
     <ClInclude Include="PlayerNavigationDialog.h" />
     <ClInclude Include="PlayerPlaylistBar.h" />
+    <ClInclude Include="PlayerPreView.h" />
     <ClInclude Include="PlayerSeekBar.h" />
     <ClInclude Include="PlayerStatusBar.h" />
     <ClInclude Include="PlayerSubresyncBar.h" />
@@ -363,6 +492,7 @@
     <ClInclude Include="PPageInternalFilters.h" />
     <ClInclude Include="PPageLogo.h" />
     <ClInclude Include="PPageMisc.h" />
+    <ClInclude Include="PPageMouse.h" />
     <ClInclude Include="PPageOutput.h" />
     <ClInclude Include="PPagePlayback.h" />
     <ClInclude Include="PPagePlayer.h" />
@@ -371,14 +501,13 @@
     <ClInclude Include="PPageSubMisc.h" />
     <ClInclude Include="PPageSubStyle.h" />
     <ClInclude Include="PPageSubtitles.h" />
-    <ClInclude Include="PPageSync.h" />
+    <ClInclude Include="PPageVideoRenderer.h" />
+    <ClInclude Include="PPageTheme.h" />
+    <ClInclude Include="PPageToolBar.h" />
+    <ClInclude Include="PPageToolBarLayout.h" />
     <ClInclude Include="PPageTweaks.h" />
     <ClInclude Include="PPageWebServer.h" />
-    <ClInclude Include="QuicktimeGraph.h">
-      <ExcludedFromBuild Condition="'$(PlatForm)'=='x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="RealMediaGraph.h" />
-    <ClInclude Include="RealMediaWindowlessSite.h" />
+    <ClInclude Include="RarEntrySelectorDialog.h" />
     <ClInclude Include="RegFilterChooserDlg.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SaveDlg.h" />
@@ -387,10 +516,10 @@
     <ClInclude Include="SaveTextFileDialog.h" />
     <ClInclude Include="SaveThumbnailsDialog.h" />
     <ClInclude Include="SelectMediaType.h" />
+    <ClInclude Include="SMTC2Compat.h" />
     <ClInclude Include="SettingsDefines.h" />
     <ClInclude Include="Shaders.h" />
     <ClInclude Include="ShockwaveGraph.h" />
-    <ClInclude Include="SkypeMoodMsgHandler.h" />
     <ClInclude Include="StaticLink.h" />
     <ClInclude Include="StatusLabel.h" />
     <ClInclude Include="stdafx.h" />
@@ -399,7 +528,6 @@
     <ClInclude Include="SubtitlesProvider.h" />
     <ClInclude Include="SubtitlesProviders.h" />
     <ClInclude Include="SubtitlesProvidersUtils.h" />
-    <ClInclude Include="SubtitleUpDlg.h" />
     <ClInclude Include="SVGImage.h" />
     <ClInclude Include="TextPassThruFilter.h" />
     <ClInclude Include="TimerWrappers.h" />
@@ -410,13 +538,14 @@
     <ClInclude Include="UpdateCheckerDlg.h" />
     <ClInclude Include="VersionInfo.h" />
     <ClInclude Include="vkCodes.h" />
-    <ClInclude Include="VMROSD.h" />
     <ClInclude Include="VolumeCtrl.h" />
     <ClInclude Include="WebClientSocket.h" />
     <ClInclude Include="WebServer.h" />
     <ClInclude Include="WebServerSocket.h" />
+    <ClInclude Include="WicUtils.h" />
     <ClInclude Include="WinHotkeyCtrl.h" />
     <ClInclude Include="..\thirdparty\XmlRpc4Win\timxmlrpc.h" />
+    <ClInclude Include="YoutubeDL.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\ani.avi" />
@@ -532,6 +661,9 @@
     <ProjectReference Include="..\DSUtil\DSUtil.vcxproj">
       <Project>{fc70988b-1ae5-4381-866d-4f405e28ac42}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\thirdparty\AudioTools\AudioTools.vcxproj">
+      <Project>{1b6de4c0-9d27-4150-a327-e7f3b492b5f0}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\thirdparty\BaseClasses\BaseClasses.vcxproj">
       <Project>{e8a3f6fa-ae1c-4c8e-a0b6-9c8480324eaa}</Project>
     </ProjectReference>
@@ -586,9 +718,6 @@
     <ProjectReference Include="..\filters\switcher\AudioSwitcher\AudioSwitcher.vcxproj">
       <Project>{d8db3e7e-d50e-4ec3-a9b9-dad18f5fe466}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\filters\transform\AVI2AC3Filter\AVI2AC3Filter.vcxproj">
-      <Project>{339a4575-e25b-45d6-94a1-d835891740b8}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\filters\transform\BufferFilter\BufferFilter.vcxproj">
       <Project>{9dcfd02a-16a0-4766-bc18-66163e21929d}</Project>
     </ProjectReference>
@@ -601,9 +730,6 @@
     <ProjectReference Include="..\Subtitles\Subtitles.vcxproj">
       <Project>{5e56335f-0fb1-4eea-b240-d8dc5e0608e4}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\thirdparty\DoctorDump\DoctorDump.vcxproj">
-      <Project>{beceaff9-cdca-45ec-a1cf-658fa51818e6}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\thirdparty\bs2b\bs2b.vcxproj">
       <Project>{0fd9bf8f-2397-4e23-b41e-e4624f35d646}</Project>
       <Private>false</Private>
@@ -612,19 +738,34 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
-    <ProjectReference Include="..\thirdparty\LAVFilters\LAVFilters.vcxproj">
-      <Project>{ed257874-e12e-4143-af0a-0676da3bb18c}</Project>
+    <ProjectReference Include="..\thirdparty\ffmpeg\ffmpeg.vcxproj">
+      <Project>{438286b7-a9f4-411d-bcc5-948c40e37d8f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\thirdparty\freetype2\freetype2.vcxproj">
+      <Project>{78b079bd-9fc7-4b9e-b4a6-96da0f00248b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\thirdparty\fribidi\libfribidi.vcxproj">
+      <Project>{08091723-a142-478b-a092-20741ba8fae2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\thirdparty\harfbuzz\libharfbuzz.vcxproj">
+      <Project>{9db795b7-e8bd-4846-82a5-c6d2577b1aaf}</Project>
     </ProjectReference>
     <ProjectReference Include="..\thirdparty\lcms2\lcms2.vcxproj">
       <Project>{acf5c64b-78aa-4730-91a2-24f4910fbad9}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\thirdparty\MediaInfo\MediaInfoLib.vcxproj">
-      <Project>{20e0f8d6-213c-460b-b361-9c725cb375c7}</Project>
+    <ProjectReference Include="..\thirdparty\libass\libass.vcxproj">
+      <Project>{19677dfd-c020-434d-9cb1-d0f105e72770}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\thirdparty\libiconv\libiconv.vcxproj">
+      <Project>{1704ea01-6b21-4362-9f1f-44d25cf2e0d7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\thirdparty\MpcAudioRenderer\MpcAudioRenderer.vcxproj">
+      <Project>{d0620ef4-1313-40d5-9069-a82f6fe26994}</Project>
     </ProjectReference>
     <ProjectReference Include="..\thirdparty\RARFileSource\RARFileSource.vcxproj">
       <Project>{2b7f22d7-1750-47c5-8709-1a3688b62499}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\thirdparty\sanear\sanear\sanear.vcxproj">
+    <ProjectReference Include="..\thirdparty\sanear\sanear.vcxproj">
       <Project>{bb2b61af-734a-4dad-9326-07f4f9ea088f}</Project>
       <Private>false</Private>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
@@ -654,15 +795,6 @@
     <ProjectReference Include="..\thirdparty\unrar\unrar.vcxproj">
       <Project>{da8461c4-7683-4360-9372-2a9e0f1795c2}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\thirdparty\VirtualDub\Kasumi\Kasumi.vcxproj">
-      <Project>{0d252872-7542-4232-8d02-53f9182aee15}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\thirdparty\VirtualDub\system\system.vcxproj">
-      <Project>{c2082189-3ecb-4079-91fa-89d3c8a305c0}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\thirdparty\ZenLib\ZenLib.vcxproj">
-      <Project>{0da1da7d-f393-4e7c-a7ce-cb5c6a67bc94}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\thirdparty\zita-resampler\zita-resampler.vcxproj">
       <Project>{f3d02050-f39a-4103-8343-09285359a495}</Project>
       <Private>false</Private>
@@ -689,14 +821,6 @@
     <ProjectReference Include="..\thirdparty\TreePropSheet\TreePropSheet.vcxproj">
       <Project>{ab494732-ef6d-44d0-bcf8-80ff04858d10}</Project>
     </ProjectReference>
-    <ProjectReference Include="CrashReporterDialog\CrashReporterDialog.vcxproj">
-      <Project>{5db958dd-8b25-45ef-8072-3356caf8ccd7}</Project>
-      <Private>false</Private>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
-      <LinkLibraryDependencies>false</LinkLibraryDependencies>
-      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
-    </ProjectReference>
     <ProjectReference Include="..\thirdparty\minhook\minhook.vcxproj">
       <Project>{303B855A-137D-45E9-AF6D-B7241C6E66D6}</Project>
     </ProjectReference>
@@ -705,14 +829,28 @@
     <Image Include="res\check_all.bmp" />
     <Image Include="res\check_audio.bmp" />
     <Image Include="res\check_video.bmp" />
+    <Image Include="res\darktheme\checkboxes-120.png" />
+    <Image Include="res\darktheme\checkboxes-144.png" />
+    <Image Include="res\darktheme\checkboxes-192.png" />
+    <Image Include="res\darktheme\checkboxes-96.png" />
+    <Image Include="res\darktheme\gripper-120.png" />
+    <Image Include="res\darktheme\gripper-144.png" />
+    <Image Include="res\darktheme\gripper-168.png" />
+    <Image Include="res\darktheme\gripper-192.png" />
+    <Image Include="res\darktheme\gripper-96.png" />
+    <Image Include="res\darktheme\radios-120.png" />
+    <Image Include="res\darktheme\radios-144.png" />
+    <Image Include="res\darktheme\radios-192.png" />
+    <Image Include="res\darktheme\radios-96.png" />
+    <Image Include="res\logo.4.png" />
+    <Image Include="res\logo.4_x64.png" />
+    <Image Include="res\noimage.png" />
     <Image Include="res\uncheck_all.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\subtitles\favicon_opensubtitles.ico" />
     <Image Include="res\subtitles\favicon_podnapisi.ico" />
     <Image Include="res\subtitles\favicon_subdb.ico" />
-    <Image Include="res\subtitles\favicon_titlovi.ico" />
-    <Image Include="res\subtitles\favicon_ysubs.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

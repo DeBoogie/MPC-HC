@@ -1,6 +1,6 @@
 #ifndef ISPP_INVOKED
 /*
- * (C) 2013-2017 see Authors.txt
+ * (C) 2013-2018 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -31,24 +31,29 @@
 #endif
 #endif
 
-#define WEBSITE_URL  _T("https://mpc-hc.org/")
-#define DOWNLOAD_URL _T("https://mpc-hc.org/downloads/")
-#define UPDATE_URL   _T("https://mpc-hc.org/version.txt")
-#define TRAC_URL     _T("https://trac.mpc-hc.org/")
-#define BUGS_URL     _T("https://trac.mpc-hc.org/wiki/How_to_Report_Issues")
-#define TOOLBARS_URL _T("https://trac.mpc-hc.org/wiki/Toolbar_images")
+#define WEBSITE_URL  _T("https://github.com/clsid2/mpc-hc/releases")
+#define DOWNLOAD_URL _T("https://github.com/clsid2/mpc-hc/releases")
+#define UPDATE_URL   _T("https://github.com/clsid2/mpc-hc/raw/develop/version.txt")
+#define BACKUP_UPDATE_URL   _T("https://cdn.jsdelivr.net/gh/clsid2/mpc-hc@develop/version.txt")
+#define TRAC_URL     _T("https://github.com/clsid2/mpc-hc/issues")
+#define BUGS_URL     _T("https://github.com/clsid2/mpc-hc/issues")
 
 #define USE_STATIC_UNRAR 1
 
-#ifndef MPCHC_LITE
-#define USE_STATIC_MEDIAINFO 1
+#define USE_LIBASS 1
+
+#ifndef USE_DRDUMP_CRASH_REPORTER
+#define USE_DRDUMP_CRASH_REPORTER 0
 #endif
 
 #define SHADERS_DIR _T("Shaders")
+#define SHADERS_DIR11 _T("Shaders11")
 #define SHADERS_EXT _T(".hlsl")
 
+#define USE_LAVFILTERS 1
+
 // If this is enabled, the registered LAV Filters can be loaded as internal filters
-#define ENABLE_LOAD_EXTERNAL_LAVF_AS_INTERNAL 0
+#define ENABLE_LOAD_EXTERNAL_LAVF_AS_INTERNAL 1
 
 #define DO_MAKE_STR(x)          _T(#x)
 #define MAKE_STR(x)             DO_MAKE_STR(x)
@@ -62,5 +67,10 @@
 // Used in build scripts
 #define MPCHC_WINSDK_VER 8.1
 #endif
+
+
+#define TRACE_GRAPH_BUILD 0
+#define TRACE_SANEAR      0
+#define TRACE_SUBTITLES   0
 
 #endif // MPC_HC_CONFIG_H

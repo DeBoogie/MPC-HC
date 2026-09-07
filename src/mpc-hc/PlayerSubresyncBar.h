@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include "PlayerBar.h"
+#include "CMPCThemePlayerBar.h"
 #include "PlayerListCtrl.h"
 #include "../Subtitles/STS.h"
 #include "../Subtitles/VobSubFile.h"
@@ -34,13 +34,16 @@ interface ISubStream;
 
 // CPlayerSubresyncBar
 
-class CPlayerSubresyncBar : public CPlayerBar
+
+class CPlayerSubresyncBar : public CMPCThemePlayerBar
+    , public CMPCThemeListCtrlCustomInterface
 {
     DECLARE_DYNAMIC(CPlayerSubresyncBar)
 
 private:
     CString m_strYes, m_strNo;
     CString m_strYesMenu, m_strNoMenu;
+    bool bHadFocusBeforeClick = false;
 
     CPlayerListCtrl m_list;
 
@@ -49,13 +52,16 @@ private:
     CFont m_font;
     void ScaleFont();
 
-    int m_itemHeight = 0;
+	int m_itemHeight = 0;
+	bool createdWindow;
+
     EventClient m_eventc;
     void EventCallback(MpcEvent ev);
 
     CCritSec* m_pSubLock;
     CComPtr<ISubStream> m_pSubStream;
     double m_fps;
+    bool m_external;
 
     int m_lastSegment;
     REFERENCE_TIME m_rt;
@@ -139,7 +145,8 @@ public:
     void SetTime(REFERENCE_TIME rt);
     void SetFPS(double fps);
 
-    void SetSubtitle(ISubStream* pSubStream, double fps);
+    void SetSubtitle(ISubStream* pSubStream, double fps, bool external);
+    bool RefreshEmbeddedTextSubtitleData();
     void ReloadSubtitle();
     void ResetSubtitle();
     void SaveSubtitle();
@@ -151,6 +158,9 @@ public:
 protected:
     virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
     virtual BOOL PreTranslateMessage(MSG* pMsg);
+    virtual void GetCustomTextColors(INT_PTR nItem, int iSubItem, COLORREF& clrText, COLORREF& clrTextBk, bool& overrideSelectedBG);
+    virtual void DoCustomPrePaint();
+    virtual void GetCustomGridColors(int nItem, COLORREF& horzGridColor, COLORREF& vertGridColor);
 
     bool HandleShortCuts(const MSG* pMsg);
 
@@ -165,5 +175,5 @@ protected:
     afx_msg void OnRclickList(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnNMDblclkList(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnLvnKeydownList(NMHDR* pNMHDR, LRESULT* pResult);
-    afx_msg void OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult);
+    void OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult);
 };

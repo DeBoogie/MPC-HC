@@ -27,7 +27,6 @@ namespace DSObjects
         , public IVideoWindow
         , public IBasicVideo2
         , public IVMRWindowlessControl
-        , public IVMRffdshow9
         , public IVMRMixerBitmap9
     {
         CComPtr<IUnknown> m_pVMR;
@@ -67,9 +66,6 @@ namespace DSObjects
                     }
                     if (riid == __uuidof(IBasicVideo2)) {
                         return GetInterface((IBasicVideo2*)this, ppv);
-                    }
-                    if (riid == __uuidof(IVMRffdshow9)) { // Support ffdshow queueing. We show ffdshow that this is patched MPC-HC.
-                        return GetInterface((IVMRffdshow9*)this, ppv);
                     }
                     /*if (riid == __uuidof(IVMRWindowlessControl))
                     return GetInterface((IVMRWindowlessControl*)this, ppv);
@@ -187,12 +183,6 @@ namespace DSObjects
 
         STDMETHODIMP SetDefaultDestinationPosition() { return E_NOTIMPL; }
         STDMETHODIMP GetVideoSize(long* pWidth, long* pHeight);
-
-        // IVMRffdshow9
-        STDMETHODIMP support_ffdshow() {
-            queue_ffdshow_support = true;
-            return S_OK;
-        }
 
         STDMETHODIMP GetVideoPaletteEntries(long StartIndex, long Entries, long* pRetrieved, long* pPalette) {
             return E_NOTIMPL;

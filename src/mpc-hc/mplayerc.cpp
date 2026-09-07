@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2017 see Authors.txt
+ * (C) 2006-2018 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -39,14 +39,18 @@
 #include "WebServer.h"
 #include "WinAPIUtils.h"
 #include "mpc-hc_config.h"
+#include "zlib/minizip/zip.h"
+#include "zlib/minizip/iowin32.h"
 #include "winddk/ntddcdvd.h"
 #include <afxsock.h>
 #include <atlsync.h>
 #include <winternl.h>
 #include <regex>
 #include "ExceptionHandler.h"
-
-#define HOOKS_BUGS_URL _T("https://trac.mpc-hc.org/ticket/3739")
+#include "FGFilterLAV.h"
+#include "CMPCThemeMsgBox.h"
+#include "version.h"
+#include "psapi.h"
 
 HICON LoadIcon(CString fn, bool bSmallIcon, DpiHelper* pDpiHelper/* = nullptr*/)
 {
@@ -233,7 +237,7 @@ bool LoadResource(UINT resid, CStringA& str, LPCTSTR restype)
     return true;
 }
 
-static bool FindRedir(const CUrl& src, CString ct, const CString& body, CAtlList<CString>& urls, const std::vector<std::wregex>& res)
+static bool FindRedir(const CUrl& src,const CString& body, CAtlList<CString>& urls, const std::vector<std::wregex>& res)
 {
     bool bDetectHLS = false;
     for (const auto re : res) {
@@ -276,13 +280,14 @@ static bool FindRedir(const CUrl& src, CString ct, const CString& body, CAtlList
     return !urls.IsEmpty();
 }
 
-static bool FindRedir(const CString& fn, CString ct, CAtlList<CString>& fns, const std::vector<std::wregex>& res)
+static bool FindRedir(const CString& fn, CAtlList<CString>& fns, const std::vector<std::wregex>& res)
 {
     CString body;
 
     CTextFile f(CTextFile::UTF8);
     if (f.Open(fn)) {
-        for (CString tmp; f.ReadString(tmp); body += tmp + '\n') {
+        int i = 0;
+        for (CString tmp; i < 10000 && f.ReadString(tmp); body += tmp + '\n', ++i) {
             ;
         }
     }
@@ -320,242 +325,243 @@ static bool FindRedir(const CString& fn, CString ct, CAtlList<CString>& fns, con
     return !fns.IsEmpty();
 }
 
-CStringA GetContentType(CString fn, CAtlList<CString>* redir)
+
+CString GetContentType(CString fn, CAtlList<CString>* redir)
 {
-    CUrl url;
-    CString ct, body;
-
     fn.Trim();
+    if (fn.IsEmpty()) {
+        return "";
+    }
 
-    if (fn.Find(_T("://")) >= 0) {
+    CUrl url;
+    CString content, body;
+    BOOL url_fail = false;
+    BOOL ishttp = false;
+    BOOL parsefile = false;
+    BOOL isurl = PathUtils::IsURL(fn);
+
+    // Get content type based on the URI scheme
+    if (isurl) {
         url.CrackUrl(fn);
 
         if (_tcsicmp(url.GetSchemeName(), _T("pnm")) == 0) {
             return "audio/x-pn-realaudio";
         }
-
         if (_tcsicmp(url.GetSchemeName(), _T("mms")) == 0) {
             return "video/x-ms-asf";
         }
-
-        if (_tcsicmp(url.GetSchemeName(), _T("http")) != 0) {
+        if (_tcsicmp(url.GetSchemeName(), _T("http")) == 0 || _tcsicmp(url.GetSchemeName(), _T("https")) == 0) {
+            ishttp = true;
+            if (AfxGetMainFrame()->CanSendToYoutubeDL(fn)) {
+                return "ytdl";
+            }
+        } else {
             return "";
         }
-
-        DWORD ProxyEnable = 0;
-        CString ProxyServer;
-        DWORD ProxyPort = 0;
-        ULONG len = 256 + 1;
-        CRegKey key;
-
-        if (ERROR_SUCCESS == key.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"), KEY_READ)
-                && ERROR_SUCCESS == key.QueryDWORDValue(_T("ProxyEnable"), ProxyEnable) && ProxyEnable
-                && ERROR_SUCCESS == key.QueryStringValue(_T("ProxyServer"), ProxyServer.GetBufferSetLength(256), &len)) {
-            ProxyServer.ReleaseBufferSetLength(len);
-
-            CAtlList<CString> sl;
-            ProxyServer = Explode(ProxyServer, sl, ';');
-            if (sl.GetCount() > 1) {
-                POSITION pos = sl.GetHeadPosition();
-                while (pos) {
-                    CAtlList<CString> sl2;
-                    if (!Explode(sl.GetNext(pos), sl2, '=', 2).CompareNoCase(_T("http"))
-                            && sl2.GetCount() == 2) {
-                        ProxyServer = sl2.GetTail();
-                        break;
-                    }
-                }
-            }
-
-            ProxyServer = Explode(ProxyServer, sl, ':');
-            if (sl.GetCount() > 1) {
-                ProxyPort = _tcstol(sl.GetTail(), nullptr, 10);
-            }
-        }
-
-        CSocket s;
-        s.Create();
-        if (s.Connect(
-                    ProxyEnable ? ProxyServer.GetString() : url.GetHostName(),
-                    ProxyEnable ? ProxyPort : url.GetPortNumber())) {
-            CStringA host = url.GetHostName();
-            CStringA path = url.GetUrlPath();
-            path += url.GetExtraInfo();
-
-            if (ProxyEnable) {
-                path = "http://" + host + path;
-            }
-
-            CStringA hdr;
-            hdr.Format(
-                "GET %s HTTP/1.0\r\n"
-                "User-Agent: MPC-HC\r\n"
-                "Host: %s\r\n"
-                "Accept: */*\r\n"
-                "\r\n", path.GetString(), host.GetString());
-
-            // MessageBox(nullptr, CString(hdr), _T("Sending..."), MB_OK);
-
-            if (s.Send((LPCSTR)hdr, hdr.GetLength()) < hdr.GetLength()) {
-                return "";
-            }
-
-            hdr.Empty();
-            for (;;) {
-                CStringA str;
-                str.ReleaseBuffer(s.Receive(str.GetBuffer(256), 256)); // SOCKET_ERROR == -1, also suitable for ReleaseBuffer
-                if (str.IsEmpty()) {
-                    break;
-                }
-                hdr += str;
-                int hdrend = hdr.Find("\r\n\r\n");
-                if (hdrend >= 0) {
-                    body = hdr.Mid(hdrend + 4);
-                    hdr = hdr.Left(hdrend);
-                    break;
-                }
-            }
-
-            // MessageBox(nullptr, CString(hdr), _T("Received..."), MB_OK);
-
-            CAtlList<CStringA> sl;
-            Explode(hdr, sl, '\n');
-            POSITION pos = sl.GetHeadPosition();
-            while (pos) {
-                CStringA& hdrline = sl.GetNext(pos);
-                CAtlList<CStringA> sl2;
-                Explode(hdrline, sl2, ':', 2);
-                CStringA field = sl2.RemoveHead().MakeLower();
-                if (field == "location" && !sl2.IsEmpty()) {
-                    return GetContentType(CString(sl2.GetHead()), redir);
-                }
-                if (field == "content-type" && !sl2.IsEmpty()) {
-                    ct = sl2.GetHead();
-                    int iEndContentType = ct.Find(_T(';'));
-                    if (iEndContentType > 0) {
-                        ct.Truncate(iEndContentType);
-                    }
-                }
-            }
-
-            while (body.GetLength() < 256) {
-                CStringA str;
-                str.ReleaseBuffer(s.Receive(str.GetBuffer(256), 256)); // SOCKET_ERROR == -1, also suitable for ReleaseBuffer
-                if (str.IsEmpty()) {
-                    break;
-                }
-                body += str;
-            }
-
-            if (body.GetLength() >= 8) {
-                CStringA str = TToA(body);
-                if (!strncmp((LPCSTR)str, ".ra", 3)) {
-                    return "audio/x-pn-realaudio";
-                }
-                if (!strncmp((LPCSTR)str, ".RMF", 4)) {
-                    return "audio/x-pn-realaudio";
-                }
-                if (*(DWORD*)(LPCSTR)str == 0x75b22630) {
-                    return "video/x-ms-wmv";
-                }
-                if (!strncmp((LPCSTR)str + 4, "moov", 4)) {
-                    return "video/quicktime";
-                }
-            }
-
-            if (redir
-                    && (ct == _T("audio/x-scpls") || ct == _T("audio/scpls")
-                        || ct == _T("audio/x-mpegurl") || ct == _T("audio/mpegurl")
-                        || ct == _T("text/plain"))) {
-                while (body.GetLength() < 64 * 1024) { // should be enough for a playlist...
-                    CStringA str;
-                    str.ReleaseBuffer(s.Receive(str.GetBuffer(256), 256)); // SOCKET_ERROR == -1, also suitable for ReleaseBuffer
-                    if (str.IsEmpty()) {
-                        break;
-                    }
-                    body += str;
-                }
-            }
-        }
-    } else if (!fn.IsEmpty()) {
-        FILE* f = nullptr;
-        if (!_tfopen_s(&f, fn, _T("rb"))) {
-            CStringA str;
-            str.ReleaseBufferSetLength((int)fread(str.GetBuffer(10240), 1, 10240, f));
-            body = AToT(str);
-            fclose(f);
-        }
     }
 
-    // Try to guess from the extension if we don't have much info yet
-    if (!fn.IsEmpty() && (ct.IsEmpty() || ct == _T("text/plain"))) {
-        CPath p(fn);
-        CString ext = p.GetExtension().MakeLower();
-        if (ext == _T(".asx")) {
-            ct = _T("video/x-ms-asf");
-        } else if (ext == _T(".pls")) {
-            ct = _T("audio/x-scpls");
-        } else if (ext == _T(".m3u") || ext == _T(".m3u8")) {
-            ct = _T("audio/x-mpegurl");
-        } else if (ext == _T(".qtl")) {
-            ct = _T("application/x-quicktimeplayer");
+    CString ext = CPath(fn).GetExtension().MakeLower();
+    int p = ext.FindOneOf(_T("?#"));
+    if (p > 0) {
+        ext = ext.Left(p);
+    }
+
+    // no further analysis needed if known audio/video extension and points directly to a file
+    if (!ext.IsEmpty()) {
+        if (ext == _T(".mp4") || ext == _T(".m4v") || ext == _T(".mov") || ext == _T(".mkv") || ext == _T(".webm") || ext == _T(".avi") || ext == _T(".wmv") || ext == _T(".mpg") || ext == _T(".mpeg") || ext == _T(".flv") || ext == _T(".ogm") || ext == _T(".m2ts") || ext == _T(".ts")) {
+            content = _T("video");
+        } else if (ext == _T(".mp3") || ext == _T(".m4a") || ext == _T(".aac") || ext == _T(".flac") || ext == _T(".mka") || ext == _T(".ogg") || ext == _T(".opus")) {
+            content = _T("audio");
         } else if (ext == _T(".mpcpl")) {
-            ct = _T("application/x-mpc-playlist");
-        } else if (ext == _T(".ram")) {
-            ct = _T("audio/x-pn-realaudio");
+            content = _T("application/x-mpc-playlist");
+        } else if (ext == _T(".m3u") || ext == _T(".m3u8")) {
+            content = _T("audio/x-mpegurl");
         } else if (ext == _T(".bdmv")) {
-            ct = _T("application/x-bdmv-playlist");
+            content = _T("application/x-bdmv-playlist");
+        } else if (ext == _T(".cue")) {
+            content = _T("application/x-cue-sheet");
+        } else if (ext == _T(".swf")) {
+            content = _T("application/x-shockwave-flash");
+        }
+
+        if (!content.IsEmpty()) {
+            return content;
         }
     }
 
-    if (body.GetLength() >= 4) { // here only those which cannot be opened through dshow
-        CStringA str = TToA(body);
-        if (!strncmp((LPCSTR)str, ".ra", 3)) {
-            return "audio/x-pn-realaudio";
+    // Get content type by getting the header response from server
+    if (ishttp) {
+        CInternetSession internet;
+        internet.SetOption(INTERNET_OPTION_CONNECT_TIMEOUT,  5000);
+        internet.SetOption(INTERNET_OPTION_RECEIVE_TIMEOUT, 10000);
+        internet.SetOption(INTERNET_OPTION_SEND_TIMEOUT,    10000);
+        CString headers = _T("User-Agent: MPC-HC");
+        CHttpFile* httpFile = NULL;
+        try {
+            httpFile = (CHttpFile*)internet.OpenURL(fn,
+                1,
+                INTERNET_FLAG_TRANSFER_ASCII | INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_RELOAD,
+                headers,
+                DWORD(-1));
         }
-        if (!strncmp((LPCSTR)str, "FWS", 3)) {
-            return "application/x-shockwave-flash";
+        catch (CInternetException* pEx)
+        {
+            pEx->Delete();
+            url_fail = true; // Timeout has most likely occured, server unreachable
+            return content;
         }
 
+        if (httpFile) {
+            //CString	strContentType;
+            //httpFile->QueryInfo(HTTP_QUERY_RAW_HEADERS, strContentType); // Check also HTTP_QUERY_RAW_HEADERS_CRLF
+            //DWORD dw = 8192;  // Arbitrary 8192 char length for Url (should handle most cases)
+            //CString urlredirect; // Retrieve the new Url in case we encountered an HTTP redirection (HTTP 302 code)
+            //httpFile->QueryOption(INTERNET_OPTION_URL, urlredirect.GetBuffer(8192), &dw);
+            DWORD	dwStatus;
+            httpFile->QueryInfoStatusCode(dwStatus);
+            switch (dwStatus) {
+                case HTTP_STATUS_OK:                  // 200  request completed
+                case HTTP_STATUS_CREATED:             // 201  object created, reason = new URI
+                case HTTP_STATUS_ACCEPTED:            // 202  async completion (TBS)
+                case HTTP_STATUS_PARTIAL:             // 203  partial completion
+                case HTTP_STATUS_NO_CONTENT:          // 204  no info to return
+                case HTTP_STATUS_RESET_CONTENT:       // 205  request completed, but clear form
+                case HTTP_STATUS_PARTIAL_CONTENT:     // 206  partial GET furfilled
+                case HTTP_STATUS_AMBIGUOUS:           // 300  server couldn't decide what to return
+                case HTTP_STATUS_MOVED:               // 301  object permanently moved
+                case HTTP_STATUS_REDIRECT:            // 302  object temporarily moved
+                case HTTP_STATUS_REDIRECT_METHOD:     // 303  redirection w/ new access method
+                case HTTP_STATUS_NOT_MODIFIED:        // 304  if-modified-since was not modified
+                case HTTP_STATUS_USE_PROXY:           // 305  redirection to proxy, location header specifies proxy to use
+                case HTTP_STATUS_REDIRECT_KEEP_VERB:  // 307  HTTP/1.1: keep same verb
+                case 308/*HTTP_STATUS_PERMANENT_REDIRECT*/:  // 308  Object permanently moved keep verb
+                    break;
+                default:
+                    //CString	strStatus;
+                    //httpFile->QueryInfo(HTTP_QUERY_STATUS_TEXT, strStatus);	// Status String - eg OK, Not Found
+                    url_fail = true;
+            }
+
+            if (url_fail) {
+                httpFile->Close(); // Close() isn't called by the destructor
+                delete httpFile;
+                return content;
+            }
+
+            if (content.IsEmpty()) {
+                httpFile->QueryInfo(HTTP_QUERY_CONTENT_TYPE, content);	// Content-Type - eg text/html
+            }
+
+            long contentsize = 0;
+            CString contentlength = _T("");
+            if (httpFile->QueryInfo(HTTP_QUERY_CONTENT_LENGTH, contentlength)) {
+                contentsize = _ttol(contentlength);
+            }           
+
+            // Partial download of response body to further identify content types
+            if (content.IsEmpty() && contentsize < 256*1024) {
+                UINT br = 0;
+                char buffer[513] = "";
+                while (body.GetLength() < 256) {
+                    br = httpFile->Read(buffer, 256);
+                    if (br == 0) {
+                        break;
+                    }
+                    buffer[br] = '\0';
+                    body += buffer;
+                }
+                if (body.GetLength() >= 8) {
+                    BOOL exit = false;
+                    if (!wcsncmp((LPCWSTR)body, _T(".ra"), 3)) {
+                        content = _T("audio/x-pn-realaudio");
+                        exit = true;
+                    } else if (!wcsncmp((LPCWSTR)body, _T(".RMF"), 4)) {
+                        content = _T("audio/x-pn-realaudio");
+                        exit = true;
+                    }
+
+                    if (exit) {
+                        httpFile->Close();
+                        delete httpFile;
+                        return content;
+                    }
+                }
+            }
+            // Download larger piece of response body in case it's a playlist
+            if (redir && contentsize < 256*1024 && (content == _T("audio/x-scpls") || content == _T("audio/scpls")
+                || content == _T("video/x-ms-asf") || content == _T("text/plain")
+                || content == _T("application/octet-stream") || content == _T("application/pls+xml"))) {
+                UINT br = 0;
+                char buffer[513] = "";
+                while (body.GetLength() < 64 * 1024) { // should be enough for a playlist...
+                    br = httpFile->Read(buffer, 256);
+                    if (br == 0) {
+                        break;
+                    }
+                    buffer[br] = '\0';
+                    body += buffer;
+                }
+            }
+
+            httpFile->Close();
+            delete httpFile;
+        }
     }
 
-    if (redir && !ct.IsEmpty()) {
+    // If content type is empty, plain text or octet-stream (weird server!) GUESS by extension if it exists.....
+    if (content.IsEmpty() || content == _T("text/plain") || content == _T("application/octet-stream")) {
+        if (ext == _T(".pls")) {
+            content = _T("audio/x-scpls");
+            parsefile = true;
+        } else if (ext == _T(".asx")) {
+            content = _T("video/x-ms-asf");
+            parsefile = true;
+        } else if (ext == _T(".ram")) {
+            content = _T("audio/x-pn-realaudio");
+            parsefile = true;
+        }
+    }
+
+    if (redir && !content.IsEmpty() && (isurl && !body.IsEmpty() || !isurl && parsefile)) {
         std::vector<std::wregex> res;
         const std::wregex::flag_type reFlags = std::wregex::icase | std::wregex::optimize;
 
-        if (ct == _T("video/x-ms-asf")) {
+        if (content == _T("video/x-ms-asf")) {
             // ...://..."/>
             res.emplace_back(_T("[a-zA-Z]+://[^\n\">]*"), reFlags);
             // Ref#n= ...://...\n
             res.emplace_back(_T("Ref\\d+\\s*=\\s*[\"]*([a-zA-Z]+://[^\n\"]+)"), reFlags);
-        } else if (ct == _T("audio/x-scpls") || ct == _T("audio/scpls")) {
+        }
+        else if (content == _T("audio/x-scpls") || content == _T("audio/scpls") || content == _T("application/pls+xml")) {
             // File1=...\n
             res.emplace_back(_T("file\\d+\\s*=\\s*[\"]*([^\n\"]+)"), reFlags);
-        } else if (ct == _T("audio/x-mpegurl") || ct == _T("audio/mpegurl")) {
-            // #comment
-            // ...
-            res.emplace_back(_T("[^#][^\n]+"), reFlags);
-        } else if (ct == _T("audio/x-pn-realaudio")) {
+        }
+        else if (content == _T("audio/x-pn-realaudio")) {
             // rtsp://...
             res.emplace_back(_T("rtsp://[^\n]+"), reFlags);
             // http://...
             res.emplace_back(_T("http://[^\n]+"), reFlags);
         }
 
-        if (!body.IsEmpty()) {
-            if (fn.Find(_T("://")) >= 0) {
-                FindRedir(url, ct, body, *redir, res);
+        if (res.size()) {
+            if (isurl) {
+                FindRedir(url, body, *redir, res);
             } else {
-                FindRedir(fn, ct, *redir, res);
+                FindRedir(fn, *redir, res);
             }
         }
     }
 
-    return TToA(ct);
+    return content;
 }
 
-WORD AssignedToCmd(UINT keyOrMouseValue, bool bIsFullScreen, bool bCheckMouse)
+WORD AssignedToCmd(UINT keyValue)
 {
+    if (keyValue == 0) {
+        ASSERT(false);
+        return 0;
+    }
+
     WORD assignTo = 0;
     const CAppSettings& s = AfxGetAppSettings();
 
@@ -563,15 +569,7 @@ WORD AssignedToCmd(UINT keyOrMouseValue, bool bIsFullScreen, bool bCheckMouse)
     while (pos && !assignTo) {
         const wmcmd& wc = s.wmcmds.GetNext(pos);
 
-        if (bCheckMouse) {
-            if (bIsFullScreen) {
-                if (wc.mouseFS == keyOrMouseValue) {
-                    assignTo = wc.cmd;
-                }
-            } else if (wc.mouse == keyOrMouseValue) {
-                assignTo = wc.cmd;
-            }
-        } else if (wc.key == keyOrMouseValue) {
+        if (wc.key == keyValue) {
             assignTo = wc.cmd;
         }
     }
@@ -579,30 +577,69 @@ WORD AssignedToCmd(UINT keyOrMouseValue, bool bIsFullScreen, bool bCheckMouse)
     return assignTo;
 }
 
-void SetAudioRenderer(int AudioDevNo)
-{
-    CStringArray m_AudioRendererDisplayNames;
-    AfxGetMyApp()->m_AudioRendererDisplayName_CL = _T("");
-    m_AudioRendererDisplayNames.Add(_T(""));
-    int i = 2;
-
+std::map<CStringW, CStringW> GetAudioDeviceList() {
+    std::map<CStringW, CStringW> devicelist;
     BeginEnumSysDev(CLSID_AudioRendererCategory, pMoniker) {
         CComHeapPtr<OLECHAR> olestr;
         if (FAILED(pMoniker->GetDisplayName(0, 0, &olestr))) {
             continue;
         }
-        CStringW str(olestr);
-        m_AudioRendererDisplayNames.Add(CString(str));
-        i++;
+        CStringW dispname(olestr);
+        CStringW friendlyname;
+        if (dispname == L"@device:cm:{E0F158E1-CB04-11D0-BD4E-00A0C911CE86}\\Default DirectSound Device") {
+            friendlyname = L"DirectSound: Default Device";
+        } else if (dispname == L"@device:cm:{E0F158E1-CB04-11D0-BD4E-00A0C911CE86}\\Default WaveOut Device") {
+            friendlyname = L"WaveOut: Default Device  [Old/Do not use]";
+        } else {
+            CComPtr<IPropertyBag> pPB;
+            if (SUCCEEDED(pMoniker->BindToStorage(0, 0, IID_PPV_ARGS(&pPB)))) {
+                CComVariant var;
+                if (SUCCEEDED(pPB->Read(_T("FriendlyName"), &var, nullptr))) {
+                    CStringW frname(var.bstrVal);
+                    var.Clear();
+                    friendlyname = frname;
+                    if (SUCCEEDED(pPB->Read(_T("WaveOutId"), &var, nullptr))) {
+                        DWORD dw = var.intVal;
+                        var.Clear();
+                        if (dw != -1) { // skip default waveout
+                            friendlyname = L"WaveOut: " + friendlyname;
+                        }
+                        friendlyname.Append(L"  [Old/Do not use]");
+                    }
+                }
+            } else {
+                friendlyname = dispname;
+            }
+        }
+        devicelist.emplace(friendlyname, dispname);
     }
     EndEnumSysDev;
 
-    m_AudioRendererDisplayNames.Add(AUDRNDT_NULL_COMP);
-    m_AudioRendererDisplayNames.Add(AUDRNDT_NULL_UNCOMP);
-    m_AudioRendererDisplayNames.Add(AUDRNDT_INTERNAL);
-    i += 3;
-    if (AudioDevNo >= 1 && AudioDevNo <= i) {
-        AfxGetMyApp()->m_AudioRendererDisplayName_CL = m_AudioRendererDisplayNames[AudioDevNo - 1];
+    return devicelist;
+}
+
+void SetAudioRenderer(int AudioDevNo)
+{
+    CStringArray dispnames;
+    AfxGetMyApp()->m_AudioRendererDisplayName_CL = _T("");
+    dispnames.Add(_T(""));
+    dispnames.Add(AUDRNDT_INTERNAL);
+    dispnames.Add(AUDRNDT_MPC);
+    int devcount = 3;
+
+    std::map<CStringW, CStringW> devicelist = GetAudioDeviceList();
+
+    for (auto it = devicelist.cbegin(); it != devicelist.cend(); it++) {
+        dispnames.Add((*it).second);
+        devcount++;
+    }
+
+    dispnames.Add(AUDRNDT_NULL_COMP);
+    dispnames.Add(AUDRNDT_NULL_UNCOMP);
+    devcount += 2;
+
+    if (AudioDevNo >= 1 && AudioDevNo <= devcount) {
+        AfxGetMyApp()->m_AudioRendererDisplayName_CL = dispnames[AudioDevNo - 1];
     }
 }
 
@@ -616,10 +653,8 @@ void SetHandCursor(HWND m_hWnd, UINT nID)
 CMPlayerCApp::CMPlayerCApp()
     : m_hNTDLL(nullptr)
     , m_bDelayingIdle(false)
-    , m_bProfileInitialized(false)
-    , m_bQueuedProfileFlush(false)
-    , m_dwProfileLastAccessTick(0)
     , m_fClosingState(false)
+    , m_bThemeLoaded(false)
 {
     m_strVersion = FileVersionInfo::GetFileVersionStr(PathUtils::GetProgramPath(true));
 
@@ -650,6 +685,29 @@ CMPlayerCApp::~CMPlayerCApp()
     while (WAIT_IO_COMPLETION == SleepEx(0, TRUE));
 }
 
+int CMPlayerCApp::DoMessageBox(LPCTSTR lpszPrompt, UINT nType,
+                               UINT nIDPrompt)
+{
+    if (AppNeedsThemedControls()) {
+        CWnd* pParentWnd = CWnd::GetActiveWindow();
+        if (pParentWnd == NULL) {
+            pParentWnd = GetMainWnd();
+            if (pParentWnd == NULL) {
+                return CWinAppEx::DoMessageBox(lpszPrompt, nType, nIDPrompt);
+            } else {
+                pParentWnd = pParentWnd->GetLastActivePopup();
+            }
+        }
+
+        CMPCThemeMsgBox dlgMessage(pParentWnd, lpszPrompt, _T(""), nType,
+                                   nIDPrompt);
+
+        return (int)dlgMessage.DoModal();
+    } else {
+        return CWinAppEx::DoMessageBox(lpszPrompt, nType, nIDPrompt);
+    }
+}
+
 void CMPlayerCApp::DelayedIdle()
 {
     m_bDelayingIdle = false;
@@ -663,7 +721,7 @@ BOOL CMPlayerCApp::IsIdleMessage(MSG* pMsg)
             ret = FALSE;
         } else {
             auto pMainFrm = AfxGetMainFrame();
-            if (pMainFrm) {
+            if (pMainFrm && m_pMainWnd) {
                 const unsigned uTimeout = 100;
                 // delay next WM_MOUSEMOVE initiated idle for uTimeout ms
                 // if there will be no WM_MOUSEMOVE messages, WM_TIMER will initiate the idle
@@ -712,41 +770,304 @@ CMPlayerCApp theApp; // The one and only CMPlayerCApp object
 
 HWND g_hWnd = nullptr;
 
-bool CMPlayerCApp::StoreSettingsToIni()
+bool CMPlayerCApp::StoreSettingsToIni(bool bKeepRegistryCopy)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_profileMutex);
-
-    CString ini = GetIniPath();
-    free((void*)m_pszRegistryKey);
-    m_pszRegistryKey = nullptr;
-    free((void*)m_pszProfileName);
-    m_pszProfileName = _tcsdup(ini);
-
-    return true;
+    return m_Profile.StoreSettingsTo(SETS_PROGRAMDIR, bKeepRegistryCopy);
 }
 
 bool CMPlayerCApp::StoreSettingsToRegistry()
 {
-    std::lock_guard<std::recursive_mutex> lock(m_profileMutex);
-
-    free((void*)m_pszRegistryKey);
-    m_pszRegistryKey = nullptr;
-
-    SetRegistryKey(_T("MPC-HC"));
-
-    return true;
+    CString historyini;
+    if (m_HistoryProfile) {
+        historyini = m_HistoryProfile->GetIniPath();
+    }
+    bool result = m_Profile.StoreSettingsTo(SETS_REGISTRY);
+    if (result && !historyini.IsEmpty() && ::PathFileExistsW(historyini)) {
+        _wremove(historyini);
+    }
+    return result;
 }
 
 CString CMPlayerCApp::GetIniPath() const
 {
-    CString path = PathUtils::GetProgramPath(true);
-    path = path.Left(path.ReverseFind('.') + 1) + _T("ini");
+    // In registry mode the live ini path is empty; return the prospective path
+    // (where a portable ini would be created) so callers like the "store to ini"
+    // option's write-permission check have a real target to test.
+    CString path = m_Profile.GetIniPath();
+    if (path.IsEmpty()) {
+        path = CProfile::DefaultIniPath();
+    }
     return path;
 }
 
 bool CMPlayerCApp::IsIniValid() const
 {
-    return PathUtils::Exists(GetIniPath());
+    return !IsUsingRegistry();
+}
+
+bool CMPlayerCApp::IsUsingRegistry() const
+{
+    return m_Profile.GetSettingsLocation() == SETS_REGISTRY;
+}
+
+void CMPlayerCApp::SetupSettingsStore()
+{
+    // The store stays at its historical location (HKCU\Software\MPC-HC\MPC-HC or
+    // <exe>.ini) so external tools and older builds keep reading it unchanged.
+    // Scalar settings evolve additively; the one format-fragile composite field
+    // (saved DVB channels) moved to a replacement section (DVBConfiguration2)
+    // at its own call sites, so no store-wide format/migration machinery is
+    // needed here.
+    //
+    // MediaHistory is the one structural change: in portable (INI) mode it moves
+    // to a separate file; in registry mode it stays inside the settings key.
+    if (!IsUsingRegistry()) {
+        SetupHistoryStore();
+    }
+}
+
+// Set up the separate MediaHistory store (portable/INI mode) and perform the
+// one-time split of MediaHistory out of the main settings file.
+void CMPlayerCApp::SetupHistoryStore()
+{
+    m_HistoryProfile = std::make_unique<CProfile>(ResolveHistoryIniPath());
+
+    // One-time: move any MediaHistory still in the main settings store into it.
+    if (!m_Profile.HasEntry(_T("Version"), _T("HistorySplit"))) {
+        m_Profile.MoveSectionTree(_T("MediaHistory"), *m_HistoryProfile);
+        m_Profile.WriteString(_T("Version"), _T("HistorySplit"), _T("1"));
+        m_Profile.Flush(true);
+    }
+}
+
+// User-visible settings policies, deferred until a normal interactive launch is
+// committed (so utility invocations like /help, /close, /regvid, /admin don't
+// pop a modal or apply machine policy). See InitInstance.
+void CMPlayerCApp::ApplySettingsPolicies()
+{
+    // Apply machine-wide default settings pushed via HKLM (issue #2347).
+    ApplyHKLMDefaults();
+}
+
+// Recursively copy an HKLM defaults subtree into the user store, preserving
+// value types. `section` is the user-store section path built from the subkey
+// path ("" at the HKLM root, whose own values are control values, not settings).
+void CMPlayerCApp::ImportHKLMTree(HKEY hKey, const CStringW& section)
+{
+    // Size name buffers from the key's maxima so long value/subkey names aren't
+    // silently dropped (RegEnumValue returns ERROR_MORE_DATA on a short buffer).
+    DWORD maxValueName = 0, maxSubKeyName = 0;
+    if (RegQueryInfoKeyW(hKey, nullptr, nullptr, nullptr, nullptr, &maxSubKeyName,
+                         nullptr, nullptr, &maxValueName, nullptr, nullptr, nullptr) != ERROR_SUCCESS) {
+        maxValueName = 16383;
+        maxSubKeyName = 255;
+    }
+
+    if (!section.IsEmpty()) {
+        std::vector<WCHAR> name(maxValueName + 1);
+        for (DWORD i = 0;; i++) {
+            DWORD nameLen = static_cast<DWORD>(name.size()), type = 0, dataLen = 0;
+            LONG r = RegEnumValueW(hKey, i, name.data(), &nameLen, nullptr, &type, nullptr, &dataLen);
+            if (r == ERROR_NO_MORE_ITEMS) {
+                break;
+            }
+            if (r != ERROR_SUCCESS || dataLen == 0) {
+                continue;
+            }
+            std::vector<BYTE> data(dataLen);
+            DWORD cb = dataLen;
+            if (RegQueryValueExW(hKey, name.data(), nullptr, &type, data.data(), &cb) != ERROR_SUCCESS) {
+                continue;
+            }
+            switch (type) {
+                case REG_DWORD:
+                    if (cb >= sizeof(DWORD)) {
+                        WriteProfileInt(section, name.data(), *reinterpret_cast<DWORD*>(data.data()));
+                    }
+                    break;
+                case REG_QWORD:
+                    if (cb >= sizeof(ULONGLONG)) {
+                        CStringW s;
+                        s.Format(_T("%I64u"), *reinterpret_cast<ULONGLONG*>(data.data()));
+                        WriteProfileString(section, name.data(), s);
+                    }
+                    break;
+                case REG_SZ:
+                case REG_EXPAND_SZ: {
+                    // Registry strings are not guaranteed NUL-terminated; build a
+                    // bounded string from cb bytes and trim at any embedded NUL.
+                    CStringW s(reinterpret_cast<LPCWSTR>(data.data()), static_cast<int>(cb / sizeof(WCHAR)));
+                    int nul = s.Find(L'\0');
+                    if (nul >= 0) {
+                        s.Truncate(nul);
+                    }
+                    if (type == REG_EXPAND_SZ) {
+                        DWORD need = ExpandEnvironmentStringsW(s, nullptr, 0);
+                        if (need > 0) {
+                            CStringW expanded;
+                            ExpandEnvironmentStringsW(s, expanded.GetBufferSetLength(need - 1), need);
+                            expanded.ReleaseBuffer();
+                            s = expanded;
+                        }
+                    }
+                    WriteProfileString(section, name.data(), s);
+                    break;
+                }
+                case REG_BINARY:
+                    WriteProfileBinary(section, name.data(), data.data(), cb);
+                    break;
+                default:
+                    break; // unsupported types are ignored
+            }
+        }
+    }
+
+    std::vector<WCHAR> sub(maxSubKeyName + 1);
+    for (DWORD i = 0;; i++) {
+        DWORD subLen = static_cast<DWORD>(sub.size());
+        LONG r = RegEnumKeyExW(hKey, i, sub.data(), &subLen, nullptr, nullptr, nullptr, nullptr);
+        if (r == ERROR_NO_MORE_ITEMS) {
+            break;
+        }
+        if (r != ERROR_SUCCESS) {
+            continue;
+        }
+        HKEY hSub;
+        if (RegOpenKeyExW(hKey, sub.data(), 0, KEY_READ, &hSub) == ERROR_SUCCESS) {
+            CStringW child = section.IsEmpty() ? CStringW(sub.data()) : (section + L"\\" + sub.data());
+            ImportHKLMTree(hSub, child);
+            RegCloseKey(hSub);
+        }
+    }
+}
+
+void CMPlayerCApp::ApplyHKLMDefaults()
+{
+    HKEY hRoot;
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, _T("Software\\MPC-HC"), 0, KEY_READ, &hRoot) != ERROR_SUCCESS) {
+        return; // no machine-wide defaults configured
+    }
+
+    // Control values live at the root of HKLM\Software\MPC-HC.
+    DWORD type = 0, cb;
+    DWORD reset = 0;
+    cb = sizeof(reset);
+    const bool hasReset = RegQueryValueExW(hRoot, _T("SettingsReset"), nullptr, &type, (BYTE*)&reset, &cb) == ERROR_SUCCESS && type == REG_DWORD;
+    ULONGLONG ts = 0;
+    cb = sizeof(ts);
+    const bool hasTs = RegQueryValueExW(hRoot, _T("SettingsTimestamp"), nullptr, &type, (BYTE*)&ts, &cb) == ERROR_SUCCESS && (type == REG_QWORD || type == REG_DWORD);
+
+    // What we've already applied (kept in the user store).
+    const DWORD appliedReset = static_cast<DWORD>(GetProfileInt(_T("HKLMState"), _T("AppliedReset"), 0));
+    const ULONGLONG appliedTs = _wcstoui64(GetProfileString(_T("HKLMState"), _T("AppliedTimestamp"), _T("0")), nullptr, 10);
+
+    const bool doReset = hasReset && reset != appliedReset;
+    const bool doImport = doReset || (hasTs && ts > appliedTs);
+
+    if (!doImport) {
+        RegCloseKey(hRoot);
+        return;
+    }
+
+    if (doReset) {
+        // Force user settings back to defaults, then re-seed from HKLM.
+        m_Profile.Clear();
+        if (m_HistoryProfile) {
+            m_HistoryProfile->Clear();
+        }
+        // Keep the split marker so the (now-empty) main store isn't re-split.
+        m_Profile.WriteString(_T("Version"), _T("HistorySplit"), _T("1"));
+    }
+
+    ImportHKLMTree(hRoot, CStringW());
+
+    // Record what we applied so this runs only once per change.
+    if (hasReset) {
+        WriteProfileInt(_T("HKLMState"), _T("AppliedReset"), static_cast<int>(reset));
+    }
+    if (hasTs) {
+        CStringW s;
+        s.Format(_T("%I64u"), ts);
+        WriteProfileString(_T("HKLMState"), _T("AppliedTimestamp"), s);
+    }
+
+    FlushProfile(true);
+    RegCloseKey(hRoot);
+}
+
+bool CMPlayerCApp::UseAppDataForHistory()
+{
+    if (m_iHistoryInAppData < 0) {
+        // First call happens before LoadSettings() has run, so read the raw
+        // option value once; later calls use the cached copy.
+        bool inAppData = false;
+        m_Profile.ReadBool(IDS_R_SETTINGS, IDS_RS_HISTORY_IN_APPDATA, inAppData);
+        m_iHistoryInAppData = inAppData ? 1 : 0;
+    }
+    return m_iHistoryInAppData > 0;
+}
+
+void CMPlayerCApp::SetHistoryInAppData(bool inAppData)
+{
+    m_iHistoryInAppData = inAppData ? 1 : 0;
+}
+
+CStringW CMPlayerCApp::ResolveHistoryIniPath()
+{
+    const CStringW programPath = CProfile::HistoryIniPath();
+
+    CString appDataDir;
+    if (!GetAppDataPath(appDataDir)) {
+        return programPath;
+    }
+    CPath historyFileName(programPath);
+    historyFileName.StripPath(); // filename incl. extension (PathUtils::FileName drops the extension)
+    const CStringW appDataPath = PathUtils::CombinePaths(appDataDir, historyFileName);
+
+    bool useAppData = UseAppDataForHistory();
+    if (!useAppData && !PathUtils::Exists(programPath)) {
+        // Fall back to %APPDATA% when the history file cannot be created next
+        // to the executable (e.g. installed in a read-only folder but running
+        // portable off a shared settings INI).
+        HANDLE hProbe = ::CreateFileW(programPath, GENERIC_WRITE, 0, nullptr,
+                                      CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (hProbe == INVALID_HANDLE_VALUE) {
+            useAppData = true;
+            if (m_iHistoryInAppData != 1) {
+                m_iHistoryInAppData = 1;
+                m_Profile.WriteInt(IDS_R_SETTINGS, IDS_RS_HISTORY_IN_APPDATA, m_iHistoryInAppData);
+            }
+        } else {
+            ::CloseHandle(hProbe);
+            ::DeleteFileW(programPath); // probe only, leave no empty file behind
+        }
+    }
+
+    const CStringW target = useAppData ? appDataPath : programPath;
+    const CStringW other  = useAppData ? programPath : appDataPath;
+    if (useAppData) {
+        ::CreateDirectoryW(appDataDir, nullptr);
+    }
+    // Carry an existing history file over when the location changes (option
+    // toggled, or the fallback newly triggered), so history is not lost.
+    if (!PathUtils::Exists(target) && PathUtils::Exists(other)) {
+        if (!::MoveFileExW(other, target, MOVEFILE_COPY_ALLOWED)) {
+            ::CopyFileW(other, target, TRUE); // source not deletable; copy is enough
+        }
+    }
+
+    return target;
+}
+
+bool CMPlayerCApp::GetPlaylistSavePath(CString& path)
+{
+    // The saved playlist lives next to the MediaHistory store, so the
+    // HistoryInAppData option (and the unwritable-folder fallback) moves both.
+    if (m_HistoryProfile) {
+        path = PathUtils::DirName(m_HistoryProfile->GetIniPath());
+        return !path.IsEmpty();
+    }
+    return GetAppSavePath(path);
 }
 
 bool CMPlayerCApp::GetAppSavePath(CString& path)
@@ -778,8 +1099,6 @@ bool CMPlayerCApp::GetAppDataPath(CString& path)
 
 bool CMPlayerCApp::ChangeSettingsLocation(bool useIni)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_profileMutex);
-
     bool success;
 
     // Load favorites so that they can be correctly saved to the new location
@@ -788,14 +1107,46 @@ bool CMPlayerCApp::ChangeSettingsLocation(bool useIni)
     m_s->GetFav(FAV_DVD, DVDsFav);
     m_s->GetFav(FAV_DEVICE, devicesFav);
 
+    // The internal filter settings (LAV Splitter/Video/Audio, audio renderer)
+    // exist only in the profile store, so snapshot them for the new location
+    ProfileMap internalFilterSettings;
+    m_Profile.ReadSectionTree(IDS_R_INTERNAL_FILTERS, internalFilterSettings);
+
     if (useIni) {
-        success = StoreSettingsToIni();
+        // Offer to leave the old registry settings in place as a backup copy
+        // (useful when running multiple copies of the player). A present INI
+        // file is what selects portable mode, so the copy can't cause the
+        // wrong store to be picked up.
+        bool keepRegistryCopy = false;
+        if (IsUsingRegistry()) {
+            keepRegistryCopy = AfxMessageBox(IDS_SETTINGS_KEEP_REGISTRY_COPY, MB_ICONQUESTION | MB_YESNO) == IDYES;
+        }
+        success = StoreSettingsToIni(keepRegistryCopy);
         // No need to delete old mpc-hc.ini,
         // as it will be overwritten during CAppSettings::SaveSettings()
     } else {
+        // StoreSettingsToRegistry also removes the portable-mode MediaHistory
+        // INI; the full history is rewritten into the registry by
+        // SaveSettings(true) below.
         success = StoreSettingsToRegistry();
-        _tremove(GetIniPath());
     }
+
+    if (!success) {
+        return false;
+    }
+
+    // Restore the internal filter settings into the new store
+    m_Profile.WriteSectionTree(internalFilterSettings);
+
+    // Point the MediaHistory store at the new location before SaveSettings()
+    // below re-writes the full in-memory history there in the correct format.
+    if (!IsUsingRegistry()) {
+        m_HistoryProfile = std::make_unique<CProfile>(ResolveHistoryIniPath());
+        m_Profile.WriteString(_T("Version"), _T("HistorySplit"), _T("1")); // history is separate here
+    } else {
+        m_HistoryProfile.reset(); // registry keeps history in the registry
+    }
+    m_Profile.Flush(true);
 
     // Save favorites to the new location
     m_s->SetFav(FAV_FILE, filesFav);
@@ -806,9 +1157,64 @@ bool CMPlayerCApp::ChangeSettingsLocation(bool useIni)
     m_s->SaveExternalFilters();
 
     // Write settings immediately
-    m_s->SaveSettings();
+    m_s->SaveSettings(true);
 
     return success;
+}
+
+// Add one on-disk file to an open zip under nameInZip (ASCII). Returns false on
+// any I/O error. Best-effort skip if the source file is missing.
+static bool AddFileToZip(zipFile zf, const CStringW& srcPath, const CStringA& nameInZip)
+{
+    CFile src;
+    if (!src.Open(srcPath, CFile::modeRead | CFile::shareDenyWrite | CFile::typeBinary)) {
+        return true; // nothing to add (e.g. history file not created yet)
+    }
+    zip_fileinfo zi = {};
+    if (zipOpenNewFileInZip(zf, nameInZip, &zi, nullptr, 0, nullptr, 0, nullptr,
+                            Z_DEFLATED, Z_DEFAULT_COMPRESSION) != ZIP_OK) {
+        return false;
+    }
+    bool ok = true;
+    BYTE buf[64 * 1024];
+    UINT n;
+    while ((n = src.Read(buf, sizeof(buf))) > 0) {
+        if (zipWriteInFileInZip(zf, buf, n) != ZIP_OK) {
+            ok = false;
+            break;
+        }
+    }
+    zipCloseFileInZip(zf);
+    return ok;
+}
+
+// Bundle the settings store and the separate MediaHistory store into one zip,
+// each stored under its real filename so restoring a backup is just
+// "extract into the program folder" - no renaming, and neither file is missed.
+bool CMPlayerCApp::ExportSettingsZip(const CString& zipPath)
+{
+    zlib_filefunc64_def ffunc;
+    fill_win32_filefunc64W(&ffunc); // Unicode-safe archive path
+    zipFile zf = zipOpen2_64(zipPath.GetString(), APPEND_STATUS_CREATE, nullptr, &ffunc);
+    if (!zf) {
+        return false;
+    }
+
+    const CStringW settingsSrc = GetIniPath();
+    CStringA settingsName(settingsSrc.Mid(settingsSrc.ReverseFind(L'\\') + 1));
+    bool ok = AddFileToZip(zf, settingsSrc, settingsName);
+
+    if (ok && m_HistoryProfile) {
+        const CStringW histSrc = m_HistoryProfile->GetIniPath();
+        CStringA histName(histSrc.Mid(histSrc.ReverseFind(L'\\') + 1));
+        ok = AddFileToZip(zf, histSrc, histName);
+    }
+
+    zipClose(zf, nullptr);
+    if (!ok) {
+        DeleteFile(zipPath);
+    }
+    return ok;
 }
 
 bool CMPlayerCApp::ExportSettings(CString savePath, CString subKey)
@@ -817,13 +1223,16 @@ bool CMPlayerCApp::ExportSettings(CString savePath, CString subKey)
     m_s->SaveSettings();
 
     if (IsIniValid()) {
-        success = !!CopyFile(GetIniPath(), savePath, FALSE);
-    } else {
-        CString regKey;
         if (subKey.IsEmpty()) {
-            regKey.Format(_T("Software\\%s\\%s"), m_pszRegistryKey, m_pszProfileName);
+            // Full export: bundle settings + separate MediaHistory into one zip.
+            success = ExportSettingsZip(savePath);
         } else {
-            regKey.Format(_T("Software\\%s\\%s\\%s"), m_pszRegistryKey, m_pszProfileName, subKey.GetString());
+            success = !!CopyFile(GetIniPath(), savePath, FALSE);
+        }
+    } else {
+        CString regKey = m_Profile.GetRegistryKeyPath();
+        if (!subKey.IsEmpty()) {
+            regKey += _T("\\") + subKey;
         }
 
         FILE* fStream;
@@ -842,405 +1251,142 @@ bool CMPlayerCApp::ExportSettings(CString savePath, CString subKey)
     return success;
 }
 
-void CMPlayerCApp::InitProfile()
+// True for the "MediaHistory" section and its "MediaHistory\..." subsections.
+static bool IsMediaHistorySection(LPCWSTR lpszSection)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_profileMutex);
+    static const wchar_t* const mh = L"MediaHistory";
+    static const size_t n = wcslen(mh);
+    return lpszSection && _wcsnicmp(lpszSection, mh, n) == 0 &&
+           (lpszSection[n] == L'\0' || lpszSection[n] == L'\\');
+}
 
-    if (!m_pszRegistryKey) {
-        // Don't reread mpc-hc.ini if the cache needs to be flushed or it was accessed recently
-        if (m_bProfileInitialized && (m_bQueuedProfileFlush || GetTickCount64() - m_dwProfileLastAccessTick < 100ULL)) {
-            m_dwProfileLastAccessTick = GetTickCount64();
-            return;
-        }
-
-        m_bProfileInitialized = true;
-        m_dwProfileLastAccessTick = GetTickCount64();
-
-        ASSERT(m_pszProfileName);
-        if (!PathUtils::Exists(m_pszProfileName)) {
-            return;
-        }
-
-        FILE* fp;
-        int fpStatus;
-        do { // Open mpc-hc.ini in UNICODE mode, retry if it is already being used by another process
-            fp = _tfsopen(m_pszProfileName, _T("r, ccs=UNICODE"), _SH_SECURE);
-            if (fp || (GetLastError() != ERROR_SHARING_VIOLATION)) {
-                break;
-            }
-            Sleep(100);
-        } while (true);
-        if (!fp) {
-            ASSERT(FALSE);
-            return;
-        }
-        if (_ftell_nolock(fp) == 0L) {
-            // No BOM was consumed, assume mpc-hc.ini is ANSI encoded
-            fpStatus = fclose(fp);
-            ASSERT(fpStatus == 0);
-            do { // Reopen mpc-hc.ini in ANSI mode, retry if it is already being used by another process
-                fp = _tfsopen(m_pszProfileName, _T("r"), _SH_SECURE);
-                if (fp || (GetLastError() != ERROR_SHARING_VIOLATION)) {
-                    break;
-                }
-                Sleep(100);
-            } while (true);
-            if (!fp) {
-                ASSERT(FALSE);
-                return;
-            }
-        }
-
-        CStdioFile file(fp);
-
-        ASSERT(!m_bQueuedProfileFlush);
-        m_ProfileMap.clear();
-
-        CString line, section, var, val;
-        while (file.ReadString(line)) {
-            // Parse mpc-hc.ini file, this parser:
-            //  - doesn't trim whitespaces
-            //  - doesn't remove quotation marks
-            //  - omits keys with empty names
-            //  - omits unnamed sections
-            int pos = 0;
-            if (line[0] == _T('[')) {
-                pos = line.Find(_T(']'));
-                if (pos == -1) {
-                    continue;
-                }
-                section = line.Mid(1, pos - 1);
-            } else if (line[0] != _T(';')) {
-                pos = line.Find(_T('='));
-                if (pos == -1) {
-                    continue;
-                }
-                var = line.Mid(0, pos);
-                val = line.Mid(pos + 1);
-                if (!section.IsEmpty() && !var.IsEmpty()) {
-                    m_ProfileMap[section][var] = val;
-                }
-            }
-        }
-        fpStatus = fclose(fp);
-        ASSERT(fpStatus == 0);
-
-        m_dwProfileLastAccessTick = GetTickCount64();
+CProfile& CMPlayerCApp::ProfileForSection(LPCWSTR lpszSection)
+{
+    if (m_HistoryProfile && IsMediaHistorySection(lpszSection)) {
+        return *m_HistoryProfile;
     }
+    return m_Profile;
 }
 
 void CMPlayerCApp::FlushProfile(bool bForce/* = true*/)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_profileMutex);
-
-    if (!m_pszRegistryKey) {
-        if (!bForce && !m_bQueuedProfileFlush) {
-            return;
-        }
-
-        m_bQueuedProfileFlush = false;
-
-        ASSERT(m_bProfileInitialized);
-        ASSERT(m_pszProfileName);
-
-        FILE* fp;
-        int fpStatus;
-        do { // Open mpc-hc.ini, retry if it is already being used by another process
-            fp = _tfsopen(m_pszProfileName, _T("w, ccs=UTF-8"), _SH_SECURE);
-            if (fp || (GetLastError() != ERROR_SHARING_VIOLATION)) {
-                break;
-            }
-            Sleep(100);
-        } while (true);
-        if (!fp) {
-            ASSERT(FALSE);
-            return;
-        }
-        CStdioFile file(fp);
-        CString line;
-        try {
-            file.WriteString(_T("; MPC-HC\n"));
-            for (auto it1 = m_ProfileMap.begin(); it1 != m_ProfileMap.end(); ++it1) {
-                line.Format(_T("[%s]\n"), it1->first.GetString());
-                file.WriteString(line);
-                for (auto it2 = it1->second.begin(); it2 != it1->second.end(); ++it2) {
-                    line.Format(_T("%s=%s\n"), it2->first.GetString(), it2->second.GetString());
-                    file.WriteString(line);
-                }
-            }
-        } catch (CFileException& e) {
-            // Fail silently if disk is full
-            UNREFERENCED_PARAMETER(e);
-            ASSERT(FALSE);
-        }
-        fpStatus = fclose(fp);
-        ASSERT(fpStatus == 0);
+    m_Profile.Flush(bForce);
+    if (m_HistoryProfile) {
+        m_HistoryProfile->Flush(bForce);
     }
 }
 
 BOOL CMPlayerCApp::GetProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPBYTE* ppData, UINT* pBytes)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_profileMutex);
-
-    if (m_pszRegistryKey) {
-        return CWinApp::GetProfileBinary(lpszSection, lpszEntry, ppData, pBytes);
-    } else {
-        if (!lpszSection || !lpszEntry || !ppData || !pBytes) {
-            ASSERT(FALSE);
-            return FALSE;
-        }
-        CString sectionStr(lpszSection);
-        CString keyStr(lpszEntry);
-        if (sectionStr.IsEmpty() || keyStr.IsEmpty()) {
-            ASSERT(FALSE);
-            return FALSE;
-        }
-        CString valueStr;
-
-        InitProfile();
-        auto it1 = m_ProfileMap.find(sectionStr);
-        if (it1 != m_ProfileMap.end()) {
-            auto it2 = it1->second.find(keyStr);
-            if (it2 != it1->second.end()) {
-                valueStr = it2->second;
-            }
-        }
-        if (valueStr.IsEmpty()) {
-            return FALSE;
-        }
-        int length = valueStr.GetLength();
-        // Encoding: each 4-bit sequence is coded in one character, from 'A' for 0x0 to 'P' for 0xf
-        if (length % 2) {
-            ASSERT(FALSE);
-            return FALSE;
-        }
-        for (int i = 0; i < length; i++) {
-            if (valueStr[i] < 'A' || valueStr[i] > 'P') {
-                ASSERT(FALSE);
-                return FALSE;
-            }
-        }
-        *pBytes = length / 2;
-        *ppData = new (std::nothrow) BYTE[*pBytes];
-        if (!(*ppData)) {
-            ASSERT(FALSE);
-            return FALSE;
-        }
-        for (UINT i = 0; i < *pBytes; i++) {
-            (*ppData)[i] = BYTE((valueStr[i * 2] - 'A') | ((valueStr[i * 2 + 1] - 'A') << 4));
-        }
-        return TRUE;
+    if (!lpszSection || !lpszEntry || !ppData || !pBytes) {
+        ASSERT(FALSE);
+        return FALSE;
     }
+    return ProfileForSection(lpszSection).ReadBinary(lpszSection, lpszEntry, ppData, *pBytes) ? TRUE : FALSE;
 }
 
 UINT CMPlayerCApp::GetProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nDefault)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_profileMutex);
-
-    int res = nDefault;
-    if (m_pszRegistryKey) {
-        res = CWinApp::GetProfileInt(lpszSection, lpszEntry, nDefault);
-    } else {
-        if (!lpszSection || !lpszEntry) {
-            ASSERT(FALSE);
-            return res;
-        }
-        CString sectionStr(lpszSection);
-        CString keyStr(lpszEntry);
-        if (sectionStr.IsEmpty() || keyStr.IsEmpty()) {
-            ASSERT(FALSE);
-            return res;
-        }
-
-        InitProfile();
-        auto it1 = m_ProfileMap.find(sectionStr);
-        if (it1 != m_ProfileMap.end()) {
-            auto it2 = it1->second.find(keyStr);
-            if (it2 != it1->second.end()) {
-                res = _ttoi(it2->second);
-            }
-        }
-    }
-    return res;
+    int value;
+    return ProfileForSection(lpszSection).ReadInt(lpszSection, lpszEntry, value) ? static_cast<UINT>(value) : static_cast<UINT>(nDefault);
 }
+
+std::list<CStringW> CMPlayerCApp::GetSectionSubKeys(LPCWSTR lpszSection)
+{
+    std::list<CStringW> keys;
+    if (!lpszSection || !*lpszSection) {
+        ASSERT(FALSE);
+        return keys;
+    }
+    std::vector<CStringW> names;
+    ProfileForSection(lpszSection).EnumSectionNames(lpszSection, names);
+    keys.assign(names.begin(), names.end());
+    return keys;
+}
+
 
 CString CMPlayerCApp::GetProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszDefault)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_profileMutex);
-
-    CString res;
-    if (m_pszRegistryKey) {
-        res = CWinApp::GetProfileString(lpszSection, lpszEntry, lpszDefault);
-    } else {
-        if (!lpszSection || !lpszEntry) {
-            ASSERT(FALSE);
-            return res;
-        }
-        CString sectionStr(lpszSection);
-        CString keyStr(lpszEntry);
-        if (sectionStr.IsEmpty() || keyStr.IsEmpty()) {
-            ASSERT(FALSE);
-            return res;
-        }
-        if (lpszDefault) {
-            res = lpszDefault;
-        }
-
-        InitProfile();
-        auto it1 = m_ProfileMap.find(sectionStr);
-        if (it1 != m_ProfileMap.end()) {
-            auto it2 = it1->second.find(keyStr);
-            if (it2 != it1->second.end()) {
-                res = it2->second;
-            }
-        }
+    CStringW value;
+    if (!ProfileForSection(lpszSection).ReadString(lpszSection, lpszEntry, value) && lpszDefault) {
+        value = lpszDefault;
     }
-    return res;
+    return value;
 }
 
 BOOL CMPlayerCApp::WriteProfileBinary(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPBYTE pData, UINT nBytes)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_profileMutex);
-
-    if (m_pszRegistryKey) {
-        return CWinApp::WriteProfileBinary(lpszSection, lpszEntry, pData, nBytes);
-    } else {
-        if (!lpszSection || !lpszEntry || !pData || !nBytes) {
-            ASSERT(FALSE);
-            return FALSE;
-        }
-        CString sectionStr(lpszSection);
-        CString keyStr(lpszEntry);
-        if (sectionStr.IsEmpty() || keyStr.IsEmpty()) {
-            ASSERT(FALSE);
-            return FALSE;
-        }
-        CString valueStr;
-
-        TCHAR* buffer = valueStr.GetBufferSetLength(nBytes * 2);
-        // Encoding: each 4-bit sequence is coded in one character, from 'A' for 0x0 to 'P' for 0xf
-        for (UINT i = 0; i < nBytes; i++) {
-            buffer[i * 2] = 'A' + (pData[i] & 0xf);
-            buffer[i * 2 + 1] = 'A' + (pData[i] >> 4 & 0xf);
-        }
-        valueStr.ReleaseBufferSetLength(nBytes * 2);
-
-        InitProfile();
-        CString& old = m_ProfileMap[sectionStr][keyStr];
-        if (old != valueStr) {
-            old = valueStr;
-            m_bQueuedProfileFlush = true;
-        }
-        return TRUE;
+    if (!lpszSection || !lpszEntry || !pData || !nBytes) {
+        ASSERT(FALSE);
+        return FALSE;
     }
+    return ProfileForSection(lpszSection).WriteBinary(lpszSection, lpszEntry, pData, nBytes) ? TRUE : FALSE;
+}
+
+LONG CMPlayerCApp::RemoveProfileKey(LPCWSTR lpszSection, LPCWSTR lpszEntry)
+{
+    // Historically this removes the whole subsection [section\entry].
+    if (!lpszSection || !lpszEntry || !*lpszSection || !*lpszEntry) {
+        ASSERT(FALSE);
+        return 1;
+    }
+    ProfileForSection(lpszSection).DeleteSection(CStringW(lpszSection) + L"\\" + lpszEntry);
+    return 0;
 }
 
 BOOL CMPlayerCApp::WriteProfileInt(LPCTSTR lpszSection, LPCTSTR lpszEntry, int nValue)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_profileMutex);
-
-    if (m_pszRegistryKey) {
-        return CWinApp::WriteProfileInt(lpszSection, lpszEntry, nValue);
-    } else {
-        if (!lpszSection || !lpszEntry) {
-            ASSERT(FALSE);
-            return FALSE;
-        }
-        CString sectionStr(lpszSection);
-        CString keyStr(lpszEntry);
-        if (sectionStr.IsEmpty() || keyStr.IsEmpty()) {
-            ASSERT(FALSE);
-            return FALSE;
-        }
-        CString valueStr;
-        valueStr.Format(_T("%d"), nValue);
-
-        InitProfile();
-        CString& old = m_ProfileMap[sectionStr][keyStr];
-        if (old != valueStr) {
-            old = valueStr;
-            m_bQueuedProfileFlush = true;
-        }
-        return TRUE;
-    }
+    return ProfileForSection(lpszSection).WriteInt(lpszSection, lpszEntry, nValue) ? TRUE : FALSE;
 }
 
 BOOL CMPlayerCApp::WriteProfileString(LPCTSTR lpszSection, LPCTSTR lpszEntry, LPCTSTR lpszValue)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_profileMutex);
-
-    if (m_pszRegistryKey) {
-        return CWinApp::WriteProfileString(lpszSection, lpszEntry, lpszValue);
-    } else {
-        if (!lpszSection) {
-            ASSERT(FALSE);
-            return FALSE;
-        }
-        CString sectionStr(lpszSection);
-        if (sectionStr.IsEmpty()) {
-            ASSERT(FALSE);
-            return FALSE;
-        }
-        CString keyStr(lpszEntry);
-        if (lpszEntry && keyStr.IsEmpty()) {
-            ASSERT(FALSE);
-            return FALSE;
-        }
-
-        InitProfile();
-
-        // Mimic CWinApp::WriteProfileString() behavior
-        if (lpszEntry) {
-            if (lpszValue) {
-                CString& old = m_ProfileMap[sectionStr][keyStr];
-                if (old != lpszValue) {
-                    old = lpszValue;
-                    m_bQueuedProfileFlush = true;
-                }
-            } else { // Delete key
-                auto it = m_ProfileMap.find(sectionStr);
-                if (it != m_ProfileMap.end()) {
-                    if (it->second.erase(keyStr)) {
-                        m_bQueuedProfileFlush = true;
-                    }
-                }
-            }
-        } else { // Delete section
-            if (m_ProfileMap.erase(sectionStr)) {
-                m_bQueuedProfileFlush = true;
-            }
-        }
-        return TRUE;
+    if (!lpszSection) {
+        ASSERT(FALSE);
+        return FALSE;
     }
+    CProfile& profile = ProfileForSection(lpszSection);
+    // Mimic CWinAppEx::WriteProfileString() behavior
+    if (!lpszEntry) { // Delete section
+        profile.DeleteSection(lpszSection);
+    } else if (!lpszValue) { // Delete key
+        profile.DeleteValue(lpszSection, lpszEntry);
+    } else {
+        profile.WriteString(lpszSection, lpszEntry, lpszValue);
+    }
+    return TRUE;
 }
 
 bool CMPlayerCApp::HasProfileEntry(LPCTSTR lpszSection, LPCTSTR lpszEntry)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_profileMutex);
+    return ProfileForSection(lpszSection).HasEntry(lpszSection, lpszEntry);
+}
 
-    bool ret = false;
-    if (m_pszRegistryKey) {
-        if (HKEY hAppKey = GetAppRegistryKey()) {
-            HKEY hSectionKey;
-            if (RegOpenKeyEx(hAppKey, lpszSection, 0, KEY_READ, &hSectionKey) == ERROR_SUCCESS) {
-                LONG lResult = RegQueryValueEx(hSectionKey, lpszEntry, nullptr, nullptr, nullptr, nullptr);
-                ret = (lResult == ERROR_SUCCESS);
-                VERIFY(RegCloseKey(hSectionKey) == ERROR_SUCCESS);
-            }
-            VERIFY(RegCloseKey(hAppKey) == ERROR_SUCCESS);
-        } else {
-            ASSERT(FALSE);
-        }
-    } else {
-        InitProfile();
-        auto it1 = m_ProfileMap.find(lpszSection);
-        if (it1 != m_ProfileMap.end()) {
-            auto& sectionMap = it1->second;
-            auto it2 = sectionMap.find(lpszEntry);
-            ret = (it2 != sectionMap.end());
-        }
+std::vector<int> CMPlayerCApp::GetProfileVectorInt(CString strSection, CString strKey) {
+    std::vector<int> vData;
+    UINT uSize = theApp.GetProfileInt(strSection, strKey + _T("Size"), 0);
+    UINT uSizeRead = 0;
+    BYTE* temp = nullptr;
+    theApp.GetProfileBinary(strSection, strKey, &temp, &uSizeRead);
+    if (uSizeRead == uSize) {
+        vData.resize(uSizeRead / sizeof(int), 0);
+        memcpy(vData.data(), temp, uSizeRead);
     }
-    return ret;
+    delete[] temp;
+    temp = nullptr;
+    return vData;
+}
+
+
+void CMPlayerCApp::WriteProfileVectorInt(CString strSection, CString strKey, std::vector<int> vData) {
+    UINT uSize = static_cast<UINT>(sizeof(int) * vData.size());
+    theApp.WriteProfileBinary(
+        strSection,
+        strKey,
+        (LPBYTE)vData.data(),
+        uSize
+    );
+    theApp.WriteProfileInt(strSection, strKey + _T("Size"), uSize);
 }
 
 void CMPlayerCApp::PreProcessCommandLine()
@@ -1288,7 +1434,7 @@ bool CMPlayerCApp::SendCommandLine(HWND hWnd)
     cds.cbData = bufflen;
     cds.lpData = (void*)(BYTE*)buff;
 
-    return !!SendMessage(hWnd, WM_COPYDATA, (WPARAM)nullptr, (LPARAM)&cds);
+    return !!SendMessageTimeoutW(hWnd, WM_COPYDATA, (WPARAM)nullptr, (LPARAM)&cds, SMTO_ABORTIFHUNG | SMTO_NOTIMEOUTIFNOTHUNG, 5000, nullptr);
 }
 
 // CMPlayerCApp initialization
@@ -1323,6 +1469,136 @@ NTSTATUS WINAPI Mine_NtQueryInformationProcess(HANDLE ProcessHandle, PROCESSINFO
     }
 
     return nRet;
+}
+
+#define USE_DLL_BLOCKLIST 1
+
+#if USE_DLL_BLOCKLIST
+#define STATUS_UNSUCCESSFUL ((NTSTATUS)0xC0000001L)
+
+typedef enum _SECTION_INHERIT { ViewShare = 1, ViewUnmap = 2 } SECTION_INHERIT;
+
+typedef enum _SECTION_INFORMATION_CLASS {
+    SectionBasicInformation = 0,
+    SectionImageInformation
+} SECTION_INFORMATION_CLASS;
+
+typedef struct _SECTION_BASIC_INFORMATION {
+    PVOID BaseAddress;
+    ULONG Attributes;
+    LARGE_INTEGER Size;
+} SECTION_BASIC_INFORMATION;
+
+typedef NTSTATUS(STDMETHODCALLTYPE* pfn_NtMapViewOfSection)(HANDLE, HANDLE, PVOID, ULONG_PTR, SIZE_T, PLARGE_INTEGER, PSIZE_T, SECTION_INHERIT, ULONG, ULONG);
+typedef NTSTATUS(STDMETHODCALLTYPE* pfn_NtUnmapViewOfSection)(HANDLE, PVOID);
+typedef NTSTATUS(STDMETHODCALLTYPE* pfn_NtQuerySection)(HANDLE, SECTION_INFORMATION_CLASS, PVOID, SIZE_T, PSIZE_T);
+typedef DWORD(STDMETHODCALLTYPE* pfn_GetMappedFileNameW)(HANDLE, LPVOID, LPWSTR, DWORD);
+
+static pfn_NtMapViewOfSection Real_NtMapViewOfSection = nullptr;
+static pfn_NtUnmapViewOfSection Real_NtUnmapViewOfSection = nullptr;
+static pfn_NtQuerySection Real_NtQuerySection = nullptr;
+static pfn_GetMappedFileNameW Real_GetMappedFileNameW = nullptr;
+
+typedef struct {
+    // DLL name, lower case, with backslash as prefix
+    const wchar_t* name;
+    size_t name_len;
+} blocked_module_t;
+
+// list of modules that can cause crashes or other unwanted behavior
+// limit blocking to ACM/VFW codecs, as blocking other stuff might result in repeated loading attempts and performance issues
+static blocked_module_t moduleblocklist[] = {
+#if WIN64
+    {_T("\\lvcod64.dll"), 12},   // Logitech Video (I420) codec
+    {_T("\\pxc0.dll"), 9},       // ProxyCodec64
+    {_T("\\pxc1.dll"), 9},
+    {_T("\\tsccvid64.dll"), 14}, // Techsmith video codec
+    {_T("\\bdmpega64.acm"), 14}, // Bandicam audio codec
+#endif
+    {_T("\\mlc.dll"), 8},        // MLC lossless codec
+    {_T("\\ff_vfw.dll"), 11},
+    {_T("\\lameacm.acm"), 12},
+    {_T("\\ff_acm.acm"), 11},
+
+    // other candidates for blocking that often crash:
+    // cfhd.dll, prodad_codec.dll, ajavfw.dll
+};
+
+bool IsBlockedModule(wchar_t* modulename)
+{
+    size_t mod_name_len = wcslen(modulename);
+
+    for (size_t i = 0; i < _countof(moduleblocklist); i++) {
+        blocked_module_t* b = &moduleblocklist[i];
+        if (mod_name_len > b->name_len) {
+            wchar_t* dll_ptr = modulename + mod_name_len - b->name_len;
+            if (_wcsicmp(dll_ptr, b->name) == 0) {
+                TRACE(L"Blocked module load: %s\n", modulename);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+NTSTATUS STDMETHODCALLTYPE Mine_NtMapViewOfSection(HANDLE SectionHandle, HANDLE ProcessHandle, PVOID* BaseAddress, ULONG_PTR ZeroBits,  SIZE_T CommitSize,
+    PLARGE_INTEGER SectionOffset, PSIZE_T ViewSize, SECTION_INHERIT InheritDisposition, ULONG AllocationType, ULONG Win32Protect)
+{
+    NTSTATUS ret = Real_NtMapViewOfSection(SectionHandle, ProcessHandle, BaseAddress, ZeroBits, CommitSize, SectionOffset, ViewSize, InheritDisposition, AllocationType, Win32Protect);
+
+    // Verify map and process
+    if (ret < 0 || ProcessHandle != GetCurrentProcess())
+        return ret;
+
+    // Fetch section information
+    SIZE_T wrote = 0;
+    SECTION_BASIC_INFORMATION section_information;
+    if (Real_NtQuerySection(SectionHandle, SectionBasicInformation, &section_information, sizeof(section_information), &wrote) < 0)
+        return ret;
+
+    // Verify fetch was successful
+    if (wrote != sizeof(section_information))
+        return ret;
+
+    // We're not interested in non-image maps
+    if (!(section_information.Attributes & SEC_IMAGE))
+        return ret;
+
+    // Get the actual filename if possible
+    wchar_t fileName[MAX_PATH];
+    // ToDo: switch to PSAPI_VERSION=2 and directly use K32GetMappedFileNameW ?
+    if (Real_GetMappedFileNameW(ProcessHandle, *BaseAddress, fileName, _countof(fileName)) == 0)
+        return ret;
+
+    if (IsBlockedModule(fileName)) {
+        Real_NtUnmapViewOfSection(ProcessHandle, BaseAddress);
+        ret = STATUS_UNSUCCESSFUL;
+    }
+
+    return ret;
+}
+#endif
+
+void CMPlayerCApp::HookModuleLoading() {
+#if USE_DLL_BLOCKLIST
+    // ToDo: maybe check registry first to see if any "bad" codecs are installed?
+    if (m_hNTDLL && !Real_NtMapViewOfSection) {
+        Real_NtMapViewOfSection = (pfn_NtMapViewOfSection)GetProcAddress(m_hNTDLL, "NtMapViewOfSection");
+        Real_NtUnmapViewOfSection = (pfn_NtUnmapViewOfSection)GetProcAddress(m_hNTDLL, "NtUnmapViewOfSection");
+        Real_NtQuerySection = (pfn_NtQuerySection)GetProcAddress(m_hNTDLL, "NtQuerySection");
+        HMODULE k32 = GetModuleHandle(L"kernel32.dll");
+        if (k32) {
+            Real_GetMappedFileNameW = (pfn_GetMappedFileNameW)GetProcAddress(k32, "K32GetMappedFileNameW");
+        }
+
+        if (Real_NtMapViewOfSection && Real_NtUnmapViewOfSection && Real_NtQuerySection && Real_GetMappedFileNameW) {
+            if (Mhook_SetHookEx(&Real_NtMapViewOfSection, Mine_NtMapViewOfSection)) {
+                MH_EnableHook(MH_ALL_HOOKS);
+            }
+        }
+    }
+#endif
 }
 
 static LONG Mine_ChangeDisplaySettingsEx(LONG ret, DWORD dwFlags, LPVOID lParam)
@@ -1391,6 +1667,116 @@ static BOOL CreateFakeVideoTS(LPCWSTR strIFOPath, LPWSTR strFakeFile, size_t nFa
     return bRet;
 }
 
+static CMPCThemeScrollBarRenderer* GetScrollBarRenderer(HWND hWnd) {
+    CWnd* pWnd = CWnd::FromHandlePermanent(hWnd);
+    static BOOL sbrIsThemeActive = IsThemeActive();
+
+    // Themed scrollbars not available in classic mode = !IsThemeActive()
+    if (pWnd && sbrIsThemeActive) {
+        static BOOL cachedThemedControls = AppNeedsThemedControls();
+        if (cachedThemedControls) {
+            CMPCThemeScrollBarRenderer* pRenderer = DYNAMIC_DOWNCAST(CMPCThemePlayerListCtrl, pWnd);
+            if (pRenderer) {
+                return pRenderer;
+            }
+            pRenderer = DYNAMIC_DOWNCAST(CMPCThemeEdit, pWnd);
+            if (pRenderer) {
+                return pRenderer;
+            }
+            pRenderer = DYNAMIC_DOWNCAST(CMPCThemeListBox, pWnd);
+            if (pRenderer) {
+                return pRenderer;
+            }
+            pRenderer = DYNAMIC_DOWNCAST(CMPCThemeTreeCtrl, pWnd);
+            if (pRenderer) {
+                return pRenderer;
+            }
+        }
+    }
+    return nullptr;
+}
+
+static BOOL(WINAPI* Real_BitBlt)(HDC, int, int, int, int, HDC, int, int, DWORD) = BitBlt;
+BOOL WINAPI Mine_BitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop) {
+    HWND hWnd = WindowFromDC(hdc);
+    CMPCThemeScrollBarRenderer* pRenderer = GetScrollBarRenderer(hWnd);
+    if (pRenderer) {
+        CRect drawRect(x, y, x + cx, y + cy);
+        auto clipState = pRenderer->ApplyScrollbarClipping(hdc, hWnd, drawRect, true);
+
+        BOOL result = TRUE;
+        if (!clipState.IsFullyClipped()) {
+            result = Real_BitBlt(hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
+        }
+
+        CMPCThemeScrollBarRenderer::RestoreClipping(hdc, clipState);
+        return result;
+    }
+    return Real_BitBlt(hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
+}
+
+static BOOL(WINAPI* Real_GdiAlphaBlend)(HDC, int, int, int, int, HDC, int, int, int, int, BLENDFUNCTION) = GdiAlphaBlend;
+BOOL WINAPI Mine_GdiAlphaBlend(HDC hdcDest, int xoriginDest, int yoriginDest, int wDest, int hDest, HDC hdcSrc, int xoriginSrc, int yoriginSrc, int wSrc, int hSrc, BLENDFUNCTION ftn) {
+    HWND hWnd = WindowFromDC(hdcDest);
+    CMPCThemeScrollBarRenderer* pRenderer = GetScrollBarRenderer(hWnd);
+
+    if (pRenderer) {
+        CRect drawRect(xoriginDest, yoriginDest, xoriginDest + wDest, yoriginDest + hDest);
+        
+        // We draw to the src of the blend function -- note, this relies on an assumption
+        // that win32 uses a src hdc with the same origin as the window (double buffer hdc?)
+        // Real_GdiAlphaBlend will then function normally with our src data
+        auto clipState = pRenderer->ApplyScrollbarClipping(hdcSrc, hWnd, drawRect, true);
+        CMPCThemeScrollBarRenderer::RestoreClipping(hdcSrc, clipState);
+    }
+    
+    return Real_GdiAlphaBlend(hdcDest, xoriginDest, yoriginDest, wDest, hDest, hdcSrc, xoriginSrc, yoriginSrc, wSrc, hSrc, ftn);
+}
+
+static HRESULT(WINAPI* Real_DrawThemeBackground)(HTHEME, HDC, int, int, LPCRECT, LPCRECT) = DrawThemeBackground;
+HRESULT WINAPI Mine_DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect) {
+    HWND hWnd = WindowFromDC(hdc);
+    CMPCThemeScrollBarRenderer* pRenderer = GetScrollBarRenderer(hWnd);
+    if (pRenderer) {
+        CRect drawRect(pRect);
+        auto clipState = pRenderer->ApplyScrollbarClipping(hdc, hWnd, drawRect, false);
+        
+        HRESULT result = S_OK;
+        if (!clipState.IsFullyClipped()) {
+            result = Real_DrawThemeBackground(hTheme, hdc, iPartId, iStateId, pRect, pClipRect);
+        }
+        
+        CMPCThemeScrollBarRenderer::RestoreClipping(hdc, clipState);
+        return result;
+    }
+    return Real_DrawThemeBackground(hTheme, hdc, iPartId, iStateId, pRect, pClipRect);
+}
+
+int(WINAPI* Real_ScrollWindowEx)(HWND, int, int, CONST RECT*, CONST RECT*, HRGN, LPRECT, UINT) = ScrollWindowEx;
+int WINAPI Mine_ScrollWindowEx(HWND hWnd, int dx, int dy, CONST RECT* prcScroll, CONST RECT* prcClip, HRGN hrgnUpdate, LPRECT prcUpdate, UINT flags)
+{
+    RECT expandedClip = { 0 };
+    CWnd* pWnd = CWnd::FromHandlePermanent(hWnd);
+    if (pWnd && prcClip && dx && AppNeedsThemedControls()) {
+        CMPCThemePlayerListCtrl* pList = dynamic_cast<CMPCThemePlayerListCtrl*>(pWnd);
+        if (pList && !pList->PaintHooksActive()) {
+            expandedClip = *prcClip;
+            expandedClip.top = 0; //horizontal scroll will need to include header
+            prcClip = &expandedClip;
+        } else {
+            CMPCThemeHeaderCtrl* pHeader = dynamic_cast<CMPCThemeHeaderCtrl*>(pWnd);
+            if (pHeader) {
+                pList = dynamic_cast<CMPCThemePlayerListCtrl*>(pWnd->GetParent());
+                if (pList && !pList->PaintHooksActive()) {
+                    return NULLREGION;
+                }
+            }
+        }
+    }
+    return Real_ScrollWindowEx(hWnd, dx, dy, prcScroll, prcClip, hrgnUpdate, prcUpdate, flags);
+}
+
+
 // This hook forces files to open even if they are currently being written and hijacks
 // IFO file opening so that a modified IFO with no forbidden operations is opened instead.
 HANDLE(WINAPI* Real_CreateFileW)(LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE) = CreateFileW;
@@ -1420,13 +1806,26 @@ BOOL(WINAPI* Real_DeviceIoControl)(HANDLE, DWORD, LPVOID, DWORD, LPVOID, DWORD, 
 BOOL WINAPI Mine_DeviceIoControl(HANDLE hDevice, DWORD dwIoControlCode, LPVOID lpInBuffer, DWORD nInBufferSize, LPVOID lpOutBuffer, DWORD nOutBufferSize, LPDWORD lpBytesReturned, LPOVERLAPPED lpOverlapped)
 {
     BOOL ret = Real_DeviceIoControl(hDevice, dwIoControlCode, lpInBuffer, nInBufferSize, lpOutBuffer, nOutBufferSize, lpBytesReturned, lpOverlapped);
-
-    if (IOCTL_DVD_GET_REGION == dwIoControlCode && lpOutBuffer
-            && lpBytesReturned && *lpBytesReturned == sizeof(DVD_REGION)) {
+    if (IOCTL_DVD_GET_REGION == dwIoControlCode && lpOutBuffer && nOutBufferSize == sizeof(DVD_REGION)) {
         DVD_REGION* pDVDRegion = (DVD_REGION*)lpOutBuffer;
-        pDVDRegion->SystemRegion = ~pDVDRegion->RegionData;
-    }
 
+        if (pDVDRegion->RegionData > 0) {
+            UCHAR disc_regions = ~pDVDRegion->RegionData;
+            if ((disc_regions & pDVDRegion->SystemRegion) == 0) {
+                if      (disc_regions & 1)   pDVDRegion->SystemRegion = 1;
+                else if (disc_regions & 2)   pDVDRegion->SystemRegion = 2;
+                else if (disc_regions & 4)   pDVDRegion->SystemRegion = 4;
+                else if (disc_regions & 8)   pDVDRegion->SystemRegion = 8;
+                else if (disc_regions & 16)  pDVDRegion->SystemRegion = 16;
+                else if (disc_regions & 32)  pDVDRegion->SystemRegion = 32;
+                else if (disc_regions & 128) pDVDRegion->SystemRegion = 128;
+                ret = true;
+            }
+        } else if (pDVDRegion->SystemRegion == 0) {
+            pDVDRegion->SystemRegion = 1;
+            ret = true;
+        }
+    }
     return ret;
 }
 
@@ -1452,6 +1851,32 @@ BOOL WINAPI Mine_LockWindowUpdate(HWND hWndLock)
     }
 }
 
+BOOL RegQueryBoolValue(HKEY hKeyRoot, LPCWSTR lpSubKey, LPCWSTR lpValuename, BOOL defaultvalue) {
+    BOOL result = defaultvalue;
+    HKEY hKeyOpen;
+    DWORD rv = RegOpenKeyEx(hKeyRoot, lpSubKey, 0, KEY_READ, &hKeyOpen);
+    if (rv == ERROR_SUCCESS) {
+        DWORD data;
+        DWORD dwBufferSize = sizeof(DWORD);
+        rv = RegQueryValueEx(hKeyOpen, lpValuename, NULL, NULL, reinterpret_cast<LPBYTE>(&data), &dwBufferSize);
+        if (rv == ERROR_SUCCESS) {
+            result = (data > 0);
+        }
+        RegCloseKey(hKeyOpen);
+    }
+    return result;
+}
+
+#if USE_DRDUMP_CRASH_REPORTER
+void DisableCrashReporter()
+{
+    if (CrashReporter::IsEnabled()) {
+        CrashReporter::Disable();
+        MPCExceptionHandler::Enable();
+    }
+}
+#endif
+
 BOOL CMPlayerCApp::InitInstance()
 {
     // Remove the working directory from the search path to work around the DLL preloading vulnerability
@@ -1459,10 +1884,18 @@ BOOL CMPlayerCApp::InitInstance()
 
     // At this point we have not hooked this function yet so we get the real result
     if (!IsDebuggerPresent()) {
-        CrashReporter::Enable();
-        if (!CrashReporter::IsEnabled()) {
+#if !defined(_DEBUG) && USE_DRDUMP_CRASH_REPORTER
+        if (RegQueryBoolValue(HKEY_CURRENT_USER, _T("Software\\MPC-HC\\MPC-HC\\Settings"), _T("EnableCrashReporter"), true)) {
+            CrashReporter::Enable();
+            if (!CrashReporter::IsEnabled()) {
+                MPCExceptionHandler::Enable();
+            }
+        } else {
             MPCExceptionHandler::Enable();
         }
+#else
+        MPCExceptionHandler::Enable();
+#endif
     }
 
     if (!HeapSetInformation(nullptr, HeapEnableTerminationOnCorruption, nullptr, 0)) {
@@ -1472,7 +1905,9 @@ BOOL CMPlayerCApp::InitInstance()
 
     bool bHookingSuccessful = MH_Initialize() == MH_OK;
 
+#ifndef _DEBUG
     bHookingSuccessful &= !!Mhook_SetHookEx(&Real_IsDebuggerPresent, Mine_IsDebuggerPresent);
+#endif
 
     m_hNTDLL = LoadLibrary(_T("ntdll.dll"));
 #if 0
@@ -1489,13 +1924,15 @@ BOOL CMPlayerCApp::InitInstance()
 
     bHookingSuccessful &= !!Mhook_SetHookEx(&Real_CreateFileW, Mine_CreateFileW);
     bHookingSuccessful &= !!Mhook_SetHookEx(&Real_DeviceIoControl, Mine_DeviceIoControl);
+    bHookingSuccessful &= !!Mhook_SetHookEx(&Real_ScrollWindowEx, Mine_ScrollWindowEx);
+    bHookingSuccessful &= !!Mhook_SetHookEx(&Real_BitBlt, Mine_BitBlt);
+    bHookingSuccessful &= !!Mhook_SetHookEx(&Real_GdiAlphaBlend, Mine_GdiAlphaBlend);
+    bHookingSuccessful &= !!Mhook_SetHookEx(&Real_DrawThemeBackground, Mine_DrawThemeBackground);
 
     bHookingSuccessful &= MH_EnableHook(MH_ALL_HOOKS) == MH_OK;
 
     if (!bHookingSuccessful) {
-        if (AfxMessageBox(IDS_HOOKS_FAILED, MB_ICONWARNING | MB_YESNO, 0) == IDYES) {
-            ShellExecute(nullptr, _T("open"), HOOKS_BUGS_URL, nullptr, nullptr, SW_SHOWDEFAULT);
-        }
+        AfxMessageBox(IDS_HOOKS_FAILED);
     }
 
     // If those hooks fail it's annoying but try to run anyway without reporting any error in release mode
@@ -1504,7 +1941,6 @@ BOOL CMPlayerCApp::InitInstance()
     VERIFY(Mhook_SetHookEx(&Real_CreateFileA, Mine_CreateFileA)); // The internal splitter uses the right share mode anyway so this is no big deal
     VERIFY(Mhook_SetHookEx(&Real_LockWindowUpdate, Mine_LockWindowUpdate));
     VERIFY(Mhook_SetHookEx(&Real_mixerSetControlDetails, Mine_mixerSetControlDetails));
-
     MH_EnableHook(MH_ALL_HOOKS);
 
     CFilterMapper2::Init();
@@ -1543,11 +1979,9 @@ BOOL CMPlayerCApp::InitInstance()
 
     PreProcessCommandLine();
 
-    if (IsIniValid()) {
-        StoreSettingsToIni();
-    } else {
-        StoreSettingsToRegistry();
-    }
+    // The settings store auto-detects its location (portable INI or registry) on
+    // construction. In portable mode this splits MediaHistory into its own file.
+    SetupSettingsStore();
 
     m_s->ParseCommandLine(m_cmdln);
 
@@ -1573,45 +2007,25 @@ BOOL CMPlayerCApp::InitInstance()
             }
         }
 
-        // If the profile was already cached, it should be cleared here
-        ASSERT(!m_bProfileInitialized);
-
-        // Remove the settings
-        if (IsIniValid()) {
-            FILE* fp;
-            do { // Open mpc-hc.ini, retry if it is already being used by another process
-                fp = _tfsopen(m_pszProfileName, _T("w"), _SH_SECURE);
-                if (fp || (GetLastError() != ERROR_SHARING_VIOLATION)) {
-                    break;
-                }
-                Sleep(100);
-            } while (true);
-            if (fp) {
-                // Close without writing anything, it should produce empty file
-                VERIFY(fclose(fp) == 0);
-            } else {
-                ASSERT(FALSE);
-            }
-        } else {
-            CRegKey key;
-            // Clear settings
-            key.Attach(GetAppRegistryKey());
-            VERIFY(key.RecurseDeleteKey(_T("")) == ERROR_SUCCESS);
-            VERIFY(key.Close() == ERROR_SUCCESS);
-            // Set ExePath value to prevent settings migration
-            key.Attach(GetAppRegistryKey());
-            VERIFY(key.SetStringValue(_T("ExePath"), PathUtils::GetProgramPath(true)) == ERROR_SUCCESS);
-            VERIFY(key.Close() == ERROR_SUCCESS);
+        // Remove the settings, then re-mark the history split so the next run
+        // does not try to re-split an already-empty store.
+        m_Profile.Clear();
+        m_Profile.WriteString(_T("Version"), _T("HistorySplit"), _T("1")); // history is separate; don't re-split
+        m_Profile.Flush(true);
+        if (m_HistoryProfile) {
+            m_HistoryProfile->Clear();
         }
 
         // Remove the current playlist if it exists
         CString strSavePath;
-        if (GetAppSavePath(strSavePath)) {
+        if (GetPlaylistSavePath(strSavePath)) {
             CPath playlistPath;
             playlistPath.Combine(strSavePath, _T("default.mpcpl"));
 
             if (playlistPath.FileExists()) {
-                CFile::Remove(playlistPath);
+                try {
+                    CFile::Remove(playlistPath);
+                } catch (...) {}
             }
         }
     }
@@ -1699,28 +2113,48 @@ BOOL CMPlayerCApp::InitInstance()
         return FALSE;
     }
 
+    if (m_s->nCLSwitches & (CLSW_CONFIGLAVSPLITTER | CLSW_CONFIGLAVAUDIO | CLSW_CONFIGLAVVIDEO)) {
+        m_s->LoadSettings();
+        if (m_s->nCLSwitches & CLSW_CONFIGLAVSPLITTER) {
+            CFGFilterLAVSplitter::ShowPropertyPages(NULL);
+        }
+        if (m_s->nCLSwitches & CLSW_CONFIGLAVAUDIO) {
+            CFGFilterLAVAudio::ShowPropertyPages(NULL);
+        }
+        if (m_s->nCLSwitches & CLSW_CONFIGLAVVIDEO) {
+            CFGFilterLAVVideo::ShowPropertyPages(NULL);
+        }
+        return FALSE;
+    }
+
     m_mutexOneInstance.Create(nullptr, TRUE, MPC_WND_CLASS_NAME);
 
-    if (GetLastError() == ERROR_ALREADY_EXISTS &&
-            (!(m_s->GetAllowMultiInst() || m_s->nCLSwitches & CLSW_NEW || m_cmdln.IsEmpty()) || m_s->nCLSwitches & CLSW_ADD)) {
-
-        DWORD res = WaitForSingleObject(m_mutexOneInstance.m_h, 5000);
-        if (res == WAIT_OBJECT_0 || res == WAIT_ABANDONED) {
-            HWND hWnd = ::FindWindow(MPC_WND_CLASS_NAME, nullptr);
-            if (hWnd) {
-                DWORD dwProcessId = 0;
-                if (GetWindowThreadProcessId(hWnd, &dwProcessId) && dwProcessId) {
-                    VERIFY(AllowSetForegroundWindow(dwProcessId));
-                } else {
-                    ASSERT(FALSE);
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        if ((m_s->nCLSwitches & CLSW_ADD) || !(m_s->GetAllowMultiInst() || m_s->nCLSwitches & CLSW_NEW || m_cmdln.IsEmpty())) {
+            DWORD res = WaitForSingleObject(m_mutexOneInstance.m_h, 5000);
+            if (res == WAIT_OBJECT_0 || res == WAIT_ABANDONED) {
+                HWND hWnd = ::FindWindow(MPC_WND_CLASS_NAME, nullptr);
+                if (hWnd) {
+                    DWORD dwProcessId = 0;
+                    if (GetWindowThreadProcessId(hWnd, &dwProcessId) && dwProcessId) {
+                        VERIFY(AllowSetForegroundWindow(dwProcessId));
+                    } else {
+                        ASSERT(FALSE);
+                    }
+                    if (!(m_s->nCLSwitches & CLSW_MINIMIZED) && IsIconic(hWnd) &&
+                        (!(m_s->nCLSwitches & CLSW_ADD) || m_s->nCLSwitches & CLSW_PLAY) //do not restore when adding to playlist of minimized player, unless also playing
+                        ) {
+                        ShowWindow(hWnd, SW_RESTORE);
+                    }
+                    if (SendCommandLine(hWnd)) {
+                        m_mutexOneInstance.Close();
+                        return FALSE;
+                    }
                 }
-                if (!(m_s->nCLSwitches & CLSW_MINIMIZED) && IsIconic(hWnd)) {
-                    ShowWindow(hWnd, SW_RESTORE);
-                }
-                if (SendCommandLine(hWnd)) {
-                    m_mutexOneInstance.Close();
-                    return FALSE;
-                }
+            }
+            if ((m_s->nCLSwitches & CLSW_ADD)) {
+                ASSERT(FALSE);
+                return FALSE; // don't open new instance if SendCommandLine() failed
             }
         }
     }
@@ -1740,36 +2174,74 @@ BOOL CMPlayerCApp::InitInstance()
         }
     }
 
-    m_s->UpdateSettings(); // update settings
-    m_s->LoadSettings(); // read settings
+    // Now that a normal interactive launch is committed (utility switches and
+    // single-instance forwarding have returned above), apply the deferred
+    // settings policies (newer-version warning + HKLM machine defaults) before
+    // settings are read.
+    ApplySettingsPolicies();
+
+    m_s->MigrateSettings(); // migrate old settings
+    m_s->LoadSettings();    // read settings
+    m_s->UpdateSettings();  // update settings
+
+    #if !defined(_DEBUG) && USE_DRDUMP_CRASH_REPORTER
+    if (m_s->bEnableCrashReporter) {
+        if (!CrashReporter::IsEnabled()) { // failed
+            m_s->bEnableCrashReporter = false;
+        }
+    } else {
+        DisableCrashReporter();
+    }
+    #endif
 
     m_AudioRendererDisplayName_CL = _T("");
 
     if (!__super::InitInstance()) {
-        AfxMessageBox(_T("InitInstance failed!"));
+        MessageBoxW(nullptr, L"MPC-HC encountered a problem during initialization", L"MPC-HC", MB_ICONERROR | MB_OK);
         return FALSE;
     }
 
     AfxEnableControlContainer();
 
-    CMainFrame* pFrame = DEBUG_NEW CMainFrame;
-    m_pMainWnd = pFrame;
-    if (!pFrame->LoadFrame(IDR_MAINFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, nullptr, nullptr)) {
-        if (MessageBox(nullptr, ResStr(IDS_FRAME_INIT_FAILED), m_pszAppName, MB_ICONERROR | MB_YESNO) == IDYES) {
-            ShellExecute(nullptr, _T("open"), TRAC_URL, nullptr, nullptr, SW_SHOWDEFAULT);
+    CMainFrame* pFrame;
+    try {
+        pFrame = DEBUG_NEW CMainFrame;
+        if (!pFrame || !pFrame->LoadFrame(IDR_MAINFRAME, WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, nullptr, nullptr)) {
+            MessageBoxW(nullptr, L"MPC-HC encountered a problem during initialization", L"MPC-HC", MB_ICONERROR | MB_OK);
+            return FALSE;
         }
+    } catch (...) {
+        MessageBoxW(nullptr, L"MPC-HC encountered a problem during initialization", L"MPC-HC", MB_ICONERROR | MB_OK);
         return FALSE;
     }
-    pFrame->m_controls.LoadState();
+
+    m_pMainWnd = pFrame;
+    if (!m_pMainWnd) {
+        MessageBoxW(nullptr, L"MPC-HC encountered a problem during initialization", L"MPC-HC", MB_ICONERROR | MB_OK);
+        return FALSE;
+    }
+
+    try {
+        pFrame->m_controls.LoadState();
+    } catch (...) {
+        MessageBoxW(nullptr, L"MPC-HC encountered a problem during initialization of its control bars", L"MPC-HC", MB_ICONERROR | MB_OK);
+        return FALSE;
+    }
+
+    CPoint borderAdjustDirection;
     pFrame->SetDefaultWindowRect((m_s->nCLSwitches & CLSW_MONITOR) ? m_s->iMonitor : 0);
     if (!m_s->slFiles.IsEmpty()) {
         pFrame->m_controls.DelayShowNotLoaded(true);
+    }
+    // Apply the persistent startup view preset, unless a command-line /viewpreset overrides it (applied later).
+    if (!(m_s->nCLSwitches & (CLSW_PRESET1 | CLSW_PRESET2 | CLSW_PRESET3 | CLSW_PRESET4))) {
+        pFrame->ApplyStartupPreset();
     }
     pFrame->SetDefaultFullscreenState();
     pFrame->UpdateControlState(CMainFrame::UPDATE_CONTROLS_VISIBILITY);
     pFrame->SetIcon(icon, TRUE);
 
-    bool bRestoreLastWindowType = m_s->fRememberWindowSize && m_s->fRememberWindowPos;
+    bool bRestoreLastWindowType = (m_s->fRememberWindowSize || m_s->fRememberWindowPos) && !m_s->fLastFullScreen && !m_s->fLaunchfullscreen;
     bool bMinimized = (m_s->nCLSwitches & CLSW_MINIMIZED) || (bRestoreLastWindowType && m_s->nLastWindowType == SIZE_MINIMIZED);
     bool bMaximized = bRestoreLastWindowType && m_s->nLastWindowType == SIZE_MAXIMIZED;
 
@@ -1783,7 +2255,27 @@ BOOL CMPlayerCApp::InitInstance()
     }
 
     pFrame->ActivateFrame(m_nCmdShow);
+
+    if (AfxGetAppSettings().HasFixedWindowSize() && IsWindows8OrGreater()) {//make adjustments for drop shadow frame
+        CRect rect, frame;
+        pFrame->GetWindowRect(&rect);
+        CRect diff = pFrame->GetInvisibleBorderSize();
+        if (!diff.IsRectNull()) {
+            rect.InflateRect(diff);
+            pFrame->SetWindowPos(nullptr, rect.left, rect.top, rect.Width(), rect.Height(), SWP_NOZORDER | SWP_NOACTIVATE);
+        }
+    }
+
+    /* adipose 2019-11-12:
+        LoadPlayList this used to be performed inside OnCreate,
+        but due to all toolbars being hidden, EnsureVisible does not correctly
+        scroll to the current file in the playlist.  We call after activating
+        the frame to fix this issue.
+    */
+    pFrame->m_wndPlaylistBar.LoadPlaylist(pFrame->GetRecentFile());
+
     pFrame->UpdateWindow();
+
 
     if (bMinimized && bMaximized) {
         WINDOWPLACEMENT wp;
@@ -1797,13 +2289,17 @@ BOOL CMPlayerCApp::InitInstance()
     if (m_s->fWinLirc) {
         m_s->WinLircClient.Connect(m_s->strWinLircAddr);
     }
-    m_s->UIceClient.SetHWND(m_pMainWnd->m_hWnd);
-    if (m_s->fUIce) {
-        m_s->UIceClient.Connect(m_s->strUIceAddr);
-    }
 
     if (UpdateChecker::IsAutoUpdateEnabled()) {
         UpdateChecker::CheckForUpdate(true);
+    }
+
+    if (!m_pMainWnd) {
+        // The first-run "enable automatic update checks?" prompt above is modal, so it pumps
+        // messages. If the user closed the player while it was up, the main frame is already
+        // destroyed and MFC has cleared m_pMainWnd. Abort startup instead of dereferencing it;
+        // AfxWinMain skips Run() and calls ExitInstance(), so the settings still get saved.
+        return FALSE;
     }
 
     SendCommandLine(m_pMainWnd->m_hWnd);
@@ -1825,8 +2321,6 @@ BOOL CMPlayerCApp::InitInstance()
 
     m_mutexOneInstance.Release();
 
-    CWebServer::Init();
-
     if (m_s->fAssociatedWithIcons) {
         m_s->fileAssoc.CheckIconsAssoc();
     }
@@ -1840,12 +2334,12 @@ UINT CMPlayerCApp::GetRemoteControlCodeMicrosoft(UINT nInputcode, HRAWINPUT hRaw
     UINT nMceCmd = 0;
 
     // Support for MCE remote control
-    GetRawInputData(hRawInput, RID_INPUT, nullptr, &dwSize, sizeof(RAWINPUTHEADER));
-    if (dwSize > 0) {
+    UINT ret = GetRawInputData(hRawInput, RID_INPUT, nullptr, &dwSize, sizeof(RAWINPUTHEADER));
+    if (ret == 0 && dwSize > 0) {
         BYTE* pRawBuffer = DEBUG_NEW BYTE[dwSize];
         if (GetRawInputData(hRawInput, RID_INPUT, pRawBuffer, &dwSize, sizeof(RAWINPUTHEADER)) != -1) {
             RAWINPUT* raw = (RAWINPUT*)pRawBuffer;
-            if (raw->header.dwType == RIM_TYPEHID) {
+            if (raw->header.dwType == RIM_TYPEHID && raw->data.hid.dwSizeHid >= 3) {
                 nMceCmd = 0x10000 + (raw->data.hid.bRawData[1] | raw->data.hid.bRawData[2] << 8);
             }
         }
@@ -1860,14 +2354,14 @@ UINT CMPlayerCApp::GetRemoteControlCodeSRM7500(UINT nInputcode, HRAWINPUT hRawIn
     UINT dwSize = 0;
     UINT nMceCmd = 0;
 
-    GetRawInputData(hRawInput, RID_INPUT, nullptr, &dwSize, sizeof(RAWINPUTHEADER));
-    if (dwSize > 21) {
+    UINT ret = GetRawInputData(hRawInput, RID_INPUT, nullptr, &dwSize, sizeof(RAWINPUTHEADER));
+    if (ret == 0 && dwSize > 21) {
         BYTE* pRawBuffer = DEBUG_NEW BYTE[dwSize];
         if (GetRawInputData(hRawInput, RID_INPUT, pRawBuffer, &dwSize, sizeof(RAWINPUTHEADER)) != -1) {
             RAWINPUT* raw = (RAWINPUT*)pRawBuffer;
 
             // data.hid.bRawData[21] set to one when key is pressed
-            if (raw->header.dwType == RIM_TYPEHID && raw->data.hid.bRawData[21] == 1) {
+            if (raw->header.dwType == RIM_TYPEHID && raw->data.hid.dwSizeHid >= 22 && raw->data.hid.bRawData[21] == 1) {
                 // data.hid.bRawData[21] has keycode
                 switch (raw->data.hid.bRawData[20]) {
                     case 0x0033:
@@ -1957,11 +2451,13 @@ void CMPlayerCApp::RegisterHotkeys()
 
     if (m_s->fGlobalMedia) {
         POSITION pos = m_s->wmcmds.GetHeadPosition();
-
         while (pos) {
             const wmcmd& wc = m_s->wmcmds.GetNext(pos);
             if (wc.appcmd != 0) {
-                RegisterHotKey(m_pMainWnd->m_hWnd, wc.appcmd, 0, GetVKFromAppCommand(wc.appcmd));
+                UINT vkappcmd = GetVKFromAppCommand(wc.appcmd);
+                if (vkappcmd > 0) {
+                    RegisterHotKey(m_pMainWnd->m_hWnd, wc.appcmd, 0, vkappcmd);
+                }
             }
         }
     }
@@ -1971,7 +2467,6 @@ void CMPlayerCApp::UnregisterHotkeys()
 {
     if (m_s->fGlobalMedia) {
         POSITION pos = m_s->wmcmds.GetHeadPosition();
-
         while (pos) {
             const wmcmd& wc = m_s->wmcmds.GetNext(pos);
             if (wc.appcmd != 0) {
@@ -1983,7 +2478,24 @@ void CMPlayerCApp::UnregisterHotkeys()
 
 UINT CMPlayerCApp::GetVKFromAppCommand(UINT nAppCommand)
 {
+    // Note: Only a subset of AppCommands have a VirtualKey
     switch (nAppCommand) {
+        case APPCOMMAND_MEDIA_PLAY_PAUSE:
+            return VK_MEDIA_PLAY_PAUSE;
+        case APPCOMMAND_MEDIA_STOP:
+            return VK_MEDIA_STOP;
+        case APPCOMMAND_MEDIA_NEXTTRACK:
+            return VK_MEDIA_NEXT_TRACK;
+        case APPCOMMAND_MEDIA_PREVIOUSTRACK:
+            return VK_MEDIA_PREV_TRACK;
+        case APPCOMMAND_VOLUME_DOWN:
+            return VK_VOLUME_DOWN;
+        case APPCOMMAND_VOLUME_UP:
+            return VK_VOLUME_UP;
+        case APPCOMMAND_VOLUME_MUTE:
+            return VK_VOLUME_MUTE;
+        case APPCOMMAND_LAUNCH_MEDIA_SELECT:
+            return VK_LAUNCH_MEDIA_SELECT;
         case APPCOMMAND_BROWSER_BACKWARD:
             return VK_BROWSER_BACK;
         case APPCOMMAND_BROWSER_FORWARD:
@@ -1998,24 +2510,6 @@ UINT CMPlayerCApp::GetVKFromAppCommand(UINT nAppCommand)
             return VK_BROWSER_FAVORITES;
         case APPCOMMAND_BROWSER_HOME:
             return VK_BROWSER_HOME;
-        case APPCOMMAND_VOLUME_MUTE:
-            return VK_VOLUME_MUTE;
-        case APPCOMMAND_VOLUME_DOWN:
-            return VK_VOLUME_DOWN;
-        case APPCOMMAND_VOLUME_UP:
-            return VK_VOLUME_UP;
-        case APPCOMMAND_MEDIA_NEXTTRACK:
-            return VK_MEDIA_NEXT_TRACK;
-        case APPCOMMAND_MEDIA_PREVIOUSTRACK:
-            return VK_MEDIA_PREV_TRACK;
-        case APPCOMMAND_MEDIA_STOP:
-            return VK_MEDIA_STOP;
-        case APPCOMMAND_MEDIA_PLAY_PAUSE:
-            return VK_MEDIA_PLAY_PAUSE;
-        case APPCOMMAND_LAUNCH_MAIL:
-            return VK_LAUNCH_MAIL;
-        case APPCOMMAND_LAUNCH_MEDIA_SELECT:
-            return VK_LAUNCH_MEDIA_SELECT;
         case APPCOMMAND_LAUNCH_APP1:
             return VK_LAUNCH_APP1;
         case APPCOMMAND_LAUNCH_APP2:
@@ -2039,12 +2533,29 @@ int CMPlayerCApp::ExitInstance()
 
     OleUninitialize();
 
-    return CWinApp::ExitInstance();
+    return CWinAppEx::ExitInstance();
+}
+
+BOOL CMPlayerCApp::SaveAllModified()
+{
+    // CWinApp::SaveAllModified
+    // Called by the framework to save all documents
+    // when the application's main frame window is to be closed,
+    // or through a WM_QUERYENDSESSION message.
+    if (m_s && !m_fClosingState) {
+        if (auto pMainFrame = AfxFindMainFrame()) {
+            if (pMainFrame->GetLoadState() != MLS::CLOSED) {
+                pMainFrame->CloseMedia();
+            }
+        }
+    }
+
+    return TRUE;
 }
 
 // CMPlayerCApp message handlers
 
-BEGIN_MESSAGE_MAP(CMPlayerCApp, CWinApp)
+BEGIN_MESSAGE_MAP(CMPlayerCApp, CWinAppEx)
     ON_COMMAND(ID_HELP_ABOUT, OnAppAbout)
     ON_COMMAND(ID_FILE_EXIT, OnFileExit)
     ON_COMMAND(ID_HELP_SHOWCOMMANDLINESWITCHES, OnHelpShowcommandlineswitches)
@@ -2056,9 +2567,16 @@ void CMPlayerCApp::OnAppAbout()
     aboutDlg.DoModal();
 }
 
-void CMPlayerCApp::OnFileExit()
+void CMPlayerCApp::SetClosingState()
 {
     m_fClosingState = true;
+#if USE_DRDUMP_CRASH_REPORTER & (MPC_VERSION_PATCH < 2) & (MPC_VERSION_REV < 10)
+    DisableCrashReporter();
+#endif
+}
+
+void CMPlayerCApp::OnFileExit()
+{
     OnAppExit();
 }
 
@@ -2176,7 +2694,7 @@ void CRemoteCtrlClient::ExecuteCommand(CStringA cmd, int repcnt)
     while (pos) {
         const wmcmd& wc = s.wmcmds.GetNext(pos);
         if ((repcnt == 0 && wc.rmrepcnt == 0 || wc.rmrepcnt > 0 && (repcnt % wc.rmrepcnt) == 0)
-                && (!wc.rmcmd.CompareNoCase(cmd) || wc.cmd == (WORD)strtol(cmd, nullptr, 10))) {
+                && (wc.rmcmd.CompareNoCase(cmd) == 0 || wc.cmd == (WORD)strtol(cmd, nullptr, 10))) {
             CAutoLock cAutoLock(&m_csLock);
             TRACE(_T("CRemoteCtrlClient (calling command): %s\n"), wc.GetName().GetString());
             m_pWnd->SendMessage(WM_COMMAND, wc.cmd);
@@ -2203,29 +2721,6 @@ void CWinLircClient::OnCommand(CStringA str)
             repcnt = strtol(token, nullptr, 16);
         } else if (j == 2) {
             ExecuteCommand(token, repcnt);
-        }
-    }
-}
-
-// CUIceClient
-
-CUIceClient::CUIceClient()
-{
-}
-
-void CUIceClient::OnCommand(CStringA str)
-{
-    TRACE(_T("CUIceClient (OnCommand): %S\n"), str.GetString());
-
-    CStringA cmd;
-    int i = 0, j = 0;
-    for (CStringA token = str.Tokenize("|", i);
-            !token.IsEmpty();
-            token = str.Tokenize("|", i), j++) {
-        if (j == 0) {
-            cmd = token;
-        } else if (j == 1) {
-            ExecuteCommand(cmd, strtol(token, nullptr, 16));
         }
     }
 }
@@ -2301,9 +2796,6 @@ void CMPlayerCApp::UpdateColorControlRange(bool isEVR)
         m_ColorControl[0].DefaultValue  = (int)floor(m_VMR9ColorControl[0].DefaultValue + 0.5);
         m_ColorControl[0].StepSize      = std::max(1, (int)(m_VMR9ColorControl[0].StepSize + 0.5));
         // Contrast
-        /*if (m_VMR9ColorControl[1].MinValue == 0.0999908447265625) {
-              m_VMR9ColorControl[1].MinValue = 0.11;    //fix NVIDIA bug
-          }*/
         if (*(int*)&m_VMR9ColorControl[1].MinValue == 1036830720) {
             m_VMR9ColorControl[1].MinValue = 0.11f;    //fix NVIDIA bug
         }
@@ -2331,6 +2823,9 @@ void CMPlayerCApp::UpdateColorControlRange(bool isEVR)
         m_ColorControl[0].MaxValue = 100;
     }
     // Contrast
+    if (m_ColorControl[1].MinValue == m_ColorControl[1].MaxValue) { // when ProcAmp is unsupported
+        m_ColorControl[1].MinValue = m_ColorControl[1].MaxValue = m_ColorControl[1].DefaultValue = 0;
+    }
     if (m_ColorControl[1].MinValue < -100) {
         m_ColorControl[1].MinValue = -100;
     }
@@ -2345,6 +2840,9 @@ void CMPlayerCApp::UpdateColorControlRange(bool isEVR)
         m_ColorControl[2].MaxValue = 180;
     }
     // Saturation
+    if (m_ColorControl[3].MinValue == m_ColorControl[3].MaxValue) { // when ProcAmp is unsupported
+        m_ColorControl[3].MinValue = m_ColorControl[3].MaxValue = m_ColorControl[3].DefaultValue = 0;
+    }
     if (m_ColorControl[3].MinValue < -100) {
         m_ColorControl[3].MinValue = -100;
     }
@@ -2401,14 +2899,115 @@ void CMPlayerCApp::RunAsAdministrator(LPCTSTR strCommand, LPCTSTR strArgs, bool 
     }
 }
 
-// RenderersSettings.h
-
-CRenderersData* GetRenderersData()
+bool ReadRegistryDWORD(HKEY hKeyRoot, const wchar_t* subKey, const wchar_t* valueName, DWORD& value)
 {
-    return &AfxGetMyApp()->m_Renderers;
+    DWORD dataSize = sizeof(DWORD);
+    DWORD dataType = 0;
+
+    LONG result = RegGetValueW(
+        hKeyRoot,
+        subKey,
+        valueName,
+        RRF_RT_REG_DWORD,
+        &dataType,
+        &value,
+        &dataSize);
+
+    return (result == ERROR_SUCCESS);
 }
 
-CRenderersSettings& GetRenderersSettings()
+bool ReadRegistryString(HKEY hKeyRoot, LPCWSTR subKey, LPCWSTR valueName, CString& value)
 {
-    return AfxGetAppSettings().m_RenderersSettings;
+    DWORD dataSize = 0;
+
+    // Query the required buffer size (in bytes).
+    LONG result = RegGetValueW(
+        hKeyRoot,
+        subKey,
+        valueName,
+        RRF_RT_REG_SZ,
+        nullptr,
+        nullptr,
+        &dataSize);
+
+    if (result != ERROR_SUCCESS)
+        return false;
+
+    // Allocate the CString buffer.
+    LPTSTR buffer = value.GetBuffer(dataSize / sizeof(WCHAR));
+
+    result = RegGetValueW(
+        hKeyRoot,
+        subKey,
+        valueName,
+        RRF_RT_REG_SZ,
+        nullptr,
+        buffer,
+        &dataSize);
+
+    value.ReleaseBuffer();
+
+    return (result == ERROR_SUCCESS);
+}
+
+bool WriteRegistryDWORD(HKEY hKeyRoot, LPCWSTR subKey, LPCWSTR valueName, DWORD value)
+{
+    HKEY hKey = nullptr;
+
+    LONG result = RegCreateKeyExW(
+        hKeyRoot,
+        subKey,
+        0,
+        nullptr,
+        REG_OPTION_NON_VOLATILE,
+        KEY_WRITE,
+        nullptr,
+        &hKey,
+        nullptr);
+
+    if (result != ERROR_SUCCESS)
+        return false;
+
+    result = RegSetValueExW(
+        hKey,
+        valueName,
+        0,
+        REG_DWORD,
+        reinterpret_cast<const BYTE*>(&value),
+        sizeof(value));
+
+    RegCloseKey(hKey);
+
+    return (result == ERROR_SUCCESS);
+}
+
+bool WriteRegistryString(HKEY hKeyRoot, LPCWSTR subKey, LPCWSTR valueName, const CString& value)
+{
+    HKEY hKey = nullptr;
+
+    LONG result = RegCreateKeyExW(
+        hKeyRoot,
+        subKey,
+        0,
+        nullptr,
+        REG_OPTION_NON_VOLATILE,
+        KEY_WRITE,
+        nullptr,
+        &hKey,
+        nullptr);
+
+    if (result != ERROR_SUCCESS)
+        return false;
+
+    result = RegSetValueExW(
+        hKey,
+        valueName,
+        0,
+        REG_SZ,
+        reinterpret_cast<const BYTE*>(static_cast<LPCWSTR>(value)),
+        static_cast<DWORD>((value.GetLength() + 1) * sizeof(WCHAR)));
+
+    RegCloseKey(hKey);
+
+    return (result == ERROR_SUCCESS);
 }

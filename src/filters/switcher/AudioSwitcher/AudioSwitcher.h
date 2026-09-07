@@ -35,8 +35,6 @@ interface __declspec(uuid("CEDB2890-53AE-4231-91A3-B0AAFCD1DBDE"))
     STDMETHOD(GetSpeakerConfig)(bool* pfCustomChannelMapping, DWORD pSpeakerToChannelMap[AS_MAX_CHANNELS][AS_MAX_CHANNELS]) PURE;
     STDMETHOD(SetSpeakerConfig)(bool fCustomChannelMapping, DWORD pSpeakerToChannelMap[AS_MAX_CHANNELS][AS_MAX_CHANNELS]) PURE;
     STDMETHOD_(int, GetNumberOfInputChannels)() PURE;
-    STDMETHOD_(bool, IsDownSamplingTo441Enabled)() PURE;
-    STDMETHOD(EnableDownSamplingTo441)(bool fEnable) PURE;
     STDMETHOD_(REFERENCE_TIME, GetAudioTimeShift)() PURE;
     STDMETHOD(SetAudioTimeShift)(REFERENCE_TIME rtAudioTimeShift) PURE;
     // Deprecated
@@ -59,14 +57,13 @@ class __declspec(uuid("18C16B08-6497-420e-AD14-22D21C2CEAB7"))
 
     bool m_fCustomChannelMapping;
     DWORD m_pSpeakerToChannelMap[AS_MAX_CHANNELS][AS_MAX_CHANNELS];
-    bool m_fDownSampleTo441;
     REFERENCE_TIME m_rtAudioTimeShift;
-    CAutoPtrArray<AudioStreamResampler> m_pResamplers;
     bool m_fNormalize, m_fNormalizeRecover;
     double m_nMaxNormFactor, m_boostFactor;
     double m_normalizeFactor;
 
     REFERENCE_TIME m_rtNextStart, m_rtNextStop;
+    REFERENCE_TIME m_rtSegmentStart;
 
 public:
     CAudioSwitcherFilter(LPUNKNOWN lpunk, HRESULT* phr);
@@ -87,8 +84,6 @@ public:
     STDMETHODIMP GetSpeakerConfig(bool* pfCustomChannelMapping, DWORD pSpeakerToChannelMap[AS_MAX_CHANNELS][AS_MAX_CHANNELS]);
     STDMETHODIMP SetSpeakerConfig(bool fCustomChannelMapping, DWORD pSpeakerToChannelMap[AS_MAX_CHANNELS][AS_MAX_CHANNELS]);
     STDMETHODIMP_(int) GetNumberOfInputChannels();
-    STDMETHODIMP_(bool) IsDownSamplingTo441Enabled();
-    STDMETHODIMP EnableDownSamplingTo441(bool fEnable);
     STDMETHODIMP_(REFERENCE_TIME) GetAudioTimeShift();
     STDMETHODIMP SetAudioTimeShift(REFERENCE_TIME rtAudioTimeShift);
     // Deprecated

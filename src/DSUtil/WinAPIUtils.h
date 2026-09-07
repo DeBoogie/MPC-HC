@@ -36,11 +36,31 @@ bool IsFontInstalled(LPCTSTR lpszFont);
 
 bool ExploreToFile(LPCTSTR path);
 
-HRESULT FileDelete(CString file, HWND hWnd, bool recycle = true);
+HRESULT FileDelete(CString file, HWND hWnd, bool recycle = true, bool noconfirm = false);
+
+bool IsLeftMouseButtonDown();
 
 class CoInitializeHelper
 {
 public:
     CoInitializeHelper();
     ~CoInitializeHelper();
+};
+
+class CClipboard
+{
+public:
+    CClipboard(CWnd* pWnd = nullptr) {
+        m_bOpened = ::OpenClipboard(pWnd->GetSafeHwnd());
+    }
+    ~CClipboard() {
+        if(m_bOpened) {
+            VERIFY(::CloseClipboard());
+        }
+    }
+
+    BOOL SetText(const CString& text) const;
+
+protected:
+    BOOL m_bOpened;
 };

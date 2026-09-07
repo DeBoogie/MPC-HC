@@ -53,6 +53,8 @@ public:
     static BOOL IsMonitor(const HMONITOR hMonitor);
 
     static CMonitor GetPrimaryMonitor();
+    CMonitor GetMonitor(CStringW displayName);
+    CMonitor GetMonitor(CStringW displayName, CStringW deviceName);
     static BOOL AllMonitorsShareDisplayFormat();
 
     static int GetMonitorCount();

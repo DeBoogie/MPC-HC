@@ -100,7 +100,9 @@ void CPixelShaderCache::SavePixelShader(
         file.Close();
 
         if (!res) {
-            CFile::Remove(cacheFilePath);
+            try {
+                CFile::Remove(cacheFilePath);
+            } catch (...) {}
         }
     }
 }
@@ -116,7 +118,9 @@ void CPixelShaderCache::LoadCache()
             working = finder.FindNextFile();
             if (!finder.IsDirectory() && !finder.IsDots()) {
                 if (!LoadCache(finder.GetFileName(), finder.GetFilePath())) {
-                    CFile::Remove(finder.GetFilePath());
+                    try {
+                        CFile::Remove(finder.GetFilePath());
+                    } catch (...) {}
                 }
             }
         }
@@ -146,19 +150,25 @@ bool CPixelShaderCache::IsEnabled()
 void CPixelShaderCache::TouchFile(const CString& FileName) const
 {
     CFileStatus status;
-    if (CFile::GetStatus(FileName, status)) {
-        status.m_mtime = CTime::GetCurrentTime();
-        CFile::SetStatus(FileName, status);
+    try {
+        if (CFile::GetStatus(FileName, status)) {
+            status.m_mtime = CTime::GetCurrentTime();
+            CFile::SetStatus(FileName, status);
+        }
     }
+    catch (...) {}
 }
 
 bool CPixelShaderCache::IsFileOutdated(const CString& FileName) const
 {
     CFileStatus status;
-    if (CFile::GetStatus(FileName, status)) {
-        CTimeSpan timespan(m_CachedDaysLimit, 0, 0, 0);
-        return CTime::GetCurrentTime() - status.m_mtime > timespan;
+    try {
+        if (CFile::GetStatus(FileName, status)) {
+            CTimeSpan timespan(m_CachedDaysLimit, 0, 0, 0);
+            return CTime::GetCurrentTime() - status.m_mtime > timespan;
+        }
     }
+    catch (...) {}
 
     return true;
 }
@@ -202,7 +212,9 @@ void CPixelShaderCache::DeleteCache(uint64_t Hash)
 
     CString cacheFilePath;
     if (GetCacheFilePath(cacheFilePath, Hash)) {
-        CFile::Remove(cacheFilePath);
+        try {
+            CFile::Remove(cacheFilePath);
+        } catch (...) {}
     }
 }
 

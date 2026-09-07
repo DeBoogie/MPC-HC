@@ -29,11 +29,12 @@
 #include "RegFilterChooserDlg.h"
 #include "SelectMediaType.h"
 #include "FGFilter.h"
+#include "FGFilterLAV.h"
 #include "moreuuids.h"
 #include "FakeFilterMapper2.h"
 
 
-IMPLEMENT_DYNAMIC(CPPageExternalFiltersListBox, CListCtrl)
+IMPLEMENT_DYNAMIC(CPPageExternalFiltersListBox, CMPCThemePlayerListCtrl)
 CPPageExternalFiltersListBox::CPPageExternalFiltersListBox()
 {
 }
@@ -42,7 +43,7 @@ void CPPageExternalFiltersListBox::PreSubclassWindow()
 {
     __super::PreSubclassWindow();
     GetToolTips()->Activate(FALSE);
-    EnableToolTips(TRUE);
+    //EnableToolTips(TRUE);
 }
 
 INT_PTR CPPageExternalFiltersListBox::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
@@ -54,14 +55,14 @@ INT_PTR CPPageExternalFiltersListBox::OnToolHitTest(CPoint point, TOOLINFO* pTI)
 
     pTI->uFlags |= TTF_ALWAYSTIP;
     pTI->hwnd = m_hWnd;
-    pTI->uId = (UINT)item;
+    pTI->uId = (UINT)item + 1;
     VERIFY(GetItemRect(item, &pTI->rect, LVIR_BOUNDS));
     pTI->lpszText = LPSTR_TEXTCALLBACK;
 
     return pTI->uId;
 }
 
-BEGIN_MESSAGE_MAP(CPPageExternalFiltersListBox, CListCtrl)
+BEGIN_MESSAGE_MAP(CPPageExternalFiltersListBox, CMPCThemePlayerListCtrl)
     ON_NOTIFY_EX(TTN_NEEDTEXT, 0, OnToolTipNotify)
 END_MESSAGE_MAP()
 
@@ -78,9 +79,9 @@ BOOL CPPageExternalFiltersListBox::OnToolTipNotify(UINT id, NMHDR* pNMHDR, LRESU
 
 // CPPageExternalFilters dialog
 
-IMPLEMENT_DYNAMIC(CPPageExternalFilters, CPPageBase)
+IMPLEMENT_DYNAMIC(CPPageExternalFilters, CMPCThemePPageBase)
 CPPageExternalFilters::CPPageExternalFilters()
-    : CPPageBase(CPPageExternalFilters::IDD, CPPageExternalFilters::IDD)
+    : CMPCThemePPageBase(CPPageExternalFilters::IDD, CPPageExternalFilters::IDD)
     , m_pLastSelFilter(nullptr)
     , m_iLoadType(FilterOverride::PREFERRED)
 {
@@ -97,6 +98,7 @@ void CPPageExternalFilters::DoDataExchange(CDataExchange* pDX)
     DDX_Radio(pDX, IDC_RADIO1, m_iLoadType);
     DDX_Control(pDX, IDC_EDIT1, m_dwMerit);
     DDX_Control(pDX, IDC_TREE1, m_tree);
+    m_tree.fulfillThemeReqs();
 }
 
 void CPPageExternalFilters::Exchange(CListCtrl& list, int i, int j)
@@ -199,125 +201,10 @@ void CPPageExternalFilters::SetupMajorTypes(CAtlArray<GUID>& guids)
 void CPPageExternalFilters::SetupSubTypes(CAtlArray<GUID>& guids)
 {
     guids.RemoveAll();
-    guids.Add(MEDIASUBTYPE_None);
-    guids.Add(MEDIASUBTYPE_CLPL);
-    guids.Add(MEDIASUBTYPE_YUYV);
-    guids.Add(MEDIASUBTYPE_IYUV);
-    guids.Add(MEDIASUBTYPE_YVU9);
-    guids.Add(MEDIASUBTYPE_Y411);
-    guids.Add(MEDIASUBTYPE_Y41P);
-    guids.Add(MEDIASUBTYPE_YUY2);
-    guids.Add(MEDIASUBTYPE_YVYU);
-    guids.Add(MEDIASUBTYPE_UYVY);
-    guids.Add(MEDIASUBTYPE_Y211);
-    guids.Add(MEDIASUBTYPE_CLJR);
-    guids.Add(MEDIASUBTYPE_IF09);
-    guids.Add(MEDIASUBTYPE_CPLA);
-    guids.Add(MEDIASUBTYPE_MJPG);
-    guids.Add(MEDIASUBTYPE_MJPA);
-    guids.Add(MEDIASUBTYPE_MJPB);
-    guids.Add(MEDIASUBTYPE_TVMJ);
-    guids.Add(MEDIASUBTYPE_WAKE);
-    guids.Add(MEDIASUBTYPE_CFCC);
-    guids.Add(MEDIASUBTYPE_IJPG);
-    guids.Add(MEDIASUBTYPE_Plum);
-    guids.Add(MEDIASUBTYPE_DVCS);
-    guids.Add(MEDIASUBTYPE_DVSD);
-    guids.Add(MEDIASUBTYPE_MDVF);
-    guids.Add(MEDIASUBTYPE_RGB1);
-    guids.Add(MEDIASUBTYPE_RGB4);
-    guids.Add(MEDIASUBTYPE_RGB8);
-    guids.Add(MEDIASUBTYPE_RGB565);
-    guids.Add(MEDIASUBTYPE_RGB555);
-    guids.Add(MEDIASUBTYPE_RGB24);
-    guids.Add(MEDIASUBTYPE_RGB32);
-    guids.Add(MEDIASUBTYPE_ARGB1555);
-    guids.Add(MEDIASUBTYPE_ARGB4444);
-    guids.Add(MEDIASUBTYPE_ARGB32);
-    guids.Add(MEDIASUBTYPE_A2R10G10B10);
-    guids.Add(MEDIASUBTYPE_A2B10G10R10);
-    guids.Add(MEDIASUBTYPE_AYUV);
-    guids.Add(MEDIASUBTYPE_AI44);
-    guids.Add(MEDIASUBTYPE_IA44);
-    guids.Add(MEDIASUBTYPE_RGB32_D3D_DX7_RT);
-    guids.Add(MEDIASUBTYPE_RGB16_D3D_DX7_RT);
-    guids.Add(MEDIASUBTYPE_ARGB32_D3D_DX7_RT);
-    guids.Add(MEDIASUBTYPE_ARGB4444_D3D_DX7_RT);
-    guids.Add(MEDIASUBTYPE_ARGB1555_D3D_DX7_RT);
-    guids.Add(MEDIASUBTYPE_RGB32_D3D_DX9_RT);
-    guids.Add(MEDIASUBTYPE_RGB16_D3D_DX9_RT);
-    guids.Add(MEDIASUBTYPE_ARGB32_D3D_DX9_RT);
-    guids.Add(MEDIASUBTYPE_ARGB4444_D3D_DX9_RT);
-    guids.Add(MEDIASUBTYPE_ARGB1555_D3D_DX9_RT);
-    guids.Add(MEDIASUBTYPE_YV12);
-    guids.Add(MEDIASUBTYPE_NV12);
-    guids.Add(MEDIASUBTYPE_IMC1);
-    guids.Add(MEDIASUBTYPE_IMC2);
-    guids.Add(MEDIASUBTYPE_IMC3);
-    guids.Add(MEDIASUBTYPE_IMC4);
-    guids.Add(MEDIASUBTYPE_S340);
-    guids.Add(MEDIASUBTYPE_S342);
-    guids.Add(MEDIASUBTYPE_Overlay);
-    guids.Add(MEDIASUBTYPE_MPEG1Packet);
-    guids.Add(MEDIASUBTYPE_MPEG1Payload);
-    guids.Add(MEDIASUBTYPE_MPEG1AudioPayload);
-    guids.Add(MEDIASUBTYPE_MPEG1System);
-    guids.Add(MEDIASUBTYPE_MPEG1VideoCD);
-    guids.Add(MEDIASUBTYPE_MPEG1Video);
-    guids.Add(MEDIASUBTYPE_MPEG1Audio);
-    guids.Add(MEDIASUBTYPE_Avi);
-    guids.Add(MEDIASUBTYPE_Asf);
-    guids.Add(MEDIASUBTYPE_QTMovie);
-    guids.Add(MEDIASUBTYPE_QTRpza);
-    guids.Add(MEDIASUBTYPE_QTSmc);
-    guids.Add(MEDIASUBTYPE_QTRle);
-    guids.Add(MEDIASUBTYPE_QTJpeg);
-    guids.Add(MEDIASUBTYPE_PCMAudio_Obsolete);
-    guids.Add(MEDIASUBTYPE_PCM);
-    guids.Add(MEDIASUBTYPE_WAVE);
-    guids.Add(MEDIASUBTYPE_AU);
-    guids.Add(MEDIASUBTYPE_AIFF);
-    guids.Add(MEDIASUBTYPE_dvsd);
-    guids.Add(MEDIASUBTYPE_dvhd);
-    guids.Add(MEDIASUBTYPE_dvsl);
-    guids.Add(MEDIASUBTYPE_dv25);
-    guids.Add(MEDIASUBTYPE_dv50);
-    guids.Add(MEDIASUBTYPE_dvh1);
-    guids.Add(MEDIASUBTYPE_Line21_BytePair);
-    guids.Add(MEDIASUBTYPE_Line21_GOPPacket);
-    guids.Add(MEDIASUBTYPE_Line21_VBIRawData);
-    guids.Add(MEDIASUBTYPE_TELETEXT);
-    guids.Add(MEDIASUBTYPE_DRM_Audio);
-    guids.Add(MEDIASUBTYPE_IEEE_FLOAT);
-    guids.Add(MEDIASUBTYPE_DOLBY_AC3_SPDIF);
-    guids.Add(MEDIASUBTYPE_RAW_SPORT);
-    guids.Add(MEDIASUBTYPE_SPDIF_TAG_241h);
-    guids.Add(MEDIASUBTYPE_DssVideo);
-    guids.Add(MEDIASUBTYPE_DssAudio);
-    guids.Add(MEDIASUBTYPE_VPVideo);
-    guids.Add(MEDIASUBTYPE_VPVBI);
-    guids.Add(MEDIASUBTYPE_ATSC_SI);
-    guids.Add(MEDIASUBTYPE_DVB_SI);
-    guids.Add(MEDIASUBTYPE_MPEG2DATA);
-    guids.Add(MEDIASUBTYPE_MPEG2_VIDEO);
-    guids.Add(MEDIASUBTYPE_MPEG2_PROGRAM);
-    guids.Add(MEDIASUBTYPE_MPEG2_TRANSPORT);
-    guids.Add(MEDIASUBTYPE_MPEG2_TRANSPORT_STRIDE);
-    guids.Add(MEDIASUBTYPE_MPEG2_AUDIO);
-    guids.Add(MEDIASUBTYPE_DOLBY_AC3);
-    guids.Add(MEDIASUBTYPE_DVD_SUBPICTURE);
-    guids.Add(MEDIASUBTYPE_DVD_LPCM_AUDIO);
-    guids.Add(MEDIASUBTYPE_DTS);
-    guids.Add(MEDIASUBTYPE_SDDS);
-    guids.Add(MEDIASUBTYPE_DVD_NAVIGATION_PCI);
-    guids.Add(MEDIASUBTYPE_DVD_NAVIGATION_DSI);
-    guids.Add(MEDIASUBTYPE_DVD_NAVIGATION_PROVIDER);
-    guids.Add(MEDIASUBTYPE_I420);
-    guids.Add(MEDIASUBTYPE_WAVE_DOLBY_AC3);
-    guids.Add(MEDIASUBTYPE_WAVE_DTS);
+    guids.Add(MEDIASUBTYPE_NULL);
 }
 
-BEGIN_MESSAGE_MAP(CPPageExternalFilters, CPPageBase)
+BEGIN_MESSAGE_MAP(CPPageExternalFilters, CMPCThemePPageBase)
     ON_UPDATE_COMMAND_UI(IDC_BUTTON2, OnUpdateFilter)
     ON_UPDATE_COMMAND_UI(IDC_RADIO1, OnUpdateFilter)
     ON_UPDATE_COMMAND_UI(IDC_RADIO2, OnUpdateFilter)
@@ -358,7 +245,8 @@ BOOL CPPageExternalFilters::OnInitDialog()
     __super::OnInitDialog();
 
     m_filters.InsertColumn(0, _T(""));
-    m_filters.SetExtendedStyle(m_filters.GetExtendedStyle() | LVS_EX_CHECKBOXES | LVS_EX_DOUBLEBUFFER);
+    m_filters.SetExtendedStyle(m_filters.GetExtendedStyle() | LVS_EX_CHECKBOXES /*| LVS_EX_DOUBLEBUFFER*/);
+    m_filters.setAdditionalStyles(LVS_EX_DOUBLEBUFFER);
 
     m_dropTarget.Register(this);
 
@@ -465,6 +353,30 @@ void CPPageExternalFilters::OnUpdateDeleteType(CCmdUI* pCmdUI)
     pCmdUI->Enable(!!m_tree.GetSelectedItem());
 }
 
+bool IsExternalVideoRenderer(CLSID clsid)
+{
+    return clsid == CLSID_MPCVR || clsid == CLSID_MadVR || clsid == CLSID_DXR || clsid == CLSID_EnhancedVideoRenderer || clsid == CLSID_VideoMixingRenderer9 || clsid == CLSID_VideoMixingRenderer || \
+        clsid == CLSID_VideoRenderer || clsid == CLSID_VideoRendererDefault || clsid == CLSID_OverlayMixer || clsid == CLSID_OverlayMixer2 || clsid == CLSID_NullRenderer;
+}
+
+bool IgnoreExternalFilter(CLSID clsid)
+{
+    if (IsExternalVideoRenderer(clsid)) {
+        return true;
+    } else if (clsid == CLSID_XySubFilter || clsid == CLSID_XySubFilter_AutoLoader || clsid == CLSID_VSFilter || clsid == CLSID_VSFilter2) {
+        return true;
+    } else if (clsid == GUID_LAVSplitterSource) {
+        return true;
+    } else if (clsid == CLSID_DVDNavigator || clsid == CLSID_SmartTee || clsid == CLSID_VideoPortManager) {
+        return true;
+    } else if (clsid == CLSID_WMAsfWriter || clsid == CLSID_AviDest || clsid == CLSID_FileWriter || clsid == CLSID_DVMux || clsid == CLSID_MultFile) {
+        return true;
+    } else if (clsid == __uuidof(CMPEG2EncoderVideoDS) || clsid == __uuidof(CMPEG2EncoderDS) || clsid == __uuidof(CMPEG2EncoderAudioDS) || clsid == __uuidof(CMSAC3Enc)) {
+        return true;
+    }
+    return false;
+}
+
 void CPPageExternalFilters::OnAddRegistered()
 {
     CRegFilterChooserDlg dlg(this);
@@ -473,8 +385,15 @@ void CPPageExternalFilters::OnAddRegistered()
             if (FilterOverride* f = dlg.m_filters.RemoveHead()) {
                 CAutoPtr<FilterOverride> p(f);
 
-                CString name = f->name;
+                if (f->name.IsEmpty() && !f->dwMerit && f->guids.IsEmpty()) {
+                    AfxMessageBox(L"Error: Unsupported filter", MB_OK);
+                    continue;
+                } else if (IsExternalVideoRenderer(f->clsid)) {
+                    AfxMessageBox(L"You can not add video renderers as external filter. You should select your preferred video renderer on the Playback Output settings page.", MB_OK);
+                    continue;
+                }
 
+                CString name = f->name;
                 if (f->type == FilterOverride::EXTERNAL) {
                     if (!PathUtils::Exists(MakeFullPath(f->path))) {
                         name += _T(" <not found!>");
@@ -531,11 +450,39 @@ void CPPageExternalFilters::OnDoubleClickFilter(NMHDR* pNMHDR, LRESULT* pResult)
 {
     ASSERT(pNMHDR);
     ASSERT(pResult);
+    *pResult = 0;
 
     if (FilterOverride* f = GetCurFilter()) {
+        if (f->clsid == CLSID_VapourSynthFilter) {
+            CString vsscript_path = L"VSScript.dll";
+            wchar_t* env_value = nullptr;
+            size_t size = 0;
+            errno_t result = _wdupenv_s(&env_value, &size, L"VSSCRIPT_PATH");
+            if (result == 0 && env_value != nullptr)
+            {
+                vsscript_path = env_value;
+                free(env_value);
+            }
+            HMODULE hVS = LoadLibraryExW(vsscript_path, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
+            if (hVS) {
+                FreeLibrary(hVS);
+            } else {
+                AfxMessageBox(L"Error: Can not open filter properties. The required Vapoursynth runtime is not installed.", MB_OK);
+                return;
+            }
+        }
+        if (f->clsid == CLSID_AviSynthFilter) {
+            HMODULE hAVS = LoadLibraryExW(L"avisynth.dll", nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
+            if (hAVS) {
+                FreeLibrary(hAVS);
+            } else {
+                AfxMessageBox(L"Error: Can not open filter properties. The required Avisynth runtime is not installed.", MB_OK);
+                return;
+            }
+        }
+
         CComPtr<IBaseFilter> pBF;
         CString name;
-
         if (f->type == FilterOverride::REGISTERED) {
             CStringW namew;
             if (CreateFilter(f->dispname, &pBF, namew)) {
@@ -559,8 +506,6 @@ void CPPageExternalFilters::OnDoubleClickFilter(NMHDR* pNMHDR, LRESULT* pResult)
             }
         }
     }
-
-    *pResult = 0;
 }
 
 int CPPageExternalFilters::OnVKeyToItem(UINT nKey, CListBox* pListBox, UINT nIndex)
@@ -904,6 +849,12 @@ void CPPageExternalFilters::OnDropFiles(CAtlList<CString>& slFiles, DROPEFFECT)
         while (!fm2.m_filters.IsEmpty()) {
             if (FilterOverride* f = fm2.m_filters.RemoveHead()) {
                 CAutoPtr<FilterOverride> p(f);
+
+                if (IsExternalVideoRenderer(f->clsid)) {
+                    AfxMessageBox(L"You can not add video renderers as external filter. You should select your preferred video renderer on the Playback Output settings page.", MB_OK);
+                    continue;
+                }
+
                 int i = m_filters.InsertItem(m_filters.GetItemCount(), f->name);
                 m_filters.SetItemData(i, reinterpret_cast<DWORD_PTR>(m_pFilters.AddTail(p)));
                 m_filters.SetCheck(i, 1);
@@ -926,7 +877,7 @@ BOOL CPPageExternalFilters::OnToolTipNotify(UINT id, NMHDR* pNMHDR, LRESULT* pRe
 {
     TOOLTIPTEXT* pTTT = (TOOLTIPTEXT*)pNMHDR;
 
-    int nIndex = (int)pNMHDR->idFrom;
+    int nIndex = (int)pNMHDR->idFrom - 1;
     if (0 <= nIndex && nIndex < m_filters.GetItemCount()) {
         if (POSITION pos = (POSITION)m_filters.GetItemData(nIndex)) {
             CAutoPtr<FilterOverride>& f = m_pFilters.GetAt(pos);

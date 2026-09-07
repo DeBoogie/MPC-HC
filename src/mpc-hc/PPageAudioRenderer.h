@@ -20,10 +20,14 @@
 
 #pragma once
 
-#include "PPageBase.h"
+#include "CMPCThemePPageBase.h"
+#include "CMPCThemeSliderCtrl.h"
+#include "CMPCThemeComboBox.h"
 
-class CPPageAudioRenderer : public CPPageBase
+
+class CPPageAudioRenderer : public CMPCThemePPageBase
 {
+    DECLARE_DYNAMIC(CPPageAudioRenderer)
 public:
 
     CPPageAudioRenderer();
@@ -35,14 +39,12 @@ protected:
     void DoDataExchange(CDataExchange* pDX) override;
     BOOL OnInitDialog() override;
     BOOL OnApply() override;
-    void OnCancel() override;
 
     void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 
     void OnCMoyButton();
     void OnJMeierButton();
 
-    void OnUpdateAllowBitstreamingCheckbox(CCmdUI* pCmdUI);
     void OnUpdateCrossfeedGroup(CCmdUI* pCmdUI);
     void OnUpdateCrossfeedCutoffLabel(CCmdUI* pCmdUI);
     void OnUpdateCrossfeedLevelLabel(CCmdUI* pCmdUI);
@@ -52,11 +54,10 @@ protected:
     std::vector<CString> m_deviceIds;
 
     BOOL m_bExclusiveMode;
-    BOOL m_bAllowBitstreaming;
     BOOL m_bCrossfeedEnabled;
     BOOL m_bIgnoreSystemChannelMixer;
 
-    CComboBox m_combo1;
-    CSliderCtrl m_slider1;
-    CSliderCtrl m_slider2;
+    CMPCThemeComboBox m_combo1;
+    CMPCThemeSliderCtrl m_slider1;
+    CMPCThemeSliderCtrl m_slider2;
 };

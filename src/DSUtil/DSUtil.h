@@ -28,8 +28,12 @@
 #include "BaseClasses/streams.h"
 #include <atlcoll.h>
 #include <atlpath.h>
+#include "MFCHelper.h"
+#include "Utils.h"
 
 #define LCID_NOSUBTITLES -1
+
+#define IsWaveFormatExtensible(wfe) (wfe->wFormatTag == WAVE_FORMAT_EXTENSIBLE && wfe->cbSize == 22)
 
 extern int  CountPins(IBaseFilter* pBF, int& nIn, int& nOut, int& nInC, int& nOutC);
 extern bool IsSplitter(IBaseFilter* pBF, bool fCountConnectedOnly = false);
@@ -46,6 +50,7 @@ extern void  NukeDownstream(IBaseFilter* pBF, IFilterGraph* pFG);
 extern void  NukeDownstream(IPin* pPin, IFilterGraph* pFG);
 extern IBaseFilter* FindFilter(LPCWSTR clsid, IFilterGraph* pFG);
 extern IBaseFilter* FindFilter(const CLSID& clsid, IFilterGraph* pFG);
+extern IBaseFilter* FindFirstFilter(IFilterGraph* pFG);
 extern IPin* FindPin(IBaseFilter* pBF, PIN_DIRECTION direction, const AM_MEDIA_TYPE* pRequestedMT);
 extern CStringW GetFilterName(IBaseFilter* pBF);
 extern CStringW GetPinName(IPin* pPin);
@@ -59,6 +64,7 @@ extern void  ShowPPage(CString DisplayName, HWND hParentWnd);
 extern void  ShowPPage(IUnknown* pUnknown, HWND hParentWnd);
 extern CLSID GetCLSID(IBaseFilter* pBF);
 extern CLSID GetCLSID(IPin* pPin);
+extern CString CLSIDToString(CLSID& clsid);
 extern bool  IsCLSIDRegistered(LPCTSTR clsid);
 extern bool  IsCLSIDRegistered(const CLSID& clsid);
 extern CString GetFilterPath(LPCTSTR clsid);
@@ -77,8 +83,10 @@ enum OpticalDiskType_t {
 extern OpticalDiskType_t GetOpticalDiskType(TCHAR drive, CAtlList<CString>& files);
 extern CString GetDriveLabel(TCHAR drive);
 extern CString GetDriveLabel(CPath path);
+bool IsDriveVirtual(CString drive);
 extern bool GetKeyFrames(CString fn, CUIntArray& kfs);
 extern DVD_HMSF_TIMECODE RT2HMSF(REFERENCE_TIME rt, double fps = 0.0); // used to remember the current position
+extern DVD_HMSF_TIMECODE RT2HMS(REFERENCE_TIME rt);
 extern DVD_HMSF_TIMECODE RT2HMS_r(REFERENCE_TIME rt);                  // used only to display information with rounding to nearest second
 extern REFERENCE_TIME HMSF2RT(DVD_HMSF_TIMECODE hmsf, double fps = -1.0);
 extern void memsetd(void* dst, unsigned int c, size_t nbytes);
@@ -90,11 +98,15 @@ extern bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, int& arx, int& 
 extern bool CreateFilter(CStringW DisplayName, IBaseFilter** ppBF, CStringW& FriendlyName);
 extern IBaseFilter* AppendFilter(IPin* pPin, IMoniker* pMoniker, IGraphBuilder* pGB);
 extern CStringW GetFriendlyName(CStringW DisplayName);
-extern HRESULT LoadExternalObject(LPCTSTR path, REFCLSID clsid, REFIID iid, void** ppv);
+extern HRESULT LoadExternalObject(LPCTSTR path, REFCLSID clsid, REFIID iid, void** ppv, IUnknown* aggregate = nullptr);
 extern HRESULT LoadExternalFilter(LPCTSTR path, REFCLSID clsid, IBaseFilter** ppBF);
 extern HRESULT LoadExternalPropertyPage(IPersist* pP, REFCLSID clsid, IPropertyPage** ppPP);
 extern bool UnloadUnusedExternalObjects();
+extern void ExtendMaxPathLengthIfNeeded(CString& path, bool no_url = false);
+extern bool ContainsWildcard(CString& path);
+extern void ShortenLongPath(CString& path);
 extern CString MakeFullPath(LPCTSTR path);
+extern bool GetMediaTypeFourCC(const GUID& guid, CString& fourCC);
 extern CString GetMediaTypeName(const GUID& guid);
 extern GUID GUIDFromCString(CString str);
 extern HRESULT GUIDFromCString(CString str, GUID& guid);
@@ -113,12 +125,21 @@ extern void UnRegisterSourceFilter(const GUID& subtype);
 extern LPCTSTR GetDXVAMode(const GUID* guidDecoder);
 extern CString ReftimeToString(const REFERENCE_TIME& rtVal);
 extern CString ReftimeToString2(const REFERENCE_TIME& rtVal);
+extern CString ReftimeToString3(const REFERENCE_TIME& rtVal);
+extern CStringW ReftimeToString4(REFERENCE_TIME rt, bool showZeroHours = true);
 extern CString DVDtimeToString(const DVD_HMSF_TIMECODE& rtVal, bool bAlwaysShowHours = false);
 extern REFERENCE_TIME StringToReftime(LPCTSTR strVal);
 extern void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName);
-extern void CorrectComboListWidth(CComboBox& m_pComboBox);
-extern void CorrectComboBoxHeaderWidth(CWnd* pComboBox);
 extern CString FindCoverArt(const CString& path, const CString& author);
+extern CString NormalizeUnicodeStrForSearch(CString srcStr, LANGID langid);
+extern bool FindStringInList(const CAtlList<CString>& list, CString& value);
+extern CStringW ForceTrailingSlash(CStringW folder);
+extern CStringW GetChannelStrFromMediaType(AM_MEDIA_TYPE* pmt);
+extern CStringW GetChannelStrFromMediaType(AM_MEDIA_TYPE* pmt, int& channels);
+extern CStringW GetShortAudioNameFromMediaType(AM_MEDIA_TYPE* pmt);
+extern bool GetVideoFormatNameFromMediaType(const GUID& guid, CString& name);
+
+extern inline const LONGLONG GetPerfCounter();
 
 enum FF_FIELD_TYPE {
     PICT_NONE,
@@ -195,13 +216,13 @@ public:
 #define BeginEnumSysDev(clsid, pMoniker)                                                                            \
 {                                                                                                                   \
     CComPtr<ICreateDevEnum> pDevEnum4$##clsid;                                                                      \
-    pDevEnum4$##clsid.CoCreateInstance(CLSID_SystemDeviceEnum);                                                     \
-    CComPtr<IEnumMoniker> pClassEnum4$##clsid;                                                                      \
-    if (SUCCEEDED(pDevEnum4$##clsid->CreateClassEnumerator(clsid, &pClassEnum4$##clsid, 0))                         \
-        && pClassEnum4$##clsid) {                                                                                   \
-        for (CComPtr<IMoniker> pMoniker; pClassEnum4$##clsid->Next(1, &pMoniker, 0) == S_OK; pMoniker = nullptr) {
+    if (SUCCEEDED(pDevEnum4$##clsid.CoCreateInstance(CLSID_SystemDeviceEnum))) {                                    \
+        CComPtr<IEnumMoniker> pClassEnum4$##clsid;                                                                  \
+        if (SUCCEEDED(pDevEnum4$##clsid->CreateClassEnumerator(clsid, &pClassEnum4$##clsid, 0))                     \
+            && pClassEnum4$##clsid) {                                                                               \
+            for (CComPtr<IMoniker> pMoniker; pClassEnum4$##clsid->Next(1, &pMoniker, 0) == S_OK; pMoniker = nullptr) {
 
-#define EndEnumSysDev }}}
+#define EndEnumSysDev }}}}
 
 #define PauseGraph                                                                                              \
     CComQIPtr<IMediaControl> _pMC(m_pGraph);                                                                    \
@@ -237,6 +258,7 @@ public:
 #define SAFE_DELETE_ARRAY(p) { if (p) { delete [] (p);  (p) = nullptr; } }
 #define SAFE_RELEASE(p)      { if (p) { (p)->Release(); (p) = nullptr; } }
 #define SAFE_CLOSE_HANDLE(p) { if (p) { if ((p) != INVALID_HANDLE_VALUE) VERIFY(CloseHandle(p)); (p) = nullptr; } }
+#define EXIT_ON_ERROR(hres)  { if (FAILED(hres)) return hres; }
 
 #define StrRes(id)  MAKEINTRESOURCE((id))
 #define ResStr(id)  CString(StrRes((id)))

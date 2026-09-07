@@ -25,15 +25,16 @@
 #include "mplayerc.h"
 #include "DSUtil.h"
 #include "FakeFilterMapper2.h"
+#include "OpenFileDlg.h"
 #include <initguid.h>
 #include <dmo.h>
-
+#include "PPageExternalFilters.h"
 
 // CRegFilterChooserDlg dialog
 
-//IMPLEMENT_DYNAMIC(CRegFilterChooserDlg, CResizableDialog)
+//IMPLEMENT_DYNAMIC(CRegFilterChooserDlg, CMPCThemeResizableDialog)
 CRegFilterChooserDlg::CRegFilterChooserDlg(CWnd* pParent /*=nullptr*/)
-    : CResizableDialog(CRegFilterChooserDlg::IDD, pParent)
+    : CMPCThemeResizableDialog(CRegFilterChooserDlg::IDD, pParent)
 {
 }
 
@@ -57,6 +58,15 @@ void CRegFilterChooserDlg::AddToList(IMoniker* pMoniker)
     if (SUCCEEDED(pMoniker->BindToStorage(0, 0, IID_PPV_ARGS(&pPB)))) {
         CComVariant var;
         if (SUCCEEDED(pPB->Read(_T("FriendlyName"), &var, nullptr))) {
+            CComVariant var2;
+            if (SUCCEEDED(pPB->Read(_T("CLSID"), &var2, nullptr))) {
+                CString clsid_str = CString(var2.bstrVal);
+                if (!clsid_str.IsEmpty()) {
+                    if (IgnoreExternalFilter(GUIDFromCString(clsid_str))) {
+                        return;
+                    }
+                }
+            }
             m_list.SetItemData(
                 m_list.InsertItem(-1, CString(CStringW(var.bstrVal))),
                 (DWORD_PTR)m_monikers.AddTail(pMoniker));
@@ -66,7 +76,7 @@ void CRegFilterChooserDlg::AddToList(IMoniker* pMoniker)
 }
 
 
-BEGIN_MESSAGE_MAP(CRegFilterChooserDlg, CResizableDialog)
+BEGIN_MESSAGE_MAP(CRegFilterChooserDlg, CMPCThemeResizableDialog)
     ON_LBN_DBLCLK(IDC_LIST1, OnLbnDblclkList1)
     ON_UPDATE_COMMAND_UI(IDOK, OnUpdateOK)
     ON_BN_CLICKED(IDOK, OnBnClickedOk)
@@ -101,7 +111,12 @@ BOOL CRegFilterChooserDlg::OnInitDialog()
     AddAnchor(IDOK, BOTTOM_RIGHT);
     AddAnchor(IDCANCEL, BOTTOM_RIGHT);
 
-    SetMinTrackSize(CSize(300, 100));
+    CRect wr;
+    GetWindowRect(wr);
+    SetMinTrackSize(wr.Size());
+
+    m_list.setAdditionalStyles(LVS_EX_DOUBLEBUFFER);
+    fulfillThemeReqs();
 
     return TRUE;  // return TRUE unless you set the focus to a control
     // EXCEPTION: OCX Property Pages should return FALSE
@@ -135,6 +150,7 @@ void CRegFilterChooserDlg::OnBnClickedOk()
         f->type = FilterOverride::REGISTERED;
         f->name = fgf.GetName();
         f->dispname = fgf.GetDisplayName();
+        f->clsid = fgf.GetCLSID();
         f->guids.AddTailList(&fgf.GetTypes());
         f->backup.AddTailList(&fgf.GetTypes());
         f->dwMerit = fgf.GetMeritForDirectShow();
@@ -153,7 +169,7 @@ void CRegFilterChooserDlg::OnBnClickedButton1()
 
     if (dlg.DoModal() == IDOK) {
         CFilterMapper2 fm2(false);
-        fm2.Register(dlg.GetPathName());
+        fm2.Register(FileDialogUtils::GetSelectedPath(dlg));
         m_filters.AddTail(&fm2.m_filters);
         fm2.m_filters.RemoveAll();
 

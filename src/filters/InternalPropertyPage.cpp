@@ -23,10 +23,29 @@
 #include "InternalPropertyPage.h"
 #include "../DSUtil/DSUtil.h"
 
+
 //
 // CInternalPropertyPageWnd
 //
 
+void CInternalPropertyPageWnd::CalcTextRect(CRect& rect, long x, long y, long w, long border)
+{
+	rect.left   = x;
+	rect.top    = y;
+	rect.right  = x + w;
+	rect.bottom = y + border;
+	m_dpi.ScaleRect(rect);
+	rect.bottom += m_fontheight;
+}
+
+void CInternalPropertyPageWnd::CalcRect(CRect& rect, long x, long y, long w, long h)
+{
+	rect.left   = x;
+	rect.top    = y;
+	rect.right  = x + w;
+	rect.bottom = y + h;
+    m_dpi.ScaleRect(rect);
+}
 CInternalPropertyPageWnd::CInternalPropertyPageWnd()
     : m_fDirty(false)
     , m_fontheight(IPP_FONTSIZE)
@@ -93,8 +112,15 @@ BOOL CInternalPropertyPageWnd::Create(IPropertyPageSite* pPageSite, LPCRECT pRec
 BOOL CInternalPropertyPageWnd::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult)
 {
     if (message == WM_COMMAND || message == WM_HSCROLL || message == WM_VSCROLL) {
-        SetDirty(true);
-    }
+		WORD notify = HIWORD(wParam);
+		// check only notifications that change the state of a control, otherwise false positives are possible.
+		if (notify == BN_CLICKED
+				|| notify == CBN_SELCHANGE
+				|| notify == EN_CHANGE
+				|| notify == CLBN_CHKCHANGE) {
+			SetDirty(true);
+		}
+	}
 
     return __super::OnWndMsg(message, wParam, lParam, pResult);
 }

@@ -21,7 +21,8 @@
 #include "stdafx.h"
 #include "TreePropSheet.h"
 #include "PropPageFrameDefault.h"
-
+#include "../../../src/mpc-hc/DpiHelper.h"
+#include "../../../src/DSUtil/VersionHelpersInternal.h"
 
 namespace TreePropSheet
 {
@@ -247,6 +248,11 @@ CString CTreePropSheet::GenerateEmptyPageMessage(LPCTSTR lpszEmptyPageMessage, L
 CTreeCtrl* CTreePropSheet::CreatePageTreeObject()
 {
     return new CTreeCtrl;
+}
+
+//added for mpc-hc theming
+void CTreePropSheet::SetTreeCtrlTheme(CTreeCtrl *ctrl) {
+    SetWindowTheme(ctrl->GetSafeHwnd(), L"Explorer", NULL);
 }
 
 
@@ -736,6 +742,7 @@ BOOL CTreePropSheet::OnInitDialog()
     }
 
     // perform default implementation
+
     BOOL bResult = CPropertySheet::OnInitDialog();
 
     if (!m_bTreeViewMode)
@@ -768,9 +775,12 @@ BOOL CTreePropSheet::OnInitDialog()
     m_pFrame->Create(WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS, rectFrame, this, 0xFFFF);
     m_pFrame->ShowCaption(m_bPageCaption);
 
+    DpiHelper dpiWindow;
+    dpiWindow.Override(GetParent()->GetSafeHwnd());
+
     // Lets make place for the tree ctrl
-    const int   nTreeWidth = m_nPageTreeWidth;
-    const int   nTreeSpace = 5;
+    const int   nTreeWidth = dpiWindow.ScaleX(m_nPageTreeWidth);
+    const int   nTreeSpace = dpiWindow.ScaleX(5);
 
     CRect   rectSheet;
     GetWindowRect(rectSheet);
@@ -784,14 +794,23 @@ BOOL CTreePropSheet::OnInitDialog()
     CRect   rectTree(rectFrame);
     rectTree.right = rectTree.left + nTreeWidth - nTreeSpace;
 
-    // calculate caption height
-    CTabCtrl    wndTabCtrl;
-    wndTabCtrl.Create(WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS, rectFrame, this, 0x1234);
-    wndTabCtrl.InsertItem(0, _T(""));
-    CRect   rectFrameCaption;
-    wndTabCtrl.GetItemRect(0, rectFrameCaption);
-    wndTabCtrl.DestroyWindow();
-    m_pFrame->SetCaptionHeight(rectFrameCaption.Height());
+    //originally, using a dummy tabctrl to get a default height for the caption
+    //tabs do not scale sanely with dpi (96->font 11 height 21, 120-> font 12 height 21), so we will scale manually
+    int frameCaptionHeight;
+    if (DpiHelper::CanUsePerMonitorV2()) {
+        frameCaptionHeight = dpiWindow.ScaleX(21); //hard code 21 as the 96 dpi value and scale
+    } else {
+        // calculate caption height
+        CTabCtrl    wndTabCtrl;
+        wndTabCtrl.Create(WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, rectFrame, this, 0x1234);
+        wndTabCtrl.InsertItem(0, _T(""));
+        CRect   rectFrameCaption;
+        wndTabCtrl.GetItemRect(0, rectFrameCaption);
+        wndTabCtrl.DestroyWindow();
+
+        frameCaptionHeight = rectFrameCaption.Height();
+    }
+    m_pFrame->SetCaptionHeight(frameCaptionHeight);
 
     // if no caption should be displayed, make the window smaller in
     // height
@@ -800,20 +819,20 @@ BOOL CTreePropSheet::OnInitDialog()
         // make frame smaller
         m_pFrame->GetWnd()->GetWindowRect(rectFrame);
         ScreenToClient(rectFrame);
-        rectFrame.top+= rectFrameCaption.Height();
+        rectFrame.top+= frameCaptionHeight;
         m_pFrame->GetWnd()->MoveWindow(rectFrame);
 
         // move all child windows up
-        MoveChildWindows(0, -rectFrameCaption.Height());
+        MoveChildWindows(0, -frameCaptionHeight);
 
         // modify rectangle for the tree ctrl
-        rectTree.bottom-= rectFrameCaption.Height();
+        rectTree.bottom-= frameCaptionHeight;
 
         // make us smaller
         CRect   rect;
         GetWindowRect(rect);
-        rect.top+= rectFrameCaption.Height()/2;
-        rect.bottom-= rectFrameCaption.Height()-rectFrameCaption.Height()/2;
+        rect.top+= frameCaptionHeight/2;
+        rect.bottom-= frameCaptionHeight-frameCaptionHeight/2;
         if (GetParent())
             GetParent()->ScreenToClient(rect);
         MoveWindow(rect);
@@ -842,7 +861,8 @@ BOOL CTreePropSheet::OnInitDialog()
         m_pwndPageTree->SetImageList(&m_Images, TVSIL_STATE);
     }
 
-    SetWindowTheme(m_pwndPageTree->GetSafeHwnd(), L"Explorer", NULL);
+    //SetWindowTheme(m_pwndPageTree->GetSafeHwnd(), L"Explorer", NULL);
+    SetTreeCtrlTheme(m_pwndPageTree);
 
     // Fill the tree ctrl
     RefillPageTree();
@@ -865,8 +885,12 @@ void CTreePropSheet::OnDestroy()
     delete m_pwndPageTree;
     m_pwndPageTree = NULL;
 
-    delete m_pFrame;
-    m_pFrame = NULL;
+    if (m_pFrame) {
+        CWnd* frameWnd = m_pFrame->GetWnd();
+        if (nullptr != frameWnd && IsWindow(frameWnd->m_hWnd)) frameWnd->DestroyWindow(); //fix memory leak of CWnd
+        delete m_pFrame;
+        m_pFrame = NULL;
+    }
 }
 
 

@@ -2,15 +2,16 @@
 # Copyright (C) 2002 - 2017 see Authors.txt
 # This file is distributed under the same license as the MPC-HC package.
 # Translators:
-# Samir Gutić <amicussamir@amicus.ba>, 2016
-# smajo burek <smajo@mail.com>, 2016
+# MPC HC <adiposegithub@gmail.com>, 2020
+# Samir Gutić <amicussamir@amicus.ba>, 2025
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: MPC-HC\n"
-"POT-Creation-Date: 2016-01-17 21:31:34+0000\n"
-"PO-Revision-Date: 2017-08-13 20:50+0000\n"
-"Last-Translator: kasper93\n"
-"Language-Team: Bosnian (Bosnia and Herzegovina) (http://www.transifex.com/mpc-hc/mpc-hc/language/bs_BA/)\n"
+"POT-Creation-Date: 2025-04-26 17:38:13+0000\n"
+"PO-Revision-Date: 2020-01-02 07:46+0000\n"
+"Last-Translator: Samir Gutić <amicussamir@amicus.ba>, 2025\n"
+"Language-Team: Bosnian (Bosnia and Herzegovina) (https://app.transifex.com/mpchc/teams/106126/bs_BA/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -26,7 +27,7 @@ msgid "&Quick Open File..."
 msgstr "Brzo Otvaranje Dokumenta..."
 
 msgctxt "ID_FILE_OPENMEDIA"
-msgid "&Open File..."
+msgid "&Open File/URL..."
 msgstr "&Otvori Dokument..."
 
 msgctxt "ID_FILE_OPENDVDBD"
@@ -81,13 +82,13 @@ msgctxt "ID_FILE_SUBTITLES_DOWNLOAD"
 msgid "&Download Subtitles..."
 msgstr "&Download-uj Titlove..."
 
-msgctxt "ID_FILE_SUBTITLES_UPLOAD"
-msgid "&Upload Subtitles..."
-msgstr "&Upload-uj Titlove..."
-
 msgctxt "ID_FILE_PROPERTIES"
 msgid "P&roperties"
 msgstr "Svojstva"
+
+msgctxt "ID_FILE_OPEN_LOCATION"
+msgid "Open File &Location"
+msgstr "Otvori &Lokaciju Dokumenta"
 
 msgctxt "ID_FILE_EXIT"
 msgid "E&xit"
@@ -137,10 +138,6 @@ msgctxt "ID_VIEW_NAVIGATION"
 msgid "Na&vigation"
 msgstr "Na&vigacija"
 
-msgctxt "ID_VIEW_DEBUGSHADERS"
-msgid "&Debug Shaders"
-msgstr "Ispravi greške Sjenčila"
-
 msgctxt "POPUP"
 msgid "&Presets..."
 msgstr "&Podešenja..."
@@ -157,6 +154,10 @@ msgctxt "ID_VIEW_PRESETS_NORMAL"
 msgid "&Normal"
 msgstr "&Normalni"
 
+msgctxt "ID_VIEW_PRESETS_CUSTOM"
+msgid "C&ustom"
+msgstr ""
+
 msgctxt "ID_VIEW_FULLSCREEN"
 msgid "F&ull Screen"
 msgstr "Na cijeli ekran"
@@ -164,6 +165,10 @@ msgstr "Na cijeli ekran"
 msgctxt "POPUP"
 msgid "&Zoom"
 msgstr "&Zum"
+
+msgctxt "ID_VIEW_ZOOM_25"
+msgid "&25%"
+msgstr "&25%"
 
 msgctxt "ID_VIEW_ZOOM_50"
 msgid "&50%"
@@ -180,10 +185,6 @@ msgstr "&200%"
 msgctxt "ID_VIEW_ZOOM_AUTOFIT"
 msgid "Auto &Fit"
 msgstr "Automatska Veličina"
-
-msgctxt "ID_VIEW_ZOOM_AUTOFIT_LARGER"
-msgid "Auto Fit (&Larger Only)"
-msgstr "Automatska Veličina (Samo Ve&liki)"
 
 msgctxt "POPUP"
 msgid "R&enderer Settings"
@@ -357,17 +358,9 @@ msgctxt "ID_VIEW_FLUSHGPU_WAIT"
 msgid "&Wait for flushes"
 msgstr "Sačekaj na pražnjenja"
 
-msgctxt "POPUP"
-msgid "R&eset"
-msgstr "R&esetuj"
-
 msgctxt "ID_VIEW_RESET_DEFAULT"
 msgid "Reset to &default renderer settings"
 msgstr "Resetuj na po&drazumijevana podešenja rendereriranja"
-
-msgctxt "ID_VIEW_RESET_OPTIMAL"
-msgid "Reset to &optimal renderer settings"
-msgstr "Resetuj na &optimalna podešenja rendereriranja"
 
 msgctxt "POPUP"
 msgid "Video &Frame"
@@ -442,8 +435,8 @@ msgid "&Correct Monitor/Desktop AR Diff"
 msgstr "Popravi Monitor/Desktop AR Diff"
 
 msgctxt "POPUP"
-msgid "Pa&n && Scan"
-msgstr "Pa&n && Scan"
+msgid "P&nS Frame Adjust"
+msgstr "Podešenja P&nS Okvira"
 
 msgctxt "ID_VIEW_INCSIZE"
 msgid "&Increase Size"
@@ -488,6 +481,22 @@ msgstr "Pomakni &Dole"
 msgctxt "ID_PANSCAN_CENTER"
 msgid "Cen&ter"
 msgstr "Cen&triraj"
+
+msgctxt "ID_PANSCAN_ROTATEZM"
+msgid "Rotate Cloc&kwise"
+msgstr "Rotiraj U smjeru &kazaljke na satu"
+
+msgctxt "ID_PANSCAN_ROTATEZ270"
+msgid "Rotate Counter-Clock&wise"
+msgstr "Rotiraj U smjeru suprotnom od smjera kazaljke na satu"
+
+msgctxt "ID_PANSCAN_ROTATEXM"
+msgid "&Flip Vertically"
+msgstr "Obrni Vertikalno"
+
+msgctxt "ID_PANSCAN_ROTATEYM"
+msgid "&Mirror"
+msgstr "Kao slika u ogledalu"
 
 msgctxt "ID_VIEW_RESET"
 msgid "Re&set"
@@ -549,6 +558,94 @@ msgctxt "ID_PLAY_REPEAT_WHOLEPLAYLIST"
 msgid "&Playlist"
 msgstr "&Playlista"
 
+msgctxt "ID_PLAY_REPEAT_AB"
+msgid "A-B (&Reset)"
+msgstr "A-B (&Resetuj)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_A"
+msgid "A-B (Mark &A)"
+msgstr "A-B (Označi &A)"
+
+msgctxt "ID_PLAY_REPEAT_AB_MARK_B"
+msgid "A-B (Mark &B)"
+msgstr "A-B (Označi &B)"
+
+msgctxt "POPUP"
+msgid "&Playback Rate"
+msgstr "Tempo Reprodukcije"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_025"
+msgid "0.25 x"
+msgstr "0.25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_050"
+msgid "0.50 x"
+msgstr "0.50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_075"
+msgid "0.75 x"
+msgstr "0.75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_090"
+msgid "0.90 x"
+msgstr "0.90 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_100"
+msgid "1.00 x"
+msgstr "1.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_110"
+msgid "1.10 x"
+msgstr "1.10 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_125"
+msgid "1.25 x"
+msgstr "1.25 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_150"
+msgid "1.50 x"
+msgstr "1.50 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_175"
+msgid "1.75 x"
+msgstr "1.75 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_200"
+msgid "2.00 x"
+msgstr "2.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_300"
+msgid "3.00 x"
+msgstr "3.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_400"
+msgid "4.00 x"
+msgstr "4.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_600"
+msgid "6.00 x"
+msgstr "6.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_800"
+msgid "8.00 x"
+msgstr "8.00 x"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS23"
+msgid "23.976 fps"
+msgstr "23.976 fps"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS24"
+msgid "24 fps"
+msgstr "24 fps"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS25"
+msgid "25 fps"
+msgstr "25 fps"
+
+msgctxt "ID_PLAY_PLAYBACKRATE_FPS59"
+msgid "59.94 fps"
+msgstr "59.94 fps"
+
 msgctxt "ID_PLAY_DECRATE"
 msgid "&Decrease Rate"
 msgstr "Smanji Tempo"
@@ -565,6 +662,10 @@ msgctxt "ID_FILTERS"
 msgid "&Filters"
 msgstr "&Filteri"
 
+msgctxt "ID_COLOR_CONTROLS"
+msgid "&Color controls..."
+msgstr ""
+
 msgctxt "ID_SHADERS"
 msgid "S&haders"
 msgstr "Sjenčila"
@@ -576,6 +677,10 @@ msgstr "&Audio Zapis"
 msgctxt "ID_SUBTITLES"
 msgid "Su&btitle Track"
 msgstr "Zapis Titla"
+
+msgctxt "ID_SUBTITLES_SECONDARY"
+msgid "Secondary Subtitle Track"
+msgstr ""
 
 msgctxt "ID_VIDEO_STREAMS"
 msgid "Vide&o Track"
@@ -708,4 +813,3 @@ msgstr "&Doniraj"
 msgctxt "ID_HELP_ABOUT"
 msgid "&About..."
 msgstr "O programu..."
-

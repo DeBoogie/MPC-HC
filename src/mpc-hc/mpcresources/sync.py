@@ -33,23 +33,23 @@ def processRC(file):
         ret += '--> Updating PO file\n'
         UpdatePO(file)
     except Exception:
-        ret += ''.join(traceback.format_exception(*sys.exc_info()))
+        ret += traceback.format_exc()
         result = False
     else:
         try:
             ret += '--> Updating RC file\n'
             UpdateRC(file, False)
         except Exception:
-            ret += ''.join(traceback.format_exception(*sys.exc_info()))
+            ret += traceback.format_exc()
             result = False
 
     ret += '----------------------'
     return result, ret
 
 if __name__ == '__main__':
-    print 'Updating POT file'
+    print('Updating POT file')
     UpdatePOT()
-    print '----------------------'
+    print('----------------------')
 
     pool = Pool()
     results = []
@@ -61,6 +61,6 @@ if __name__ == '__main__':
 
     for result in results:
         ret = result.get(15)
-        print ret[1]
+        print(ret[1])
         if (not ret[0]):
             os.system('pause')

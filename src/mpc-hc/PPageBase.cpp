@@ -24,6 +24,8 @@
 #include "mplayerc.h"
 #include "PPageBase.h"
 #include "SettingsDefines.h"
+#include "ComPropertySheet.h"
+
 
 // CPPageBase dialog
 
@@ -92,18 +94,22 @@ void CPPageBase::CreateToolTip()
     }
 }
 
-void CPPageBase::SetButtonIcon(UINT nIDButton, UINT nIDIcon)
+void CPPageBase::SetButtonIcon(UINT nIDButton, IconDef iconDef)
 {
-    if (!m_buttonIcons.count(nIDIcon)) {
+    if (!m_buttonIcons.count(iconDef)) {
         CImage img;
-        img.LoadFromResource(AfxGetInstanceHandle(), nIDIcon);
-        CImageList& imageList = m_buttonIcons[nIDIcon];
+        if (iconDef.svgTargetWidth) {
+            SVGImage::LoadIconDef(iconDef, img);
+        } else {
+            img.LoadFromResource(AfxGetInstanceHandle(), iconDef.nIDIcon);
+        }
+        CImageList& imageList = m_buttonIcons[iconDef];
         imageList.Create(img.GetWidth(), img.GetHeight(), ILC_COLOR32, 1, 0);
         imageList.Add(CBitmap::FromHandle(img), nullptr);
     }
 
     BUTTON_IMAGELIST buttonImageList;
-    buttonImageList.himl = m_buttonIcons[nIDIcon];
+    buttonImageList.himl = m_buttonIcons[iconDef];
     buttonImageList.margin = { 0, 0, 0, 0 };
     buttonImageList.uAlign = BUTTON_IMAGELIST_ALIGN_CENTER;
     static_cast<CButton*>(GetDlgItem(nIDButton))->SetImageList(&buttonImageList);
@@ -139,8 +145,13 @@ END_MESSAGE_MAP()
 BOOL CPPageBase::OnSetActive()
 {
     ASSERT(IS_INTRESOURCE(m_pPSP->pszTemplate));
-    AfxGetAppSettings().nLastUsedPage = (WORD)(ULONG_PTR)m_pPSP->pszTemplate;
-    return __super::OnSetActive();
+    if (!m_bPopupHosted) {
+        AfxGetAppSettings().nLastUsedPage = (WORD)(ULONG_PTR)m_pPSP->pszTemplate;
+    }
+    SetRedraw(false); //adipose: disable redraw due to CPropertyPage::OnSetActive forcing ddx, which causes "optimized" redraw of comboboxes without consulting subclass paint method
+    BOOL ret = __super::OnSetActive();
+    SetRedraw(true); //adipose: reenable redraw. no regressions observed by enabling after ddx
+    return ret;
 }
 
 BOOL CPPageBase::OnApply()
@@ -156,4 +167,27 @@ void CPPageBase::OnDestroy()
 {
     __super::OnDestroy();
     m_wndToolTip.DestroyWindow();
+}
+
+void CPPageBase::ShowPPage(CUnknown* (WINAPI* CreateInstance)(LPUNKNOWN lpunk, HRESULT* phr)) {
+    if (!CreateInstance) {
+        return;
+    }
+
+    HRESULT hr;
+    CUnknown* pObj = CreateInstance(nullptr, &hr);
+
+    if (!pObj) {
+        return;
+    }
+
+    CComPtr<IUnknown> pUnk = (IUnknown*)(INonDelegatingUnknown*)pObj;
+
+    if (SUCCEEDED(hr)) {
+        if (CComQIPtr<ISpecifyPropertyPages> pSPP = pUnk) {
+            CComPropertySheet ps(ResStr(IDS_PROPSHEET_PROPERTIES), this);
+            ps.AddPages(pSPP);
+            ps.DoModal();
+        }
+    }
 }

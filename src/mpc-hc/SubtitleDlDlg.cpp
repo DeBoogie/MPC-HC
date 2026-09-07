@@ -20,25 +20,31 @@
  */
 
 #include "stdafx.h"
+#include <WinAPIUtils.h>
 #include "SubtitleDlDlg.h"
 #include "SubtitlesProvider.h"
 #include "mplayerc.h"
 #include "MainFrm.h"
 #include "ISOLang.h"
 #include "PPageSubMisc.h"
+#include "CMPCTheme.h"
+#include "CMPCThemeMenu.h"
+#include "SysVersion.h"
+#include "DpiHelper.h"
 
-BEGIN_MESSAGE_MAP(CSubtitleDlDlgListCtrl, CListCtrl)
+BEGIN_MESSAGE_MAP(CSubtitleDlDlgListCtrl, CMPCThemePlayerListCtrl)
     ON_NOTIFY_EX(TTN_NEEDTEXT, 0, OnToolNeedText)
 END_MESSAGE_MAP()
 
 void CSubtitleDlDlgListCtrl::PreSubclassWindow()
 {
     __super::PreSubclassWindow();
-    GetToolTips()->SetWindowPos(&wndTopMost, 0, 0, 0, 0, SWP_NOREDRAW | SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOOWNERZORDER);
 }
 
 BOOL CSubtitleDlDlgListCtrl::OnToolNeedText(UINT id, NMHDR* pNMHDR, LRESULT*)
 {
+    auto pTTT = reinterpret_cast<TOOLTIPTEXT*>(pNMHDR);
+
     CPoint pt(GetMessagePos());
     ScreenToClient(&pt);
 
@@ -55,15 +61,14 @@ BOOL CSubtitleDlDlgListCtrl::OnToolNeedText(UINT id, NMHDR* pNMHDR, LRESULT*)
         return FALSE;
     }
 
-    static CString tooltipText;
-    tooltipText = SubtitlesProvidersUtils::JoinContainer(subtitleInfo->releaseNames, "\n").c_str();
+    static CStringW tooltipText;
+    tooltipText = SubtitlesProvidersUtils::JoinContainer(subtitleInfo->releaseNames, L"\n").c_str();
     ASSERT(!tooltipText.IsEmpty());
 
-    auto pTTT = reinterpret_cast<TOOLTIPTEXT*>(pNMHDR);
     pTTT->lpszText = tooltipText.GetBuffer();
 
     // Needed for multiline tooltips.
-    GetToolTips()->SetMaxTipWidth(1000);
+    ::SendMessage(pNMHDR->hwndFrom, TTM_SETMAXTIPWIDTH, 0, 1000);
 
     // Force ListView internal variables related to LABELTIP to invalidate. This is needed to use both custom tooltip and LABELTIP.
     // When LABELTIP is enabled ListView internally changes tooltip to be draw in-place of text. Unfortunately it doesn't
@@ -81,12 +86,13 @@ enum {
     UWM_DOWNLOADED,
     UWM_COMPLETED,
     UWM_FINISHED,
-    UWM_FAILED,
+    UWM_FAILED_SEARCH,
+    UWM_FAILED_DOWNLOAD,
     UWM_CLEAR
 };
 
 CSubtitleDlDlg::CSubtitleDlDlg(CMainFrame* pParentWnd)
-    : CResizableDialog(IDD, pParentWnd)
+    : CMPCThemeModelessResizableDialog(IDD, pParentWnd)
     , m_ps(nullptr, 0, 0)
     , m_bIsRefreshed(false)
     , m_pMainFrame(pParentWnd)
@@ -99,6 +105,8 @@ void CSubtitleDlDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_LIST1, m_list);
     DDX_Control(pDX, IDC_PROGRESS1, m_progress);
     DDX_Control(pDX, IDC_STATUSBAR, m_status);
+    DDX_Text(pDX, IDC_EDIT1, manualSearch);
+    fulfillThemeReqs();
 }
 
 void CSubtitleDlDlg::SetStatusText(const CString& status, BOOL bPropagate/* = TRUE*/)
@@ -127,66 +135,119 @@ void CSubtitleDlDlg::SetListViewSortColumn()
     }
 }
 
+int SortScoreFile(SubtitlesInfo* si_left, SubtitlesInfo* si_right, bool sortup) {
+    // high bits are language score
+    // low bits are file score
+    SHORT left = (SHORT)LOWORD(si_left->Score());
+    SHORT right = (SHORT)LOWORD(si_right->Score());
+    return left == right ? 0 : sortup ? (left > right ? 1 : -1) : (left < right ? 1 : -1);
+}
+
+int SortScore(SubtitlesInfo* si_left, SubtitlesInfo* si_right, bool sortup) {
+    DWORD left  = si_left->Score();
+    DWORD right = si_right->Score();
+    return left == right ? 0 : sortup ? (left > right ? 1 : -1) : (left < right ? 1 : -1);
+}
+
+int SortFramerate(SubtitlesInfo* si_left, SubtitlesInfo* si_right, bool sortup) {
+    double left = si_left->frameRate;
+    double right = si_right->frameRate;
+    return (abs(left-right) < 0.001) ? 0 : sortup ? (left > right ? 1 : -1) : (left < right ? 1 : -1);
+}
+
+int SortDownloads(SubtitlesInfo* si_left, SubtitlesInfo* si_right, bool sortup) {
+    int left = si_left->downloadCount;
+    int right = si_right->downloadCount;
+    if (left == -1 && right != -1) {
+        return 1;
+    }
+    if (left != -1 && right == -1) {
+        return -1;
+    }
+    return left == right ? 0 : sortup ? (left > right ? 1 : -1) : (left < right ? 1 : -1);
+}
+
 int CALLBACK CSubtitleDlDlg::SortCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
     PPARAMSORT ps = (PPARAMSORT)(lParamSort);
     CListCtrl* list = (CListCtrl*)CListCtrl::FromHandle(ps->m_hWnd);
 
+    SubtitlesInfo* si_left  = (SubtitlesInfo*)(list->GetItemData((int)lParam1));
+    SubtitlesInfo* si_right = (SubtitlesInfo*)(list->GetItemData((int)lParam2));
+    bool sortup = (ps->m_fSortOrder == 1);
+
     if (ps->m_fSortOrder == 0) {
-        DWORD left = (*(SubtitlesInfo*)(list->GetItemData((int)lParam1))).Score();
-        DWORD right = (*(SubtitlesInfo*)(list->GetItemData((int)lParam2))).Score();
-        return left == right ? 0 : left < right ? 1 : -1;
+        int x = SortScore(si_left, si_right, false);
+        if (x == 0) {
+            return SortDownloads(si_left, si_right, false);
+        } else {
+            return x;
+        }
     }
 
     if (ps->m_nSortColumn == COL_DOWNLOADS) {
-        int left = (*(SubtitlesInfo*)(list->GetItemData((int)lParam1))).downloadCount;
-        int right = (*(SubtitlesInfo*)(list->GetItemData((int)lParam2))).downloadCount;
-        if (left == -1 && right != -1) {
-            return 1;
+        int x = SortDownloads(si_left, si_right, sortup);
+        if (x == 0) {
+            return SortScore(si_left, si_right, false);
+        } else {
+            return x;
         }
-
-        if (left != -1 && right == -1) {
-            return -1;
-        }
-
-        return left == right ? 0 : (ps->m_fSortOrder == 1)
-               ? (left > right ? 1 : -1)
-               : (left < right ? 1 : -1);
     }
 
-#ifdef _DEBUG
+    if (ps->m_nSortColumn == COL_FRAMERATE) {
+        int x = SortFramerate(si_left, si_right, sortup);
+        if (x == 0) {
+            return SortScore(si_left, si_right, false);
+        } else {
+            return x;
+        }
+    }
+
     if (ps->m_nSortColumn == COL_SCORE) {
-        SHORT left = (SHORT)LOWORD((*(SubtitlesInfo*)(list->GetItemData((int)lParam1))).Score());
-        SHORT right = (SHORT)LOWORD((*(SubtitlesInfo*)(list->GetItemData((int)lParam2))).Score());
-        return left == right ? 0 : (ps->m_fSortOrder == 1)
-               ? (left > right ? 1 : -1)
-               : (left < right ? 1 : -1);
+        int x = SortScoreFile(si_left, si_right, sortup);
+        if (x == 0) {
+            x = SortScore(si_left, si_right, sortup);
+            if (x == 0) {
+                return SortDownloads(si_left, si_right, false);
+            } else {
+                return x;
+            }
+        } else {
+            return x;
+        }
     }
-#endif
 
     CString left(list->GetItemText((int)lParam1, ps->m_nSortColumn));
     CString right(list->GetItemText((int)lParam2, ps->m_nSortColumn));
     if (left == _T("-") && right != _T("-")) {
         return 1;
     }
-
     if (left != _T("-") && right == _T("-")) {
         return -1;
     }
-
-    return (ps->m_fSortOrder == 1) ? StrCmpLogicalW(left, right) : StrCmpLogicalW(right, left);
+    int x = sortup ? StrCmpLogicalW(left, right) : StrCmpLogicalW(right, left);
+    if (x == 0) {
+        int x = (ps->m_nSortColumn == COL_LANGUAGE) ? SortScoreFile(si_left, si_right, false) : SortScore(si_left, si_right, false);
+        if (x == 0) {
+            return SortDownloads(si_left, si_right, false);
+        } else {
+            return x;
+        }
+    }
+    return x;
 }
 
 BOOL CSubtitleDlDlg::OnInitDialog()
 {
-    __super::OnInitDialog();
+    EnableSaveRestoreKey(IDS_R_DLG_SUBTITLEDL, TRUE);
 
-    m_progress.SetParent(&m_status);
-    m_progress.UpdateWindow();
+    __super::OnInitDialog();
+    m_status.SetProgressBar(&m_progress, 1);
 
     m_list.SetExtendedStyle(m_list.GetExtendedStyle()
-                            | LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT
-                            | LVS_EX_CHECKBOXES   | LVS_EX_LABELTIP);
+                            /*| LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT */
+                            | LVS_EX_CHECKBOXES | LVS_EX_LABELTIP);
+    m_list.setAdditionalStyles(LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT);
 
     m_list.SetImageList(&m_pMainFrame->m_pSubtitlesProviders->GetImageList(), LVSIL_SMALL);
 
@@ -211,53 +272,65 @@ BOOL CSubtitleDlDlg::OnInitDialog()
     if (columnWidth.GetCount() != COL_TOTAL_COLUMNS) {
         // default sizes
         columnWidth.RemoveAll();
-        columnWidth.Add(100);
+        columnWidth.Add(150);
         columnWidth.Add(300);
-        columnWidth.Add(80);
+        columnWidth.Add(100);
         columnWidth.Add(40);
-        columnWidth.Add(50);
         columnWidth.Add(40);
+        columnWidth.Add(70);
         columnWidth.Add(250);
-#ifdef _DEBUG
         columnWidth.Add(40);
-#endif
+        columnWidth.Add(40);
     }
 
     m_list.InsertColumn(COL_PROVIDER, ResStr(IDS_SUBDL_DLG_PROVIDER_COL), LVCFMT_LEFT, columnWidth[COL_PROVIDER]);
     m_list.InsertColumn(COL_FILENAME, ResStr(IDS_SUBDL_DLG_FILENAME_COL), LVCFMT_LEFT, columnWidth[COL_FILENAME]);
-    m_list.InsertColumn(COL_LANGUAGE, ResStr(IDS_SUBDL_DLG_LANGUAGE_COL), LVCFMT_CENTER, columnWidth[COL_LANGUAGE]);
-    m_list.InsertColumn(COL_DISC, ResStr(IDS_SUBDL_DLG_DISC_COL), LVCFMT_CENTER, columnWidth[COL_DISC]);
-    m_list.InsertColumn(COL_HEARINGIMPAIRED, ResStr(IDS_SUBDL_DLG_HI_COL), LVCFMT_CENTER, columnWidth[COL_HEARINGIMPAIRED]);
+    m_list.InsertColumn(COL_LANGUAGE, ResStr(IDS_SUBDL_DLG_LANGUAGE_COL), LVCFMT_LEFT, columnWidth[COL_LANGUAGE]);
+    m_list.InsertColumn(COL_FRAMERATE, L"FPS", LVCFMT_RIGHT, columnWidth[COL_FRAMERATE]);
+    m_list.InsertColumn(COL_HEARINGIMPAIRED, ResStr(IDS_SUBDL_DLG_HI_COL), LVCFMT_RIGHT, columnWidth[COL_HEARINGIMPAIRED]);
     m_list.InsertColumn(COL_DOWNLOADS, ResStr(IDS_SUBDL_DLG_DOWNLOADS_COL), LVCFMT_RIGHT, columnWidth[COL_DOWNLOADS]);
     m_list.InsertColumn(COL_TITLES, ResStr(IDS_SUBDL_DLG_TITLES_COL), LVCFMT_LEFT, columnWidth[COL_TITLES]);
-#ifdef _DEBUG
     m_list.InsertColumn(COL_SCORE, ResStr(IDS_SUBDL_DLG_SCORE_COL), LVCFMT_RIGHT, columnWidth[COL_SCORE]);
-#endif
+    m_list.InsertColumn(COL_DISC, ResStr(IDS_SUBDL_DLG_DISC_COL), LVCFMT_RIGHT, columnWidth[COL_DISC]);
     SetListViewSortColumn();
 
+    SetupAnchors();
+
+    CheckDlgButton(IDC_CHECK1, true);
+
+    CRect cr;
+    GetClientRect(cr);
+    const CSize s(cr.Width(), 250);
+    SetMinTrackSize(s);
+
+    return TRUE;
+}
+
+void CSubtitleDlDlg::SetupAnchors()
+{
     AddAnchor(IDC_LIST1, TOP_LEFT, BOTTOM_RIGHT);
     AddAnchor(IDC_CHECK1, BOTTOM_LEFT);
     AddAnchor(IDC_BUTTON1, BOTTOM_RIGHT);
     AddAnchor(IDC_BUTTON2, BOTTOM_RIGHT);
     AddAnchor(IDC_BUTTON3, BOTTOM_RIGHT);
     AddAnchor(IDOK, BOTTOM_RIGHT);
+    AddAnchor(IDC_EDIT1, BOTTOM_RIGHT, BOTTOM_RIGHT);
+    AddAnchor(IDC_BUTTON4, BOTTOM_RIGHT);
     AddAnchor(IDC_STATUSBAR, BOTTOM_LEFT, BOTTOM_RIGHT);
-
-    const CSize s(500, 250);
-    SetMinTrackSize(s);
-    EnableSaveRestore(IDS_R_DLG_SUBTITLEDL, TRUE);
-
-    return TRUE;
 }
 
 BOOL CSubtitleDlDlg::PreTranslateMessage(MSG* pMsg)
 {
-    // Inhibit default handling for the Enter key when the list has the focus and an item is selected.
-    if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN
-            && pMsg->hwnd == m_list.GetSafeHwnd() && m_list.GetSelectedCount() > 0) {
-        return FALSE;
+    if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN) {
+        // Inhibit default handling for the Enter key when the list has the focus and an item is selected.
+        if (pMsg->hwnd == m_list.GetSafeHwnd() && m_list.GetSelectedCount() > 0) {
+            return FALSE;
+        }
+        if (pMsg->hwnd == GetDlgItem(IDC_EDIT1)->GetSafeHwnd()) { //we want <enter> in the search field to initiate search
+            SendMessage(WM_COMMAND, (WPARAM)IDC_BUTTON4, LPARAM(0)); //press search button
+            return FALSE;
+        }
     }
-
     return __super::PreTranslateMessage(pMsg);
 }
 
@@ -288,21 +361,20 @@ void CSubtitleDlDlg::OnOK()
         }
     }
 
-    // Just hide the dialog, since it's modeless we don't want to call EndDialog
-    ShowWindow(SW_HIDE);
-}
-
-
-void CSubtitleDlDlg::OnCancel()
-{
-    // Just hide the dialog, since it's modeless we don't want to call EndDialog
-    ShowWindow(SW_HIDE);
+    __super::OnOK();
 }
 
 void CSubtitleDlDlg::OnRefresh()
 {
     m_list.DeleteAllItems();
     m_pMainFrame->m_pSubtitlesProviders->Search(FALSE);
+}
+
+void CSubtitleDlDlg::OnManualSearch()
+{
+    m_list.DeleteAllItems();
+    UpdateData(TRUE);
+    m_pMainFrame->m_pSubtitlesProviders->ManualSearch(FALSE, manualSearch);
 }
 
 void CSubtitleDlDlg::OnAbort()
@@ -358,24 +430,43 @@ void CSubtitleDlDlg::OnColumnClick(NMHDR* pNMHDR, LRESULT* pResult)
     m_list.UpdateWindow();
 }
 
-void CSubtitleDlDlg::OnSize(UINT nType, int cx, int cy)
+void CSubtitleDlDlg::UpdateStatusBarLayout()
 {
-    __super::OnSize(nType, cx, cy);
-
-    ArrangeLayout();
-
     if (m_status && m_progress) {
-        // Reposition the progress control correctly!
         CRect statusRect, buttonRect;
         m_status.GetClientRect(&statusRect);
         GetDlgItem(IDOK)->GetWindowRect(&buttonRect);
         ScreenToClient(&buttonRect);
+
+        // Calculate part widths - if there's a gripper, the last part should not extend over it
         int parts[2] = { buttonRect.left - 2, -1 };
+        if (m_status.GetStyle() & SBARS_SIZEGRIP) {
+            DpiHelper dpiHelper;
+            dpiHelper.Override(m_currentDpi, m_currentDpi);
+            int gripperWidth = dpiHelper.GetSystemMetricsDPI(SM_CXVSCROLL);
+            parts[1] = statusRect.Width() - gripperWidth;
+        }
+
+        // Status bar handles progress bar positioning automatically
         m_status.SetParts(2, parts);
-        m_status.GetRect(1, &statusRect);
-        statusRect.DeflateRect(1, 1, 1, 1);
-        m_progress.SetWindowPos(&wndTop, statusRect.left, statusRect.top, statusRect.Width(), statusRect.Height(),  SWP_NOACTIVATE | SWP_NOZORDER);
     }
+}
+
+void CSubtitleDlDlg::OnSize(UINT nType, int cx, int cy)
+{
+    __super::OnSize(nType, cx, cy);
+    UpdateStatusBarLayout();
+}
+
+LRESULT CSubtitleDlDlg::OnDpiChanged(WPARAM wParam, LPARAM lParam)
+{
+    // Call base class to handle DPI change
+    LRESULT result = __super::OnDpiChanged(wParam, lParam);
+
+    // OnSize was blocked during DPI change, so update status bar layout manually
+    UpdateStatusBarLayout();
+
+    return result;
 }
 
 void CSubtitleDlDlg::OnDestroy()
@@ -383,24 +474,18 @@ void CSubtitleDlDlg::OnDestroy()
     RemoveAllAnchors();
 
     const CHeaderCtrl& pHC = *m_list.GetHeaderCtrl();
-    CString strColumnWidth;
-
-    for (int i = 0; i < pHC.GetItemCount(); ++i) {
-        int w = m_list.GetColumnWidth(i);
-        strColumnWidth.AppendFormat(L"%d,", w);
+    if (pHC) {
+        CString strColumnWidth;
+        for (int i = 0; i < pHC.GetItemCount(); ++i) {
+            int w = m_list.GetColumnWidth(i);
+            strColumnWidth.AppendFormat(L"%d,", w);
+        }
+        AfxGetApp()->WriteProfileString(IDS_R_DLG_SUBTITLEDL, IDS_RS_DLG_SUBTITLEDL_COLWIDTH, strColumnWidth);
+        AfxGetApp()->WriteProfileInt(IDS_R_DLG_SUBTITLEDL, IDS_RS_DLG_SUBTITLEDL_SORTCOLUMN, m_ps.m_nSortColumn);
+        AfxGetApp()->WriteProfileInt(IDS_R_DLG_SUBTITLEDL, IDS_RS_DLG_SUBTITLEDL_SORTORDER, m_ps.m_fSortOrder);
     }
-    AfxGetApp()->WriteProfileString(IDS_R_DLG_SUBTITLEDL, IDS_RS_DLG_SUBTITLEDL_COLWIDTH, strColumnWidth);
-    AfxGetApp()->WriteProfileInt(IDS_R_DLG_SUBTITLEDL, IDS_RS_DLG_SUBTITLEDL_SORTCOLUMN, m_ps.m_nSortColumn);
-    AfxGetApp()->WriteProfileInt(IDS_R_DLG_SUBTITLEDL, IDS_RS_DLG_SUBTITLEDL_SORTORDER, m_ps.m_fSortOrder);
 
     __super::OnDestroy();
-}
-
-BOOL CSubtitleDlDlg::OnEraseBkgnd(CDC* pDC)
-{
-    EraseBackground(pDC);
-
-    return TRUE;
 }
 
 void CSubtitleDlDlg::DownloadSelectedSubtitles()
@@ -416,12 +501,14 @@ void CSubtitleDlDlg::DownloadSelectedSubtitles()
 }
 
 // ON_UPDATE_COMMAND_UI does not work for modeless dialogs
-BEGIN_MESSAGE_MAP(CSubtitleDlDlg, CResizableDialog)
+BEGIN_MESSAGE_MAP(CSubtitleDlDlg, CMPCThemeModelessResizableDialog)
     ON_WM_ERASEBKGND()
     ON_WM_SIZE()
+    ON_MESSAGE(WM_DPICHANGED, OnDpiChanged)
     ON_COMMAND(IDC_BUTTON1, OnRefresh)
     ON_COMMAND(IDC_BUTTON2, OnAbort)
     ON_COMMAND(IDC_BUTTON3, OnOptions)
+    ON_COMMAND(IDC_BUTTON4, OnManualSearch)
     ON_UPDATE_COMMAND_UI(IDOK, OnUpdateOk)
     ON_UPDATE_COMMAND_UI(IDC_BUTTON1, OnUpdateRefresh)
     ON_NOTIFY(HDN_ITEMCLICK, 0, OnColumnClick)
@@ -439,7 +526,8 @@ BEGIN_MESSAGE_MAP(CSubtitleDlDlg, CResizableDialog)
     ON_MESSAGE(UWM_DOWNLOADED, OnDownloaded)
     ON_MESSAGE(UWM_COMPLETED, OnCompleted)
     ON_MESSAGE(UWM_FINISHED, OnFinished)
-    ON_MESSAGE(UWM_FAILED, OnFailed)
+    ON_MESSAGE(UWM_FAILED_SEARCH, OnFailedSearch)
+    ON_MESSAGE(UWM_FAILED_DOWNLOAD, OnFailedDownload)
     ON_MESSAGE(UWM_CLEAR, OnClear)
 END_MESSAGE_MAP()
 
@@ -475,12 +563,15 @@ void CSubtitleDlDlg::OnRightClick(NMHDR* pNMHDR, LRESULT* pResult)
             COPY_URL
         };
 
-        CMenu m;
+        CMPCThemeMenu m;
         m.CreatePopupMenu();
         m.AppendMenu(MF_STRING | (m_list.GetCheck(lpnmlv->iItem) != -1 ? MF_ENABLED : MF_DISABLED), DOWNLOAD, ResStr(IDS_SUBMENU_DOWNLOAD));
         m.AppendMenu(MF_SEPARATOR);
         m.AppendMenu(MF_STRING | (!subtitlesInfo.url.empty() ? MF_ENABLED : MF_DISABLED), OPEN_URL, ResStr(IDS_SUBMENU_OPENURL));
         m.AppendMenu(MF_STRING | (!subtitlesInfo.url.empty() ? MF_ENABLED : MF_DISABLED), COPY_URL, ResStr(IDS_SUBMENU_COPYURL));
+        if (AppIsThemeLoaded()) {
+            m.fulfillThemeReqs();
+        }
 
         CPoint pt = lpnmlv->ptAction;
         ::MapWindowPoints(lpnmlv->hdr.hwndFrom, HWND_DESKTOP, &pt, 1);
@@ -495,30 +586,8 @@ void CSubtitleDlDlg::OnRightClick(NMHDR* pNMHDR, LRESULT* pResult)
                 break;
             case COPY_URL: {
                 if (!subtitlesInfo.url.empty()) {
-                    size_t len = subtitlesInfo.url.length() + 1;
-                    HGLOBAL hGlob = ::GlobalAlloc(GMEM_MOVEABLE, len * sizeof(CHAR));
-                    if (hGlob) {
-                        // Lock the handle and copy the text to the buffer
-                        LPVOID pData = ::GlobalLock(hGlob);
-                        if (pData) {
-                            ::strcpy_s((CHAR*)pData, len, (LPCSTR)subtitlesInfo.url.c_str());
-                            ::GlobalUnlock(hGlob);
-
-                            if (GetParent()->OpenClipboard()) {
-                                // Place the handle on the clipboard, if the call succeeds
-                                // the system will take care of the allocated memory
-                                if (::EmptyClipboard() && ::SetClipboardData(CF_TEXT, hGlob)) {
-                                    hGlob = nullptr;
-                                }
-
-                                ::CloseClipboard();
-                            }
-                        }
-
-                        if (hGlob) {
-                            ::GlobalFree(hGlob);
-                        }
-                    }
+                    CClipboard clipboard(this);
+                    VERIFY(clipboard.SetText(subtitlesInfo.url.c_str()));
                 }
                 break;
             }
@@ -532,13 +601,26 @@ void CSubtitleDlDlg::OnItemChanging(NMHDR* pNMHDR, LRESULT* pResult)
 {
     LPNMLISTVIEW pNMLV = (LPNMLISTVIEW)(pNMHDR);
 
-    if (pNMLV->uOldState == 0 && pNMLV->uNewState == 0x1000 && pNMLV->lParam) {
+    if (pNMLV->uOldState == 0 && pNMLV->uNewState == LVIS_UNCHECKED && pNMLV->lParam) {
         *pResult = TRUE;
     }
 }
 
 void CSubtitleDlDlg::OnItemChanged(NMHDR* pNMHDR, LRESULT* pResult)
 {
+    LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+    if (pNMLV->uChanged & LVIF_STATE) { //sync checkboxes and highlighted/selected rows
+        if (pNMLV->uNewState & LVIS_CHECKED) {
+            m_list.SetItemState(pNMLV->iItem, LVIS_SELECTED, LVIS_SELECTED);
+        } else if (pNMLV->uNewState & LVIS_UNCHECKED) {
+            m_list.SetItemState(pNMLV->iItem, 0, LVIS_SELECTED);
+        } else if (pNMLV->uNewState & LVIS_SELECTED) { //selection was changed
+            m_list.SetCheck(pNMLV->iItem, 1);
+        } else if (pNMLV->uOldState & LVIS_SELECTED) { //selection was removed
+            m_list.SetCheck(pNMLV->iItem, 0);
+        }
+    }
+
     UpdateDialogControls(this, FALSE);
 }
 
@@ -551,6 +633,7 @@ void CSubtitleDlDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 
     if (bShow == TRUE && !m_bIsRefreshed && !m_pMainFrame->m_fAudioOnly && s.fEnableSubtitles) {
         OnRefresh();
+        m_bIsRefreshed = true;
     }
 }
 
@@ -574,7 +657,11 @@ afx_msg LRESULT CSubtitleDlDlg::OnSearch(WPARAM wParam, LPARAM /*lParam*/)
 afx_msg LRESULT CSubtitleDlDlg::OnSearching(WPARAM /*wParam*/, LPARAM lParam)
 {
     SubtitlesInfo& _fileInfo = *(SubtitlesInfo*)lParam;
-    CString title = ResStr(IDS_SUBDL_DLG_TITLE) + _T(" - ") + CString(_fileInfo.fileName.c_str());
+    CStringW search = UTF8To16(_fileInfo.fileName.c_str());
+    if (search.IsEmpty()) {
+        search = _fileInfo.manualSearchString;
+    }
+    CStringW title = ResStr(IDS_SUBDL_DLG_TITLE) + _T(" - ") + search;
     SetWindowText(title);
     return S_OK;
 }
@@ -584,7 +671,7 @@ afx_msg LRESULT CSubtitleDlDlg::OnDownloading(WPARAM /*wParam*/, LPARAM lParam)
     SubtitlesInfo& _fileInfo = *(SubtitlesInfo*)lParam;
 
     CString statusMessage;
-    statusMessage.Format(IDS_SUBDL_DLG_DOWNLOADING, CString(_fileInfo.Provider()->Name().c_str()).GetString(), CString(_fileInfo.fileName.c_str()).GetString());
+    statusMessage.Format(IDS_SUBDL_DLG_DOWNLOADING, CString(_fileInfo.Provider()->DisplayName().c_str()).GetString(), CString(_fileInfo.fileName.c_str()).GetString());
     SetStatusText(statusMessage);
 
     return S_OK;
@@ -595,7 +682,7 @@ afx_msg LRESULT CSubtitleDlDlg::OnDownloaded(WPARAM /*wParam*/, LPARAM lParam)
     SubtitlesInfo& _fileInfo = *(SubtitlesInfo*)lParam;
 
     CString statusMessage;
-    statusMessage.Format(IDS_SUBDL_DLG_DOWNLOADED, CString(_fileInfo.Provider()->Name().c_str()).GetString(), CString(_fileInfo.fileName.c_str()).GetString());
+    statusMessage.Format(IDS_SUBDL_DLG_DOWNLOADED, CString(_fileInfo.Provider()->DisplayName().c_str()).GetString(), CString(_fileInfo.fileName.c_str()).GetString());
     SetStatusText(statusMessage);
 
     for (int i = 0; i < m_list.GetItemCount(); ++i) {
@@ -622,11 +709,17 @@ afx_msg LRESULT CSubtitleDlDlg::OnCompleted(WPARAM wParam, LPARAM lParam)
         m_list.SetRedraw(FALSE);
 
         for (const auto& subInfo : _subtitlesList) {
-            int iItem = m_list.InsertItem(0, UTF8To16(subInfo.Provider()->Name().c_str()), subInfo.Provider()->GetIconIndex());
+            int iItem = m_list.InsertItem(0, UTF8To16(subInfo.Provider()->DisplayName().c_str()), subInfo.Provider()->GetIconIndex());
             m_list.SetItemText(iItem, COL_FILENAME, UTF8To16(subInfo.fileName.c_str()));
             m_list.SetItemText(iItem, COL_LANGUAGE, ISOLang::ISO639XToLanguage(subInfo.languageCode.c_str()));
-            CString disc;
-            disc.Format(_T("%d/%d"), subInfo.discNumber, subInfo.discCount);
+            CStringW disc = L"";
+            if (subInfo.discNumber > 0) {
+                if (subInfo.discCount > 0) {
+                    disc.Format(L"%d/%d", subInfo.discNumber, subInfo.discCount);
+                } else {
+                    disc.Format(L"%d", subInfo.discNumber);
+                }
+            }
             m_list.SetItemText(iItem, COL_DISC, disc);
             m_list.SetItemText(iItem, COL_HEARINGIMPAIRED, subInfo.hearingImpaired == -1 ? _T("-") : subInfo.hearingImpaired > 0 ? ResStr(IDS_YES).GetString() : ResStr(IDS_NO).GetString());
             CString downloads(_T("-"));
@@ -636,11 +729,17 @@ afx_msg LRESULT CSubtitleDlDlg::OnCompleted(WPARAM wParam, LPARAM lParam)
             }
             m_list.SetItemText(iItem, COL_DOWNLOADS, downloads);
             m_list.SetItemText(iItem, COL_TITLES, UTF8To16(subInfo.DisplayTitle().c_str()));
-#ifdef _DEBUG
+
+            CString fps;
+            if (subInfo.frameRate > 0.1) {
+                fps.Format(_T("%.3f"), subInfo.frameRate);
+            }
+            m_list.SetItemText(iItem, COL_FRAMERATE, fps);
+
             CString score;
             score.Format(_T("%d"), (SHORT)LOWORD(subInfo.Score()));
             m_list.SetItemText(iItem, COL_SCORE, score);
-#endif
+
             m_Subtitles.emplace_back(subInfo);
             m_list.SetItemData(iItem, (DWORD_PTR)&m_Subtitles.back());
         }
@@ -691,9 +790,21 @@ afx_msg LRESULT CSubtitleDlDlg::OnFinished(WPARAM wParam, LPARAM lParam)
     return S_OK;
 }
 
-afx_msg LRESULT CSubtitleDlDlg::OnFailed(WPARAM /*wParam*/, LPARAM /*lParam*/)
+afx_msg LRESULT CSubtitleDlDlg::OnFailedSearch(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
     SetStatusText(StrRes(IDS_SUBDL_DLG_FAILED));
+
+    return S_OK;
+}
+
+afx_msg LRESULT CSubtitleDlDlg::OnFailedDownload(WPARAM wParam, LPARAM /*lParam*/)
+{
+    CString status = StrRes(IDS_SUBDL_DLG_FAILED_DL);
+    status.AppendFormat(L" (error %lu)", (DWORD)wParam);
+    if (wParam == 406) {
+        status.Append(L" (global daily download quota exceeded)");
+    }
+    SetStatusText(status);
 
     return S_OK;
 }
@@ -743,9 +854,13 @@ void CSubtitleDlDlg::DoFinished(BOOL _bAborted, BOOL _bShowDialog)
 {
     SendMessage(UWM_FINISHED, (WPARAM)_bAborted, (LPARAM)_bShowDialog);
 }
-void CSubtitleDlDlg::DoFailed()
+void CSubtitleDlDlg::DoSearchFailed()
 {
-    SendMessage(UWM_FAILED, (WPARAM)nullptr, (LPARAM)nullptr);
+    SendMessage(UWM_FAILED_SEARCH, (WPARAM)nullptr, (LPARAM)nullptr);
+}
+void CSubtitleDlDlg::DoDownloadFailed(DWORD statuscode)
+{
+    SendMessage(UWM_FAILED_DOWNLOAD, (WPARAM)statuscode, (LPARAM)nullptr);
 }
 void CSubtitleDlDlg::DoClear()
 {

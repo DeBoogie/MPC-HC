@@ -74,6 +74,9 @@ public:
     HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, const RECT *pRect, OPTIONAL const RECT *pClipRect) const
     {return (*m_pDrawThemeBackground)(hTheme, hdc, iPartId, iStateId, pRect, pClipRect);}
 
+    HRESULT DrawThemeEdge(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, const RECT *pRect, UINT uEdge, UINT uFlags, OPTIONAL const RECT * pContentRect) const
+    {return (*m_pDrawThemeEdge)(hTheme, hdc, iPartId, iStateId, pRect, uEdge, uFlags, pContentRect);}
+
 // function pointers
 private:
     typedef BOOL (__stdcall *_IsThemeActive)();
@@ -88,8 +91,11 @@ private:
     typedef HRESULT(__stdcall *_GetThemeBackgroundContentRect)(HTHEME hTheme, OPTIONAL HDC hdc, int iPartId, int iStateId, const RECT *pBoundingRect, OUT RECT *pContentRect);
     _GetThemeBackgroundContentRect m_pGetThemeBackgroundContentRect;
 
-    typedef HRESULT (__stdcall *_DrawThemeBackground)(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, const RECT *pRect, OPTIONAL const RECT *pClipRect);
+    typedef HRESULT(__stdcall* _DrawThemeBackground)(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, const RECT* pRect, OPTIONAL const RECT* pClipRect);
     _DrawThemeBackground m_pDrawThemeBackground;
+
+    typedef HRESULT(__stdcall* _DrawThemeEdge)(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, const RECT* pRect, UINT uEdge, UINT uFlags, OPTIONAL const RECT* pContentRect);
+    _DrawThemeEdge m_pDrawThemeEdge;
 
 // properties
 private:
@@ -120,6 +126,7 @@ CThemeLib::CThemeLib()
     m_pCloseThemeData = (_CloseThemeData)GetProcAddress(m_hThemeLib, "CloseThemeData");
     m_pGetThemeBackgroundContentRect = (_GetThemeBackgroundContentRect)GetProcAddress(m_hThemeLib, "GetThemeBackgroundContentRect");
     m_pDrawThemeBackground = (_DrawThemeBackground)GetProcAddress(m_hThemeLib, "DrawThemeBackground");
+    m_pDrawThemeEdge = (_DrawThemeEdge)GetProcAddress(m_hThemeLib, "DrawThemeEdge");
 }
 
 
@@ -293,17 +300,33 @@ void CPropPageFrameDefault::DrawCaption(CDC *pDc, CRect rect, LPCTSTR lpszCaptio
     int             nBkStyle = pDc->SetBkMode(TRANSPARENT);
     CFont           *pFont = (CFont*)pDc->SelectStockObject(SYSTEM_FONT);
 
-    // <MPC-HC Custom Code>
+// <MPC-HC Custom Code>
     LOGFONT lf;
     GetMessageFont(&lf);
-    lf.lfHeight = rect.Height();
+    lf.lfHeight = static_cast<long>(-.8f * rect.Height());
     lf.lfWeight = FW_BOLD;
-    // <MPC-HC Custom Code>
     CFont f;
-    f.CreateFontIndirect(&lf);
-    pDc->SelectObject(&f);
+    f.CreateFontIndirectW(&lf);
+    pFont = pDc->SelectObject(&f);
 
-    pDc->DrawText(lpszCaption, rect, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
+    TEXTMETRIC GDIMetrics;
+    GetTextMetricsW(pDc->GetSafeHdc(), &GDIMetrics);
+    while (GDIMetrics.tmHeight > rect.Height() && abs(lf.lfHeight) > 10) {
+        pDc->SelectObject(pFont);
+        f.DeleteObject();
+        lf.lfHeight++;
+        f.CreateFontIndirectW(&lf);
+        pDc->SelectObject(&f);
+        GetTextMetricsW(pDc->GetSafeHdc(), &GDIMetrics);
+    }
+
+    rect.top -= GDIMetrics.tmDescent - 1;
+//    CFont f;
+//    f.CreateFontIndirect(&lf);
+//    pDc->SelectObject(&f);
+    pDc->DrawText(lpszCaption, rect, DT_LEFT | DT_SINGLELINE | DT_END_ELLIPSIS);
+// <MPC-HC Custom Code>
+
 
     pDc->SetTextColor(clrPrev);
     pDc->SetBkMode(nBkStyle);
@@ -365,7 +388,12 @@ BOOL CPropPageFrameDefault::OnEraseBkgnd(CDC* pDC)
         {
             CRect   rect;
             GetClientRect(rect);
-            g_ThemeLib.DrawThemeBackground(hTheme, pDC->m_hDC, TABP_PANE, 0, rect, NULL);
+            //g_ThemeLib.DrawThemeBackground(hTheme, pDC->m_hDC, TABP_PANE, 0, rect, NULL);
+
+            //mpc-hc: TABP_PANE draws a border 1 pixel short of bottom, and two pixels short of right.  
+            //instead we fill using TABP_BODY and draw the edge separately (using BDR_SUNKENOUTER for 1 pixel only)
+            g_ThemeLib.DrawThemeBackground(hTheme, pDC->m_hDC, TABP_BODY, 0, rect, NULL);
+            g_ThemeLib.DrawThemeEdge(hTheme, pDC->m_hDC, TABP_BODY, 0, rect, BDR_SUNKENOUTER, BF_FLAT | BF_RECT, NULL);
 
             g_ThemeLib.CloseThemeData(hTheme);
         }

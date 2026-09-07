@@ -27,6 +27,7 @@
 #include "Rasterizer.h"
 #include "../SubPic/SubPicProviderImpl.h"
 #include "RenderingCache.h"
+#include "../../include/mpc-hc_config.h"
 
 class Effect;
 struct CTextDims;
@@ -122,9 +123,12 @@ struct CTextDims {
 };
 
 class CPolygon;
+class CLineBG;
 
 class CWord : public Rasterizer
 {
+    friend class CLineBG;
+
     bool m_fDrawn;
     CPoint m_p;
 
@@ -132,6 +136,8 @@ class CWord : public Rasterizer
 
     void Transform_C(const CPoint& org);
     void Transform_SSE2(const CPoint& org);
+    void Transform_quick_C(const CPoint& org);
+    void Transform_quick_SSE2(const CPoint& org);
     bool CreateOpaqueBox();
 
 protected:
@@ -156,6 +162,7 @@ public:
     // str[0] = 0 -> m_fLineBreak = true (in this case we only need and use the height of m_font from the whole class)
     CWord(const STSStyle& style, CStringW str, int ktype, int kstart, int kend, double scalex, double scaley,
           RenderingCaches& renderingCaches);
+    CWord(RenderingCaches& renderingCaches);
     virtual ~CWord();
 
     virtual CWord* Copy() = 0;
@@ -166,17 +173,31 @@ public:
     friend class COutlineKey;
 };
 
+class CRenderedTextSubtitle;
 class CText : public CWord
 {
 protected:
     virtual bool CreatePath();
-
+    CRenderedTextSubtitle* m_RTS;
 public:
     CText(const STSStyle& style, CStringW str, int ktype, int kstart, int kend, double scalex, double scaley,
           RenderingCaches& renderingCaches);
+    CText(RenderingCaches& renderingCaches);
 
     virtual CWord* Copy();
     virtual bool Append(CWord* w);
+    void SetRts(CRenderedTextSubtitle* RTS) { m_RTS = RTS; };
+};
+
+class CLine;
+class CLineBG : public CText
+{
+public:
+    CLineBG(RenderingCaches& renderingCaches);
+    static std::shared_ptr<CLineBG> CLineBGFactory(CLine const* line, RenderingCaches& renderingCaches);
+    CRect PaintLineShadow(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPoint p, CPoint org, int time, int alpha);
+    CRect PaintLineOutline(SubPicDesc& spd, CRect& clipRect, BYTE* pAlphaMask, CPoint p, CPoint org, int time, int alpha);
+    virtual CLineBG* Copy() { return nullptr; }; //not used
 };
 
 class CPolygon : public CWord
@@ -225,7 +246,7 @@ public:
     CClipper(CStringW str, const CSize& size, double scalex, double scaley, bool inverse, const CPoint& cpOffset,
              RenderingCaches& renderingCaches);
 
-    void CClipper::SetEffect(const Effect& effect, int effectType) {
+    void SetEffect(const Effect& effect, int effectType) {
         m_effectType = effectType;
         m_effect = effect;
     }
@@ -281,7 +302,12 @@ using CClipperSharedPtr = std::shared_ptr<CClipper>;
 class CLine : public CAtlList<CWord*>
 {
 public:
-    int m_width, m_ascent, m_descent, m_borderX, m_borderY;
+    int m_width   = 0;
+    int m_ascent  = 0;
+    int m_descent = 0;
+    int m_borderX = 0;
+    int m_borderY = 0;
+    int m_linePadding = 0;
 
     virtual ~CLine();
 
@@ -411,7 +437,11 @@ public:
     int m_topborder, m_bottomborder;
     bool m_clipInverse;
 
-    double m_scalex, m_scaley;
+    double m_target_scale_x, m_target_scale_y;
+    double m_script_scale_x, m_script_scale_y;
+    double m_total_scale_x,  m_total_scale_y;
+
+    bool m_allowLinePadding;
 
 public:
     CSubtitle(RenderingCaches& renderingCaches);
@@ -448,6 +478,7 @@ class __declspec(uuid("537DCACA-2812-4a4f-B2C6-1A34C17ADEB0"))
     CAtlMap<int, CSubtitle*> m_subtitleCache;
 
     RenderingCaches m_renderingCaches;
+    CCritSec renderLock;
 
     CScreenLayoutAllocator m_sla;
 
@@ -461,10 +492,10 @@ class __declspec(uuid("537DCACA-2812-4a4f-B2C6-1A34C17ADEB0"))
     int m_ktype, m_kstart, m_kend;
     int m_nPolygon;
     int m_polygonBaselineOffset;
-    STSStyle m_styleOverride; // the app can decide to use this style instead of a built-in one
-    bool m_bOverrideStyle;
     bool m_bOverridePlacement;
+    bool m_bUseFreeType;
     CSize m_overridePlacement;
+    bool m_bTopAlignedPlacement; // secondary subtitle track: forced top-anchored placement
 
     void ParseEffect(CSubtitle* sub, CString str);
     void ParseString(CSubtitle* sub, CStringW str, STSStyle& style);
@@ -488,19 +519,26 @@ public:
     virtual void Empty();
 
     // call to signal this RTS to ignore any of the styles and apply the given override style
-    void SetOverride(bool bOverride, const STSStyle& styleOverride) {
-        m_bOverrideStyle = bOverride;
-        m_styleOverride = styleOverride;
-    }
+    void SetOverride(bool bOverrideDefault, bool bOverrideAll, const STSStyle& styleOverride);
+ 
+    void SetUseFreeType(bool useFreeType) { m_bUseFreeType = useFreeType; }
+    bool GetUseFreeType() { return m_bUseFreeType; }
 
-    void SetAlignment(bool bOverridePlacement, LONG lHorPos, LONG lVerPos) {
+    void SetAlignment(bool bOverridePlacement, LONG lHorPos, LONG lVerPos, bool bTopAligned = false) {
         m_bOverridePlacement = bOverridePlacement;
         m_overridePlacement.SetSize(lHorPos, lVerPos);
+        m_bTopAlignedPlacement = bTopAligned;
     }
 
 public:
     bool Init(CSize size, const CRect& vidrect); // will call Deinit()
     void Deinit();
+    CString GetPath();
+
+    bool m_webvtt_allow_clear;
+    //FT cache for RTS
+    FTLibraryData m_ftLibrary;
+    //end FT cache
 
     DECLARE_IUNKNOWN
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
@@ -523,4 +561,5 @@ public:
     STDMETHODIMP SetStream(int iStream);
     STDMETHODIMP Reload();
     STDMETHODIMP SetSourceTargetInfo(CString yuvMatrix, int targetBlackLevel, int targetWhiteLevel);
+    void SetSubtitleTypeFromGUID(GUID subtype);
 };

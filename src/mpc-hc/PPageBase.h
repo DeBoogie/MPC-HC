@@ -22,22 +22,26 @@
 #pragma once
 
 #include "ResizableLib/ResizableDialog.h"
+#include "../../CmdUI/CmdUI.h"
+#include "CMPCThemeToolTipCtrl.h"
+#include "SVGImage.h"
 
 // CPPageBase dialog
-
+using namespace SVGImage;
 class CPPageBase : public CCmdUIPropertyPage
 {
     DECLARE_DYNAMIC(CPPageBase)
 
 protected:
-    CToolTipCtrl m_wndToolTip;
-    std::map<UINT, CImageList> m_buttonIcons;
+    CMPCThemeToolTipCtrl m_wndToolTip;
+    std::map<IconDef, CImageList, icomp> m_buttonIcons;
+    bool m_bPopupHosted = false; // page is hosted in a standalone popup sheet, not the options tree
 
     static bool FillComboToolTip(CComboBox& comboBox, TOOLTIPTEXT* pTTT);
 
     void CreateToolTip();
 
-    void SetButtonIcon(UINT nIDButton, UINT nIDIcon);
+    void SetButtonIcon(UINT nIDButton, IconDef iconDef);
 
 public:
     CPPageBase(UINT nIDTemplate, UINT nIDCaption = 0);
@@ -50,6 +54,7 @@ protected:
     virtual BOOL PreTranslateMessage(MSG* pMsg);
     virtual BOOL OnSetActive();
     virtual BOOL OnApply();
+    void ShowPPage(CUnknown* (__stdcall* CreateInstance)(LPUNKNOWN lpunk, HRESULT* phr));
 
     DECLARE_MESSAGE_MAP()
 

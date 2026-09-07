@@ -25,7 +25,6 @@ namespace DSObjects
 {
     class COuterEVR
         : public CUnknown
-        , public IVMRffdshow9
         , public IVMRMixerBitmap9
         , public IBaseFilter
     {
@@ -65,11 +64,6 @@ namespace DSObjects
             hr = m_pEVR ? m_pEVR->QueryInterface(riid, ppv) : E_NOINTERFACE;
             if (m_pEVR && FAILED(hr)) {
                 hr = m_pAllocatorPresenter ? m_pAllocatorPresenter->QueryInterface(riid, ppv) : E_NOINTERFACE;
-                if (FAILED(hr)) {
-                    if (riid == __uuidof(IVMRffdshow9)) { // Support ffdshow queueing. We show ffdshow that this is patched MPC-HC.
-                        return GetInterface((IVMRffdshow9*)this, ppv);
-                    }
-                }
             }
 
             return SUCCEEDED(hr) ? hr : __super::NonDelegatingQueryInterface(riid, ppv);
@@ -88,12 +82,6 @@ namespace DSObjects
         STDMETHODIMP SetSyncSource(__in_opt  IReferenceClock* pClock);
         STDMETHODIMP GetSyncSource(__deref_out_opt  IReferenceClock** pClock);
         STDMETHODIMP GetClassID(__RPC__out CLSID* pClassID);
-
-        // IVMRffdshow9
-        STDMETHODIMP support_ffdshow() {
-            queue_ffdshow_support = true;
-            return S_OK;
-        }
 
         // IVMRMixerBitmap9
         STDMETHODIMP GetAlphaBitmapParameters(VMR9AlphaBitmap* pBmpParms);

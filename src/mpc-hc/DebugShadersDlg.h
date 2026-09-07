@@ -20,17 +20,21 @@
 
 #pragma once
 
-#include "ResizableLib/ResizableDialog.h"
+#include "CMPCThemeModelessResizableDialog.h"
 
 #include "EventDispatcher.h"
 #include "PixelShaderCompiler.h"
 #include "Shaders.h"
 #include "TimerWrappers.h"
+#include "CMPCThemeComboBox.h"
+#include "CMPCThemeEdit.h"
+#include "CMPCThemeToolTipCtrl.h"
 
-class CModelessDialog : public CResizableDialog
+//mainly, this class seems to be used to block <enter> closing the dialog, and returning focus to the player when closed
+class CModelessDialog : public CMPCThemeModelessResizableDialog
 {
 public:
-    CModelessDialog(UINT nIDTemplate);
+    CModelessDialog(UINT nIDTemplate, CWnd* pParent);
     BOOL DestroyWindow();
 
 private:
@@ -59,11 +63,15 @@ private:
         TIMER_ONETIME_END = TIMER_ONETIME_START + 16,
     };
 
+    UINT GetDialogTemplateID() const override { return IDD; }
+    void SetupAnchors() override;
+
 protected:
     int m_iVersion;
-    CComboBox m_Shaders;
-    CEdit m_DebugInfo;
+    CMPCThemeComboBox m_Shaders;
+    CMPCThemeEdit m_DebugInfo;
     CPixelShaderCompiler m_Compiler;
+    ShaderList m_list;
 
     EventClient m_eventc;
     void EventCallback(MpcEvent ev);
@@ -73,13 +81,18 @@ protected:
 
     void ShaderFileChangedCooldownCallback();
     void OnListRefresh();
+    int AppendShader(int loc, CString filePath);
+    CString GetShaderPath(int loc);
 
     virtual void DoDataExchange(CDataExchange* pDX) override;
-    void OnTimer(UINT_PTR nIDEvent);
+    virtual BOOL OnInitDialog() override;
 
-    void OnRecompileShader();
-    void OnSelChange();
-    void OnVersionClicked();
+    BOOL PreTranslateMessage(MSG* pMsg);
 
     DECLARE_MESSAGE_MAP()
+    afx_msg BOOL OnToolTipNotify(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
+    afx_msg void OnTimer(UINT_PTR nIDEvent);
+    afx_msg void OnRecompileShader();
+    afx_msg void OnSelChange();
+    afx_msg void OnVersionClicked();
 };

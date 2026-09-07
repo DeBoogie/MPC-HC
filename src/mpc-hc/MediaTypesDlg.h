@@ -24,12 +24,16 @@
 #include <afxwin.h>
 #include <atlcoll.h>
 #include "IGraphBuilder2.h"
-#include "ResizableLib/ResizableDialog.h"
+#include "CMPCThemeResizableDialog.h"
+#include "CMPCThemeEdit.h"
+#include "CMPCThemeComboBox.h"
 
+
+#define WM_EXTERNALCLOSE WM_APP + 0x100
 
 // CMediaTypesDlg dialog
 
-class CMediaTypesDlg : public CResizableDialog
+class CMediaTypesDlg : public CMPCThemeResizableDialog
 {
     //  DECLARE_DYNAMIC(CMediaTypesDlg)
 
@@ -46,8 +50,8 @@ public:
 
     // Dialog Data
     enum { IDD = IDD_MEDIATYPES_DLG };
-    CComboBox m_pins;
-    CEdit m_report;
+    CMPCThemeComboBox m_pins;
+    CMPCThemeEdit m_report;
 
 protected:
     virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -56,4 +60,5 @@ protected:
     DECLARE_MESSAGE_MAP()
 public:
     afx_msg void OnCbnSelchangeCombo1();
+    afx_msg LRESULT OnExternalClose(WPARAM wParam, LPARAM lParam);
 };

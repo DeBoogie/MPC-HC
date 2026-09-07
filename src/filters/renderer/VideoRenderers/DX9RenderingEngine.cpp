@@ -20,10 +20,12 @@
 
 #include "stdafx.h"
 #include <algorithm>
+#pragma warning(disable: 5033) // warning C5033: 'register' is no longer a supported storage class
 #include "lcms2/library/include/lcms2.h"
 #include "../../../mpc-hc/resource.h"
 #include "Dither.h"
 #include "DX9RenderingEngine.h"
+#include "../../../mpc-hc/ColorProfileUtil.h"
 
 // UUID for vorpX hack
 static const IID IID_D3D9VorpVideoCaptureTexture = { 0x8a49d79, 0x8646, 0x4867, { 0xb9, 0x34, 0x13, 0x12, 0xe4, 0x4b, 0x23, 0xdb } };
@@ -58,7 +60,7 @@ static void AdjustQuad(MYD3DVERTEX<texcoords>* v, double dx, double dy)
             v[i].t[j].v -= (float)(offset * dy);
         }
 
-        if constexpr (texcoords > 1) {
+        if constexpr(texcoords > 1) {
             v[i].t[texcoords - 1].u -= offset;
             v[i].t[texcoords - 1].v -= offset;
         }
@@ -212,8 +214,8 @@ void CDX9RenderingEngine::CleanupRenderingEngine()
     }
 
     for (int i = 0; i < 2; i++) {
-        m_pTemporaryVideoTextures[i] = nullptr;
-        m_pTemporaryScreenSpaceTextures[i] = nullptr;
+        m_pTemporaryVideoTextures[i].Release();
+        m_pTemporaryScreenSpaceTextures[i].Release();
     }
 }
 
@@ -227,7 +229,7 @@ HRESULT CDX9RenderingEngine::CreateVideoSurfaces()
 
     // Free previously allocated temporary video textures, because the native video size might have been changed!
     for (int i = 0; i < 2; i++) {
-        m_pTemporaryVideoTextures[i] = nullptr;
+        m_pTemporaryVideoTextures[i].Release();
     }
 
     CheckPointer(m_pD3DDev, E_POINTER);
@@ -368,6 +370,7 @@ HRESULT CDX9RenderingEngine::RenderVideoDrawPath(IDirect3DSurface9* pRenderTarge
         bResizerShaders = false;
         bCustomScreenSpacePixelShaders = false;
         bFinalPass = false;
+        screenSpacePassCount = 1;
     }
 
     hr = InitScreenSpacePipeline(screenSpacePassCount, pRenderTarget);
@@ -589,8 +592,8 @@ HRESULT CDX9RenderingEngine::InitTemporaryScreenSpaceTextures(int count)
 
     for (int i = 0; i < count; i++) {
         if (m_pTemporaryScreenSpaceTextures[i] == nullptr) {
-            m_TemporaryScreenSpaceTextureSize = CSize(std::min(m_ScreenSize.cx, (long)m_Caps.MaxTextureWidth),
-                                                      std::min(std::max(m_ScreenSize.cy, m_nativeVideoSize.cy), (long)m_Caps.MaxTextureHeight));
+            m_TemporaryScreenSpaceTextureSize = CSize(std::min(std::max(m_BackBufferSize.cx, m_nativeVideoSize.cx), (long)m_Caps.MaxTextureWidth),
+                                                      std::min(std::max(m_BackBufferSize.cy, m_nativeVideoSize.cy), (long)m_Caps.MaxTextureHeight));
             hr = m_pD3DDev->CreateTexture(
                      m_TemporaryScreenSpaceTextureSize.cx,
                      m_TemporaryScreenSpaceTextureSize.cy,
@@ -604,7 +607,7 @@ HRESULT CDX9RenderingEngine::InitTemporaryScreenSpaceTextures(int count)
             if (FAILED(hr)) {
                 // Free all textures
                 for (int j = 0; j < 2; j++) {
-                    m_pTemporaryScreenSpaceTextures[j] = nullptr;
+                    m_pTemporaryScreenSpaceTextures[j].Release();
                 }
 
                 return hr;
@@ -614,7 +617,7 @@ HRESULT CDX9RenderingEngine::InitTemporaryScreenSpaceTextures(int count)
 
     // Free unnecessary textures
     for (int i = count; i < 2; i++) {
-        m_pTemporaryScreenSpaceTextures[i] = nullptr;
+        m_pTemporaryScreenSpaceTextures[i].Release();
     }
 
     return hr;
@@ -954,6 +957,28 @@ HRESULT CDX9RenderingEngine::TextureResizeBicubic2pass(IDirect3DTexture9* pTextu
 }
 */
 
+HRESULT CDX9RenderingEngine::Resize(IDirect3DTexture9* pTexture, const CRect& srcRect, const CRect& destRect)
+{
+    HRESULT hr = E_FAIL;
+
+    const CRenderersSettings& r = GetRenderersSettings();
+
+    DWORD iDX9Resizer = r.iDX9Resizer;
+    Vector dst[4];
+    Transform(destRect, dst);
+
+    if (iDX9Resizer == 0 || iDX9Resizer == 1) {
+        D3DTEXTUREFILTERTYPE Filter = iDX9Resizer == 0 ? D3DTEXF_POINT : D3DTEXF_LINEAR;
+        hr = TextureResize(pTexture, dst, Filter, srcRect);
+    } else if (iDX9Resizer == 2) {
+        hr = TextureResizeBilinear(pTexture, dst, srcRect);
+    } else if (iDX9Resizer >= 3) {
+        hr = TextureResizeBicubic1pass(pTexture, dst, srcRect);
+    }
+
+	return hr;
+}
+
 HRESULT CDX9RenderingEngine::InitFinalPass()
 {
     HRESULT hr;
@@ -1056,20 +1081,7 @@ HRESULT CDX9RenderingEngine::InitFinalPass()
     // Initialize the color management if necessary
     if (bColorManagement) {
         // Get the ICC profile path
-        TCHAR* iccProfilePath = 0;
-        HDC hDC = GetDC(m_hWnd);
-
-        if (hDC != nullptr) {
-            DWORD icmProfilePathSize = 0;
-            GetICMProfile(hDC, &icmProfilePathSize, nullptr);
-            iccProfilePath = DEBUG_NEW TCHAR[icmProfilePathSize];
-            if (!GetICMProfile(hDC, &icmProfilePathSize, iccProfilePath)) {
-                delete [] iccProfilePath;
-                iccProfilePath = 0;
-            }
-
-            ReleaseDC(m_hWnd, hDC);
-        }
+        TCHAR* iccProfilePath = ColorProfileUtil::getIccProfilePath(m_hWnd);
 
         // Create the 3D LUT texture
         m_Lut3DSize = 64; // 64x64x64 LUT is enough for high-quality color management
@@ -1089,7 +1101,15 @@ HRESULT CDX9RenderingEngine::InitFinalPass()
             return hr;
         }
 
-        float* lut3DFloat32 = DEBUG_NEW float[m_Lut3DEntryCount * 3];
+        float* lut3DFloat32;
+        try {
+            lut3DFloat32 = DEBUG_NEW float[m_Lut3DEntryCount * 3];
+        } catch (...) {
+            m_bColorManagement = false;
+            delete[] iccProfilePath;
+            CleanupFinalPass();
+            return E_FAIL;
+        }
         hr = CreateIccProfileLut(iccProfilePath, lut3DFloat32);
         delete [] iccProfilePath;
         if (FAILED(hr)) {
@@ -1098,7 +1118,15 @@ HRESULT CDX9RenderingEngine::InitFinalPass()
             return hr;
         }
 
-        D3DXFLOAT16* lut3DFloat16 = DEBUG_NEW D3DXFLOAT16[m_Lut3DEntryCount * 3];
+        D3DXFLOAT16* lut3DFloat16;
+        try {
+            lut3DFloat16 = DEBUG_NEW D3DXFLOAT16[m_Lut3DEntryCount * 3];
+        } catch (...) {
+            m_bColorManagement = false;
+            delete[] lut3DFloat32;
+            CleanupFinalPass();
+            return E_FAIL;
+        }
         m_pD3DXFloat32To16Array(lut3DFloat16, lut3DFloat32, m_Lut3DEntryCount * 3);
         delete [] lut3DFloat32;
 
@@ -1515,6 +1543,7 @@ HRESULT CDX9RenderingEngine::TextureCopy(IDirect3DTexture9* pTexture)
 
     hr = m_pD3DDev->SetTexture(0, pTexture);
 
+    // use D3DTEXF_LINEAR here if wanting to support hw linear sampling in pixel shaders
     return TextureBlt(m_pD3DDev, v, D3DTEXF_POINT);
 }
 
@@ -1709,7 +1738,9 @@ HRESULT CDX9RenderingEngine::SetCustomPixelShader(LPCSTR pSrcData, LPCSTR pTarge
 
     if (!pSrcData && !pTarget) {
         pPixelShaders->RemoveAll();
-        m_pD3DDev->SetPixelShader(nullptr);
+        if (m_pD3DDev) {
+            m_pD3DDev->SetPixelShader(nullptr);
+        }
         return S_OK;
     }
 
@@ -1720,6 +1751,11 @@ HRESULT CDX9RenderingEngine::SetCustomPixelShader(LPCSTR pSrcData, LPCSTR pTarge
     CExternalPixelShader Shader;
     Shader.m_SourceData = pSrcData;
     Shader.m_SourceTarget = pTarget;
+
+    if (Shader.m_SourceData.Find("$MinimumShaderProfile: ps_4_0") > 0 || Shader.m_SourceData.Find("$MinimumShaderProfile: ps_5_0") > 0) {
+        // incompatible shader
+        return E_INVALIDARG;
+    }
 
     CComPtr<IDirect3DPixelShader9> pPixelShader;
 

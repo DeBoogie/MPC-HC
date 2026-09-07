@@ -24,6 +24,7 @@
 #include "DSMPropertyBag.h"
 #include "MainFrm.h"
 #include <mvrInterfaces.h>
+#include "CMPCTheme.h"
 
 #define SEEKBAR_HEIGHT       60
 #define SLIDER_BAR_MARGIN    10
@@ -50,14 +51,30 @@ CVMROSD::CVMROSD(CMainFrame* pMainFrame)
     , m_llSeekPos(0)
     , m_bShowMessage(true)
     , m_nMessagePos(OSD_NOMESSAGE)
+    , timerExpires(GetTickCount())
 {
-    m_colors[OSD_TRANSPARENT] = RGB(0,     0,   0);
-    m_colors[OSD_BACKGROUND]  = RGB(32,   40,  48);
-    m_colors[OSD_BORDER]      = RGB(48,   56,  62);
-    m_colors[OSD_TEXT]        = RGB(224, 224, 224);
-    m_colors[OSD_BAR]         = RGB(64,   72,  80);
-    m_colors[OSD_CURSOR]      = RGB(192, 200, 208);
-    m_colors[OSD_DEBUGCLR]    = RGB(128, 136, 144);
+    m_colors[OSD_TRANSPARENT] = RGB(0, 0, 0);
+    if (AppIsThemeLoaded()) {
+        m_colors[OSD_BACKGROUND] = CMPCTheme::ContentBGColor;
+        m_colors[OSD_BORDER] = CMPCTheme::WindowBorderColorDim;
+        m_colors[OSD_TEXT] = CMPCTheme::TextFGColor;
+        m_colors[OSD_BAR] = CMPCTheme::ScrollBGColor;
+        m_colors[OSD_CURSOR] = CMPCTheme::ScrollThumbColor;
+        m_colors[OSD_DEBUGCLR] = CMPCTheme::DebugColorRed;
+
+        for (int a = OSD_TRANSPARENT + 1; a < std::size(m_colors); a++) {
+            if (m_colors[a] == 0) { //we cannot permit any standard color to be transparent=RGB(0,0,0)
+                m_colors[a] = RGB(1,1,1);
+            }
+        }
+    } else {
+        m_colors[OSD_BACKGROUND] = RGB(32, 40, 48);
+        m_colors[OSD_BORDER] = RGB(48, 56, 62);
+        m_colors[OSD_TEXT] = RGB(224, 224, 224);
+        m_colors[OSD_BAR] = RGB(64, 72, 80);
+        m_colors[OSD_CURSOR] = RGB(192, 200, 208);
+        m_colors[OSD_DEBUGCLR] = RGB(128, 136, 144);
+    }
 
     m_penBorder.CreatePen(PS_SOLID, 1, m_colors[OSD_BORDER]);
     m_penCursor.CreatePen(PS_SOLID, 4, m_colors[OSD_CURSOR]);
@@ -76,6 +93,13 @@ CVMROSD::~CVMROSD()
 {
     Stop();
     m_memDC.DeleteDC();
+    m_penBorder.DeleteObject();
+    m_penCursor.DeleteObject();
+    m_brushBack.DeleteObject();
+    m_brushBar.DeleteObject();
+    m_brushChapter.DeleteObject();
+    m_debugBrushBack.DeleteObject();
+    m_debugPenBorder.DeleteObject();
 }
 
 void CVMROSD::SetSize(const CRect& wndRect, const CRect& videoRect)
@@ -366,12 +390,14 @@ void CVMROSD::UpdateSeekBarPos(CPoint point)
     m_llSeekPos = std::max(m_llSeekPos, m_llSeekMin);
     m_llSeekPos = std::min(m_llSeekPos, m_llSeekMax);
 
-    if (AfxGetAppSettings().bFastSeek ^ (GetKeyState(VK_SHIFT) < 0)) {
-        m_llSeekPos = m_pMainFrame->GetClosestKeyFrame(m_llSeekPos);
+    const CAppSettings& s = AfxGetAppSettings();
+    if (s.bFastSeek ^ (GetKeyState(VK_SHIFT) < 0)) {
+        REFERENCE_TIME rtMaxDiff = s.bAllowInaccurateFastseek ? 200000000LL : std::min(100000000LL, m_llSeekMax / 30);
+        m_llSeekPos = m_pMainFrame->GetClosestKeyFrame(m_llSeekPos, rtMaxDiff, rtMaxDiff);
     }
 
     if (m_pWnd) {
-        AfxGetApp()->GetMainWnd()->PostMessage(WM_HSCROLL, NULL, reinterpret_cast<LPARAM>(m_pWnd->m_hWnd));
+        AfxGetApp()->GetMainWnd()->PostMessage(WM_HSCROLL, (WPARAM)0, reinterpret_cast<LPARAM>(m_pWnd->m_hWnd));
     }
 }
 
@@ -476,9 +502,21 @@ void CVMROSD::TimerFunc(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime)
 {
     CVMROSD* pVMROSD = (CVMROSD*)nIDEvent;
     if (pVMROSD) {
-        pVMROSD->ClearMessage();
+        if (!pVMROSD->currentTime.IsEmpty()) {
+            pVMROSD->DisplayTime(pVMROSD->currentTime);
+        } else {
+            pVMROSD->ClearMessage();
+        }
     }
     KillTimer(hWnd, nIDEvent);
+}
+
+void CVMROSD::ClearTime()
+{
+    currentTime = L"";
+    if (timerExpires == timerExpiresForTime) {
+        ClearMessage();
+    }
 }
 
 void CVMROSD::ClearMessage(bool hide)
@@ -505,6 +543,16 @@ void CVMROSD::ClearMessage(bool hide)
 
     m_pMainFrame->RepaintVideo();
 }
+
+void CVMROSD::DisplayTime(LPCTSTR strTime)
+{
+    currentTime = strTime;
+    if (timerExpires < GetTickCount() || timerExpires == timerExpiresForTime) {
+        DisplayMessage(OSD_TOPLEFT, strTime, 1000);
+        timerExpiresForTime = timerExpires;
+    }
+}
+
 
 void CVMROSD::DisplayMessage(OSD_MESSAGEPOS nPos, LPCTSTR strMsg, int nDuration, int iFontSize, CString fontName)
 {
@@ -533,7 +581,7 @@ void CVMROSD::DisplayMessage(OSD_MESSAGEPOS nPos, LPCTSTR strMsg, int nDuration,
         } else {
             m_iFontSize = iFontSize;
         }
-        if (m_iFontSize < 10 || m_iFontSize > 26) {
+        if (m_iFontSize < 10 || m_iFontSize > 50) {
             m_iFontSize = 20;
         }
         if (fontName.IsEmpty()) {
@@ -554,6 +602,7 @@ void CVMROSD::DisplayMessage(OSD_MESSAGEPOS nPos, LPCTSTR strMsg, int nDuration,
         if (m_pWnd) {
             m_pWnd->KillTimer((UINT_PTR)this);
             if (nDuration != -1) {
+                timerExpires = GetTickCount() + nDuration;
                 m_pWnd->SetTimer((UINT_PTR)this, nDuration, TimerFunc);
             }
         }
@@ -588,6 +637,11 @@ void CVMROSD::HideMessage(bool hide)
 void CVMROSD::EnableShowMessage(bool enabled)
 {
     m_bShowMessage = enabled;
+}
+
+bool CVMROSD::CanShowMessage()
+{
+    return m_bShowMessage && (m_pVMB || m_pMFVMB || m_pMVTO);
 }
 
 void CVMROSD::EnableShowSeekBar(bool enabled)

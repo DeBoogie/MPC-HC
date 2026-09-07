@@ -22,15 +22,17 @@
 
 #include <future>
 #include "mpc-hc_config.h"
+#include "CMPCThemeResizablePropertyPage.h"
+#include "CMPCThemeEdit.h"
 
 // CPPageFileMediaInfo dialog
 
-class CPPageFileMediaInfo : public CPropertyPage
+class CPPageFileMediaInfo : public CMPCThemeResizablePropertyPage
 {
     DECLARE_DYNAMIC(CPPageFileMediaInfo)
 
 private:
-    CEdit m_mediainfo;
+    CMPCThemeEdit m_mediainfo;
     CFont m_font;
 
     CString m_fn, m_path;
@@ -45,9 +47,7 @@ public:
     // Dialog Data
     enum { IDD = IDD_FILEMEDIAINFO };
 
-#if !USE_STATIC_MEDIAINFO
     static bool HasMediaInfo();
-#endif
 
     void OnSaveAs();
 

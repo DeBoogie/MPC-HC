@@ -1,5 +1,5 @@
 /*
- * (C) 2013-2017 see Authors.txt
+ * (C) 2013-2018 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -30,16 +30,24 @@ DEFINE_GUID(GUID_LAVAudio, 0xE8E73B6B, 0x4CB3, 0x44A4, 0xBE, 0x99, 0x4F, 0x7B, 0
 #include "FGFilter.h"
 #include "ComPropertySheet.h"
 
-#include "LAVFilters/src/common/includes/LAVSplitterSettings.h"
-#include "LAVFilters/src/decoder/LAVVideo/LAVVideoSettings.h"
-#include "LAVFilters/src/decoder/LAVAudio/LAVAudioSettings.h"
+#include "LAVFilters/src/include/LAVSplitterSettings.h"
+#include "LAVFilters/src/include/LAVVideoSettings.h"
+#include "LAVFilters/src/include/LAVAudioSettings.h"
+
+#define IDS_R_INTERNAL_LAVSPLITTER           IDS_R_INTERNAL_FILTERS  _T("\\LAVSplitter")
+#define IDS_R_INTERNAL_LAVVIDEO              IDS_R_INTERNAL_FILTERS  _T("\\LAVVideo")
+#define IDS_R_INTERNAL_LAVVIDEO_OUTPUTFORMAT IDS_R_INTERNAL_LAVVIDEO _T("\\OutputFormat")
+#define IDS_R_INTERNAL_LAVVIDEO_HWACCEL      IDS_R_INTERNAL_LAVVIDEO _T("\\HWAccel")
+#define IDS_R_INTERNAL_LAVAUDIO              IDS_R_INTERNAL_FILTERS  _T("\\LAVAudio")
 
 class CFGFilterLAV : public CFGFilterFile
 {
 protected:
     static CList<const IBaseFilter*> s_instances;
+    static QWORD lav_version;
+    bool isPreview;
 
-    CFGFilterLAV(const CLSID& clsid, CString path, CStringW name, bool bAddLowMeritSuffix, UINT64 merit);
+    CFGFilterLAV(const CLSID& clsid, CString path, CStringW name, bool bAddLowMeritSuffix, UINT64 merit, bool bIsPreview);
 
 public:
     enum LAVFILTER_TYPE {
@@ -54,7 +62,8 @@ public:
     static bool CheckVersion(CString filtersPath);
     static CString GetVersion(LAVFILTER_TYPE filterType = INVALID);
 
-    static CFGFilterLAV* CreateFilter(LAVFILTER_TYPE filterType, UINT64 merit = MERIT64_DO_USE, bool bAddLowMeritSuffix = false);
+    static CFGFilterLAV* CreateFilter(LAVFILTER_TYPE filterType, UINT64 merit = MERIT64_DO_USE, bool bAddLowMeritSuffix = false, bool bIsPreview = false);
+    static CFGFilterLAV* CreateFilterPreview(LAVFILTER_TYPE filterType, UINT64 merit = MERIT64_DO_USE, bool bAddLowMeritSuffix = false);
 
     static bool IsInternalInstance(IBaseFilter* pBF, LAVFILTER_TYPE* pLAVFilterType = nullptr);
     static void ResetInternalInstances() {
@@ -72,7 +81,7 @@ public:
             if (SUCCEEDED(pLAVFilter->Create(&pBF, pUnks))) {
                 if (CComQIPtr<ISpecifyPropertyPages> pSPP = pBF) {
                     CComPropertySheet ps(IDS_PROPSHEET_PROPERTIES, pParendWnd);
-                    ps.AddPages(pSPP, iIgnoredPage);
+                    ps.AddPages(pSPP, true, iIgnoredPage);
                     ps.DoModal();
 
                     if (CComQIPtr<filterInterface> pLAVFSettings = pBF) {
@@ -94,7 +103,7 @@ class CFGFilterLAVSplitterBase : public CFGFilterLAV
 protected:
     CAtlList<CStringA> m_enabledFormats, m_disabledFormats;
 
-    CFGFilterLAVSplitterBase(CString path, const CLSID& clsid, CStringW name, bool bAddLowMeritSuffix, UINT64 merit);
+    CFGFilterLAVSplitterBase(CString path, const CLSID& clsid, CStringW name, bool bAddLowMeritSuffix, UINT64 merit, bool bIsPreview);
 
     void SetEnabledDisabledFormats(CComQIPtr<ILAVFSettings> pLAVFSettings);
 
@@ -111,6 +120,8 @@ public:
         BOOL bSubstreams;
 
         BOOL bMatroskaExternalSegments;
+
+        BOOL bStreamSwitchReselectSubs;
 
         BOOL bStreamSwitchRemoveAudio;
         BOOL bImpairedAudio;
@@ -144,13 +155,13 @@ public:
 class CFGFilterLAVSplitter : public CFGFilterLAVSplitterBase
 {
 public:
-    CFGFilterLAVSplitter(CString path, UINT64 merit = MERIT64_DO_USE, bool bAddLowMeritSuffix = false);
+    CFGFilterLAVSplitter(CString path, UINT64 merit = MERIT64_DO_USE, bool bAddLowMeritSuffix = false, bool bIsPreview = false);
 };
 
 class CFGFilterLAVSplitterSource : public CFGFilterLAVSplitterBase
 {
 public:
-    CFGFilterLAVSplitterSource(CString path, UINT64 merit = MERIT64_DO_USE, bool bAddLowMeritSuffix = false);
+    CFGFilterLAVSplitterSource(CString path, UINT64 merit = MERIT64_DO_USE, bool bAddLowMeritSuffix = false, bool bIsPreview = false);
 };
 
 class CFGFilterLAVVideo : public CFGFilterLAV
@@ -174,6 +185,9 @@ public:
         DWORD dwDitherMode;
         DWORD dwHWAccelDeviceDXVA2;
         DWORD dwHWAccelDeviceDXVA2Desc;
+        DWORD dwHWAccelDeviceD3D11;
+        DWORD dwHWAccelDeviceD3D11Desc;
+        BOOL bHWAccelCUVIDXVA;
 
         void LoadSettings();
         void SaveSettings();
@@ -184,7 +198,7 @@ public:
 
     static const CString filename;
 
-    CFGFilterLAVVideo(CString path, UINT64 merit = MERIT64_DO_USE, bool bAddLowMeritSuffix = false);
+    CFGFilterLAVVideo(CString path, UINT64 merit = MERIT64_DO_USE, bool bAddLowMeritSuffix = false, bool bIsPreview = false);
 
     virtual HRESULT Create(IBaseFilter** ppBF, CInterfaceList<IUnknown, &IID_IUnknown>& pUnks);
 
@@ -202,6 +216,7 @@ public:
         int iDRCLevel;
         BOOL bBitstream[Bitstream_NB];
         BOOL bDTSHDFraming;
+        BOOL bBitstreamingFallback;
         BOOL bAutoAVSync;
         BOOL bExpandMono;
         BOOL bExpand61;
@@ -230,7 +245,7 @@ public:
 
     static const CString filename;
 
-    CFGFilterLAVAudio(CString path, UINT64 merit = MERIT64_DO_USE, bool bAddLowMeritSuffix = false);
+    CFGFilterLAVAudio(CString path, UINT64 merit = MERIT64_DO_USE, bool bAddLowMeritSuffix = false, bool bIsPreview = false);
 
     virtual HRESULT Create(IBaseFilter** ppBF, CInterfaceList<IUnknown, &IID_IUnknown>& pUnks);
 

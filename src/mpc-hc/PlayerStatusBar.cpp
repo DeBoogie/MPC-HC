@@ -24,6 +24,8 @@
 #include "PlayerStatusBar.h"
 #include "MainFrm.h"
 #include "DSUtil.h"
+#include "CMPCTheme.h"
+#include "DpiHelper.h"
 
 // CPlayerStatusBar
 
@@ -35,6 +37,8 @@ CPlayerStatusBar::CPlayerStatusBar(CMainFrame* pMainFrame)
     , m_time(pMainFrame->m_dpi, true, false)
     , m_bmid(0)
     , m_hIcon(0)
+    , m_rtNow(0LL)
+    , m_rtDur(0LL)
     , m_time_rect(-1, -1, -1, -1)
 {
     EventRouter::EventSelection fires;
@@ -57,13 +61,21 @@ BOOL CPlayerStatusBar::Create(CWnd* pParentWnd)
 
     // Should never be RTLed
     ModifyStyleEx(WS_EX_LAYOUTRTL, WS_EX_NOINHERITLAYOUT);
-
-    m_tooltip.Create(this, TTS_NOPREFIX | TTS_ALWAYSTIP);
-    m_tooltip.SetDelayTime(TTDT_INITIAL, 0);
-    m_tooltip.SetDelayTime(TTDT_AUTOPOP, 2500);
-    m_tooltip.SetDelayTime(TTDT_RESHOW, 0);
-    m_tooltip.AddTool(&m_time, IDS_TOOLTIP_REMAINING_TIME);
-    m_tooltip.AddTool(&m_status);
+    if (AppIsThemeLoaded()) {
+        themedToolTip.Create(this, TTS_NOPREFIX | TTS_ALWAYSTIP);
+        themedToolTip.SetDelayTime(TTDT_INITIAL, 0);
+        themedToolTip.SetDelayTime(TTDT_AUTOPOP, 2500);
+        themedToolTip.SetDelayTime(TTDT_RESHOW, 0);
+        themedToolTip.AddTool(&m_time, IDS_TOOLTIP_REMAINING_TIME);
+        themedToolTip.AddTool(&m_status);
+    } else {
+        m_tooltip.Create(this, TTS_NOPREFIX | TTS_ALWAYSTIP);
+        m_tooltip.SetDelayTime(TTDT_INITIAL, 0);
+        m_tooltip.SetDelayTime(TTDT_AUTOPOP, 2500);
+        m_tooltip.SetDelayTime(TTDT_RESHOW, 0);
+        m_tooltip.AddTool(&m_time, IDS_TOOLTIP_REMAINING_TIME);
+        m_tooltip.AddTool(&m_status);
+    }
 
     return ret;
 }
@@ -83,8 +95,12 @@ BOOL CPlayerStatusBar::PreCreateWindow(CREATESTRUCT& cs)
 CSize CPlayerStatusBar::CalcFixedLayout(BOOL bStretch, BOOL bHorz)
 {
     CSize ret = __super::CalcFixedLayout(bStretch, bHorz);
-    ret.cy = std::max<long>(ret.cy, 24);
-    ret.cy = m_pMainFrame->m_dpi.ScaleSystemToOverrideY(ret.cy);
+    if (!m_initialWindowDPI) {
+        m_initialWindowDPI = m_pMainFrame->m_dpi.DPIY(); //the initial DPI is always cached by CDialogBar and is never updated for future calculations of CalcFixedLayout
+    }
+    CSize r2 = ret;
+    ret.cy = m_pMainFrame->m_dpi.ScaleArbitraryToOverrideY(ret.cy, m_initialWindowDPI); //we must scale by initial DPI, NOT current DPI
+    ret.cy = std::max<long>(ret.cy, m_pMainFrame->m_dpi.ScaleY(24)); //at least 24px scaled to current dpi
     return ret;
 }
 
@@ -110,17 +126,23 @@ int CPlayerStatusBar::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
     m_status.SetWindowPos(&m_time, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 
+    ScaleFont();
+
     Relayout();
 
     return 0;
+}
+
+void CPlayerStatusBar::ScaleFont() {
+    m_status.ScaleFont(m_pMainFrame->m_dpi);
+    m_time.ScaleFont(m_pMainFrame->m_dpi);
 }
 
 void CPlayerStatusBar::EventCallback(MpcEvent ev)
 {
     switch (ev) {
         case MpcEvent::DPI_CHANGED:
-            m_status.ScaleFont(m_pMainFrame->m_dpi);
-            m_time.ScaleFont(m_pMainFrame->m_dpi);
+            ScaleFont();
             SetMediaTypeIcon();
             break;
 
@@ -131,54 +153,55 @@ void CPlayerStatusBar::EventCallback(MpcEvent ev)
 
 void CPlayerStatusBar::Relayout()
 {
-    BITMAP bm {};
-    if (m_bm.m_hObject) {
-        m_bm.GetBitmap(&bm);
+    const CAppSettings& s = AfxGetAppSettings();
+    CRect rfull;
+    GetClientRect(rfull);
+
+    if (s.bShowAudioFormatInStatusbar) {
+        rfull.DeflateRect(8, 4, 8, 4);
+    } else {
+        BITMAP bm{};
+        if (m_bm.m_hObject) {
+            m_bm.GetBitmap(&bm);
+        }
+#if 0
+        if (m_type.GetIcon()) {
+            CRect rtype;
+            rtype.SetRect(6, rfull.top + 4, 6 + m_pMainFrame->m_dpi.ScaleX(16), rfull.bottom - 4);
+            m_type.MoveWindow(rtype);
+        }
+
+        rfull.DeflateRect(11 + m_pMainFrame->m_dpi.ScaleX(16), 5, bm.bmWidth + 8, 4);
+#else
+        rfull.DeflateRect(8, 4, bm.bmWidth + 8, 4);
+#endif
     }
-
-    CString str;
-    CRect r, r2;
-
-    GetClientRect(r);
-
-    if (m_type.GetIcon()) {
-        r2.SetRect(6, r.top + 4, 6 + m_pMainFrame->m_dpi.ScaleX(16), r.bottom - 4);
-        m_type.MoveWindow(r2);
-    }
-
-    r.DeflateRect(11 + m_pMainFrame->m_dpi.ScaleX(16), 5, bm.bmWidth + 8, 4);
 
     if (CDC* pDC = m_time.GetDC()) {
         CFont* pOld = pDC->SelectObject(&m_time.GetFont());
+        CRect rtime = rfull;
+        CString str;
         m_time.GetWindowText(str);
-        r2 = r;
-        r2.left = r2.right - pDC->GetTextExtent(str).cx;
-        m_time.MoveWindow(&r2, FALSE);
-        m_time_rect = r2;
+        // When the time is shown on the seekbar instead (modern theme only), collapse the
+        // status-bar time control (but keep its text so GetStatusTimer() still feeds the seekbar).
+        if (str.IsEmpty() || (s.nTimeOnSeekBar == TIME_ON_SEEKBAR_ALWAYS && AppIsThemeLoaded())) {
+            rtime.left = rtime.right;
+        } else {
+            rtime.left = rtime.right - pDC->GetTextExtent(str).cx;
+        }
+        m_time.MoveWindow(&rtime, FALSE);
+        m_time_rect = rtime;
         pDC->SelectObject(pOld);
         m_time.ReleaseDC(pDC);
-    } else {
-        ASSERT(FALSE);
     }
 
-    if (CDC* pDC = m_status.GetDC()) {
-        CFont* pOld = pDC->SelectObject(&m_status.GetFont());
-        m_status.GetWindowText(str);
-        r2 = r;
-        r2.right = r2.left + pDC->GetTextExtent(str).cx;
-        // If the text is too long, ensure it won't overlap
-        // with the timer. Ellipses will be added if needed.
-        if (r2.right >= m_time_rect.left) {
-            r2.right = m_time_rect.left - 1;
-        }
-        m_status.MoveWindow(&r2, FALSE);
-        pDC->SelectObject(pOld);
-        m_status.ReleaseDC(pDC);
-    } else {
-        ASSERT(FALSE);
+    CRect rstatus = rfull;
+    if (m_time_rect.left > 0) {
+        rstatus.right = m_time_rect.left - 8;
     }
+    m_status.MoveWindow(&rstatus, FALSE);
 
-    InvalidateRect(r);
+    InvalidateRect(rfull);
     UpdateWindow();
 }
 
@@ -254,6 +277,16 @@ CString CPlayerStatusBar::PreparePathStatusMessage(CPath path)
     return path;
 }
 
+REFERENCE_TIME CPlayerStatusBar::GetTimerCurPos()
+{
+    return m_rtNow;
+}
+
+REFERENCE_TIME CPlayerStatusBar::GetTimerDuration()
+{
+    return m_rtDur;
+}
+
 CString CPlayerStatusBar::GetStatusTimer() const
 {
     CString strResult;
@@ -277,51 +310,79 @@ void CPlayerStatusBar::SetStatusTimer(CString str)
 void CPlayerStatusBar::SetStatusTimer(REFERENCE_TIME rtNow, REFERENCE_TIME rtDur, bool fHighPrecision, const GUID& timeFormat/* = TIME_FORMAT_MEDIA_TIME*/)
 {
     CString str;
-    CString posstr, durstr, rstr;
+    CString posstr;
     const CAppSettings& s = AfxGetAppSettings();
 
-    if (timeFormat == TIME_FORMAT_MEDIA_TIME) {
-        DVD_HMSF_TIMECODE tcNow, tcDur, tcRt;
+    m_rtNow = rtNow;
+    m_rtDur = rtDur;
 
-        if (fHighPrecision || s.bHighPrecisionTimer) {
-            tcNow = RT2HMSF(rtNow);
-            tcDur = RT2HMSF(rtDur);
-            tcRt  = RT2HMSF(rtDur - rtNow);
+    if (rtDur > 0) {
+        REFERENCE_TIME rtRem = rtDur - rtNow;
+        CString durstr, remstr;
+
+        if (timeFormat == TIME_FORMAT_MEDIA_TIME) {
+            DVD_HMSF_TIMECODE tcNow, tcDur, tcRem;
+
+            if (fHighPrecision || s.bHighPrecisionTimer) {
+                tcNow = RT2HMSF(rtNow);
+                tcDur = RT2HMSF(rtDur);
+                tcRem = RT2HMSF(rtRem);
+            } else {
+                tcNow = RT2HMS(rtNow);
+                tcDur = RT2HMS(rtDur);
+                tcRem = RT2HMS(rtRem);
+            }
+
+            if (tcDur.bHours > 0 || (rtNow > rtDur && tcNow.bHours > 0)) {
+                posstr.Format(_T("%02u:%02u:%02u"), tcNow.bHours, tcNow.bMinutes, tcNow.bSeconds);
+                durstr.Format(_T("%02u:%02u:%02u"), tcDur.bHours, tcDur.bMinutes, tcDur.bSeconds);
+                remstr.Format(_T("%02u:%02u:%02u"), tcRem.bHours, tcRem.bMinutes, tcRem.bSeconds);
+            } else {
+                posstr.Format(_T("%02u:%02u"), tcNow.bMinutes, tcNow.bSeconds);
+                durstr.Format(_T("%02u:%02u"), tcDur.bMinutes, tcDur.bSeconds);
+                remstr.Format(_T("%02u:%02u"), tcRem.bMinutes, tcRem.bSeconds);
+            }
+
+            if (fHighPrecision || s.bHighPrecisionTimer) {
+                posstr.AppendFormat(_T(".%03d"), int((rtNow / 10000) % 1000));
+                durstr.AppendFormat(_T(".%03d"), int((rtDur / 10000) % 1000));
+                remstr.AppendFormat(_T(".%03d"), int((rtRem / 10000) % 1000));
+            }
+        } else if (timeFormat == TIME_FORMAT_FRAME) {
+            posstr.Format(_T("%I64d"), rtNow);
+            durstr.Format(_T("%I64d"), rtDur);
+            remstr.Format(_T("%I64d"), rtRem);
+        }
+
+        if (s.fRemainingTime) {
+            str = _T("- ") + remstr + _T(" / ") + durstr;
         } else {
-            tcNow = RT2HMS_r(rtNow);
-            tcDur = RT2HMS_r(rtDur);
-            tcRt  = RT2HMS_r(rtDur - rtNow);
+            str = posstr + _T(" / ") + durstr;
         }
-
-        if (tcDur.bHours > 0 || (rtNow >= rtDur && tcNow.bHours > 0)) {
-            posstr.Format(_T("%02u:%02u:%02u"), tcNow.bHours, tcNow.bMinutes, tcNow.bSeconds);
-            rstr.Format(_T("%02u:%02u:%02u"), tcRt.bHours, tcRt.bMinutes, tcRt.bSeconds);
-        } else {
-            posstr.Format(_T("%02u:%02u"), tcNow.bMinutes, tcNow.bSeconds);
-            rstr.Format(_T("%02u:%02u"), tcRt.bMinutes, tcRt.bSeconds);
+        if (s.bTimerShowPercentage) {
+            str.AppendFormat(_T(" (%.01f%%)"), s.fRemainingTime ? (100.0 * rtRem / rtDur) : (100.0 * rtNow / rtDur));
         }
-
-        if (tcDur.bHours > 0) {
-            durstr.Format(_T("%02u:%02u:%02u"), tcDur.bHours, tcDur.bMinutes, tcDur.bSeconds);
-        } else {
-            durstr.Format(_T("%02u:%02u"), tcDur.bMinutes, tcDur.bSeconds);
-        }
-
-        if (fHighPrecision || s.bHighPrecisionTimer) {
-            posstr.AppendFormat(_T(".%03d"), int((rtNow / 10000) % 1000));
-            durstr.AppendFormat(_T(".%03d"), int((rtDur / 10000) % 1000));
-            rstr.AppendFormat(_T(".%03d"), int(((rtDur - rtNow) / 10000) % 1000));
-        }
-    } else if (timeFormat == TIME_FORMAT_FRAME) {
-        posstr.Format(_T("%I64d"), rtNow);
-        durstr.Format(_T("%I64d"), rtDur);
-        rstr.Format(_T("%I64d"), rtDur - rtNow);
-    }
-
-    if (!s.fRemainingTime) {
-        str = ((rtDur <= 0) || (rtDur < rtNow)) ? posstr : posstr + _T(" / ") + durstr;
     } else {
-        str = ((rtDur <= 0) || (rtDur < rtNow)) ? posstr : _T("- ") + rstr + _T(" / ") + durstr;
+        if (timeFormat == TIME_FORMAT_MEDIA_TIME) {
+            DVD_HMSF_TIMECODE tcNow;
+            if (fHighPrecision || s.bHighPrecisionTimer) {
+                tcNow = RT2HMSF(rtNow);
+            } else {
+                tcNow = RT2HMS(rtNow);
+            }
+
+            if (tcNow.bHours > 0) {
+                str.Format(_T("%02u:%02u:%02u"), tcNow.bHours, tcNow.bMinutes, tcNow.bSeconds);
+            } else {
+                str.Format(_T("%02u:%02u"), tcNow.bMinutes, tcNow.bSeconds);
+            }
+
+            if (fHighPrecision || s.bHighPrecisionTimer) {
+                str.AppendFormat(_T(".%03d"), int((rtNow / 10000) % 1000));
+            }
+        } else if (timeFormat == TIME_FORMAT_FRAME) {
+            str.Format(_T("%I64d"), rtNow);
+        }
     }
 
     SetStatusTimer(str);
@@ -351,6 +412,7 @@ END_MESSAGE_MAP()
 
 void CPlayerStatusBar::SetMediaTypeIcon()
 {
+#if 0
     if (m_hIcon) {
         DestroyIcon(m_hIcon);
     }
@@ -360,6 +422,7 @@ void CPlayerStatusBar::SetMediaTypeIcon()
     m_type.SetIcon(m_hIcon);
 
     Relayout();
+#endif
 }
 
 BOOL CPlayerStatusBar::OnEraseBkgnd(CDC* pDC)
@@ -393,13 +456,22 @@ void CPlayerStatusBar::OnPaint()
         r.InflateRect(1, 0, 1, 0);
     }
 
-    dc.Draw3dRect(&r, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
+    if (AppIsThemeLoaded()) {
+        dc.FillSolidRect(&r, CMPCTheme::NoBorderColor);
+        CRect top(r.left, r.top, r.right, r.top + 1);
+        dc.FillSolidRect(&top, CMPCTheme::WindowBGColor);
+    } else {
+        dc.Draw3dRect(&r, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
+    }
 
     r.DeflateRect(1, 1);
 
     dc.FillSolidRect(&r, 0);
 
-    if (m_bm.m_hObject) {
+    // Only draw the audio-channel bitmap when Relayout actually reserves room for it (Audio Info off).
+    // When Audio Info is on, no space is reserved and the time control overlaps this area; drawing the
+    // bitmap here would leave it exposed once the time collapses for "time on seekbar" (#3256).
+    if (m_bm.m_hObject && !AfxGetAppSettings().bShowAudioFormatInStatusbar) {
         BITMAP bm;
         m_bm.GetBitmap(&bm);
         CDC memdc;
@@ -427,6 +499,7 @@ void CPlayerStatusBar::OnSize(UINT nType, int cx, int cy)
 void CPlayerStatusBar::OnLButtonDown(UINT nFlags, CPoint point)
 {
     CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
+    pFrame->RestoreFocus();
 
     WINDOWPLACEMENT wp;
     wp.length = sizeof(wp);
@@ -438,9 +511,7 @@ void CPlayerStatusBar::OnLButtonDown(UINT nFlags, CPoint point)
         CRect r;
         GetClientRect(r);
         CPoint p = point;
-
-        MapWindowPoints(pFrame, &point, 1);
-
+        ClientToScreen(&point);
         pFrame->PostMessage(WM_NCLBUTTONDOWN,
                             (p.x >= r.Width() - r.Height() && !pFrame->IsCaptionHidden()) ? HTBOTTOMRIGHT :
                             HTCAPTION,
@@ -465,15 +536,6 @@ BOOL CPlayerStatusBar::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
         return TRUE;
     }
 
-    if (!pFrame->m_fFullScreen && wp.showCmd != SW_SHOWMAXIMIZED) {
-        CRect r;
-        GetClientRect(r);
-        if (p.x >= r.Width() - r.Height() && !pFrame->IsCaptionHidden()) {
-            SetCursor(LoadCursor(nullptr, IDC_SIZENWSE));
-            return TRUE;
-        }
-    }
-
     return CDialogBar::OnSetCursor(pWnd, nHitTest, message);
 }
 
@@ -491,7 +553,11 @@ HBRUSH CPlayerStatusBar::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
 BOOL CPlayerStatusBar::PreTranslateMessage(MSG* pMsg)
 {
-    m_tooltip.RelayEvent(pMsg);
+    if (AppIsThemeLoaded()) {
+        themedToolTip.RelayEvent(pMsg);
+    } else {
+        m_tooltip.RelayEvent(pMsg);
+    }
 
     return __super::PreTranslateMessage(pMsg);
 }
@@ -512,13 +578,21 @@ void CPlayerStatusBar::OnContextMenu(CWnd* pWnd, CPoint point)
         return __super::OnContextMenu(pWnd, point);
     }
 
+    ShowTimerOptionsMenu(this, point);
+}
+
+void CPlayerStatusBar::ShowTimerOptionsMenu(CWnd* pOwner, CPoint screenPt)
+{
+    // Shared by the status-bar time control and the seekbar time section (#3256).
     CAppSettings& s = AfxGetAppSettings();
 
     enum {
         REMAINING_TIME = 1,
-        HIGH_PRECISION
+        HIGH_PRECISION,
+        SHOW_PERCENTAGE
     };
 
+    m_timerMenu.DestroyMenu();
     m_timerMenu.CreatePopupMenu();
     m_timerMenu.AppendMenu(MF_STRING | MF_ENABLED | (s.fRemainingTime ? MF_CHECKED : MF_UNCHECKED), REMAINING_TIME, ResStr(IDS_TIMER_REMAINING_TIME));
     UINT nFlags = MF_STRING;
@@ -528,14 +602,20 @@ void CPlayerStatusBar::OnContextMenu(CWnd* pWnd, CPoint point)
         nFlags |= MF_ENABLED | (s.bHighPrecisionTimer ? MF_CHECKED : MF_UNCHECKED);
     }
     m_timerMenu.AppendMenu(nFlags, HIGH_PRECISION, ResStr(IDS_TIMER_HIGH_PRECISION));
+    m_timerMenu.AppendMenu(MF_STRING | MF_ENABLED | (s.bTimerShowPercentage ? MF_CHECKED : MF_UNCHECKED), SHOW_PERCENTAGE, ResStr(IDS_TIMER_SHOW_PERCENTAGE));
 
-    switch (m_timerMenu.TrackPopupMenu(TPM_LEFTBUTTON | TPM_RETURNCMD, point.x, point.y, this)) {
+    m_timerMenu.fulfillThemeReqs();
+    switch (m_timerMenu.TrackPopupMenu(TPM_LEFTBUTTON | TPM_RETURNCMD, screenPt.x, screenPt.y, pOwner)) {
         case REMAINING_TIME:
             s.fRemainingTime = !s.fRemainingTime;
             m_eventc.FireEvent(MpcEvent::STREAM_POS_UPDATE_REQUEST);
             break;
         case HIGH_PRECISION:
             s.bHighPrecisionTimer = !s.bHighPrecisionTimer;
+            m_eventc.FireEvent(MpcEvent::STREAM_POS_UPDATE_REQUEST);
+            break;
+        case SHOW_PERCENTAGE:
+            s.bTimerShowPercentage = !s.bTimerShowPercentage;
             m_eventc.FireEvent(MpcEvent::STREAM_POS_UPDATE_REQUEST);
             break;
     }

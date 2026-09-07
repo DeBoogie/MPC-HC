@@ -207,20 +207,20 @@ bool CIfo::OpenFile(LPCTSTR strFile)
                     if (sector && (sector < sectorCount)) {
                         m_pPGCI = (ifo_hdr_t*)(m_pBuffer + sector * DVD_VIDEO_LB_LEN);
                     } else {
-                        TRACE(_T("IFO: Missing or invalid VTSM_PGCI_UT sector"));
+                        TRACE(_T("IFO: Missing or invalid VTSM_PGCI_UT sector\n"));
                     }
                     sector = OFF_VTS_PGCIT(m_pBuffer);
                     if (sector && (sector < sectorCount)) {
                         m_pPGCIT = (ifo_hdr_t*)(m_pBuffer + sector * DVD_VIDEO_LB_LEN);
                     } else {
-                        TRACE(_T("IFO: Missing or invalid VTS_PGCI sector"));
+                        TRACE(_T("IFO: Missing or invalid VTS_PGCI sector\n"));
                     }
                 } else if (IsVMG()) {
                     sector = OFF_VMGM_PGCI_UT(m_pBuffer);
                     if (sector && (sector < sectorCount)) {
                         m_pPGCI = (ifo_hdr_t*)(m_pBuffer + sector * DVD_VIDEO_LB_LEN);
                     } else {
-                        TRACE(_T("IFO: Missing or invalid VTSM_PGCI_UT sector"));
+                        TRACE(_T("IFO: Missing or invalid VTSM_PGCI_UT sector\n"));
                     }
                 }
                 bRet = (m_pPGCI != nullptr);

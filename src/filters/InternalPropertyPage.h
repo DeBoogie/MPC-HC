@@ -22,6 +22,7 @@
 #pragma once
 
 #include <atlcoll.h>
+#include "../mpc-hc/dpihelper.h"
 
 #define IPP_FONTSIZE 13
 #define IPP_SCALE(size) ((size) * m_fontheight / IPP_FONTSIZE)
@@ -37,11 +38,14 @@ class CInternalPropertyPageWnd : public CWnd
 {
     bool m_fDirty;
     CComPtr<IPropertyPageSite> m_pPageSite;
+    DpiHelper m_dpi;
 
 protected:
     CFont m_font, m_monospacefont;
     int m_fontheight;
 
+	void CalcTextRect(CRect& rect, long x, long y, long w, long border = 0);
+	void CalcRect(CRect& rect, long x, long y, long w, long h);
     virtual BOOL OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
 
 public:
@@ -63,7 +67,7 @@ public:
 
     virtual bool OnConnect(const CInterfaceList<IUnknown, &IID_IUnknown>& pUnks) { return true; }
     virtual void OnDisconnect() {}
-    virtual bool OnActivate() { return true; }
+    virtual bool OnActivate() { m_dpi.Override(GetSafeHwnd()); return true; }
     virtual void OnDeactivate() {}
     virtual bool OnApply() { return true; }
 

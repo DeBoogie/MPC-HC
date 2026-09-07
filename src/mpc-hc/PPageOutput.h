@@ -23,43 +23,30 @@
 
 #include "PPageBase.h"
 #include "resource.h"
+#include "CMPCThemePPageBase.h"
+#include "CMPCThemeComboBox.h"
 
 
 // CPPageOutput dialog
 
-class CPPageOutput : public CPPageBase
+class CPPageOutput : public CMPCThemePPageBase
 {
     DECLARE_DYNAMIC(CPPageOutput)
 
 private:
     CStringArray m_AudioRendererDisplayNames;
-    CStringArray m_D3D9GUIDNames;
-    CImageList m_tickcross;
-    HICON m_tick, m_cross;
+    HICON m_tick, m_cross, m_warn;
 
-    CComboBox m_iDSVideoRendererTypeCtrl;
-    CComboBox m_iAudioRendererTypeCtrl;
-    CComboBox m_SubtitleRendererCtrl;
-    CComboBox m_iRMVideoRendererTypeCtrl;
-    CComboBox m_iQTVideoRendererTypeCtrl;
-    CComboBox m_iD3D9RenderDeviceCtrl;
-    CComboBox m_APSurfaceUsageCtrl;
-    CComboBox m_DX9ResizerCtrl;
-    CComboBox m_EVRBuffersCtrl;
+    CMPCThemeComboBox m_iDSVideoRendererTypeCtrl;
+    CMPCThemeComboBox m_iAudioRendererTypeCtrl;
+    CMPCThemeComboBox m_SubtitleRendererCtrl;
 
-    CStatic m_iDSDXVASupport;
-    CStatic m_iDSSubtitleSupport;
-    CStatic m_iDSSaveImageSupport;
-    CStatic m_iDSShaderSupport;
-    CStatic m_iDSRotationSupport;
-    CStatic m_iRMSubtitleSupport;
-    CStatic m_iRMSaveImageSupport;
-    CStatic m_iQTSubtitleSupport;
-    CStatic m_iQTSaveImageSupport;
-
-    void UpdateSubtitleSupport();
+    CStatic m_iDSSupportIcon;
 
     void UpdateSubtitleRendererList();
+
+    UINT GetRendererTooltipID() const;
+    void UpdateStatusIcon();
 
 public:
     CPPageOutput();
@@ -68,22 +55,11 @@ public:
     // Dialog Data
     enum { IDD = IDD_PPAGEOUTPUT };
     int m_iDSVideoRendererType;
-    int m_iRMVideoRendererType;
-    int m_iQTVideoRendererType;
-    int m_iAPSurfaceUsage;
     int m_iAudioRendererType;
-    std::pair<bool, CAppSettings::SubtitleRenderer> m_lastSubrenderer;
-    int m_iDX9Resizer;
-    BOOL m_fVMR9MixerMode;
-    BOOL m_fD3DFullscreen;
-    BOOL m_fVMR9AlterativeVSync;
-    BOOL m_fResetDevice;
-    BOOL m_fCacheShaders;
-    CString m_iEvrBuffers;
-
-    BOOL m_fD3D9RenderDevice;
-    int m_iD3D9RenderDevice;
-
+    int m_iMPCAudioRendererType;
+    int m_iSaneAudioRendererType;
+    CAppSettings::SubtitleRenderer m_lastSubrenderer;
+    const CString& GetAudioRendererDisplayName();
 
 protected:
     virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -93,11 +69,11 @@ protected:
     DECLARE_MESSAGE_MAP()
 
 public:
-    afx_msg void OnSurfaceChange();
+    afx_msg void OnUpdateVideoRendererSettings(CCmdUI* pCmdUI);
+    afx_msg void OpenVideoRendererSettings();
+    afx_msg void OnUpdateAudioRendererSettings(CCmdUI* pCmdUI);
+    afx_msg void OpenAudioRendererSettings();
     afx_msg void OnDSRendererChange();
-    afx_msg void OnRMRendererChange();
-    afx_msg void OnQTRendererChange();
+    afx_msg void OnAudioRendererChange();
     afx_msg void OnSubtitleRendererChange();
-    afx_msg void OnFullscreenCheck();
-    afx_msg void OnD3D9DeviceCheck();
 };

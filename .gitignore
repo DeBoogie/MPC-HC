@@ -11,6 +11,7 @@
 *.tss
 *.user
 *.vspx
+_*.bat
 /.cov/*
 /.git-rewrite
 /.vs
@@ -33,6 +34,11 @@
 /src/mpc-hc/res/mpc-hc.exe.manifest
 /src/MPCTestAPI/bin
 /src/MPCTestAPI/bin17
+/src/MPCTestAPI/.vs
 /src/thirdparty/DoctorDump/obj
 /src/thirdparty/LAVFilters/obj
+/src/thirdparty/libxml2/generated/libxml/xmlversion.h
 ipch
+/distrib/MPCVR/
+/distrib/x64/MediaInfo.dll
+/distrib/x86/MediaInfo.dll

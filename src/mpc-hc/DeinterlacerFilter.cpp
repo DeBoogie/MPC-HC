@@ -40,8 +40,18 @@ HRESULT CDeinterlacerFilter::CheckConnect(PIN_DIRECTION dir, IPin* pPin)
 
 HRESULT CDeinterlacerFilter::CheckInputType(const CMediaType* mtIn)
 {
+    if (mtIn->majortype != MEDIATYPE_Video) {
+        return E_FAIL;
+    }
+    if (mtIn->formattype == FORMAT_VideoInfo2) {
+        VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)mtIn->pbFormat;
+        if (!(vih2->dwInterlaceFlags & AMINTERLACE_IsInterlaced)) {
+            return E_FAIL;
+        }
+    }
+
     BITMAPINFOHEADER bih;
-    if (!ExtractBIH(mtIn, &bih) /*|| bih.biHeight <= 0*/ || bih.biHeight <= 288) {
+    if (!ExtractBIH(mtIn, &bih) || bih.biWidth == 0 || bih.biHeight <= 288) {
         return E_FAIL;
     }
 

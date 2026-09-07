@@ -27,11 +27,12 @@
 #include "ISubPic.h"
 #include "CoordGeom.h"
 #include "SubRenderIntf.h"
+#include "ScreenUtil.h"
 
 class CSubPicAllocatorPresenterImpl
     : public CUnknown
     , public CCritSec
-    , public ISubPicAllocatorPresenter2
+	, public ISubPicAllocatorPresenter3
     , public ISubRenderConsumer2
 {
 private:
@@ -42,12 +43,14 @@ protected:
     REFERENCE_TIME m_rtSubtitleDelay;
 
     CSize m_maxSubtitleTextureSize;
+    CSize m_curSubtitleTextureSize;
     CSize m_nativeVideoSize, m_aspectRatio;
     CRect m_videoRect, m_windowRect;
+	bool  m_bOtherTransform = false;
 
-    REFERENCE_TIME m_rtNow;
-    double m_fps;
-    UINT m_refreshRate;
+	REFERENCE_TIME m_rtNow = 0;
+	double m_fps           = 25.0;
+	UINT m_refreshRate     = 0;
 
     CMediaType m_inputMediaType;
 
@@ -55,22 +58,16 @@ protected:
     CComPtr<ISubPicAllocator> m_pAllocator;
     CComPtr<ISubPicQueue> m_pSubPicQueue;
 
-    std::condition_variable m_condAllocatorReady;
-
     bool m_bDeviceResetRequested;
     bool m_bPendingResetDevice;
 
-    enum SubtitleTextureLimit {
-        STATIC, VIDEO, DESKTOP
-    };
-    SubtitleTextureLimit m_SubtitleTextureLimit;
-    void InitMaxSubtitleTextureSize(int maxSize, CSize desktopSize);
+    void InitMaxSubtitleTextureSize(int maxSizeX, int maxSizeY, CSize largestScreen);
 
-    void AlphaBltSubPic(const CRect& windowRect,
-                        const CRect& videoRect,
-                        SubPicDesc* pTarget = nullptr,
-                        const double videoStretchFactor = 1.0,
-                        int xOffsetInPixels = 0);
+    HRESULT AlphaBltSubPic(const CRect& windowRect,
+                           const CRect& videoRect,
+                           SubPicDesc* pTarget = nullptr,
+                           const double videoStretchFactor = 1.0,
+                           int xOffsetInPixels = 0, int yOffsetInPixels = 0);
 
     void UpdateXForm();
     HRESULT CreateDIBFromSurfaceData(D3DSURFACE_DESC desc, D3DLOCKED_RECT r, BYTE* lpDib) const;
@@ -80,39 +77,37 @@ protected:
     XForm m_xform;
     void Transform(CRect r, Vector v[4]);
 
+    bool m_bHookedNewSegment;
+    bool m_bHookedReceive;
+
 public:
     CSubPicAllocatorPresenterImpl(HWND hWnd, HRESULT& hr, CString* _pError);
     virtual ~CSubPicAllocatorPresenterImpl();
 
     DECLARE_IUNKNOWN;
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
+    STDMETHODIMP_(void) SetVideoSize(CSize szVideo, CSize szAspectRatio = CSize(0, 0));
+
+    // ISubPicAllocatorPresenter
 
     STDMETHODIMP CreateRenderer(IUnknown** ppRenderer) PURE;
-
-    STDMETHODIMP_(void) SetVideoSize(CSize szVideo, CSize szAspectRatio = CSize(0, 0));
-    STDMETHODIMP_(SIZE) GetVideoSize(bool bCorrectAR = true) const;
-    STDMETHODIMP_(SIZE) GetVisibleVideoSize() const {
-        return m_nativeVideoSize;
-    };
+    STDMETHODIMP_(SIZE) GetVideoSize(bool bCorrectAR) const;
     STDMETHODIMP_(void) SetPosition(RECT w, RECT v);
     STDMETHODIMP_(bool) Paint(bool bAll) PURE;
-
     STDMETHODIMP_(void) SetTime(REFERENCE_TIME rtNow);
     STDMETHODIMP_(void) SetSubtitleDelay(int delayMs);
     STDMETHODIMP_(int) GetSubtitleDelay() const;
     STDMETHODIMP_(double) GetFPS() const;
-
     STDMETHODIMP_(void) SetSubPicProvider(ISubPicProvider* pSubPicProvider);
     STDMETHODIMP_(void) Invalidate(REFERENCE_TIME rtInvalidate = -1);
-
     STDMETHODIMP GetDIB(BYTE* lpDib, DWORD* size) { return E_NOTIMPL; }
-
-    STDMETHODIMP_(bool) ResetDevice() { return false; }
-
-    STDMETHODIMP_(bool) DisplayChange() { return false; }
-
+    STDMETHODIMP GetDisplayedImage(LPVOID* dibImage) { return E_NOTIMPL; }
     STDMETHODIMP SetVideoAngle(Vector v);
     STDMETHODIMP SetPixelShader(LPCSTR pSrcData, LPCSTR pTarget) { return E_NOTIMPL; }
+    STDMETHODIMP_(bool) ResetDevice() { return false; }
+    STDMETHODIMP_(bool) DisplayChange() { return false; }
+    STDMETHODIMP_(void) GetPosition(RECT* windowRect, RECT* videoRect) { *windowRect = m_windowRect; *videoRect = m_videoRect; }
+    STDMETHODIMP_(void) SetVideoMediaType(CMediaType input) { m_inputMediaType = input; }
 
     // ISubPicAllocatorPresenter2
 
@@ -123,9 +118,26 @@ public:
         return E_NOTIMPL;
     }
 
-    STDMETHODIMP SetIsRendering(bool bIsRendering) { return E_NOTIMPL; }
+    STDMETHODIMP_(SIZE) GetVisibleVideoSize() const {
+        return m_nativeVideoSize;
+    }
 
+    STDMETHODIMP SetIsRendering(bool bIsRendering) { return E_NOTIMPL; }
+    STDMETHODIMP_(bool) IsRendering() { return true; }
     STDMETHODIMP SetDefaultVideoAngle(Vector v);
+
+    // ISubPicAllocatorPresenter3
+
+	STDMETHODIMP SetRotation(int rotation) { return E_NOTIMPL; }
+	STDMETHODIMP_(int) GetRotation() { return 0; }
+	STDMETHODIMP SetFlip(bool flip) { return E_NOTIMPL; }
+	STDMETHODIMP_(bool) GetFlip() { return false; }
+    STDMETHODIMP GetVideoFrame(BYTE* lpDib, DWORD* size) { return E_NOTIMPL; }
+    STDMETHODIMP_(int) GetPixelShaderMode() { return 0; }
+    STDMETHODIMP ClearPixelShaders(int target) { return E_NOTIMPL; }
+    STDMETHODIMP AddPixelShader(int target, LPCWSTR name, LPCSTR profile, LPCSTR sourceCode) { return E_NOTIMPL; }
+    STDMETHODIMP_(bool) ResizeDevice() { return false; }
+    STDMETHODIMP_(bool) ToggleStats() { return false; }
 
     // ISubRenderOptions
 
