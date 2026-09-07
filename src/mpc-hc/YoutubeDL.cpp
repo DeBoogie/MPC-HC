@@ -246,8 +246,9 @@ bool CYoutubeDLInstance::Run(CString url)
     /////////////////////////////
 
     PROCESS_INFORMATION proc_info;
-    STARTUPINFO startup_info;
+    STARTUPINFOEX startup_info;
     SECURITY_ATTRIBUTES sec_attrib;
+    HANDLE hStdin = nullptr;
     auto& s = AfxGetAppSettings();
 
     YDL_LOG(L"%s", url);
@@ -281,54 +282,100 @@ bool CYoutubeDLInstance::Run(CString url)
     AppendCommandLineArgument(args, url);
 
     ZeroMemory(&proc_info, sizeof(PROCESS_INFORMATION));
-    ZeroMemory(&startup_info, sizeof(STARTUPINFO));
+    ZeroMemory(&startup_info, sizeof(STARTUPINFOEX));
 
-    //child process must inherit the handles
+    // The child receives only its redirected standard handles. Parent-side pipe handles stay non-inheritable.
     sec_attrib.nLength = sizeof(SECURITY_ATTRIBUTES);
     sec_attrib.lpSecurityDescriptor = NULL;
     sec_attrib.bInheritHandle = true;
 
-    if (!CreatePipe(&hStdout_r, &hStdout_w, &sec_attrib, bufsize)) {
-        return false;
-    }
-    if (!SetHandleInformation(hStdout_r, HANDLE_FLAG_INHERIT, 0)) {
-        CloseHandleSafe(hStdout_r);
-        CloseHandleSafe(hStdout_w);
-        return false;
-    }
-    if (!CreatePipe(&hStderr_r, &hStderr_w, &sec_attrib, bufsize)) {
-        CloseHandleSafe(hStdout_r);
-        CloseHandleSafe(hStdout_w);
-        return false;
-    }
-    if (!SetHandleInformation(hStderr_r, HANDLE_FLAG_INHERIT, 0)) {
+    auto CloseRedirectHandles = [&]() {
+        CloseHandleSafe(hStdin);
         CloseHandleSafe(hStdout_r);
         CloseHandleSafe(hStdout_w);
         CloseHandleSafe(hStderr_r);
         CloseHandleSafe(hStderr_w);
+    };
+
+    if (!CreatePipe(&hStdout_r, &hStdout_w, &sec_attrib, bufsize)
+            || !SetHandleInformation(hStdout_r, HANDLE_FLAG_INHERIT, 0)
+            || !CreatePipe(&hStderr_r, &hStderr_w, &sec_attrib, bufsize)
+            || !SetHandleInformation(hStderr_r, HANDLE_FLAG_INHERIT, 0)) {
+        CloseRedirectHandles();
         return false;
     }
 
-    startup_info.cb = sizeof(STARTUPINFO);
-    startup_info.hStdOutput = hStdout_w;
-    startup_info.hStdError = hStderr_w;
-    startup_info.wShowWindow = SW_HIDE;
-    startup_info.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+    hStdin = CreateFile(_T("NUL"), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, &sec_attrib,
+                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (hStdin == INVALID_HANDLE_VALUE) {
+        hStdin = nullptr;
+        CloseRedirectHandles();
+        return false;
+    }
+
+    startup_info.StartupInfo.cb = sizeof(STARTUPINFOEX);
+    startup_info.StartupInfo.hStdInput = hStdin;
+    startup_info.StartupInfo.hStdOutput = hStdout_w;
+    startup_info.StartupInfo.hStdError = hStderr_w;
+    startup_info.StartupInfo.wShowWindow = SW_HIDE;
+    startup_info.StartupInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+
+    SIZE_T attributeListSize = 0;
+    InitializeProcThreadAttributeList(nullptr, 1, 0, &attributeListSize);
+    if (!attributeListSize) {
+        CloseRedirectHandles();
+        return false;
+    }
+
+    std::vector<BYTE> attributeListBuffer;
+    try {
+        attributeListBuffer.resize(attributeListSize);
+    } catch (const std::bad_alloc&) {
+        CloseRedirectHandles();
+        return false;
+    }
+    startup_info.lpAttributeList = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(attributeListBuffer.data());
+    if (!InitializeProcThreadAttributeList(startup_info.lpAttributeList, 1, 0, &attributeListSize)) {
+        CloseRedirectHandles();
+        return false;
+    }
+
+    HANDLE inheritedHandles[] = { hStdin, hStdout_w, hStderr_w };
+    const BOOL handlesConfigured = UpdateProcThreadAttribute(
+        startup_info.lpAttributeList,
+        0,
+        PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
+        inheritedHandles,
+        sizeof(inheritedHandles),
+        nullptr,
+        nullptr);
+    if (!handlesConfigured) {
+        DeleteProcThreadAttributeList(startup_info.lpAttributeList);
+        startup_info.lpAttributeList = nullptr;
+        CloseRedirectHandles();
+        return false;
+    }
 
     LPTSTR mutableCommandLine = args.GetBuffer();
-    const BOOL created = CreateProcess(exePath.GetString(), mutableCommandLine, NULL, NULL, true, CREATE_NO_WINDOW,
-                                       NULL, NULL, &startup_info, &proc_info);
+    const DWORD creationFlags = CREATE_NO_WINDOW | EXTENDED_STARTUPINFO_PRESENT;
+    const BOOL created = CreateProcess(exePath.GetString(), mutableCommandLine, NULL, NULL, TRUE, creationFlags,
+                                       NULL, NULL, &startup_info.StartupInfo, &proc_info);
     const DWORD createError = created ? ERROR_SUCCESS : GetLastError();
     args.ReleaseBuffer();
+    DeleteProcThreadAttributeList(startup_info.lpAttributeList);
+    startup_info.lpAttributeList = nullptr;
+
+    // These are child-side handles. The parent closes them immediately after process creation.
+    CloseHandleSafe(hStdin);
+    CloseHandleSafe(hStdout_w);
+    CloseHandleSafe(hStderr_w);
+
     if (!created) {
         DWORD err = createError;
         CString errmsg;
         errmsg.Format(_T("Failed to create process for yt-dlp/youtube-dl, error %lu"), err);
         YDL_LOG(errmsg);
-        CloseHandleSafe(hStdout_r);
-        CloseHandleSafe(hStdout_w);
-        CloseHandleSafe(hStderr_r);
-        CloseHandleSafe(hStderr_w);
+        CloseRedirectHandles();
         if (!s.sYDLExePath.IsEmpty()) {
             AfxMessageBox(errmsg + L"\n\nYour YDLExepath value in advanced settings might be incorrect.", MB_ICONERROR, 0);
         } else if (url.Find(L"youtube.com") > 0) {
@@ -336,11 +383,6 @@ bool CYoutubeDLInstance::Run(CString url)
         }
         return false;
     }
-
-    // The parent must close its write handles before the reader threads start,
-    // otherwise EOF can never be observed once the child exits.
-    CloseHandleSafe(hStdout_w);
-    CloseHandleSafe(hStderr_w);
 
     /////////////////////////////////////////////////////
     // Read in stdout and stderr through the pipe buffer
