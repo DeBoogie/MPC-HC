@@ -113,5 +113,10 @@ Parser and process-launch changes should also be exercised with:
 - Corrupt container headers.
 - URLs containing escaped spaces, ampersands and Unicode.
 - Large yt-dlp stdout/stderr responses.
+- Malformed HTTP request lines and header lines without required delimiters.
+- Negative, non-decimal, duplicate, overflowing, and over-limit `Content-Length` values.
+- Unsupported `Transfer-Encoding` request framing.
+- Header terminators split across multiple socket receives.
+- POST bodies that arrive in multiple receives or include bytes beyond the declared content length.
 
 Crashes, hangs and unbounded allocation are release blockers for these cases.

@@ -46,7 +46,7 @@ class CWebClientSocket : public CAsyncSocket
 
     void Clear();
     void HandleRequest();
-    void ParseHeader(const char* headerEnd);
+    bool ParseHeader(const char* headerEnd);
     void ParsePostData();
 
 protected:
