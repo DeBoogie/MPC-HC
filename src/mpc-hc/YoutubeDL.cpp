@@ -36,6 +36,74 @@ void CloseHandleSafe(HANDLE& handle)
     }
 }
 
+CString QuoteCommandLineArgument(const CString& argument)
+{
+    CString result;
+    result.AppendChar(_T('\"'));
+
+    int backslashes = 0;
+    for (int i = 0; i < argument.GetLength(); ++i) {
+        const TCHAR ch = argument[i];
+        if (ch == _T('\\')) {
+            ++backslashes;
+            continue;
+        }
+
+        if (ch == _T('\"')) {
+            for (int j = 0; j < backslashes * 2 + 1; ++j) {
+                result.AppendChar(_T('\\'));
+            }
+            result.AppendChar(_T('\"'));
+            backslashes = 0;
+            continue;
+        }
+
+        for (int j = 0; j < backslashes; ++j) {
+            result.AppendChar(_T('\\'));
+        }
+        backslashes = 0;
+        result.AppendChar(ch);
+    }
+
+    // Backslashes before the closing quote must be doubled.
+    for (int j = 0; j < backslashes * 2; ++j) {
+        result.AppendChar(_T('\\'));
+    }
+    result.AppendChar(_T('\"'));
+    return result;
+}
+
+void AppendCommandLineArgument(CString& commandLine, const CString& argument)
+{
+    if (!commandLine.IsEmpty()) {
+        commandLine.AppendChar(_T(' '));
+    }
+    commandLine.Append(QuoteCommandLineArgument(argument));
+}
+
+void AppendRawCommandLine(CString& commandLine, const CString& rawArguments)
+{
+    if (rawArguments.IsEmpty()) {
+        return;
+    }
+    if (!commandLine.IsEmpty()) {
+        commandLine.AppendChar(_T(' '));
+    }
+    commandLine.Append(rawArguments);
+}
+
+bool HasYdlOption(const CString& commandLine, LPCTSTR shortOption, LPCTSTR longOption)
+{
+    CString padded = _T(" ") + commandLine + _T(" ");
+    const CString shortToken = CString(_T(" ")) + shortOption;
+    const CString longToken = CString(_T(" ")) + longOption;
+
+    return padded.Find(shortToken + _T(" ")) >= 0
+        || padded.Find(shortToken + _T("=")) >= 0
+        || padded.Find(longToken + _T(" ")) >= 0
+        || padded.Find(longToken + _T("=")) >= 0;
+}
+
 bool NullTerminateBuffer(char*& buffer, DWORD length, DWORD& capacity)
 {
     if (!buffer || length == MAXDWORD) {
@@ -60,35 +128,86 @@ bool NullTerminateBuffer(char*& buffer, DWORD length, DWORD& capacity)
 CString GetYDLExePath(bool* is_ytdlp) {
     auto& s = AfxGetAppSettings();
     CString ydlpath;
-    *is_ytdlp = true;
+    bool detectedYtDlp = true;
     if (s.sYDLExePath.IsEmpty()) {
         CString appdir = PathUtils::GetProgramPath(false);
         if (CPath(appdir + _T("\\yt-dlp.exe")).FileExists()) {
             ydlpath = appdir + _T("\\yt-dlp.exe");
         } else if (CPath(appdir + _T("\\youtube-dl.exe")).FileExists()) {
             ydlpath = appdir + _T("\\youtube-dl.exe");
-            *is_ytdlp = false;
+            detectedYtDlp = false;
         } else {
             // Use the installation directory explicitly instead of relying on the process search order.
             ydlpath = appdir + _T("\\yt-dlp.exe");
         }
     } else {
         ydlpath = s.sYDLExePath;
-        // expand environment variables
+        // Expand environment variables without imposing MAX_PATH on a user configured path.
         if (ydlpath.Find(_T('%')) >= 0) {
-            wchar_t expanded_buf[MAX_PATH] = { 0 };
-            DWORD req = ExpandEnvironmentStrings(ydlpath, expanded_buf, MAX_PATH);
-            if (req > 0 && req < MAX_PATH) {
-                ydlpath = CString(expanded_buf);
+            const DWORD required = ExpandEnvironmentStrings(ydlpath, nullptr, 0);
+            if (required > 0) {
+                CString expanded;
+                LPTSTR buffer = expanded.GetBuffer(required);
+                const DWORD written = ExpandEnvironmentStrings(ydlpath, buffer, required);
+                expanded.ReleaseBuffer();
+                if (written > 0 && written <= required) {
+                    ydlpath = expanded;
+                }
             }
         }
         CString lowerPath = ydlpath;
         lowerPath.MakeLower();
         if (lowerPath.Find(_T("youtube-dl")) >= 0) {
-            *is_ytdlp = false;
+            detectedYtDlp = false;
         }
     }
+    if (is_ytdlp) {
+        *is_ytdlp = detectedYtDlp;
+    }
     return ydlpath;
+}
+
+bool LaunchYDLDownload(const CString& url, const CString& filename)
+{
+    const auto& s = AfxGetAppSettings();
+    const CString exePath = GetYDLExePath();
+
+    CString commandLine;
+    AppendCommandLineArgument(commandLine, exePath);
+    AppendCommandLineArgument(commandLine, _T("--console-title"));
+
+    if (s.bYDLAudioOnly && !HasYdlOption(s.sYDLCommandLine, _T("-f"), _T("--format"))) {
+        AppendCommandLineArgument(commandLine, _T("-f"));
+        AppendCommandLineArgument(commandLine, _T("bestaudio"));
+    }
+    if (!HasYdlOption(s.sYDLCommandLine, _T("-o"), _T("--output"))) {
+        AppendCommandLineArgument(commandLine, _T("-o"));
+        AppendCommandLineArgument(commandLine, filename);
+    }
+
+    // Advanced settings intentionally accept raw yt-dlp options. Keep them before the URL terminator.
+    AppendRawCommandLine(commandLine, s.sYDLCommandLine);
+    AppendCommandLineArgument(commandLine, _T("--"));
+    AppendCommandLineArgument(commandLine, url);
+
+    STARTUPINFO startupInfo = { sizeof(startupInfo) };
+    PROCESS_INFORMATION processInfo = {};
+    LPTSTR mutableCommandLine = commandLine.GetBuffer();
+    const BOOL created = CreateProcess(exePath.GetString(), mutableCommandLine, nullptr, nullptr, FALSE, 0,
+                                       nullptr, nullptr, &startupInfo, &processInfo);
+    const DWORD error = created ? ERROR_SUCCESS : GetLastError();
+    commandLine.ReleaseBuffer();
+
+    if (!created) {
+        CString message;
+        message.Format(_T("An error occurred while attempting to run yt-dlp/youtube-dl (error %lu)"), error);
+        AfxMessageBox(message, MB_ICONERROR, 0);
+        return false;
+    }
+
+    CloseHandle(processInfo.hProcess);
+    CloseHandle(processInfo.hThread);
+    return true;
 }
 
 CYoutubeDLInstance::CYoutubeDLInstance()
@@ -134,22 +253,32 @@ bool CYoutubeDLInstance::Run(CString url)
     YDL_LOG(L"%s", url);
 
     bool ytdlp = true;
-    CString args = _T("\"") + GetYDLExePath(&ytdlp) + _T("\" -J --no-warnings");
+    const CString exePath = GetYDLExePath(&ytdlp);
+    CString args;
+    AppendCommandLineArgument(args, exePath);
+    AppendCommandLineArgument(args, _T("-J"));
+    AppendCommandLineArgument(args, _T("--no-warnings"));
     if (!s.sYDLSubsPreference.IsEmpty()) {
-        args.Append(_T(" --all-subs --write-sub"));
-        if (s.bUseAutomaticCaptions) args.Append(_T(" --write-auto-sub"));
+        AppendCommandLineArgument(args, _T("--all-subs"));
+        AppendCommandLineArgument(args, _T("--write-sub"));
+        if (s.bUseAutomaticCaptions) {
+            AppendCommandLineArgument(args, _T("--write-auto-sub"));
+        }
     }
     if (url.Find(_T("list=")) > 0) {
-        args.Append(_T(" --ignore-errors --no-playlist"));
+        AppendCommandLineArgument(args, _T("--ignore-errors"));
+        AppendCommandLineArgument(args, _T("--no-playlist"));
     }
-    // Stop option parsing before the URL. This prevents a malformed input from being interpreted as a yt-dlp switch.
-    args.Append(_T(" -- \"") + url + _T("\""));
     if (ytdlp) {
         WCHAR lpszTempPath[MAX_PATH] = { 0 };
         if (GetTempPathW(MAX_PATH, lpszTempPath)) {
-            args.AppendFormat(_T(" -P temp:\"%s\""), lpszTempPath);
+            AppendCommandLineArgument(args, _T("-P"));
+            AppendCommandLineArgument(args, CString(_T("temp:")) + lpszTempPath);
         }
     }
+    // All options must precede this terminator. The URL is always a positional argument.
+    AppendCommandLineArgument(args, _T("--"));
+    AppendCommandLineArgument(args, url);
 
     ZeroMemory(&proc_info, sizeof(PROCESS_INFORMATION));
     ZeroMemory(&startup_info, sizeof(STARTUPINFO));
@@ -186,9 +315,13 @@ bool CYoutubeDLInstance::Run(CString url)
     startup_info.wShowWindow = SW_HIDE;
     startup_info.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
 
-    if (!CreateProcess(NULL, args.GetBuffer(), NULL, NULL, true, CREATE_NO_WINDOW,
-                       NULL, NULL, &startup_info, &proc_info)) {
-        DWORD err = GetLastError();
+    LPTSTR mutableCommandLine = args.GetBuffer();
+    const BOOL created = CreateProcess(exePath.GetString(), mutableCommandLine, NULL, NULL, true, CREATE_NO_WINDOW,
+                                       NULL, NULL, &startup_info, &proc_info);
+    const DWORD createError = created ? ERROR_SUCCESS : GetLastError();
+    args.ReleaseBuffer();
+    if (!created) {
+        DWORD err = createError;
         CString errmsg;
         errmsg.Format(_T("Failed to create process for yt-dlp/youtube-dl, error %lu"), err);
         YDL_LOG(errmsg);
@@ -254,6 +387,12 @@ bool CYoutubeDLInstance::Run(CString url)
 
     WaitForSingleObject(hThreadOut, INFINITE);
     WaitForSingleObject(hThreadErr, INFINITE);
+    WaitForSingleObject(proc_info.hProcess, INFINITE);
+
+    DWORD stdoutThreadCode = ERROR_GEN_FAILURE;
+    DWORD stderrThreadCode = ERROR_GEN_FAILURE;
+    GetExitCodeThread(hThreadOut, &stdoutThreadCode);
+    GetExitCodeThread(hThreadErr, &stderrThreadCode);
 
     DWORD exitcode = ERROR_GEN_FAILURE;
     GetExitCodeProcess(proc_info.hProcess, &exitcode);
@@ -269,6 +408,11 @@ bool CYoutubeDLInstance::Run(CString url)
             !NullTerminateBuffer(buf_out, idx_out, capacity_out) ||
             !NullTerminateBuffer(buf_err, idx_err, capacity_err)) {
         throw std::bad_alloc();
+    }
+
+    if (stdoutThreadCode != ERROR_SUCCESS || stderrThreadCode != ERROR_SUCCESS) {
+        YDL_LOG(L"Failed to read yt-dlp output pipes (stdout=%lu, stderr=%lu)", stdoutThreadCode, stderrThreadCode);
+        return false;
     }
 
     // parse output
