@@ -18,12 +18,14 @@
       <AdditionalOptions Condition="'$(ANALYZE)'=='true'">/wd4005 /wd6031 /wd6246 /wd6309 /wd6387 /wd28204 %(AdditionalOptions)</AdditionalOptions>
 	  <EnablePREfast Condition="'$(ANALYZE)'=='true'">true</EnablePREfast>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SDLCheck>true</SDLCheck>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
       <ExceptionHandling>Sync</ExceptionHandling>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <PreprocessorDefinitions>_WINDOWS;WINDOWS;WINVER=0x06010000;_WIN32_WINNT=0x06010000;_WIN32_IE=0x0800;PSAPI_VERSION=1;_USE_MATH_DEFINES;__STDC_CONSTANT_MACROS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;WINDOWS;WINVER=0x0A00;_WIN32_WINNT=0x0A00;_WIN32_IE=0x0A00;PSAPI_VERSION=1;_USE_MATH_DEFINES;__STDC_CONSTANT_MACROS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(NOMINMAX)'!='False'">NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)'=='Debug Filter' Or '$(Configuration)'=='Release Filter'">STANDALONE_FILTER;_USRDLL;_AFX_NO_MFC_CONTROLS_IN_DIALOGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Platform)'=='Win32'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -38,6 +40,9 @@
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <GenerateDebugInformation>Debug</GenerateDebugInformation>
       <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <HighEntropyVA Condition="'$(Platform)'=='x64'">true</HighEntropyVA>
+      <AdditionalOptions Condition="'$(Platform)'=='x64'">/CETCOMPAT %(AdditionalOptions)</AdditionalOptions>
       <SubSystem>Windows</SubSystem>
       <TargetMachine Condition="'$(Platform)'=='Win32'">MachineX86</TargetMachine>
       <TargetMachine Condition="'$(Platform)'=='x64'">MachineX64</TargetMachine>
