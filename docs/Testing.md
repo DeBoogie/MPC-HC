@@ -86,6 +86,7 @@ On at least Intel, AMD and NVIDIA hardware where available:
 - Built-in controls-page status polling through `/status.json`.
 - Media/window titles containing quotes, backslashes, ampersands, angle brackets and non-ASCII text.
 - Dynamic title/status text must render literally rather than becoming HTML markup.
+- File-browser directory/file names and displayed paths containing ampersands or other HTML-significant text must render literally.
 - The legacy `/status.html` endpoint remains reachable for third-party compatibility.
 
 ### Web server CGI
