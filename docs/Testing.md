@@ -84,6 +84,14 @@ On at least Intel, AMD and NVIDIA hardware where available:
 - Network interruption/retry behavior.
 - yt-dlp missing from disk, returning malformed JSON, or exiting with an error.
 
+### Web server CGI
+
+- CGI interpreter and script paths containing spaces and Unicode.
+- Non-ASCII query strings and HTTP header values reaching the CGI environment intact.
+- Request bodies larger than a single pipe write/read chunk.
+- A CGI process that exits normally and one that exceeds the 30-second watchdog timeout.
+- Repeated CGI requests while other player operations are active, checking for leaked process, thread, or pipe handles.
+
 ## Untrusted-input checks
 
 Parser and process-launch changes should also be exercised with:
