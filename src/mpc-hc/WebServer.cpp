@@ -254,6 +254,27 @@ void CWebServer::Deploy(CString dir)
     }
 }
 
+static bool IsPathInsideRoot(const CPath& root, const CPath& candidate, bool allowRoot = false)
+{
+    CString rootPath = static_cast<LPCTSTR>(root);
+    CString candidatePath = static_cast<LPCTSTR>(candidate);
+
+    rootPath.Replace('/', '\\');
+    candidatePath.Replace('/', '\\');
+    rootPath.TrimRight(_T("\\"));
+    candidatePath.TrimRight(_T("\\"));
+    if (rootPath.IsEmpty() || candidatePath.IsEmpty()) {
+        return false;
+    }
+    if (candidatePath.CompareNoCase(rootPath) == 0) {
+        return allowRoot;
+    }
+
+    CString rootPrefix = rootPath + _T('\\');
+    return candidatePath.GetLength() > rootPrefix.GetLength()
+        && candidatePath.Left(rootPrefix.GetLength()).CompareNoCase(rootPrefix) == 0;
+}
+
 bool CWebServer::ToLocalPath(CString& path, CString& redir)
 {
     if (!path.IsEmpty() && m_webroot.IsDirectory()) {
@@ -261,9 +282,18 @@ bool CWebServer::ToLocalPath(CString& path, CString& redir)
         str.Replace('/', '\\');
         str.TrimLeft('\\');
 
+        // A URL maps to a relative path below the configured web root. A colon would either
+        // select another drive or address an NTFS alternate data stream, neither of which is valid here.
+        if (str.Find(_T(':')) >= 0) {
+            return false;
+        }
+
         CPath p;
         p.Combine(m_webroot, str);
         p.Canonicalize();
+        if (!IsPathInsideRoot(m_webroot, p, true)) {
+            return false;
+        }
 
         if (p.IsDirectory()) {
             CAtlList<CString> sl;
@@ -271,9 +301,13 @@ bool CWebServer::ToLocalPath(CString& path, CString& redir)
             POSITION pos = sl.GetHeadPosition();
             while (pos) {
                 str = sl.GetNext(pos);
+                if (str.Find(_T(':')) >= 0) {
+                    continue;
+                }
                 CPath p2 = p;
                 p2.Append(str);
-                if (p2.FileExists()) {
+                p2.Canonicalize();
+                if (IsPathInsideRoot(m_webroot, p2) && p2.FileExists()) {
                     p = p2;
                     redir = path;
                     if (redir.GetAt(redir.GetLength() - 1) != '/') {
@@ -285,8 +319,8 @@ bool CWebServer::ToLocalPath(CString& path, CString& redir)
             }
         }
 
-        if (_tcslen(p) > _tcslen(m_webroot) && p.FileExists()) {
-            path = (LPCTSTR)p;
+        if (IsPathInsideRoot(m_webroot, p) && p.FileExists()) {
+            path = static_cast<LPCTSTR>(p);
             return true;
         }
     }

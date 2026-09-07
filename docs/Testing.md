@@ -103,6 +103,10 @@ On at least Intel, AMD and NVIDIA hardware where available:
 
 Parser and process-launch changes should also be exercised with:
 
+- Web-root requests containing `../`, `..\`, `%2e%2e`, mixed separators, and sibling-directory prefixes.
+- A configured web default-index value containing traversal components; it must not escape the web root.
+- Normal nested static files and configured directory-index files after the traversal checks are enabled.
+
 - Very long file paths and URLs.
 - Empty and malformed playlists.
 - Malformed subtitle files.
