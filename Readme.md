@@ -64,14 +64,18 @@ You can even download those videos: Menu > File > Save a copy<br/>
 Tip: to be able to download in best quality with yt-dlp, it is recommended to also put [ffmpeg.exe](https://www.gyan.dev/ffmpeg/builds/) in the MPC-HC folder.<br/>
 Several YDL configuration options are found here: Options > Advanced<br/>
 This includes an option to specify the location of the .exe in case you don't want to put it in MPC-HC folder.<br/>
-Note 1: You also need to install [Microsoft Visual C++ 2010 SP1 Redistributable Package (x86)](https://download.microsoft.com/download/1/6/5/165255E7-1014-4D0A-B094-B6A430A6BFFC/vcredist_x86.exe)<br/>
-Note 2: [yt-dlp nightly build](https://github.com/yt-dlp/yt-dlp-nightly-builds/) (very latest version made daily)
-Note 3: [yt-dlp fork with Win7 support](https://github.com/nicolaasjan/yt-dlp/releases)
+Note: [yt-dlp nightly build](https://github.com/yt-dlp/yt-dlp-nightly-builds/) (very latest version made daily)
 * Besides all these (new) features, there have also been many bugfixes and internal improvements in the player in the past years that give better performance and stability.
 
 ## System Requirements
 
-* Windows 7 / 8 / 8.1 / 10 / 11
+* Windows 10 / 11 (64-bit recommended)
+
+## Development
+
+- [Modernization policy](docs/Modernization.md)
+- [Compilation instructions](docs/Compilation.md)
+- [Local testing guide](docs/Testing.md)
 
 ## License
 
