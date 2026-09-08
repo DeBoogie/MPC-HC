@@ -290,13 +290,21 @@ HRESULT SubtitlesInfo::GetFileInfo(const std::string& sFileName /*= std::string(
                 CFile file;
                 CFileException fileException;
                 if (p.RenameExtension(_T(".nfo")) && file.Open(p, CFile::modeRead | CFile::osSequentialScan | CFile::shareDenyNone | CFile::typeBinary, &fileException)) {
-                    std::string buffer;
-                    buffer.resize(static_cast<std::string::size_type>(file.GetLength()));
-                    file.Read(&buffer[0], (UINT)buffer.size());
-
-                    std::smatch match_pieces;
-                    if (std::regex_search(buffer, match_pieces, std::regex("imdb[.][a-z]{2,3}/title/tt(\\d+)", RegexFlags))) {
-                        imdbid = match_pieces[1].str();
+                    constexpr ULONGLONG MAX_NFO_SIZE = 4ui64 * 1024 * 1024;
+                    try {
+                        const ULONGLONG nfoSize = file.GetLength();
+                        if (nfoSize > 0 && nfoSize <= MAX_NFO_SIZE) {
+                            std::string buffer(static_cast<std::string::size_type>(nfoSize), '\0');
+                            const UINT bytesRead = file.Read(&buffer[0], static_cast<UINT>(buffer.size()));
+                            if (bytesRead == static_cast<UINT>(buffer.size())) {
+                                std::smatch match_pieces;
+                                if (std::regex_search(buffer, match_pieces, std::regex("imdb[.][a-z]{2,3}/title/tt(\\d+)", RegexFlags))) {
+                                    imdbid = match_pieces[1].str();
+                                }
+                            }
+                        }
+                    } catch (CFileException* e) {
+                        e->Delete();
                     }
                 }
             }
