@@ -68,6 +68,7 @@ On at least Intel, AMD and NVIDIA hardware where available:
 
 ### Subtitles
 
+- OpenSubtitles movie-hash generation: reject files smaller than 128 KiB, require exact first/last 64 KiB probes, and verify the official `breakdance.avi` test vector (`8e245d9679d31e12`) when the sample is available.
 - SRT/SubRip.
 - ASS/SSA with styled positioning.
 - WebVTT.
