@@ -83,6 +83,7 @@ On at least Intel, AMD and NVIDIA hardware where available:
 ### Network and URL playback
 
 - Direct HTTP/HTTPS media URL.
+- HTTP authentication prompts: credential prefill-pack failures should fall back safely, unpack failures must return an error and clear partial username/domain/password output, and user cancellation must remain cancellation.
 - HLS/DASH material supported by the current splitter stack.
 - A current yt-dlp-supported URL.
 - An invalid URL and an unsupported site.
