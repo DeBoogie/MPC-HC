@@ -668,14 +668,10 @@ bool OpenSubtitles2::CallAPIResponse(CHttpFile* httpFile, Response& response)
 {
     httpFile->QueryInfoStatusCode(response.code);
 
-    auto size = httpFile->GetLength();
-    while (size > 0)
-    {
-        std::string temp;
-        temp.resize(size);
-        httpFile->Read(temp.data(), size);
-        response.text += temp;
-        size = httpFile->GetLength();
+    response.text.clear();
+    if (FAILED(ReadHttpResponse(httpFile, response.text))) {
+        LOG(LOG_ERROR, "Subtitle service response exceeded the configured limit or could not be read");
+        return false;
     }
     if (response.code != 200)
     {

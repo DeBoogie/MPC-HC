@@ -85,6 +85,7 @@ On at least Intel, AMD and NVIDIA hardware where available:
 - A current yt-dlp-supported URL.
 - An invalid URL and an unsupported site.
 - Network interruption/retry behavior.
+- Subtitle-provider HTTP transfers: follow redirects only when requested, honor HTTPS/custom ports on uploads, trust actual read counts rather than advertised lengths, and reject responses larger than 64 MiB.
 - yt-dlp missing from disk, returning malformed JSON, or exiting with an error.
 - Built-in controls-page status polling through `/status.json`.
 - Media/window titles containing quotes, backslashes, ampersands, angle brackets and non-ASCII text.
