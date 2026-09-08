@@ -24,11 +24,14 @@
 #include "WebServerSocket.h"
 
 
-CWebServerSocket::CWebServerSocket(CWebServer* pWebServer, int port)
+CWebServerSocket::CWebServerSocket(CWebServer* pWebServer, int port, bool localhostOnly)
     : m_pWebServer(pWebServer)
 {
-    Create(port);
-    Listen();
+    constexpr long events = FD_READ | FD_WRITE | FD_OOB | FD_ACCEPT | FD_CONNECT | FD_CLOSE;
+    LPCTSTR bindAddress = localhostOnly ? _T("127.0.0.1") : nullptr;
+    if (Create(port, SOCK_STREAM, events, bindAddress)) {
+        Listen();
+    }
 }
 
 CWebServerSocket::~CWebServerSocket()

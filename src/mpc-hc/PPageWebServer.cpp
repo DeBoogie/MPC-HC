@@ -37,7 +37,7 @@ CPPageWebServer::CPPageWebServer()
     , m_nWebServerPort(0)
     , m_launch(_T("http://localhost:13579/"))
     , m_fWebServerUseCompression(FALSE)
-    , m_fWebServerLocalhostOnly(FALSE)
+    , m_fWebServerLocalhostOnly(TRUE)
     , m_bWebUIEnablePreview(FALSE)
     , m_fWebServerPrintDebugInfo(FALSE)
     , m_fWebRoot(FALSE)
@@ -122,6 +122,7 @@ BOOL CPPageWebServer::OnApply()
     }
 
     bool fRestart = s.nWebServerPort != m_nWebServerPort
+                    || s.fWebServerLocalhostOnly != !!m_fWebServerLocalhostOnly
                     || s.strWebRoot != NewWebRoot || s.strWebServerCGI != m_WebServerCGI;
 
     s.fEnableWebServer = !!m_fEnableWebServer;

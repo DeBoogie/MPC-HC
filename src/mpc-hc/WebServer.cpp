@@ -192,7 +192,7 @@ DWORD CWebServer::ThreadProc()
         return DWORD_ERROR;
     }
 
-    CWebServerSocket s(this, m_nPort);
+    CWebServerSocket s(this, m_nPort, AfxGetAppSettings().fWebServerLocalhostOnly);
 
     MSG msg;
     while ((int)GetMessage(&msg, nullptr, 0, 0) > 0) {
