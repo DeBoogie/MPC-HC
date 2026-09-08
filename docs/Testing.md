@@ -71,6 +71,7 @@ On at least Intel, AMD and NVIDIA hardware where available:
 - OpenSubtitles movie-hash generation: reject files smaller than 128 KiB, require exact first/last 64 KiB probes, and verify the official `breakdance.avi` test vector (`8e245d9679d31e12`) when the sample is available.
 - Subtitle provider file-info extraction must reject null current-file names and negative DirectShow reader lengths instead of converting them to huge unsigned sizes.
 - Empty, truncated, malformed, and oversized (>4 MiB) `.nfo` sidecars must be ignored safely; normal sidecars should still populate IMDb IDs.
+- Downloaded gzip/zlib/ZIP/RAR subtitle archives must reject entries over 32 MiB, total extracted output over 64 MiB, archives with more than 1024 entries, truncated/CRC-invalid ZIP data, and RAR callbacks that exceed the per-entry limit; Unicode temp paths must still work.
 - SRT/SubRip.
 - ASS/SSA with styled positioning.
 - WebVTT.

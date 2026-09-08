@@ -33,11 +33,110 @@
 #include "zlib/zlib.h"
 #include "zlib/zutil.h"
 #include "zlib/minizip/unzip.h"
+#include "zlib/minizip/iowin32.h"
 
 #include <afxinet.h>
 #include <WinCrypt.h>
 #include <sstream>
 #include <cstdlib>
+#include <limits>
+
+namespace {
+constexpr size_t MAX_SUBTITLE_ARCHIVE_INPUT_SIZE = 64u * 1024u * 1024u;
+constexpr size_t MAX_SUBTITLE_ARCHIVE_ENTRY_SIZE = 32u * 1024u * 1024u;
+constexpr size_t MAX_SUBTITLE_ARCHIVE_TOTAL_SIZE = 64u * 1024u * 1024u;
+constexpr uLong MAX_SUBTITLE_ARCHIVE_ENTRIES = 1024;
+
+struct RarExtractContext {
+    std::string data;
+    bool exceededLimit = false;
+};
+
+std::string InflateSubtitleData(const std::string& data, int windowBits)
+{
+    std::string result;
+    if (data.empty() || data.size() > std::numeric_limits<uInt>::max()) {
+        return result;
+    }
+
+    std::vector<BYTE> buffer(32 * 1024);
+    z_stream stream = {};
+    stream.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(data.data()));
+    stream.avail_in = static_cast<uInt>(data.size());
+
+    if (inflateInit2(&stream, windowBits) != Z_OK) {
+        return result;
+    }
+
+    bool complete = false;
+    for (;;) {
+        stream.next_out = buffer.data();
+        stream.avail_out = static_cast<uInt>(buffer.size());
+
+        const int ret = inflate(&stream, Z_NO_FLUSH);
+        const size_t produced = buffer.size() - stream.avail_out;
+        if (produced > MAX_SUBTITLE_ARCHIVE_ENTRY_SIZE
+                || result.size() > MAX_SUBTITLE_ARCHIVE_ENTRY_SIZE - produced) {
+            result.clear();
+            break;
+        }
+        if (produced) {
+            result.append(reinterpret_cast<const char*>(buffer.data()), produced);
+        }
+
+        if (ret == Z_STREAM_END) {
+            complete = true;
+            break;
+        }
+        if (ret != Z_OK || (produced == 0 && stream.avail_in == 0)) {
+            break;
+        }
+    }
+
+    inflateEnd(&stream);
+    if (!complete) {
+        result.clear();
+    }
+    return result;
+}
+
+bool WriteTempArchive(const std::string& data, CString& fileName)
+{
+    fileName.Empty();
+    if (data.empty() || data.size() > MAX_SUBTITLE_ARCHIVE_INPUT_SIZE) {
+        return false;
+    }
+
+    TCHAR tempPath[MAX_PATH] = {};
+    const DWORD pathLength = GetTempPath(_countof(tempPath), tempPath);
+    if (pathLength == 0 || pathLength >= _countof(tempPath)) {
+        return false;
+    }
+
+    TCHAR tempFile[MAX_PATH] = {};
+    if (!GetTempFileName(tempPath, _T("mpc"), 0, tempFile)) {
+        return false;
+    }
+    fileName = tempFile;
+
+    try {
+        CFile file;
+        if (!file.Open(fileName, CFile::modeCreate | CFile::modeWrite | CFile::typeBinary | CFile::shareDenyNone)) {
+            DeleteFile(fileName);
+            fileName.Empty();
+            return false;
+        }
+        file.Write(data.data(), static_cast<UINT>(data.size()));
+        file.Close();
+        return true;
+    } catch (CFileException* e) {
+        e->Delete();
+        DeleteFile(fileName);
+        fileName.Empty();
+        return false;
+    }
+}
+}
 
 int SubtitlesProvidersUtils::LevenshteinDistance(std::string s, std::string t)
 {
@@ -339,140 +438,122 @@ std::string SubtitlesProvidersUtils::StringGzipCompress(const std::string& data)
 
 std::string SubtitlesProvidersUtils::StringGzipInflate(const std::string& data)
 {
-    std::string result;
-
-    UINT buffer_len = 32 * 1024;
-    std::vector<BYTE> buffer(buffer_len);
-
-    z_stream inflate_stream = { 0 };
-    inflate_stream.next_in = (BYTE*)data.c_str();
-    inflate_stream.avail_in = (UINT)data.length();
-
-    if (inflateInit2(&inflate_stream, DEF_WBITS + Z_DECODING_ZLIB_GZIP) == Z_OK) {
-        do {
-            inflate_stream.next_out = &buffer[0];
-            inflate_stream.avail_out = buffer_len;
-            if (inflate(&inflate_stream, Z_NO_FLUSH) >= Z_OK) {
-                result.append((char*)&buffer[0], buffer_len - inflate_stream.avail_out);
-            } else {
-                break;
-            }
-        } while (inflate_stream.avail_out == 0);
-        inflateEnd(&inflate_stream);
-    }
-    return result;
+    return InflateSubtitleData(data, DEF_WBITS + Z_DECODING_ZLIB_GZIP);
 }
 
 std::string SubtitlesProvidersUtils::StringGzipUncompress(const std::string& data)
 {
-    std::string result;
-
-    UINT buffer_len = 32 * 1024;
-    std::vector<BYTE> buffer(buffer_len);
-
-    z_stream inflate_stream = { 0 };
-    inflate_stream.next_in = (BYTE*)data.c_str();
-    inflate_stream.avail_in = (UINT)data.length();
-
-    int ret = Z_OK;
-    //if ((ret = inflateInit2(&inflate_stream, DEF_WBITS)) == Z_OK) {
-    if ((ret = inflateInit(&inflate_stream)) == Z_OK) {
-        do {
-            inflate_stream.next_out = &buffer[0];
-            inflate_stream.avail_out = buffer_len;
-            if ((ret = inflate(&inflate_stream, Z_NO_FLUSH)) >= Z_OK) {
-                result.append((char*)&buffer[0], buffer_len - inflate_stream.avail_out);
-            } else {
-                break;
-            }
-        } while (inflate_stream.avail_out == 0);
-        ret = inflateEnd(&inflate_stream);
-    }
-    return result;
+    return InflateSubtitleData(data, DEF_WBITS);
 }
 
-int SubtitlesProvidersUtils::FileUnzip(CStringA fn, stringMap& dataOut)
+int SubtitlesProvidersUtils::FileUnzip(CString fn, stringMap& dataOut)
 {
 #define MAX_FILENAME 512
 #define READ_SIZE 8192
 
-    // Open the zip file
-    unzFile zipfile = unzOpen(fn);
+    dataOut.clear();
+
+    zlib_filefunc64_def fileFunctions = {};
+    fill_win32_filefunc64W(&fileFunctions);
+    unzFile zipfile = unzOpen2_64(fn.GetString(), &fileFunctions);
     if (zipfile == nullptr) {
         return -1;
     }
 
-    // Get info about the zip file
-    unz_global_info global_info;
-    if (unzGetGlobalInfo(zipfile, &global_info) != UNZ_OK) {
+    unz_global_info globalInfo = {};
+    if (unzGetGlobalInfo(zipfile, &globalInfo) != UNZ_OK
+            || globalInfo.number_entry > MAX_SUBTITLE_ARCHIVE_ENTRIES) {
         unzClose(zipfile);
         return -1;
     }
 
-    // Buffer to hold data read from the zip file.
-    char read_buffer[READ_SIZE];
+    stringMap extracted;
+    size_t totalExtracted = 0;
+    char readBuffer[READ_SIZE];
 
-    // Loop to extract all files
-    for (uLong i = 0; i < global_info.number_entry; ++i) {
-        // Get info about current file.
-        unz_file_info file_info;
-        char filename[MAX_FILENAME];
-        if (unzGetCurrentFileInfo(zipfile, &file_info, filename, MAX_FILENAME, nullptr, 0, nullptr, 0) != UNZ_OK) {
+    for (uLong i = 0; i < globalInfo.number_entry; ++i) {
+        unz_file_info fileInfo = {};
+        char filename[MAX_FILENAME] = {};
+        if (unzGetCurrentFileInfo(zipfile, &fileInfo, filename, MAX_FILENAME, nullptr, 0, nullptr, 0) != UNZ_OK
+                || fileInfo.size_filename >= MAX_FILENAME) {
             unzClose(zipfile);
             return -1;
         }
 
         if (strlen(filename) >= 4 && Subtitle::IsTextSubtitleFileName(filename)) {
+            if (static_cast<size_t>(fileInfo.uncompressed_size) > MAX_SUBTITLE_ARCHIVE_ENTRY_SIZE
+                    || totalExtracted > MAX_SUBTITLE_ARCHIVE_TOTAL_SIZE - static_cast<size_t>(fileInfo.uncompressed_size)) {
+                unzClose(zipfile);
+                return -1;
+            }
             if (unzOpenCurrentFile(zipfile) != UNZ_OK) {
                 unzClose(zipfile);
                 return -1;
             }
 
             std::string data;
-            data.reserve(file_info.uncompressed_size);
-            int error;
-            do {
-                error = unzReadCurrentFile(zipfile, read_buffer, READ_SIZE);
-                if (error < 0) {
+            data.reserve(static_cast<size_t>(fileInfo.uncompressed_size));
+            for (;;) {
+                const int bytesRead = unzReadCurrentFile(zipfile, readBuffer, READ_SIZE);
+                if (bytesRead < 0) {
                     unzCloseCurrentFile(zipfile);
                     unzClose(zipfile);
                     return -1;
                 }
-
-                // Write data to file.
-                if (error > 0) {
-                    data.append(read_buffer, error);
+                if (bytesRead == 0) {
+                    break;
                 }
-            } while (error > 0);
-            dataOut.emplace(filename, data);
-        }
+                if (static_cast<size_t>(bytesRead) > MAX_SUBTITLE_ARCHIVE_ENTRY_SIZE
+                        || data.size() > MAX_SUBTITLE_ARCHIVE_ENTRY_SIZE - static_cast<size_t>(bytesRead)) {
+                    unzCloseCurrentFile(zipfile);
+                    unzClose(zipfile);
+                    return -1;
+                }
+                data.append(readBuffer, static_cast<size_t>(bytesRead));
+            }
 
-        unzCloseCurrentFile(zipfile);
-
-        // Go the the next entry listed in the zip file.
-        if (i + 1 < global_info.number_entry) {
-            if (unzGoToNextFile(zipfile) != UNZ_OK) {
+            if (unzCloseCurrentFile(zipfile) != UNZ_OK
+                    || totalExtracted > MAX_SUBTITLE_ARCHIVE_TOTAL_SIZE - data.size()) {
                 unzClose(zipfile);
                 return -1;
             }
+            totalExtracted += data.size();
+            extracted.emplace(filename, std::move(data));
+        }
+
+        if (i + 1 < globalInfo.number_entry && unzGoToNextFile(zipfile) != UNZ_OK) {
+            unzClose(zipfile);
+            return -1;
         }
     }
 
     unzClose(zipfile);
+    dataOut = std::move(extracted);
     return 0;
 }
 
 int CALLBACK SubtitlesProvidersUtils::UnRarProc(UINT msg, LPARAM UserData, LPARAM P1, LPARAM P2)
 {
     if (msg == UCM_PROCESSDATA) {
-        std::string* data((std::string*)UserData);
-        data->append((char*)P1, (size_t)P2);
+        auto* context = reinterpret_cast<RarExtractContext*>(UserData);
+        if (!context || P1 == 0 || P2 < 0) {
+            return -1;
+        }
+
+        const size_t count = static_cast<size_t>(P2);
+        if (count > MAX_SUBTITLE_ARCHIVE_ENTRY_SIZE
+                || context->data.size() > MAX_SUBTITLE_ARCHIVE_ENTRY_SIZE - count) {
+            context->exceededLimit = true;
+            return -1;
+        }
+        context->data.append(reinterpret_cast<const char*>(P1), count);
     }
     return 1;
 }
 
 bool SubtitlesProvidersUtils::FileUnRar(CString fn, stringMap& dataOut)
 {
+    dataOut.clear();
 #if !USE_STATIC_UNRAR
 #ifdef _WIN64
     HMODULE h = LoadLibrary(_T("unrar64.dll"));
@@ -493,9 +574,7 @@ bool SubtitlesProvidersUtils::FileUnRar(CString fn, stringMap& dataOut)
         FreeLibrary(h);
         return false;
     }
-
 #else
-
 #define OpenArchiveEx      RAROpenArchiveEx
 #define CloseArchive       RARCloseArchive
 #define ReadHeaderEx       RARReadHeaderEx
@@ -503,55 +582,92 @@ bool SubtitlesProvidersUtils::FileUnRar(CString fn, stringMap& dataOut)
 #define SetCallback        RARSetCallback
 #endif /* USE_STATIC_UNRAR */
 
-    RAROpenArchiveDataEx OpenArchiveData;
-    ZeroMemory(&OpenArchiveData, sizeof(OpenArchiveData));
+    RAROpenArchiveDataEx openArchiveData = {};
+    openArchiveData.ArcNameW = const_cast<LPTSTR>(fn.GetString());
+    openArchiveData.OpenMode = RAR_OM_EXTRACT;
+    openArchiveData.Callback = UnRarProc;
 
-    OpenArchiveData.ArcNameW = (LPTSTR)(LPCTSTR)fn;
-    char fnA[MAX_PATH];
-    size_t size;
-    if (wcstombs_s(&size, fnA, fn, fn.GetLength())) {
-        fnA[0] = 0;
-    }
-    OpenArchiveData.ArcName = fnA;
-    OpenArchiveData.OpenMode = RAR_OM_EXTRACT;
-    OpenArchiveData.CmtBuf = 0;
-    OpenArchiveData.Callback = UnRarProc;
-    std::string data;
-    OpenArchiveData.UserData = (LPARAM)&data;
+    RarExtractContext context;
+    openArchiveData.UserData = reinterpret_cast<LPARAM>(&context);
 
-    HANDLE hArcData = OpenArchiveEx(&OpenArchiveData);
-    if (!hArcData) {
+    HANDLE hArcData = OpenArchiveEx(&openArchiveData);
+    if (!hArcData || openArchiveData.OpenResult != ERAR_SUCCESS) {
+        if (hArcData) {
+            CloseArchive(hArcData);
+        }
 #if !USE_STATIC_UNRAR
         FreeLibrary(h);
 #endif
         return false;
     }
 
-    RARHeaderDataEx HeaderDataEx;
-    ZeroMemory(&HeaderDataEx, sizeof(HeaderDataEx));
-
-    while (ReadHeaderEx(hArcData, &HeaderDataEx) == 0) {
-        if (wcslen(HeaderDataEx.FileNameW) >= 4 && Subtitle::IsTextSubtitleFileName(HeaderDataEx.FileNameW)) {
-            data.clear();
-            data.reserve(std::max(data.capacity(), (size_t)HeaderDataEx.UnpSize));
-            if (ProcessFile(hArcData, RAR_TEST, nullptr, nullptr)) {
-                CloseArchive(hArcData);
+    auto Cleanup = [&]() {
+        if (hArcData) {
+            CloseArchive(hArcData);
+            hArcData = nullptr;
+        }
 #if !USE_STATIC_UNRAR
-                FreeLibrary(h);
+        if (h) {
+            FreeLibrary(h);
+            h = nullptr;
+        }
 #endif
+    };
+
+    SetCallback(hArcData, UnRarProc, reinterpret_cast<LPARAM>(&context));
+
+    stringMap extracted;
+    size_t totalExtracted = 0;
+    uLong entryCount = 0;
+    int readResult = ERAR_SUCCESS;
+
+    for (;;) {
+        RARHeaderDataEx header = {};
+        readResult = ReadHeaderEx(hArcData, &header);
+        if (readResult != ERAR_SUCCESS) {
+            break;
+        }
+        if (++entryCount > MAX_SUBTITLE_ARCHIVE_ENTRIES) {
+            Cleanup();
+            return false;
+        }
+
+        const ULONGLONG unpackedSize = (static_cast<ULONGLONG>(header.UnpSizeHigh) << 32) | header.UnpSize;
+        const bool isSubtitle = wcslen(header.FileNameW) >= 4 && Subtitle::IsTextSubtitleFileName(header.FileNameW);
+
+        if (isSubtitle) {
+            if (unpackedSize > MAX_SUBTITLE_ARCHIVE_ENTRY_SIZE
+                    || totalExtracted > MAX_SUBTITLE_ARCHIVE_TOTAL_SIZE - static_cast<size_t>(unpackedSize)) {
+                Cleanup();
                 return false;
             }
-            dataOut.insert(std::pair<std::string, std::string>(HeaderDataEx.FileName, data));
-        } else {
-            ProcessFile(hArcData, RAR_SKIP, nullptr, nullptr);
+
+            context.data.clear();
+            context.exceededLimit = false;
+            context.data.reserve(static_cast<size_t>(unpackedSize));
+
+            const int processResult = ProcessFile(hArcData, RAR_TEST, nullptr, nullptr);
+            if (processResult != ERAR_SUCCESS || context.exceededLimit
+                    || totalExtracted > MAX_SUBTITLE_ARCHIVE_TOTAL_SIZE - context.data.size()) {
+                Cleanup();
+                return false;
+            }
+
+            totalExtracted += context.data.size();
+            extracted.emplace(std::string(UTF16To8(header.FileNameW).GetString()), std::move(context.data));
+        } else if (ProcessFile(hArcData, RAR_SKIP, nullptr, nullptr) != ERAR_SUCCESS) {
+            Cleanup();
+            return false;
         }
     }
 
-    CloseArchive(hArcData);
-#if !USE_STATIC_UNRAR
-    FreeLibrary(h);
-#endif
+    const bool success = readResult == ERAR_END_ARCHIVE;
+    Cleanup();
+    if (!success) {
+        return false;
+    }
 
+    dataOut = std::move(extracted);
     return true;
 }
 
@@ -559,6 +675,10 @@ SubtitlesProvidersUtils::stringMap SubtitlesProvidersUtils::StringUncompress(con
         const std::string& fileName)
 {
     stringMap result;
+    if (data.empty() || data.size() > MAX_SUBTITLE_ARCHIVE_INPUT_SIZE) {
+        return result;
+    }
+
     static const char gzip[] = { 0x1F, '\x8B' };
     static const char zlib[4][2] = { { 0x78, '\xDA' }, { 0x78, '\x9C' }, { 0x78, 0x5E }, { 0x78, 0x01 } };
     static const char zip[] = { 0x50, 0x4B, 0x03, 0x04 };
@@ -566,38 +686,35 @@ SubtitlesProvidersUtils::stringMap SubtitlesProvidersUtils::StringUncompress(con
     static const char rar5[] = { 0x52, 0x61, 0x72, 0x21, 0x1A, 0x07, 0x01, 0x00 };
 
     if (data.compare(0, sizeof(gzip), gzip, sizeof(gzip)) == 0) {
-        result.insert(std::pair<std::string, std::string>(fileName, StringGzipInflate(data)));
-    } else if ((data.compare(0, sizeof(zlib[0]), zlib[0], sizeof(zlib[0])) == 0) || (data.compare(0, sizeof(zlib[1]), zlib[1], sizeof(zlib[1])) == 0) ||
-               (data.compare(0, sizeof(zlib[2]), zlib[2], sizeof(zlib[2])) == 0) || (data.compare(0, sizeof(zlib[3]), zlib[3], sizeof(zlib[3])) == 0)) {
-        result.insert(std::pair<std::string, std::string>(fileName, StringGzipUncompress(data)));
+        std::string unpacked = StringGzipInflate(data);
+        if (!unpacked.empty()) {
+            result.emplace(fileName, std::move(unpacked));
+        }
+    } else if ((data.compare(0, sizeof(zlib[0]), zlib[0], sizeof(zlib[0])) == 0)
+            || (data.compare(0, sizeof(zlib[1]), zlib[1], sizeof(zlib[1])) == 0)
+            || (data.compare(0, sizeof(zlib[2]), zlib[2], sizeof(zlib[2])) == 0)
+            || (data.compare(0, sizeof(zlib[3]), zlib[3], sizeof(zlib[3])) == 0)) {
+        std::string unpacked = StringGzipUncompress(data);
+        if (!unpacked.empty()) {
+            result.emplace(fileName, std::move(unpacked));
+        }
     } else if (data.compare(0, sizeof(zip), zip, sizeof(zip)) == 0) {
-        TCHAR path[MAX_PATH], file[MAX_PATH];
-        GetTempPath(MAX_PATH, path);
-        GetTempFileName(path, _T("mpc"), 0, file);
-
-        CFile f;
-        if (f.Open(file, CFile::modeCreate | CFile::modeWrite | CFile::typeBinary | CFile::shareDenyNone)) {
-            f.Write((BYTE*)data.c_str(), (UINT)data.length());
-            f.Close();
+        CString tempFile;
+        if (WriteTempArchive(data, tempFile)) {
+            FileUnzip(tempFile, result);
+            DeleteFile(tempFile);
         }
-
-        FileUnzip(file, result);
-        DeleteFile(file);
-    } else if ((data.compare(0, sizeof(rar4), rar4, sizeof(rar4)) == 0) || (data.compare(0, sizeof(rar5), rar5, sizeof(rar5)) == 0)) {
-        TCHAR path[MAX_PATH], file[MAX_PATH];
-        GetTempPath(MAX_PATH, path);
-        GetTempFileName(path, _T("mpc"), 0, file);
-
-        CFile f;
-        if (f.Open(file, CFile::modeCreate | CFile::modeWrite | CFile::typeBinary | CFile::shareDenyNone)) {
-            f.Write((BYTE*)data.c_str(), (UINT)data.length());
-            f.Close();
+    } else if ((data.compare(0, sizeof(rar4), rar4, sizeof(rar4)) == 0)
+            || (data.compare(0, sizeof(rar5), rar5, sizeof(rar5)) == 0)) {
+        CString tempFile;
+        if (WriteTempArchive(data, tempFile)) {
+            FileUnRar(tempFile, result);
+            DeleteFile(tempFile);
         }
-        FileUnRar(file, result);
-        DeleteFile(file);
-    } else {
-        result.insert(std::pair<std::string, std::string>(fileName, data));
+    } else if (data.size() <= MAX_SUBTITLE_ARCHIVE_ENTRY_SIZE) {
+        result.emplace(fileName, data);
     }
+
     return result;
 }
 
