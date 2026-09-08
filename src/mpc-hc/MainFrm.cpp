@@ -24472,37 +24472,7 @@ bool CMainFrame::ProcessYoutubeDLURL(CString url, bool append, bool replace)
 
 bool CMainFrame::DownloadWithYoutubeDL(CString url, CString filename)
 {
-    PROCESS_INFORMATION proc_info;
-    STARTUPINFO startup_info;
-    const auto& s = AfxGetAppSettings();
-
-    bool ytdlp = true;
-    CString args = _T("\"") + GetYDLExePath(&ytdlp) + _T("\" --console-title \"") + url + _T("\"");
-    if (!s.sYDLCommandLine.IsEmpty()) {
-        args.Append(_T(" "));
-        args.Append(s.sYDLCommandLine);
-    }
-    if (s.bYDLAudioOnly && (s.sYDLCommandLine.Find(_T("-f ")) < 0)) {
-        args.Append(_T(" -f bestaudio"));
-    }
-    if (s.sYDLCommandLine.Find(_T("-o ")) < 0) {
-        args.Append(_T(" -o \"" + filename + "\""));
-    }
-
-    ZeroMemory(&proc_info, sizeof(PROCESS_INFORMATION));
-    ZeroMemory(&startup_info, sizeof(STARTUPINFO));
-    startup_info.cb = sizeof(STARTUPINFO);
-
-    if (!CreateProcess(NULL, args.GetBuffer(), NULL, NULL, false, 0,
-                       NULL, NULL, &startup_info, &proc_info)) {
-        AfxMessageBox(_T("An error occurred while attempting to run yt-dlp/youtube-dl"), MB_ICONERROR, 0);
-        return false;
-    }
-
-    CloseHandle(proc_info.hProcess);
-    CloseHandle(proc_info.hThread);
-
-    return true;
+    return LaunchYDLDownload(url, filename);
 }
 
 void CMainFrame::OnSettingChange(UINT uFlags, LPCTSTR lpszSection)

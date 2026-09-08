@@ -24,7 +24,8 @@ typedef rapidjson::GenericValue<rapidjson::UTF16<>> Value;
 
 struct  CUtf16JSON;
 
-CString GetYDLExePath(bool* is_ytdlp);
+CString GetYDLExePath(bool* is_ytdlp = nullptr);
+bool LaunchYDLDownload(const CString& url, const CString& filename);
 
 class CYoutubeDLInstance
 {

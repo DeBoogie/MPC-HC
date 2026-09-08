@@ -560,10 +560,11 @@ void CWebServer::OnRequest(CWebClientSocket* pClient, CStringA& hdr, CStringA& b
 
 static DWORD WINAPI KillCGI(LPVOID lParam)
 {
-    HANDLE hProcess = (HANDLE)lParam;
+    HANDLE hProcess = static_cast<HANDLE>(lParam);
     if (WaitForSingleObject(hProcess, 30000) == WAIT_TIMEOUT) {
-        TerminateProcess(hProcess, 0);
+        TerminateProcess(hProcess, ERROR_TIMEOUT);
     }
+    CloseHandle(hProcess);
     return 0;
 }
 
@@ -582,150 +583,214 @@ bool CWebServer::CallCGI(CWebClientSocket* pClient, CStringA& hdr, CStringA& bod
         return false;
     }
 
-    HANDLE hProcess = GetCurrentProcess();
-    HANDLE hChildStdinRd, hChildStdinWr, hChildStdinWrDup = nullptr;
-    HANDLE hChildStdoutRd, hChildStdoutWr, hChildStdoutRdDup = nullptr;
+    HANDLE hChildStdinRd = nullptr;
+    HANDLE hChildStdinWr = nullptr;
+    HANDLE hChildStdoutRd = nullptr;
+    HANDLE hChildStdoutWr = nullptr;
 
-    SECURITY_ATTRIBUTES saAttr;
-    ZeroMemory(&saAttr, sizeof(saAttr));
-    saAttr.nLength = sizeof(saAttr);
-    saAttr.bInheritHandle = TRUE;
+    auto CloseHandleSafe = [](HANDLE& handle) {
+        if (handle && handle != INVALID_HANDLE_VALUE) {
+            CloseHandle(handle);
+            handle = nullptr;
+        }
+    };
+    auto FailCGI = [&]() {
+        CloseHandleSafe(hChildStdinRd);
+        CloseHandleSafe(hChildStdinWr);
+        CloseHandleSafe(hChildStdoutRd);
+        CloseHandleSafe(hChildStdoutWr);
+        body = "CGI Error";
+    };
 
-    if (CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &saAttr, 0)) {
-        BOOL fSuccess = DuplicateHandle(hProcess, hChildStdoutRd, hProcess, &hChildStdoutRdDup, 0, FALSE, DUPLICATE_SAME_ACCESS);
-        UNREFERENCED_PARAMETER(fSuccess);
-        CloseHandle(hChildStdoutRd);
+    SECURITY_ATTRIBUTES saAttr = { sizeof(saAttr), nullptr, TRUE };
+    if (!CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &saAttr, 0)
+            || !SetHandleInformation(hChildStdoutRd, HANDLE_FLAG_INHERIT, 0)
+            || !CreatePipe(&hChildStdinRd, &hChildStdinWr, &saAttr, 0)
+            || !SetHandleInformation(hChildStdinWr, HANDLE_FLAG_INHERIT, 0)) {
+        FailCGI();
+        return true;
     }
 
-    if (CreatePipe(&hChildStdinRd, &hChildStdinWr, &saAttr, 0)) {
-        BOOL fSuccess = DuplicateHandle(hProcess, hChildStdinWr, hProcess, &hChildStdinWrDup, 0, FALSE, DUPLICATE_SAME_ACCESS);
-        UNREFERENCED_PARAMETER(fSuccess);
-        CloseHandle(hChildStdinWr);
+    // Build a Unicode environment block. This preserves non-ASCII paths, query strings and headers.
+    std::vector<CString> environmentVariables;
+    if (LPWCH systemEnvironment = GetEnvironmentStringsW()) {
+        for (LPCWCH variable = systemEnvironment; *variable; variable += wcslen(variable) + 1) {
+            environmentVariables.emplace_back(variable);
+        }
+        FreeEnvironmentStringsW(systemEnvironment);
     }
 
-    STARTUPINFO siStartInfo;
-    ZeroMemory(&siStartInfo, sizeof(siStartInfo));
-    siStartInfo.cb = sizeof(siStartInfo);
-    siStartInfo.hStdError = hChildStdoutWr;
-    siStartInfo.hStdOutput = hChildStdoutWr;
-    siStartInfo.hStdInput = hChildStdinRd;
-    siStartInfo.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-    siStartInfo.wShowWindow = SW_HIDE;
+    auto AppendEnvironmentVariable = [&environmentVariables](const CString& variable) {
+        environmentVariables.push_back(variable);
+    };
 
-    PROCESS_INFORMATION piProcInfo;
-    ZeroMemory(&piProcInfo, sizeof(piProcInfo));
+    AppendEnvironmentVariable(_T("GATEWAY_INTERFACE=CGI/1.1"));
+    AppendEnvironmentVariable(_T("SERVER_SOFTWARE=MPC-HC/") + VersionInfo::GetVersionString());
+    AppendEnvironmentVariable(_T("SERVER_PROTOCOL=") + AToT(pClient->m_ver));
+    AppendEnvironmentVariable(_T("REQUEST_METHOD=") + AToT(pClient->m_cmd));
+    AppendEnvironmentVariable(_T("PATH_INFO=") + redir);
+    AppendEnvironmentVariable(_T("PATH_TRANSLATED=") + path);
+    AppendEnvironmentVariable(_T("SCRIPT_NAME=") + redir);
+    AppendEnvironmentVariable(_T("QUERY_STRING=") + AToT(pClient->m_query));
 
-    CStringA envstr;
-
-    LPVOID lpvEnv = GetEnvironmentStrings();
-    if (lpvEnv) {
-        CAtlList<CString> env;
-        for (LPTSTR lpszVariable = (LPTSTR)lpvEnv; *lpszVariable; lpszVariable += _tcslen(lpszVariable) + 1) {
-            if (lpszVariable != (LPTSTR)lpvEnv) {
-                env.AddTail(lpszVariable);
-            }
-        }
-
-        env.AddTail(_T("GATEWAY_INTERFACE=CGI/1.1"));
-        env.AddTail(_T("SERVER_SOFTWARE=MPC-HC/") + VersionInfo::GetVersionString());
-        env.AddTail(_T("SERVER_PROTOCOL=") + AToT(pClient->m_ver));
-        env.AddTail(_T("REQUEST_METHOD=") + AToT(pClient->m_cmd));
-        env.AddTail(_T("PATH_INFO=") + redir);
-        env.AddTail(_T("PATH_TRANSLATED=") + path);
-        env.AddTail(_T("SCRIPT_NAME=") + redir);
-        env.AddTail(_T("QUERY_STRING=") + AToT(pClient->m_query));
-
-        {
-            CStringA str;
-            if (pClient->m_hdrlines.Lookup("content-type", str)) {
-                env.AddTail(_T("CONTENT_TYPE=") + AToT(str));
-            }
-            if (pClient->m_hdrlines.Lookup("content-length", str)) {
-                env.AddTail(_T("CONTENT_LENGTH=") + AToT(str));
-            }
-        }
-
-        POSITION pos = pClient->m_hdrlines.GetStartPosition();
-        while (pos) {
-            CString key = pClient->m_hdrlines.GetKeyAt(pos);
-            CString value = pClient->m_hdrlines.GetNextValue(pos);
-            key.Replace(_T("-"), _T("_"));
-            key.MakeUpper();
-            env.AddTail(_T("HTTP_") + key + _T("=") + value);
-        }
-
-        CString str, name;
-        UINT port;
-
-        if (pClient->GetPeerName(name, port)) {
-            str.Format(_T("%u"), port);
-            env.AddTail(_T("REMOTE_ADDR=") + name);
-            env.AddTail(_T("REMOTE_HOST=") + name);
-            env.AddTail(_T("REMOTE_PORT=") + str);
-        }
-
-        if (pClient->GetSockName(name, port)) {
-            str.Format(_T("%u"), port);
-            env.AddTail(_T("SERVER_NAME=") + name);
-            env.AddTail(_T("SERVER_PORT=") + str);
-        }
-
-        env.AddTail(_T("\0"));
-
-        str = Implode(env, '\0');
-        envstr = CStringA(str, str.GetLength());
-
-        FreeEnvironmentStrings((LPTSTR)lpvEnv);
+    CStringA headerValue;
+    if (pClient->m_hdrlines.Lookup("content-type", headerValue)) {
+        AppendEnvironmentVariable(_T("CONTENT_TYPE=") + AToT(headerValue));
+    }
+    if (pClient->m_hdrlines.Lookup("content-length", headerValue)) {
+        AppendEnvironmentVariable(_T("CONTENT_LENGTH=") + AToT(headerValue));
     }
 
-    TCHAR* cmdln = DEBUG_NEW TCHAR[32768];
-    _sntprintf_s(cmdln, 32768, 32768, _T("\"%s\" \"%s\""), cgi.GetString(), path.GetString());
+    POSITION pos = pClient->m_hdrlines.GetStartPosition();
+    while (pos) {
+        CString key = pClient->m_hdrlines.GetKeyAt(pos);
+        CString value = pClient->m_hdrlines.GetNextValue(pos);
+        key.Replace(_T("-"), _T("_"));
+        key.MakeUpper();
+        AppendEnvironmentVariable(_T("HTTP_") + key + _T("=") + value);
+    }
 
-    if (hChildStdinRd && hChildStdoutWr)
-        if (CreateProcess(
-                    nullptr, cmdln, nullptr, nullptr, TRUE, 0,
-                    envstr.GetLength() ? (LPVOID)(LPCSTR)envstr : nullptr,
-                    dir, &siStartInfo, &piProcInfo)) {
-            DWORD ThreadId;
-            VERIFY(CreateThread(nullptr, 0, KillCGI, (LPVOID)piProcInfo.hProcess, 0, &ThreadId));
+    CString value, name;
+    UINT port;
+    if (pClient->GetPeerName(name, port)) {
+        value.Format(_T("%u"), port);
+        AppendEnvironmentVariable(_T("REMOTE_ADDR=") + name);
+        AppendEnvironmentVariable(_T("REMOTE_HOST=") + name);
+        AppendEnvironmentVariable(_T("REMOTE_PORT=") + value);
+    }
+    if (pClient->GetSockName(name, port)) {
+        value.Format(_T("%u"), port);
+        AppendEnvironmentVariable(_T("SERVER_NAME=") + name);
+        AppendEnvironmentVariable(_T("SERVER_PORT=") + value);
+    }
 
-            static const int BUFFSIZE = 1024;
-            DWORD dwRead, dwWritten = 0;
+    std::sort(environmentVariables.begin(), environmentVariables.end(), [](const CString& left, const CString& right) {
+        return left.CompareNoCase(right) < 0;
+    });
+    std::vector<wchar_t> environment;
+    for (const CString& variable : environmentVariables) {
+        const wchar_t* text = variable.GetString();
+        environment.insert(environment.end(), text, text + variable.GetLength());
+        environment.push_back(L'\0');
+    }
+    environment.push_back(L'\0');
 
-            int i = 0, len = pClient->m_data.GetLength();
-            for (; i < len; i += dwWritten) {
-                if (!WriteFile(hChildStdinWrDup, (LPCSTR)pClient->m_data + i, std::min(len - i, BUFFSIZE), &dwWritten, nullptr)) {
-                    break;
-                }
-            }
+    STARTUPINFOEX startupInfo = {};
+    startupInfo.StartupInfo.cb = sizeof(startupInfo);
+    startupInfo.StartupInfo.hStdError = hChildStdoutWr;
+    startupInfo.StartupInfo.hStdOutput = hChildStdoutWr;
+    startupInfo.StartupInfo.hStdInput = hChildStdinRd;
+    startupInfo.StartupInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+    startupInfo.StartupInfo.wShowWindow = SW_HIDE;
 
-            CloseHandle(hChildStdinWrDup);
-            CloseHandle(hChildStdoutWr);
+    SIZE_T attributeListSize = 0;
+    InitializeProcThreadAttributeList(nullptr, 1, 0, &attributeListSize);
+    if (!attributeListSize) {
+        FailCGI();
+        return true;
+    }
 
-            body.Empty();
+    std::vector<BYTE> attributeListBuffer(attributeListSize);
+    startupInfo.lpAttributeList = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(attributeListBuffer.data());
+    if (!InitializeProcThreadAttributeList(startupInfo.lpAttributeList, 1, 0, &attributeListSize)) {
+        FailCGI();
+        return true;
+    }
 
-            CStringA buff;
-            while (i == len && ReadFile(hChildStdoutRdDup, buff.GetBuffer(BUFFSIZE), BUFFSIZE, &dwRead, nullptr) && dwRead) {
-                buff.ReleaseBufferSetLength(dwRead);
-                body += buff;
-            }
+    HANDLE inheritedHandles[] = { hChildStdinRd, hChildStdoutWr };
+    const BOOL handlesConfigured = UpdateProcThreadAttribute(
+        startupInfo.lpAttributeList,
+        0,
+        PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
+        inheritedHandles,
+        sizeof(inheritedHandles),
+        nullptr,
+        nullptr);
+    if (!handlesConfigured) {
+        DeleteProcThreadAttributeList(startupInfo.lpAttributeList);
+        FailCGI();
+        return true;
+    }
 
-            int hdrend = body.Find("\r\n\r\n");
-            if (hdrend >= 0) {
-                hdr = body.Left(hdrend + 2);
-                body = body.Mid(hdrend + 4);
-            }
+    CString commandLine;
+    commandLine.Format(_T("\"%s\" \"%s\""), cgi.GetString(), path.GetString());
 
-            CloseHandle(hChildStdinRd);
-            CloseHandle(hChildStdoutRdDup);
+    PROCESS_INFORMATION processInfo = {};
+    LPTSTR mutableCommandLine = commandLine.GetBuffer();
+    const DWORD creationFlags = CREATE_UNICODE_ENVIRONMENT | EXTENDED_STARTUPINFO_PRESENT | CREATE_NO_WINDOW;
+    const BOOL created = CreateProcess(
+        cgi.GetString(),
+        mutableCommandLine,
+        nullptr,
+        nullptr,
+        TRUE,
+        creationFlags,
+        environment.data(),
+        dir,
+        &startupInfo.StartupInfo,
+        &processInfo);
+    commandLine.ReleaseBuffer();
+    DeleteProcThreadAttributeList(startupInfo.lpAttributeList);
 
-            CloseHandle(piProcInfo.hProcess);
-            CloseHandle(piProcInfo.hThread);
-        } else {
-            body = "CGI Error";
+    // The parent no longer needs the child-side pipe ends after CreateProcess returns.
+    CloseHandleSafe(hChildStdinRd);
+    CloseHandleSafe(hChildStdoutWr);
+
+    if (!created) {
+        FailCGI();
+        return true;
+    }
+
+    // The watchdog owns a duplicate process handle so the request thread can close its own safely.
+    HANDLE watchdogProcess = nullptr;
+    HANDLE watchdogThread = nullptr;
+    if (DuplicateHandle(GetCurrentProcess(), processInfo.hProcess, GetCurrentProcess(), &watchdogProcess,
+                        SYNCHRONIZE | PROCESS_TERMINATE, FALSE, 0)) {
+        watchdogThread = CreateThread(nullptr, 0, KillCGI, watchdogProcess, 0, nullptr);
+    }
+    if (watchdogThread) {
+        CloseHandle(watchdogThread);
+    } else {
+        CloseHandleSafe(watchdogProcess);
+        TerminateProcess(processInfo.hProcess, ERROR_NOT_ENOUGH_MEMORY);
+    }
+
+    static const DWORD BUFFSIZE = 4096;
+    DWORD written = 0;
+    int offset = 0;
+    const int dataLength = pClient->m_data.GetLength();
+    while (offset < dataLength) {
+        const DWORD bytesToWrite = static_cast<DWORD>(std::min<int>(dataLength - offset, BUFFSIZE));
+        if (!WriteFile(hChildStdinWr, pClient->m_data.GetString() + offset,
+                       bytesToWrite, &written, nullptr) || written == 0) {
+            break;
         }
+        offset += written;
+    }
+    CloseHandleSafe(hChildStdinWr);
 
-    delete [] cmdln;
+    body.Empty();
+    if (offset == dataLength) {
+        char buffer[BUFFSIZE];
+        DWORD read = 0;
+        while (ReadFile(hChildStdoutRd, buffer, sizeof(buffer), &read, nullptr) && read) {
+            body.Append(buffer, read);
+        }
+    } else {
+        body = "CGI Error";
+    }
+    CloseHandleSafe(hChildStdoutRd);
 
+    // The watchdog bounds this wait to approximately 30 seconds from process creation.
+    WaitForSingleObject(processInfo.hProcess, INFINITE);
+
+    int hdrend = body.Find("\r\n\r\n");
+    if (hdrend >= 0) {
+        hdr = body.Left(hdrend + 2);
+        body = body.Mid(hdrend + 4);
+    }
+
+    CloseHandle(processInfo.hProcess);
+    CloseHandle(processInfo.hThread);
     return true;
 }
