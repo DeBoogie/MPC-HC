@@ -129,5 +129,6 @@ Parser and process-launch changes should also be exercised with:
 - Unsupported `Transfer-Encoding` request framing.
 - Header terminators split across multiple socket receives.
 - POST bodies that arrive in multiple receives or include bytes beyond the declared content length.
+- State-changing web parameters must reject trailing garbage, numeric overflow, NaN/infinite/out-of-range percentages, unsupported WM_COMMAND IDs, malformed seek times, and malformed resource/DVB IDs.
 
 Crashes, hangs and unbounded allocation are release blockers for these cases.

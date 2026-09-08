@@ -28,6 +28,7 @@
 #include "WebClientSocket.h"
 #include "text.h"
 #include "PathUtils.h"
+#include <limits>
 
 namespace {
 constexpr int MAX_HEADER_SIZE = 64 * 1024;
@@ -55,6 +56,131 @@ bool ParseContentLength(const CStringA& text, int& length)
     }
 
     length = parsed;
+    return true;
+}
+
+
+bool ParseIntStrict(const CString& text, int& value)
+{
+    CString input = text;
+    input.Trim();
+    if (input.IsEmpty()) {
+        return false;
+    }
+
+    TCHAR* end = nullptr;
+    const TCHAR* start = input.GetString();
+    const __int64 parsed = _tcstoi64(start, &end, 10);
+    if (end == start || *end != _T('\0') || parsed < INT_MIN || parsed > INT_MAX) {
+        return false;
+    }
+
+    value = static_cast<int>(parsed);
+    return true;
+}
+
+bool ParsePercentStrict(const CString& text, double& value)
+{
+    CString input = text;
+    input.Trim();
+    if (input.IsEmpty()) {
+        return false;
+    }
+
+    TCHAR* end = nullptr;
+    const TCHAR* start = input.GetString();
+    const double parsed = _tcstod(start, &end);
+    if (end == start || *end != _T('\0') || !std::isfinite(parsed) || parsed < 0.0 || parsed > 100.0) {
+        return false;
+    }
+
+    value = parsed;
+    return true;
+}
+
+bool ParseSeekTimeStrict(const CString& text, REFERENCE_TIME& value)
+{
+    CString input = text;
+    input.Trim();
+
+    const int firstColon = input.Find(_T(':'));
+    const int secondColon = firstColon >= 0 ? input.Find(_T(':'), firstColon + 1) : -1;
+    if (firstColon <= 0 || secondColon <= firstColon + 1 || input.Find(_T(':'), secondColon + 1) >= 0) {
+        return false;
+    }
+
+    CString hoursText = input.Left(firstColon);
+    CString minutesText = input.Mid(firstColon + 1, secondColon - firstColon - 1);
+    CString secondsText = input.Mid(secondColon + 1);
+    CString millisText;
+
+    const int dot = secondsText.Find(_T('.'));
+    if (dot >= 0) {
+        if (dot == 0 || dot == secondsText.GetLength() - 1 || secondsText.Find(_T('.'), dot + 1) >= 0) {
+            return false;
+        }
+        millisText = secondsText.Mid(dot + 1);
+        secondsText = secondsText.Left(dot);
+    }
+
+    int hours = 0, minutes = 0, seconds = 0, millis = 0;
+    if (!ParseIntStrict(hoursText, hours)
+            || !ParseIntStrict(minutesText, minutes)
+            || !ParseIntStrict(secondsText, seconds)
+            || (!millisText.IsEmpty() && !ParseIntStrict(millisText, millis))
+            || hours < 0 || minutes < 0 || minutes > 59
+            || seconds < 0 || seconds > 59 || millis < 0 || millis > 999) {
+        return false;
+    }
+
+    const LONGLONG totalSeconds = (static_cast<LONGLONG>(hours) * 60 + minutes) * 60 + seconds;
+    if (totalSeconds > ((_I64_MAX / 10000) - millis) / 1000) {
+        return false;
+    }
+
+    value = (totalSeconds * 1000 + millis) * 10000;
+    return true;
+}
+
+bool ParseUIntPtrHexStrict(const CString& text, uintptr_t& value)
+{
+    CString input = text;
+    input.Trim();
+    if (input.IsEmpty() || input[0] == _T('-') || input[0] == _T('+')) {
+        return false;
+    }
+
+    int pos = 0;
+    if (input.GetLength() >= 2 && input[0] == _T('0') && (input[1] == _T('x') || input[1] == _T('X'))) {
+        pos = 2;
+    }
+    if (pos == input.GetLength()) {
+        return false;
+    }
+
+    uintptr_t parsed = 0;
+    constexpr uintptr_t maxValue = std::numeric_limits<uintptr_t>::max();
+    for (; pos < input.GetLength(); ++pos) {
+        const TCHAR ch = input[pos];
+        unsigned digit = 0;
+        if (ch >= _T('0') && ch <= _T('9')) {
+            digit = static_cast<unsigned>(ch - _T('0'));
+        } else if (ch >= _T('a') && ch <= _T('f')) {
+            digit = 10u + static_cast<unsigned>(ch - _T('a'));
+        } else if (ch >= _T('A') && ch <= _T('F')) {
+            digit = 10u + static_cast<unsigned>(ch - _T('A'));
+        } else {
+            return false;
+        }
+        if (parsed > (maxValue - digit) / 16u) {
+            return false;
+        }
+        parsed = parsed * 16u + digit;
+    }
+    if (parsed == 0) {
+        return false;
+    }
+    value = parsed;
     return true;
 }
 
@@ -427,9 +553,13 @@ bool CWebClientSocket::OnCommand(CStringA& hdr, CStringA& body, CStringA& mime)
 {
     CString arg;
     if (m_request.Lookup("wm_command", arg)) {
-        int id = _ttol(arg);
+        int id = 0;
+        if (ParseIntStrict(arg, id) && id > 0) {
+            if (CAppSettings::CommandIDToWMCMD.find(static_cast<DWORD>(id)) == CAppSettings::CommandIDToWMCMD.end()) {
+                hdr = "HTTP/1.0 400 Bad Request\r\n";
+                return true;
+            }
 
-        if (id > 0) {
             if (id == ID_FILE_EXIT) {
                 m_pMainFrame->PostMessage(WM_COMMAND, id);
             } else {
@@ -441,47 +571,65 @@ bool CWebClientSocket::OnCommand(CStringA& hdr, CStringA& body, CStringA& mime)
                 ::SendMessageTimeout(m_pMainFrame->GetSafeHwnd(), WM_COMMAND, id, 0,
                                      SMTO_NORMAL, 5000, &dwResult);
             }
-        } else {
-            if (arg == _T(CMD_SETPOS) && m_request.Lookup("position", arg)) {
-                REFERENCE_TIME rtDur = m_pMainFrame->GetDur();
-                if (rtDur == 0) {
-                    return false;
+        } else if (arg == _T(CMD_SETPOS)) {
+            const REFERENCE_TIME rtDur = m_pMainFrame->GetDur();
+            if (rtDur == 0) {
+                return false;
+            }
+
+            CString position;
+            CString percentText;
+            if (m_request.Lookup("position", position)) {
+                REFERENCE_TIME rtPos = 0;
+                if (!ParseSeekTimeStrict(position, rtPos)) {
+                    hdr = "HTTP/1.0 400 Bad Request\r\n";
+                    return true;
                 }
-                int h, m, s, ms = 0;
-                TCHAR c;
-                if (_stscanf_s(arg, _T("%d%c%d%c%d%c%d"), &h, &c, 1, &m, &c, 1, &s, &c, 1, &ms) >= 5) {
-                    REFERENCE_TIME rtPos = 10000i64 * (((h * 60 + m) * 60 + s) * 1000 + ms);
-                    m_pMainFrame->SeekTo(rtPos);
-                    for (int retries = 20; retries-- > 0; Sleep(50)) {
-                        if (abs((int)((rtPos - m_pMainFrame->GetPos()) / 10000)) < 100) {
-                            break;
-                        }
+                m_pMainFrame->SeekTo(rtPos);
+                for (int retries = 20; retries-- > 0; Sleep(50)) {
+                    const LONGLONG deltaMs = (rtPos - m_pMainFrame->GetPos()) / 10000;
+                    if (deltaMs > -100 && deltaMs < 100) {
+                        break;
                     }
                 }
-            } else if (arg == _T(CMD_SETPOS) && m_request.Lookup("percent", arg)) {
-                REFERENCE_TIME rtDur = m_pMainFrame->GetDur();
-                if (rtDur == 0) {
-                    return false;
+            } else if (m_request.Lookup("percent", percentText)) {
+                double percent = 0.0;
+                if (!ParsePercentStrict(percentText, percent)) {
+                    hdr = "HTTP/1.0 400 Bad Request\r\n";
+                    return true;
                 }
-                float percent = 0;
-                if (_stscanf_s(arg, _T("%f"), &percent) == 1) {
-                    m_pMainFrame->SeekTo((REFERENCE_TIME)(percent / 100 * rtDur));
-                }
-            } else if (arg == _T(WEB_CMD_SETVOLUME) && m_request.Lookup("volume", arg)) {
-                int volume = _tcstol(arg, nullptr, 10);
-                m_pMainFrame->m_wndToolBar.Volume = std::min(std::max(volume, 0), 100);
-            } else if (arg == _T(CMD_SETPLAYLISTINDEX) && m_request.Lookup("index", arg)) {
-                int index = _tstoi(arg);
-                if (index >= 0 && index < m_pMainFrame->m_wndPlaylistBar.GetCount()) {
-                    m_pMainFrame->m_wndPlaylistBar.SetSelIdx(index);
-                    // Post rather than call directly: OpenCurPlaylistItem() tears down and
-                    // rebuilds the graph, which is only safe from the top of the message
-                    // loop. Every other call site (playlist double-click, context menu,
-                    // X-button prev/next) posts this same message instead of calling it
-                    // inline; calling it synchronously from here crashes MPC-HC.
-                    m_pMainFrame->PostMessage(WM_MPC_OPENCURPLAYLIST, 0, 0);
-                }
+                m_pMainFrame->SeekTo(static_cast<REFERENCE_TIME>(percent / 100.0 * rtDur));
+            } else {
+                hdr = "HTTP/1.0 400 Bad Request\r\n";
+                return true;
             }
+        } else if (arg == _T(WEB_CMD_SETVOLUME)) {
+            CString volumeText;
+            double volumePercent = 0.0;
+            if (!m_request.Lookup("volume", volumeText) || !ParsePercentStrict(volumeText, volumePercent)) {
+                hdr = "HTTP/1.0 400 Bad Request\r\n";
+                return true;
+            }
+            // Preserve the previous integer/truncation behavior used by the built-in slider.
+            m_pMainFrame->m_wndToolBar.Volume = static_cast<int>(volumePercent);
+        } else if (arg == _T(CMD_SETPLAYLISTINDEX)) {
+            CString indexText;
+            int index = -1;
+            if (!m_request.Lookup("index", indexText) || !ParseIntStrict(indexText, index)
+                    || index < 0 || index >= m_pMainFrame->m_wndPlaylistBar.GetCount()) {
+                hdr = "HTTP/1.0 400 Bad Request\r\n";
+                return true;
+            }
+            m_pMainFrame->m_wndPlaylistBar.SetSelIdx(index);
+            // Post rather than call directly: OpenCurPlaylistItem() tears down and
+            // rebuilds the graph, which is only safe from the top of the message
+            // loop. Every other call site (playlist double-click, context menu,
+            // X-button prev/next) posts this same message instead of calling it
+            // inline; calling it synchronously from here crashes MPC-HC.
+            m_pMainFrame->PostMessage(WM_MPC_OPENCURPLAYLIST, 0, 0);
+        } else {
+            hdr = "HTTP/1.0 400 Bad Request\r\n";
+            return true;
         }
     }
 
@@ -1045,7 +1193,7 @@ bool CWebClientSocket::OnViewRes(CStringA& hdr, CStringA& body, CStringA& mime)
     }
 
     uintptr_t key = 0;
-    if (1 != _stscanf_s(id, _T("%Ix"), &key) || key == 0) {
+    if (!ParseUIntPtrHexStrict(id, key)) {
         return false;
     }
 
@@ -1087,7 +1235,7 @@ bool CWebClientSocket::OnDVBSetChannel(CStringA& hdr, CStringA& body, CStringA& 
         // the 'idx' GET parameter should contain a valid integer of the
         // channel to switch to.
         if (m_get.Lookup("idx", requestParam)
-                && _stscanf_s(requestParam, _T("%d"), &channelIdx) == 1
+                && ParseIntStrict(requestParam, channelIdx)
                 && channelIdx >= 0) {
             if (AfxGetAppSettings().FindChannelByPref(channelIdx)) {
                 m_pMainFrame->SendMessage(WM_COMMAND, channelIdx + ID_NAVIGATE_JUMPTO_SUBITEM_START);
