@@ -79,33 +79,6 @@ CWebClientSocket::~CWebClientSocket()
     std::free(m_buff);
 }
 
-bool CWebClientSocket::SetCookie(CStringA name, CString value, __time64_t expire, CString path, CString domain)
-{
-    if (name.IsEmpty()) {
-        return false;
-    }
-    if (value.IsEmpty()) {
-        m_cookie.RemoveKey(name);
-        return true;
-    }
-
-    m_cookie[name] = value;
-
-    m_cookieattribs[name].path = path;
-    m_cookieattribs[name].domain = domain;
-
-    if (expire >= 0) {
-        CTime t(expire);
-        SYSTEMTIME st;
-        t.GetAsSystemTime(st);
-        CStringA str;
-        SystemTimeToHttpDate(st, str);
-        m_cookieattribs[name].expire = str;
-    }
-
-    return true;
-}
-
 void CWebClientSocket::Clear()
 {
     m_buffLen = 0;
@@ -146,16 +119,6 @@ void CWebClientSocket::HandleRequest()
                 m_cookie[sl2.GetHead()].Empty();
             }
         }
-    }
-
-    // start new session
-
-    if (!m_cookie.Lookup("MPCSESSIONID", m_sessid)) {
-        srand((unsigned int)time(nullptr));
-        m_sessid.Format(_T("%08x"), rand() * 0x12345678);
-        SetCookie("MPCSESSIONID", m_sessid);
-    } else {
-        // TODO: load session
     }
 
     CStringA reshdr, resbody;
@@ -216,32 +179,6 @@ void CWebClientSocket::HandleRequest()
     }
 
     if (!reshdr.IsEmpty()) {
-        // cookies
-        {
-            POSITION pos = m_cookie.GetStartPosition();
-            while (pos) {
-                CStringA key;
-                CString value;
-                m_cookie.GetNextAssoc(pos, key, value);
-                reshdr += "Set-Cookie: " + key + "=" + TToA(value);
-                POSITION pos2 = m_cookieattribs.GetStartPosition();
-                while (pos2) {
-                    cookie_attribs attribs;
-                    m_cookieattribs.GetNextAssoc(pos2, key, attribs);
-                    if (!attribs.path.IsEmpty()) {
-                        reshdr += "; path=" + attribs.path;
-                    }
-                    if (!attribs.expire.IsEmpty()) {
-                        reshdr += "; expire=" + attribs.expire;
-                    }
-                    if (!attribs.domain.IsEmpty()) {
-                        reshdr += "; domain=" + attribs.domain;
-                    }
-                }
-                reshdr += "\r\n";
-            }
-        }
-
         reshdr +=
             "Access-Control-Allow-Origin: *\r\n"
             "Server: MPC-HC WebServer\r\n"
