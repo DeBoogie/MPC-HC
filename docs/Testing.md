@@ -88,6 +88,7 @@ On at least Intel, AMD and NVIDIA hardware where available:
 - Built-in controls-page status polling through `/status.json`.
 - Media/window titles containing quotes, backslashes, ampersands, angle brackets and non-ASCII text.
 - Dynamic title/status text must render literally rather than becoming HTML markup.
+- With web debug output enabled, request headers, method, path, and version containing HTML-significant characters must render literally rather than becoming markup.
 - File-browser directory/file names and displayed paths containing ampersands or other HTML-significant text must render literally.
 - Custom web pages/resources with empty, truncated, unreadable, or oversized files must fail cleanly without negative/narrowed buffer lengths or partial response bodies.
 - Gzip responses for small/incompressible and compressible bodies must either use a complete valid gzip stream or fall back to the original uncompressed body.
