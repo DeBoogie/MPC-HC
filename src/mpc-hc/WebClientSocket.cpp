@@ -880,15 +880,19 @@ static bool ReadFileBytes(CStringW path, CStringA& body)
     if (_wfopen_s(&f, path, L"rb") || !f) {
         return false;
     }
-    fseek(f, 0, SEEK_END);
-    long size = ftell(f);
     bool ok = false;
-    if (size > 0) {
-        char* buff = body.GetBufferSetLength(size);
-        fseek(f, 0, SEEK_SET);
-        ok = (long)fread(buff, 1, size, f) == size;
+    if (_fseeki64(f, 0, SEEK_END) == 0) {
+        const __int64 size = _ftelli64(f);
+        if (size > 0 && size <= INT_MAX && _fseeki64(f, 0, SEEK_SET) == 0) {
+            char* buff = body.GetBufferSetLength(static_cast<int>(size));
+            const size_t bytesRead = fread(buff, 1, static_cast<size_t>(size), f);
+            ok = bytesRead == static_cast<size_t>(size) && !ferror(f);
+        }
     }
     fclose(f);
+    if (!ok) {
+        body.Empty();
+    }
     return ok;
 }
 

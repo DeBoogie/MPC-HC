@@ -333,13 +333,28 @@ bool CWebServer::LoadPage(UINT resid, CStringA& str, CString path)
     CString redir;
     if (ToLocalPath(path, redir)) {
         FILE* f = nullptr;
-        if (!_tfopen_s(&f, path, _T("rb"))) {
-            fseek(f, 0, 2);
-            char* buff = str.GetBufferSetLength(ftell(f));
-            fseek(f, 0, 0);
-            int len = (int)fread(buff, 1, str.GetLength(), f);
+        if (!_tfopen_s(&f, path, _T("rb")) && f) {
+            bool loaded = false;
+            if (_fseeki64(f, 0, SEEK_END) == 0) {
+                const __int64 size = _ftelli64(f);
+                if (size >= 0 && size <= INT_MAX && _fseeki64(f, 0, SEEK_SET) == 0) {
+                    str.Empty();
+                    if (size == 0) {
+                        loaded = true;
+                    } else {
+                        char* buff = str.GetBufferSetLength(static_cast<int>(size));
+                        const size_t bytesRead = fread(buff, 1, static_cast<size_t>(size), f);
+                        loaded = bytesRead == static_cast<size_t>(size) && !ferror(f);
+                        if (!loaded) {
+                            str.Empty();
+                        }
+                    }
+                }
+            }
             fclose(f);
-            return len == str.GetLength();
+            if (loaded) {
+                return true;
+            }
         }
     }
 
@@ -557,30 +572,31 @@ void CWebServer::OnRequest(CWebClientSocket* pClient, CStringA& hdr, CStringA& b
                 break;
             }
 
-            int gzippedBuffLen = body.GetLength();
-            BYTE* gzippedBuff = DEBUG_NEW BYTE[gzippedBuffLen];
-
-            // Compress
-            strm.avail_in = body.GetLength();
-            strm.next_in = (Bytef*)(LPCSTR)body;
-
-            strm.avail_out = gzippedBuffLen;
-            strm.next_out = gzippedBuff;
-
-            ret = deflate(&strm, Z_FINISH);
-            if (ret != Z_STREAM_END || strm.avail_in != 0) {
-                ASSERT(0);
+            const uLong compressedBound = deflateBound(&strm, static_cast<uLong>(body.GetLength()));
+            if (compressedBound == 0 || compressedBound > INT_MAX) {
                 deflateEnd(&strm);
-                delete [] gzippedBuff;
                 break;
             }
-            gzippedBuffLen -= strm.avail_out;
-            memcpy(body.GetBufferSetLength(gzippedBuffLen), gzippedBuff, gzippedBuffLen);
+            std::vector<BYTE> gzippedBuffer(static_cast<size_t>(compressedBound));
 
-            // Clean up
+            // Compress in a single pass using the bound required by zlib for Z_FINISH.
+            strm.avail_in = static_cast<uInt>(body.GetLength());
+            strm.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(body.GetString()));
+
+            strm.avail_out = static_cast<uInt>(compressedBound);
+            strm.next_out = gzippedBuffer.data();
+
+            ret = deflate(&strm, Z_FINISH);
+            const uLong compressedLength = compressedBound - strm.avail_out;
+            const bool compressed = ret == Z_STREAM_END && strm.avail_in == 0
+                && compressedLength < static_cast<uLong>(body.GetLength());
             deflateEnd(&strm);
-            delete [] gzippedBuff;
+            if (!compressed) {
+                break;
+            }
 
+            memcpy(body.GetBufferSetLength(static_cast<int>(compressedLength)),
+                   gzippedBuffer.data(), static_cast<size_t>(compressedLength));
             hdr += "Content-Encoding: gzip\r\n";
         } while (0);
 

@@ -87,6 +87,8 @@ On at least Intel, AMD and NVIDIA hardware where available:
 - Media/window titles containing quotes, backslashes, ampersands, angle brackets and non-ASCII text.
 - Dynamic title/status text must render literally rather than becoming HTML markup.
 - File-browser directory/file names and displayed paths containing ampersands or other HTML-significant text must render literally.
+- Custom web pages/resources with empty, truncated, unreadable, or oversized files must fail cleanly without negative/narrowed buffer lengths or partial response bodies.
+- Gzip responses for small/incompressible and compressible bodies must either use a complete valid gzip stream or fall back to the original uncompressed body.
 - Client-supplied Cookie headers must not be reflected back as Set-Cookie response headers.
 - The legacy `/status.html` endpoint remains reachable for third-party compatibility.
 - Legacy `/status.html` fields containing quotes, backslashes, control characters, or Unicode remain syntactically escaped inside the `OnStatus(...)` envelope.
