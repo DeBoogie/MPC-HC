@@ -39,11 +39,6 @@ class CWebClientSocket : public CAsyncSocket
     PARSING_STATE m_parsingState;
     int m_dataLen;
 
-    struct cookie_attribs {
-        CString path, expire, domain;
-    };
-    CAtlStringMap<cookie_attribs, CStringA> m_cookieattribs;
-
     void Clear();
     void HandleRequest();
     bool ParseHeader(const char* headerEnd);
@@ -57,9 +52,6 @@ public:
     CWebClientSocket(CWebServer* pWebServer, CMainFrame* pMainFrame);
     virtual ~CWebClientSocket();
 
-    bool SetCookie(CStringA name, CString value = _T(""), __time64_t expire = -1, CString path = _T("/"), CString domain = _T(""));
-
-    CString m_sessid;
     CStringA m_cmd, m_path, m_query, m_ver;
     CStringA m_data;
     CAtlStringMap<CStringA, CStringA> m_hdrlines;
