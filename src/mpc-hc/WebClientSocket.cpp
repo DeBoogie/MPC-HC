@@ -29,8 +29,35 @@
 #include "text.h"
 #include "PathUtils.h"
 
-#define MAX_HEADER_SIZE 512 * 1024
-#define MAX_DATA_SIZE 2 * 1024 * 1024
+namespace {
+constexpr int MAX_HEADER_SIZE = 64 * 1024;
+constexpr int MAX_DATA_SIZE = 2 * 1024 * 1024;
+
+bool ParseContentLength(const CStringA& text, int& length)
+{
+    CStringA value = text;
+    value.Trim();
+    if (value.IsEmpty()) {
+        return false;
+    }
+
+    int parsed = 0;
+    for (int i = 0; i < value.GetLength(); ++i) {
+        const char ch = value[i];
+        if (ch < '0' || ch > '9') {
+            return false;
+        }
+        const int digit = ch - '0';
+        if (parsed > (MAX_DATA_SIZE - digit) / 10) {
+            return false;
+        }
+        parsed = parsed * 10 + digit;
+    }
+
+    length = parsed;
+    return true;
+}
+}
 
 CWebClientSocket::CWebClientSocket(CWebServer* pWebServer, CMainFrame* pMainFrame)
     : m_pWebServer(pWebServer)
@@ -41,12 +68,15 @@ CWebClientSocket::CWebClientSocket(CWebServer* pWebServer, CMainFrame* pMainFram
     , m_parsingState(PARSING_HEADER)
     , m_dataLen(0)
 {
-    m_buff = DEBUG_NEW char[m_buffMaxLen];
+    m_buff = static_cast<char*>(std::malloc(m_buffMaxLen));
+    if (!m_buff) {
+        throw std::bad_alloc();
+    }
 }
 
 CWebClientSocket::~CWebClientSocket()
 {
-    delete [] m_buff;
+    std::free(m_buff);
 }
 
 bool CWebClientSocket::SetCookie(CStringA name, CString value, __time64_t expire, CString path, CString domain)
@@ -90,6 +120,7 @@ void CWebClientSocket::Clear()
 
     m_cmd.Empty();
     m_path.Empty();
+    m_query.Empty();
     m_ver.Empty();
     m_get.RemoveAll();
     m_post.RemoveAll();
@@ -234,57 +265,84 @@ void CWebClientSocket::HandleRequest()
     }
 }
 
-void CWebClientSocket::ParseHeader(const char* headerEnd)
+bool CWebClientSocket::ParseHeader(const char* headerEnd)
 {
-    char* start = m_buff, *end;
+    const char* start = m_buff;
+    const char* requestLineEnd = strstr(start, "\r\n");
+    if (!requestLineEnd || requestLineEnd > headerEnd) {
+        return false;
+    }
 
-    // Parse the request type
-    end = strchr(start, ' ');
-    if (!end) {
-        ASSERT(false);
-        return;
+    // Parse: METHOD SP request-target SP HTTP-version CRLF
+    const char* firstSpace = static_cast<const char*>(memchr(start, ' ', requestLineEnd - start));
+    if (!firstSpace || firstSpace == start) {
+        return false;
     }
-    m_cmd.SetString(start, int(end - start));
+    const char* secondSpace = static_cast<const char*>(memchr(firstSpace + 1, ' ', requestLineEnd - firstSpace - 1));
+    if (!secondSpace || secondSpace == firstSpace + 1 || secondSpace + 1 == requestLineEnd) {
+        return false;
+    }
+
+    m_cmd.SetString(start, int(firstSpace - start));
     m_cmd.MakeUpper();
-    start = end + 1;
-    end = strchr(start, ' ');
-    if (!end) {
-        ASSERT(false);
-        return;
-    }
-    m_path.SetString(start, int(end - start));
-    start = end + 1;
-    end = strstr(start, "\r\n");
-    m_ver.SetString(start, int(end - start));
+    m_path.SetString(firstSpace + 1, int(secondSpace - firstSpace - 1));
+    m_ver.SetString(secondSpace + 1, int(requestLineEnd - secondSpace - 1));
     m_ver.MakeUpper();
 
-    CStringA key, val;
-    start = end + 2;
+    start = requestLineEnd + 2;
     while (start < headerEnd) {
-        // Parse the header fields
-        end = strchr(start, ':');
-        key.SetString(start, int(end - start));
-        start = end + 1;
-        end = strstr(start, "\r\n");
-        val.SetString(start, int(end - start));
-        start = end + 2;
-
-        m_hdrlines[key.MakeLower()] = val;
-    }
-
-    if (m_cmd == "POST") {
-        CStringA str;
-        if (m_hdrlines.Lookup("content-length", str)) {
-            m_dataLen = strtol(str, nullptr, 10);
+        const char* lineEnd = strstr(start, "\r\n");
+        if (!lineEnd || lineEnd > headerEnd || lineEnd == start) {
+            return false;
         }
+
+        const char* colon = static_cast<const char*>(memchr(start, ':', lineEnd - start));
+        if (!colon || colon == start) {
+            return false;
+        }
+
+        CStringA key(start, int(colon - start));
+        CStringA val(colon + 1, int(lineEnd - colon - 1));
+        key.Trim();
+        val.Trim();
+        if (key.IsEmpty()) {
+            return false;
+        }
+        key.MakeLower();
+
+        CStringA existing;
+        if (key == "content-length" && m_hdrlines.Lookup(key, existing)) {
+            // Multiple framing declarations are ambiguous for this simple HTTP server.
+            return false;
+        }
+        m_hdrlines[key] = val;
+        start = lineEnd + 2;
     }
+
+    CStringA transferEncoding;
+    if (m_hdrlines.Lookup("transfer-encoding", transferEncoding)) {
+        // Chunked/request transfer codings are not implemented. Reject rather than mis-frame the body.
+        return false;
+    }
+
+    int declaredContentLength = 0;
+    CStringA contentLength;
+    if (m_hdrlines.Lookup("content-length", contentLength)
+            && !ParseContentLength(contentLength, declaredContentLength)) {
+        return false;
+    }
+
+    m_dataLen = (m_cmd == "POST") ? declaredContentLength : 0;
     m_parsingState = (m_dataLen > 0) ? PARSING_POST_DATA : PARSING_DONE;
+    return true;
 }
 
 void CWebClientSocket::ParsePostData()
 {
+    m_data.SetString(m_buff, m_dataLen);
+
     char* start = m_buff, *end;
-    char* endData = m_buff + m_buffLen;
+    char* endData = m_buff + m_dataLen;
     CStringA key, val;
 
     while (start < endData) {
@@ -312,13 +370,20 @@ void CWebClientSocket::OnReceive(int nErrorCode)
 {
     if (nErrorCode == 0 && m_parsingState != PARSING_DONE) {
         if (m_buffMaxLen - m_buffLen <= 1) {
-            char* buff = (char*)realloc(m_buff, 2 * m_buffMaxLen * sizeof(char));
-            if (buff) {
-                m_buff = buff;
-                m_buffMaxLen *= 2;
-            } else {
-                ASSERT(0);
+            const int maxBufferLen = (m_parsingState == PARSING_HEADER) ? MAX_HEADER_SIZE + 1 : MAX_DATA_SIZE + 1;
+            const int newBufferLen = std::min(m_buffMaxLen * 2, maxBufferLen);
+            if (newBufferLen <= m_buffMaxLen) {
+                OnClose(0);
+                return;
             }
+
+            char* buff = static_cast<char*>(std::realloc(m_buff, newBufferLen));
+            if (!buff) {
+                OnClose(0);
+                return;
+            }
+            m_buff = buff;
+            m_buffMaxLen = newBufferLen;
         }
 
         int nRead = Receive(m_buff + m_buffLen, m_buffMaxLen - m_buffLen - 1);
@@ -328,34 +393,31 @@ void CWebClientSocket::OnReceive(int nErrorCode)
 
             switch (m_parsingState) {
                 case PARSING_HEADER: {
-                    // Search the header end
+                    // Search the header end. Keep three previous bytes because CRLFCRLF may span receives.
                     char* headerEnd = strstr(m_buff + m_buffLenProcessed, "\r\n\r\n");
 
                     if (headerEnd) {
-                        ParseHeader(headerEnd);
-                        if (m_dataLen > MAX_DATA_SIZE) {
-                            // Refuse the connection if someone tries to send
-                            // more than MAX_DATA_SIZE of size.
+                        if (!ParseHeader(headerEnd)) {
                             OnClose(0);
                             return;
                         }
 
                         headerEnd += 4;
-                        m_buffLen = std::max(int(m_buff + m_buffLen - headerEnd), 0);
+                        const int receivedBodyBytes = std::max(int(m_buff + m_buffLen - headerEnd), 0);
+                        m_buffLen = std::min(receivedBodyBytes, m_dataLen);
                         if (m_buffLen > 0) {
-                            memcpy(m_buff, headerEnd, m_buffLen + 1);
-                            if (m_buffLen >= m_dataLen) {
-                                ParsePostData();
-                            }
+                            memmove(m_buff, headerEnd, m_buffLen);
+                        }
+                        m_buff[m_buffLen] = '\0';
+
+                        if (m_parsingState == PARSING_POST_DATA && m_buffLen >= m_dataLen) {
+                            ParsePostData();
                         }
                     } else if (m_buffLen > MAX_HEADER_SIZE) {
-                        // If we got more than MAX_HEADER_SIZE of data without finding
-                        // the end of the header we close the connection.
                         OnClose(0);
                         return;
                     } else {
-                        // Start next search from current end of the file
-                        m_buffLenProcessed += nRead;
+                        m_buffLenProcessed = std::max(m_buffLen - 3, 0);
                     }
                 }
                 break;
