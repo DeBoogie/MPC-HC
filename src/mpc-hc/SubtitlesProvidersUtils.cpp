@@ -813,44 +813,57 @@ std::list<std::string> SubtitlesProvidersUtils::LanguagesISO6392()
 
 UINT64 SubtitlesProvidersUtils::GenerateOSHash(SubtitlesInfo& pFileInfo)
 {
-    UINT64 fileHash = pFileInfo.fileSize;
-    UINT64 errval = 0x123456789; // random value that should not give any search results
+    constexpr UINT64 errval = 0x123456789; // Value chosen to avoid matching a real movie hash.
+    if (pFileInfo.fileSize == ULONGLONG_ERROR || pFileInfo.fileSize < PROBE_SIZE * 2ui64) {
+        return errval;
+    }
 
-    UINT64* buffer = (UINT64*)std::malloc(PROBE_SIZE);
-    if (!buffer) return errval;
+    static_assert(PROBE_SIZE % sizeof(UINT64) == 0, "OpenSubtitles probe size must contain whole 64-bit words");
+    std::vector<UINT64> buffer(PROBE_SIZE / sizeof(UINT64));
+    UINT64 fileHash = pFileInfo.fileSize;
+
+    auto AddProbeToHash = [&]() {
+        for (const UINT64 value : buffer) {
+            fileHash += value;
+        }
+    };
 
     if (pFileInfo.pAsyncReader) {
-        UINT64 position = 0;
-        if (SUCCEEDED(pFileInfo.pAsyncReader->SyncRead(position, PROBE_SIZE, (BYTE*)buffer))) {
-            for (int i = 0; i < PROBE_SIZE / sizeof(UINT64); ++i) {
-                fileHash += buffer[i];
-            }
-        } else { std::free(buffer); return errval; }
-        position = std::max(0ui64, pFileInfo.fileSize - PROBE_SIZE);
-        if (SUCCEEDED(pFileInfo.pAsyncReader->SyncRead(position, PROBE_SIZE, (BYTE*)buffer))) {
-            for (int i = 0; i < PROBE_SIZE / sizeof(UINT64); ++i) {
-                fileHash += buffer[i];
-            }
-        } else { std::free(buffer); return errval; }
+        if (FAILED(pFileInfo.pAsyncReader->SyncRead(0, PROBE_SIZE, reinterpret_cast<BYTE*>(buffer.data())))) {
+            return errval;
+        }
+        AddProbeToHash();
+
+        const UINT64 position = pFileInfo.fileSize - PROBE_SIZE;
+        if (FAILED(pFileInfo.pAsyncReader->SyncRead(position, PROBE_SIZE, reinterpret_cast<BYTE*>(buffer.data())))) {
+            return errval;
+        }
+        AddProbeToHash();
     } else {
         CFile file;
         CFileException fileException;
-        if (file.Open(CString(pFileInfo.filePathW.c_str()),
-                      CFile::modeRead | CFile::osSequentialScan | CFile::shareDenyNone | CFile::typeBinary, &fileException)) {
-            if (file.Read(buffer, PROBE_SIZE)) {
-                for (int i = 0; i < PROBE_SIZE / sizeof(UINT64); ++i) {
-                    fileHash += buffer[i];
-                }
-            } else { std::free(buffer); return errval; }
-            file.Seek(std::max(0ui64, pFileInfo.fileSize - PROBE_SIZE), CFile::begin);
-            if (file.Read(buffer, PROBE_SIZE)) {
-                for (int i = 0; i < PROBE_SIZE / sizeof(UINT64); ++i) {
-                    fileHash += buffer[i];
-                }
-            } else { std::free(buffer); return errval; }
+        if (!file.Open(CString(pFileInfo.filePathW.c_str()),
+                       CFile::modeRead | CFile::osSequentialScan | CFile::shareDenyNone | CFile::typeBinary, &fileException)) {
+            return errval;
+        }
+
+        try {
+            if (file.Read(buffer.data(), PROBE_SIZE) != PROBE_SIZE) {
+                return errval;
+            }
+            AddProbeToHash();
+
+            file.Seek(static_cast<LONGLONG>(pFileInfo.fileSize - PROBE_SIZE), CFile::begin);
+            if (file.Read(buffer.data(), PROBE_SIZE) != PROBE_SIZE) {
+                return errval;
+            }
+            AddProbeToHash();
+        } catch (CFileException* e) {
+            e->Delete();
+            return errval;
         }
     }
-    std::free(buffer);
+
     return fileHash;
 }
 
