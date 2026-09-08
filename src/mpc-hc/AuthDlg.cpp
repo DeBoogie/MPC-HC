@@ -59,18 +59,53 @@ HRESULT PromptForCredentials(HWND hWnd, const CString& strCaptionText, const CSt
         if (strUsername.GetLength()) {
             BOOL bResult = fnCredPackAuthenticationBufferW(0, (LPTSTR)(LPCTSTR)strUsername, (LPTSTR)(LPCTSTR)strPassword, nullptr, &cbInAuthBlob);
             if (!bResult && GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-                if ((pvInAuthBlob = CoTaskMemAlloc(cbInAuthBlob)) != nullptr) {
-                    VERIFY(fnCredPackAuthenticationBufferW(0, (LPTSTR)(LPCTSTR)strUsername, (LPTSTR)(LPCTSTR)strPassword, (PBYTE)pvInAuthBlob, &cbInAuthBlob));
+                const ULONG authBlobCapacity = cbInAuthBlob;
+                if ((pvInAuthBlob = CoTaskMemAlloc(authBlobCapacity)) != nullptr) {
+                    ULONG packedSize = authBlobCapacity;
+                    if (!fnCredPackAuthenticationBufferW(0, (LPTSTR)(LPCTSTR)strUsername, (LPTSTR)(LPCTSTR)strPassword, (PBYTE)pvInAuthBlob, &packedSize)) {
+                        SecureZeroMemory(pvInAuthBlob, authBlobCapacity);
+                        CoTaskMemFree(pvInAuthBlob);
+                        pvInAuthBlob = nullptr;
+                        cbInAuthBlob = 0;
+                    } else {
+                        cbInAuthBlob = packedSize;
+                    }
                 }
             }
         }
         const DWORD dwFlags = CREDUIWIN_GENERIC | CREDUIWIN_ENUMERATE_CURRENT_USER | (bSave ? CREDUIWIN_CHECKBOX : 0);
         DWORD dwResult = fnCredUIPromptForWindowsCredentialsW(&info, 0, &ulAuthPackage, pvInAuthBlob, cbInAuthBlob, &pvAuthBlob, &cbAuthBlob, bSave, dwFlags);
         if (dwResult == ERROR_SUCCESS) {
-            VERIFY(fnCredUnPackAuthenticationBufferW(0, pvAuthBlob, cbAuthBlob, strUsername.GetBufferSetLength(dwUsername), &dwUsername, strDomain.GetBufferSetLength(dwDomain), &dwDomain, strPassword.GetBufferSetLength(dwPassword), &dwPassword));
+            const DWORD usernameCapacity = dwUsername;
+            const DWORD domainCapacity = dwDomain;
+            const DWORD passwordCapacity = dwPassword;
+            LPTSTR usernameBuffer = strUsername.GetBufferSetLength(usernameCapacity);
+            LPTSTR domainBuffer = strDomain.GetBufferSetLength(domainCapacity);
+            LPTSTR passwordBuffer = strPassword.GetBufferSetLength(passwordCapacity);
+
+            const BOOL unpacked = fnCredUnPackAuthenticationBufferW(
+                0, pvAuthBlob, cbAuthBlob,
+                usernameBuffer, &dwUsername,
+                domainBuffer, &dwDomain,
+                passwordBuffer, &dwPassword);
+            const DWORD unpackError = unpacked ? ERROR_SUCCESS : GetLastError();
+
+            if (!unpacked) {
+                SecureZeroMemory(usernameBuffer, static_cast<SIZE_T>(usernameCapacity) * sizeof(TCHAR));
+                SecureZeroMemory(domainBuffer, static_cast<SIZE_T>(domainCapacity) * sizeof(TCHAR));
+                SecureZeroMemory(passwordBuffer, static_cast<SIZE_T>(passwordCapacity) * sizeof(TCHAR));
+            }
+
             strUsername.ReleaseBuffer();
-            strPassword.ReleaseBuffer();
             strDomain.ReleaseBuffer();
+            strPassword.ReleaseBuffer();
+
+            if (!unpacked) {
+                strUsername.Empty();
+                strDomain.Empty();
+                strPassword.Empty();
+                dwResult = unpackError != ERROR_SUCCESS ? unpackError : ERROR_INVALID_DATA;
+            }
         }
 
         // Delete the input authentication byte array.
