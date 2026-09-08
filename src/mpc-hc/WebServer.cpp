@@ -388,6 +388,24 @@ void CWebServer::OnClose(const CWebClientSocket* pClient)
     }
 }
 
+static bool IsSafeLocalRedirect(const CString& redirect)
+{
+    if (redirect.IsEmpty() || redirect.GetLength() > 2048 || redirect[0] != _T('/')) {
+        return false;
+    }
+    if (redirect.GetLength() > 1 && redirect[1] == _T('/')) {
+        return false;
+    }
+
+    for (int i = 0; i < redirect.GetLength(); ++i) {
+        const TCHAR ch = redirect[i];
+        if (ch == _T('\\') || ch < 0x20 || ch == 0x7f) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void CWebServer::OnRequest(CWebClientSocket* pClient, CStringA& hdr, CStringA& body)
 {
     const CAppSettings& s = AfxGetAppSettings();
@@ -447,6 +465,10 @@ void CWebServer::OnRequest(CWebClientSocket* pClient, CStringA& hdr, CStringA& b
                 || pClient->m_post.Lookup("redir", redir)) {
             if (redir.IsEmpty()) {
                 redir = '/';
+            }
+            if (!IsSafeLocalRedirect(redir)) {
+                hdr = "HTTP/1.0 400 Bad Request\r\n";
+                return;
             }
 
             hdr =

@@ -131,5 +131,6 @@ Parser and process-launch changes should also be exercised with:
 - Header terminators split across multiple socket receives.
 - POST bodies that arrive in multiple receives or include bytes beyond the declared content length.
 - State-changing web parameters must reject trailing garbage, numeric overflow, NaN/infinite/out-of-range percentages, unsupported WM_COMMAND IDs, malformed seek times, and malformed resource/DVB IDs.
+- Web `redir` parameters must accept normal local paths such as `/controls.html` but reject CR/LF/control characters, backslashes, scheme-relative `//host` targets, non-local targets, and excessive length.
 
 Crashes, hangs and unbounded allocation are release blockers for these cases.
