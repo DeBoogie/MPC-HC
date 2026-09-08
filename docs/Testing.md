@@ -35,6 +35,7 @@ Before a release, exercise representative samples rather than only checking that
 - AV1 8-bit and 10-bit.
 - VVC when a known-good sample and decoder path are available.
 - MPEG-2/DVD material for legacy compatibility.
+- DVD IFO handling: short reads/writes and malformed PGCI table counts, lengths, and offsets must fail or be ignored without accessing outside the loaded IFO buffer.
 - Variable-frame-rate material and files with discontinuous timestamps.
 - A damaged/truncated file to check graceful failure.
 

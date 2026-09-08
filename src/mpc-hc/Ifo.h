@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 #pragma pack(push, 1)
@@ -177,6 +178,8 @@ private:
 
     bool        IsVTS();
     bool        IsVMG();
+    bool        IsRangeInBuffer(const void* ptr, size_t length) const;
+    bool        IsTableInBuffer(const ifo_hdr_t* hdr) const;
 
     pgc_t*      GetFirstPGC();
     pgc_t*      GetPGCI(const int title, const ifo_hdr_t* hdr);
