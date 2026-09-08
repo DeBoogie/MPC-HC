@@ -256,19 +256,19 @@ HRESULT SubtitlesInfo::GetFileInfo(const std::string& sFileName /*= std::string(
         }
 
         if (pAsyncReader && MainFrame.m_pFSF) {
-            LPOLESTR name;
-            if (FAILED(MainFrame.m_pFSF->GetCurFile(&name, nullptr))) {
+            LPOLESTR name = nullptr;
+            if (FAILED(MainFrame.m_pFSF->GetCurFile(&name, nullptr)) || !name) {
                 return E_FAIL;
             }
             filePathW = name;
             filePath = UTF16To8(name);
             CoTaskMemFree(name);
 
-            LONGLONG size, available;
-            if (pAsyncReader->Length(&size, &available) != S_OK) { // Don't accept estimates
+            LONGLONG size = 0, available = 0;
+            if (pAsyncReader->Length(&size, &available) != S_OK || size < 0 || available < 0) { // Don't accept estimates or invalid sizes.
                 return E_FAIL;
             }
-            fileSize = size;
+            fileSize = static_cast<ULONGLONG>(size);
         } else {
             CString _filePath = MainFrame.m_wndPlaylistBar.GetCurFileName();
             if (PathUtils::IsURL(_filePath)) {
