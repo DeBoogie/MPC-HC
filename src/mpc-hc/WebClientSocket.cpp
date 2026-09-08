@@ -57,6 +57,47 @@ bool ParseContentLength(const CStringA& text, int& length)
     length = parsed;
     return true;
 }
+
+CStringA JSONEscape(const CStringA& str)
+{
+    CStringA escaped;
+
+    for (int i = 0, len = str.GetLength(); i < len; i++) {
+        unsigned char c = (unsigned char)str[i];
+        switch (c) {
+            case '\"':
+                escaped += "\\\"";
+                break;
+            case '\\':
+                escaped += "\\\\";
+                break;
+            case '\b':
+                escaped += "\\b";
+                break;
+            case '\f':
+                escaped += "\\f";
+                break;
+            case '\n':
+                escaped += "\\n";
+                break;
+            case '\r':
+                escaped += "\\r";
+                break;
+            case '\t':
+                escaped += "\\t";
+                break;
+            default:
+                if (c < 0x20) {
+                    escaped.AppendFormat("\\u%04x", c);
+                } else {
+                    escaped += (char)c;
+                }
+                break;
+        }
+    }
+
+    return escaped;
+}
 }
 
 CWebClientSocket::CWebClientSocket(CWebServer* pWebServer, CMainFrame* pMainFrame)
@@ -817,15 +858,12 @@ bool CWebClientSocket::OnStatus(CStringA& hdr, CStringA& body, CStringA& mime)
     REFERENCE_TIME pos = m_pMainFrame->GetPos();
     REFERENCE_TIME dur = m_pMainFrame->GetDur();
 
-    title.Replace(_T("'"), _T("\\'"));
-    status.Replace(_T("'"), _T("\\'"));
-
     body.Format("OnStatus(\"%s\", \"%s\", %ld, \"%s\", %ld, \"%s\", %d, %d, \"%s\")", // , \"%s\"
-                UTF8(title).GetString(), UTF8(status).GetString(),
-                std::lround(pos / 10000i64), UTF8(ReftimeToString2(pos)).GetString(),
-                std::lround(dur / 10000i64), UTF8(ReftimeToString2(dur)).GetString(),
+                JSONEscape(UTF8(title)).GetString(), JSONEscape(UTF8(status)).GetString(),
+                std::lround(pos / 10000i64), JSONEscape(UTF8(ReftimeToString2(pos))).GetString(),
+                std::lround(dur / 10000i64), JSONEscape(UTF8(ReftimeToString2(dur))).GetString(),
                 m_pMainFrame->IsMuted(), m_pMainFrame->GetVolume(),
-                UTF8(file).GetString()/*, UTF8(dir)*/);
+                JSONEscape(UTF8(file)).GetString()/*, UTF8(dir)*/);
 
     return true;
 }
@@ -1062,51 +1100,6 @@ bool CWebClientSocket::OnDVBSetChannel(CStringA& hdr, CStringA& body, CStringA& 
         hdr = "HTTP/1.0 503 Service Unavailable\r\n";
     }
     return true;
-}
-
-// Escape a UTF-8 string so that it can be used as a JSON string value. We can't
-// use EscapeJSONString() from text.h: it escapes the quotes before the
-// backslashes, which then escapes the backslashes it has just added itself, and
-// it leaves the other control characters alone.
-static CStringA JSONEscape(const CStringA& str)
-{
-    CStringA escaped;
-
-    for (int i = 0, len = str.GetLength(); i < len; i++) {
-        unsigned char c = (unsigned char)str[i];
-        switch (c) {
-            case '\"':
-                escaped += "\\\"";
-                break;
-            case '\\':
-                escaped += "\\\\";
-                break;
-            case '\b':
-                escaped += "\\b";
-                break;
-            case '\f':
-                escaped += "\\f";
-                break;
-            case '\n':
-                escaped += "\\n";
-                break;
-            case '\r':
-                escaped += "\\r";
-                break;
-            case '\t':
-                escaped += "\\t";
-                break;
-            default:
-                if (c < 0x20) {
-                    escaped.AppendFormat("\\u%04x", c);
-                } else {
-                    escaped += (char)c;
-                }
-                break;
-        }
-    }
-
-    return escaped;
 }
 
 // Convert a native string into a quoted, escaped UTF-8 JSON string literal.

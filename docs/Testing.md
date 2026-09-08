@@ -89,6 +89,7 @@ On at least Intel, AMD and NVIDIA hardware where available:
 - File-browser directory/file names and displayed paths containing ampersands or other HTML-significant text must render literally.
 - Client-supplied Cookie headers must not be reflected back as Set-Cookie response headers.
 - The legacy `/status.html` endpoint remains reachable for third-party compatibility.
+- Legacy `/status.html` fields containing quotes, backslashes, control characters, or Unicode remain syntactically escaped inside the `OnStatus(...)` envelope.
 
 ### Web server CGI
 
