@@ -614,6 +614,39 @@ std::string SubtitlesProvidersUtils::StringGenerateUniqueKey()
     return std::string((PCHAR)&buffer[0], buffer.size());
 }
 
+HRESULT SubtitlesProvidersUtils::ReadHttpResponse(CHttpFile* pHttpFile, std::string& data, size_t maxSize)
+{
+    if (!pHttpFile || maxSize == 0) {
+        return E_INVALIDARG;
+    }
+
+    data.clear();
+
+    DWORD contentLength = 0;
+    DWORD index = 0;
+    if (pHttpFile->QueryInfo(HTTP_QUERY_CONTENT_LENGTH, contentLength, &index)) {
+        if (static_cast<size_t>(contentLength) > maxSize) {
+            return HRESULT_FROM_WIN32(ERROR_FILE_TOO_LARGE);
+        }
+        data.reserve(contentLength);
+    }
+
+    std::vector<char> buffer(8192);
+    for (;;) {
+        const UINT bytesRead = pHttpFile->Read(buffer.data(), static_cast<UINT>(buffer.size()));
+        if (bytesRead == 0) {
+            break;
+        }
+        if (static_cast<size_t>(bytesRead) > maxSize || data.size() > maxSize - bytesRead) {
+            data.clear();
+            return HRESULT_FROM_WIN32(ERROR_FILE_TOO_LARGE);
+        }
+        data.append(buffer.data(), bytesRead);
+    }
+
+    return S_OK;
+}
+
 HRESULT SubtitlesProvidersUtils::StringDownload(const std::string& url, const stringMap& headers,
                                                 std::string& data, bool bAutoRedirect, DWORD* dwStatusCode)
 {
@@ -633,26 +666,20 @@ HRESULT SubtitlesProvidersUtils::StringDownload(const std::string& url, const st
             }
         }
 
-        CAutoPtr<CHttpFile> pHttpFile((CHttpFile*)is.OpenURL(UTF8To16(url.c_str()),
-                                                             1,
-                                                             INTERNET_FLAG_TRANSFER_BINARY | INTERNET_FLAG_EXISTING_CONNECT | (bAutoRedirect ? INTERNET_FLAG_NO_AUTO_REDIRECT : NULL),
-                                                             UTF8To16(strHeaders.c_str())));
+        const DWORD flags = INTERNET_FLAG_TRANSFER_BINARY | INTERNET_FLAG_EXISTING_CONNECT
+            | (bAutoRedirect ? 0 : INTERNET_FLAG_NO_AUTO_REDIRECT);
+        CAutoPtr<CHttpFile> pHttpFile((CHttpFile*)is.OpenURL(UTF8To16(url.c_str()), 1, flags, UTF8To16(strHeaders.c_str())));
 
-        DWORD total_length = 0, length = 0, index = 0;
-        while (pHttpFile->QueryInfo(HTTP_QUERY_CONTENT_LENGTH, length, &index)) {
-            total_length += length;
-        }
-
-        data.reserve(std::max((size_t)total_length, (size_t)pHttpFile->GetLength()));
-
-        std::vector<char> buff(1024);
-        for (int len = 0; (len = pHttpFile->Read(&buff[0], (UINT)buff.size())) > 0; data.append(&buff[0], len));
+        const HRESULT readResult = ReadHttpResponse(pHttpFile, data);
 
         if (dwStatusCode) {
             pHttpFile->QueryInfoStatusCode(*dwStatusCode);
         }
 
         pHttpFile->Close(); // must close it because the destructor doesn't seem to do it and we will get an exception when "is" is destroying
+        if (FAILED(readResult)) {
+            return readResult;
+        }
     } catch (CInternetException* pEx) {
         HRESULT hr = HRESULT_FROM_WIN32(pEx->m_dwError);
         if (dwStatusCode) {
@@ -669,18 +696,34 @@ HRESULT SubtitlesProvidersUtils::StringUpload(const std::string& url, const stri
                                               const std::string& content, std::string& data,
                                               bool bAutoRedirect, DWORD* dwStatusCode)
 {
+    data.clear();
+    if (dwStatusCode) {
+        *dwStatusCode = 0;
+    }
+    if (content.size() > MAXDWORD) {
+        return E_INVALIDARG;
+    }
+
     try {
-        DWORD dwServiceType = NULL;
+        DWORD dwServiceType = 0;
         CString strServer, strObject, strUserName, strPassword;
-        INTERNET_PORT nPort = NULL;
-        if (!AfxParseURLEx(UTF8To16(url.c_str()), dwServiceType, strServer, strObject, nPort, strUserName, strPassword)) {
+        INTERNET_PORT nPort = INTERNET_INVALID_PORT_NUMBER;
+        if (!AfxParseURLEx(UTF8To16(url.c_str()), dwServiceType, strServer, strObject, nPort, strUserName, strPassword)
+                || (dwServiceType != AFX_INET_SERVICE_HTTP && dwServiceType != AFX_INET_SERVICE_HTTPS)) {
             return E_FAIL;
         }
 
         CInternetSession is;
         is.SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, 10000);
-        CAutoPtr<CHttpConnection> pHttpConnection(is.GetHttpConnection(strServer));
-        CAutoPtr<CHttpFile> pHttpFile(pHttpConnection->OpenRequest(CHttpConnection::HTTP_VERB_POST, strObject, 0, 1, 0, 0, INTERNET_FLAG_KEEP_CONNECTION | (bAutoRedirect == FALSE ? INTERNET_FLAG_NO_AUTO_REDIRECT : NULL)));
+
+        const DWORD secureFlag = (dwServiceType == AFX_INET_SERVICE_HTTPS) ? INTERNET_FLAG_SECURE : 0;
+        CAutoPtr<CHttpConnection> pHttpConnection(is.GetHttpConnection(
+            strServer, secureFlag, nPort, strUserName, strPassword));
+
+        const DWORD requestFlags = INTERNET_FLAG_KEEP_CONNECTION | secureFlag
+            | (bAutoRedirect ? 0 : INTERNET_FLAG_NO_AUTO_REDIRECT);
+        CAutoPtr<CHttpFile> pHttpFile(pHttpConnection->OpenRequest(
+            CHttpConnection::HTTP_VERB_POST, strObject, nullptr, 1, nullptr, nullptr, requestFlags));
 
         for (const auto& iter : headers) {
             if (!iter.second.empty()) {
@@ -688,19 +731,14 @@ HRESULT SubtitlesProvidersUtils::StringUpload(const std::string& url, const stri
             }
         }
 
-        pHttpFile->SendRequestEx(DWORD(content.length()), HSR_SYNC | HSR_INITIATE);
-        pHttpFile->Write(content.c_str(), (UINT)content.length());
+        pHttpFile->SendRequestEx(static_cast<DWORD>(content.size()), HSR_SYNC | HSR_INITIATE);
+        if (!content.empty()) {
+            pHttpFile->Write(content.data(), static_cast<UINT>(content.size()));
+        }
         pHttpFile->Flush();
         pHttpFile->EndRequest(HSR_SYNC);
 
-        DWORD total_length = 0, length = 0, index = 0;
-        while (pHttpFile->QueryInfo(HTTP_QUERY_CONTENT_LENGTH, length, &index)) {
-            total_length += length;
-        }
-        data.reserve(std::max((size_t)length, (size_t)pHttpFile->GetLength()));
-
-        std::vector<char> buff(1024);
-        for (int len = 0; (len = pHttpFile->Read(&buff[0], (UINT)buff.size())) > 0; data.append(&buff[0], len));
+        const HRESULT readResult = ReadHttpResponse(pHttpFile, data);
 
         if (dwStatusCode) {
             pHttpFile->QueryInfoStatusCode(*dwStatusCode);
@@ -708,14 +746,20 @@ HRESULT SubtitlesProvidersUtils::StringUpload(const std::string& url, const stri
 
         pHttpFile->Close();
         pHttpConnection->Close();
+        if (FAILED(readResult)) {
+            return readResult;
+        }
     } catch (CInternetException* ie) {
         HRESULT hr = HRESULT_FROM_WIN32(ie->m_dwError);
+        if (dwStatusCode) {
+            *dwStatusCode = ie->m_dwError;
+        }
         TCHAR szErr[1024];
         szErr[0] = '\0';
         if (!ie->GetErrorMessage(szErr, 1024)) {
-            wcscpy_s(szErr, L"Some crazy unknown error");
+            StringCchPrintf(szErr, 1024, _T("CInternetException, error %lu"), ie->m_dwError);
         }
-        TRACE("File transfer failed!! - %s", szErr);
+        TRACE(_T("File transfer failed - 0x%lx - %s\n"), hr, szErr);
         ie->Delete();
         return hr;
     }

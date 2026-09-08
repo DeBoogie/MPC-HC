@@ -33,6 +33,7 @@
 #define PROBE_SIZE 64 * 1024
 
 struct SubtitlesInfo;
+class CHttpFile;
 
 namespace SubtitlesProvidersUtils
 {
@@ -71,6 +72,8 @@ namespace SubtitlesProvidersUtils
 
     stringMap StringUncompress(const std::string& data, const std::string& fileName);
     std::string StringGenerateUniqueKey();
+
+    HRESULT ReadHttpResponse(CHttpFile* pHttpFile, std::string& data, size_t maxSize = 64u * 1024u * 1024u);
 
     HRESULT StringDownload(const std::string& url, const stringMap& headers, std::string& data,
                            bool bAutoRedirect = true, DWORD* dwStatusCode = nullptr);
