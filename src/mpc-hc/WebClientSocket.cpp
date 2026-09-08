@@ -531,8 +531,7 @@ bool CWebClientSocket::OnIndex(CStringA& hdr, CStringA& body, CStringA& mime)
         const wmcmd& wc = s.wmcmds.GetNext(pos);
         CStringA str;
         str.Format("%u", wc.cmd);
-        CStringA valueName(UTF8(wc.GetName()));
-        valueName.Replace("&", "&amp;");
+        CStringA valueName = HtmlSpecialChars(UTF8(wc.GetName()));
         wmcoptions += "<option value=\"" + str + "\">" + valueName + "</option>\r\n";
     }
 
@@ -683,7 +682,7 @@ bool CWebClientSocket::OnBrowser(CStringA& hdr, CStringA& body, CStringA& mime)
 
                 files += "<tr>\r\n";
                 files +=
-                    "<td class=\"dirname\"><a href=\"[path]?path=" + UTF8Arg(fullpath) + "\">" + UTF8(fd.cFileName) + "</a></td>\r\n"
+                    "<td class=\"dirname\"><a href=\"[path]?path=" + UTF8Arg(fullpath) + "\">" + HtmlSpecialChars(UTF8(fd.cFileName)) + "</a></td>\r\n"
                     "<td class=\"dirtype\">Directory</td>\r\n"
                     "<td class=\"dirsize\">&nbsp;</td>\r\n"
                     "<td class=\"dirdate\"><span class=\"nobr\">" + CStringA(CTime(fd.ftLastWriteTime).Format(_T("%Y.%m.%d %H:%M"))) + "</span></td>\r\n";
@@ -718,8 +717,8 @@ bool CWebClientSocket::OnBrowser(CStringA& hdr, CStringA& body, CStringA& mime)
                     files += "<tr class=\"noext\">\r\n";
                 }
                 files +=
-                    "<td><a href=\"[path]?path=" + UTF8Arg(fullpath) + "\">" + UTF8(fd.cFileName) + "</a></td>\r\n"
-                    "<td><span class=\"nobr\">" + UTF8(type) + "</span></td>\r\n"
+                    "<td><a href=\"[path]?path=" + UTF8Arg(fullpath) + "\">" + HtmlSpecialChars(UTF8(fd.cFileName)) + "</a></td>\r\n"
+                    "<td><span class=\"nobr\">" + HtmlSpecialChars(UTF8(type)) + "</span></td>\r\n"
                     "<td><span class=\"nobr\">" + size + "</span></td>\r\n"
                     "<td><span class=\"nobr\">" + CStringA(CTime(fd.ftLastWriteTime).Format(_T("%Y.%m.%d %H:%M"))) + "</span></td>\r\n";
                 files += "</tr>\r\n";
@@ -774,9 +773,9 @@ bool CWebClientSocket::OnControls(CStringA& hdr, CStringA& body, CStringA& mime)
 
     m_pWebServer->LoadPage(IDR_HTML_CONTROLS, body, AToT(m_path));
     body.Replace("[filepatharg]", UTF8Arg(path));
-    body.Replace("[filepath]", UTF8(path));
+    body.Replace("[filepath]", HtmlSpecialChars(UTF8(path)));
     body.Replace("[filedirarg]", UTF8Arg(dir));
-    body.Replace("[filedir]", UTF8(dir));
+    body.Replace("[filedir]", HtmlSpecialChars(UTF8(dir)));
     body.Replace("[state]", UTF8(state));
     body.Replace("[statestring]", UTF8(statestring));
     body.Replace("[position]", UTF8(NumToCString(std::lround(m_pMainFrame->GetPos() / 10000i64))));
@@ -1418,6 +1417,9 @@ CStringA CWebClientSocket::GetSubtitleTracksJSON() const
 
 bool CWebClientSocket::OnStatusJSON(CStringA& hdr, CStringA& body, CStringA& mime)
 {
+    CString title;
+    m_pMainFrame->GetWindowText(title);
+
     OAFilterState fs = m_pMainFrame->GetMediaState();
     CString statestring;
     switch (fs) {
@@ -1435,14 +1437,20 @@ bool CWebClientSocket::OnStatusJSON(CStringA& hdr, CStringA& body, CStringA& mim
             break;
     }
 
+    const REFERENCE_TIME position = m_pMainFrame->GetPos();
+    const REFERENCE_TIME duration = m_pMainFrame->GetDur();
+
     body = "{";
-    body += "\"file\":" + JSONString(m_pMainFrame->GetFileName());
+    body += "\"title\":" + JSONString(title);
+    body += ",\"file\":" + JSONString(m_pMainFrame->GetFileName());
     body += ",\"path\":" + JSONString(m_pMainFrame->m_wndPlaylistBar.GetCurFileName());
     body.AppendFormat(",\"state\":%ld", fs);
     body += ",\"stateString\":" + JSONString(statestring);
     body.AppendFormat(",\"position\":%ld,\"duration\":%ld",
-                      std::lround(m_pMainFrame->GetPos() / 10000i64),
-                      std::lround(m_pMainFrame->GetDur() / 10000i64));
+                      std::lround(position / 10000i64),
+                      std::lround(duration / 10000i64));
+    body += ",\"positionString\":" + JSONString(ReftimeToString2(position));
+    body += ",\"durationString\":" + JSONString(ReftimeToString2(duration));
     body.AppendFormat(",\"volume\":%d,\"muted\":%s,\"rate\":%g",
                       m_pMainFrame->GetVolume(), m_pMainFrame->IsMuted() ? "true" : "false",
                       m_pMainFrame->GetPlayingRate());
