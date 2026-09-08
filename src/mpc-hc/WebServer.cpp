@@ -499,12 +499,12 @@ void CWebServer::OnRequest(CWebClientSocket* pClient, CStringA& hdr, CStringA& b
                     pos = pClient->m_hdrlines.GetStartPosition();
                     while (pos) {
                         pClient->m_hdrlines.GetNextAssoc(pos, key, value);
-                        debug += "HEADER[" + key + "] = " + value + "\r\n";
+                        debug += "HEADER[" + HtmlSpecialChars(key) + "] = " + HtmlSpecialChars(value) + "\r\n";
                     }
                 }
-                debug += "cmd: " + pClient->m_cmd + "\r\n";
-                debug += "path: " + pClient->m_path + "\r\n";
-                debug += "ver: " + pClient->m_ver + "\r\n";
+                debug += "cmd: " + HtmlSpecialChars(pClient->m_cmd) + "\r\n";
+                debug += "path: " + HtmlSpecialChars(pClient->m_path) + "\r\n";
+                debug += "ver: " + HtmlSpecialChars(pClient->m_ver) + "\r\n";
 
                 {
                     CString value;
