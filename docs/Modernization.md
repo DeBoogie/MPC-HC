@@ -85,3 +85,17 @@ Use `-Full` when the local MSYS2/LAV build dependencies are installed and a full
 External runtime binaries used by packages must be declared in `dependencies\manifest.json` with a source URL, SHA-256 digest, archive entry, destination, and expected file version. Use `tools\bootstrap-dependencies.ps1` rather than manually copying renderer binaries into `distrib`.
 
 `tools\check-build-env.ps1` is the canonical prerequisite diagnostic and `tools\release.ps1` is the canonical local release entry point. Release output includes SHA-256 artifact metadata so a build can be tied back to its exact source commit and dependency manifest without requiring hosted CI.
+
+## Player control architecture
+
+New control surfaces must not add transport-specific playback logic to `CMainFrame`. `CPlayerControlService` is the transport-independent command/state boundary for remote control, test automation and web status/control paths:
+
+```text
+Named-pipe JSON ─┐
+                 ├── CPlayerControlService ── CMainFrame / DirectShow
+Built-in Web UI ─┘
+```
+
+The service owns validation and canonical state/diagnostic collection. Transport adapters parse their wire format and marshal requests to the player UI thread; they do not call DirectShow graph objects or mutate toolbar/player state directly from worker threads. The legacy WM_COPYDATA API remains supported separately for compatibility and can be migrated incrementally without changing its wire contract.
+
+Cross-thread synchronous callers use the refcounted `WM_PLAYER_CONTROL_REQUEST` dispatch. The request object is heap-owned by caller and UI references independently, so a timeout cannot leave a queued UI message pointing at stack memory.

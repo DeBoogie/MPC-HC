@@ -42,9 +42,9 @@ namespace {
 
     CStringA SerializeReply(const JsonIpcRequest& request, bool hasId, int64_t id)
     {
-        if (!request.success) {
-            return MakeError(request.errorCode,
-                             request.errorMessage.IsEmpty() ? "Request failed" : request.errorMessage.GetString(),
+        if (!request.result.success) {
+            return MakeError(request.result.errorCode,
+                             request.result.errorMessage.IsEmpty() ? "Request failed" : request.result.errorMessage.GetString(),
                              hasId, id);
         }
 
@@ -60,8 +60,8 @@ namespace {
         writer.Key("apiVersion");
         writer.Int(MPC_JSON_IPC_VERSION);
 
-        if (request.method == JsonIpcMethod::GET_STATE || request.method == JsonIpcMethod::GET_DIAGNOSTICS) {
-            const JsonIpcSnapshot& s = request.snapshot;
+        if (request.control.method == PlayerControlMethod::GET_STATE || request.control.method == PlayerControlMethod::GET_DIAGNOSTICS) {
+            const PlayerStateSnapshot& s = request.result.snapshot;
             const CStringA state = UTF16To8(s.state);
             const CStringA file = UTF16To8(s.file);
             writer.Key("state");
@@ -83,7 +83,7 @@ namespace {
             writer.Key("file");
             writer.String(file.GetString(), file.GetLength());
 
-            if (request.method == JsonIpcMethod::GET_DIAGNOSTICS) {
+            if (request.control.method == PlayerControlMethod::GET_DIAGNOSTICS) {
                 const CStringA renderer = UTF16To8(s.renderer);
                 writer.Key("renderer");
                 writer.StartObject();
@@ -346,20 +346,20 @@ CStringA CJsonIpcServer::ProcessRequest(const CStringA& line)
     }
 
     const CStringA method(document["method"].GetString());
-    JsonIpcMethod parsedMethod;
-    if (method == "player.getState") parsedMethod = JsonIpcMethod::GET_STATE;
-    else if (method == "player.getDiagnostics") parsedMethod = JsonIpcMethod::GET_DIAGNOSTICS;
-    else if (method == "player.play") parsedMethod = JsonIpcMethod::PLAY;
-    else if (method == "player.pause") parsedMethod = JsonIpcMethod::PAUSE;
-    else if (method == "player.stop") parsedMethod = JsonIpcMethod::STOP;
-    else if (method == "player.quit") parsedMethod = JsonIpcMethod::QUIT;
-    else if (method == "player.seek") parsedMethod = JsonIpcMethod::SEEK;
-    else if (method == "player.setRate") parsedMethod = JsonIpcMethod::SET_RATE;
-    else if (method == "player.setVolume") parsedMethod = JsonIpcMethod::SET_VOLUME;
-    else if (method == "player.setMute") parsedMethod = JsonIpcMethod::SET_MUTE;
-    else if (method == "player.setAudioTrack") parsedMethod = JsonIpcMethod::SET_AUDIO_TRACK;
-    else if (method == "player.setSubtitleTrack") parsedMethod = JsonIpcMethod::SET_SUBTITLE_TRACK;
-    else if (method == "player.open") parsedMethod = JsonIpcMethod::OPEN_MEDIA;
+    PlayerControlMethod parsedMethod;
+    if (method == "player.getState") parsedMethod = PlayerControlMethod::GET_STATE;
+    else if (method == "player.getDiagnostics") parsedMethod = PlayerControlMethod::GET_DIAGNOSTICS;
+    else if (method == "player.play") parsedMethod = PlayerControlMethod::PLAY;
+    else if (method == "player.pause") parsedMethod = PlayerControlMethod::PAUSE;
+    else if (method == "player.stop") parsedMethod = PlayerControlMethod::STOP;
+    else if (method == "player.quit") parsedMethod = PlayerControlMethod::QUIT;
+    else if (method == "player.seek") parsedMethod = PlayerControlMethod::SEEK;
+    else if (method == "player.setRate") parsedMethod = PlayerControlMethod::SET_RATE;
+    else if (method == "player.setVolume") parsedMethod = PlayerControlMethod::SET_VOLUME;
+    else if (method == "player.setMute") parsedMethod = PlayerControlMethod::SET_MUTE;
+    else if (method == "player.setAudioTrack") parsedMethod = PlayerControlMethod::SET_AUDIO_TRACK;
+    else if (method == "player.setSubtitleTrack") parsedMethod = PlayerControlMethod::SET_SUBTITLE_TRACK;
+    else if (method == "player.open") parsedMethod = PlayerControlMethod::OPEN_MEDIA;
     else return MakeError(-32601, "Unknown method", hasId, id);
 
     std::unique_ptr<JsonIpcRequest, void(*)(JsonIpcRequest*)> request(
@@ -371,40 +371,40 @@ CStringA CJsonIpcServer::ProcessRequest(const CStringA& line)
 
     const rapidjson::Value* params = document.HasMember("params") && document["params"].IsObject()
         ? &document["params"] : nullptr;
-    if (parsedMethod == JsonIpcMethod::SEEK || parsedMethod == JsonIpcMethod::SET_RATE) {
-        const char* key = parsedMethod == JsonIpcMethod::SEEK ? "position" : "rate";
+    if (parsedMethod == PlayerControlMethod::SEEK || parsedMethod == PlayerControlMethod::SET_RATE) {
+        const char* key = parsedMethod == PlayerControlMethod::SEEK ? "position" : "rate";
         if (!params || !params->HasMember(key) || !(*params)[key].IsNumber()) {
             request->Release();
             return MakeError(-32602, "Missing numeric parameter", hasId, id);
         }
-        request->numberValue = (*params)[key].GetDouble();
-        if (!std::isfinite(request->numberValue)) {
+        request->control.numberValue = (*params)[key].GetDouble();
+        if (!std::isfinite(request->control.numberValue)) {
             request->Release();
             return MakeError(-32602, "Numeric parameter must be finite", hasId, id);
         }
-    } else if (parsedMethod == JsonIpcMethod::SET_VOLUME || parsedMethod == JsonIpcMethod::SET_MUTE
-            || parsedMethod == JsonIpcMethod::SET_AUDIO_TRACK || parsedMethod == JsonIpcMethod::SET_SUBTITLE_TRACK) {
-        const char* key = parsedMethod == JsonIpcMethod::SET_VOLUME ? "volume"
-                        : parsedMethod == JsonIpcMethod::SET_MUTE ? "muted"
+    } else if (parsedMethod == PlayerControlMethod::SET_VOLUME || parsedMethod == PlayerControlMethod::SET_MUTE
+            || parsedMethod == PlayerControlMethod::SET_AUDIO_TRACK || parsedMethod == PlayerControlMethod::SET_SUBTITLE_TRACK) {
+        const char* key = parsedMethod == PlayerControlMethod::SET_VOLUME ? "volume"
+                        : parsedMethod == PlayerControlMethod::SET_MUTE ? "muted"
                         : "index";
         if (!params || !params->HasMember(key)) {
             request->Release();
             return MakeError(-32602, "Missing parameter", hasId, id);
         }
-        if (parsedMethod == JsonIpcMethod::SET_MUTE) {
+        if (parsedMethod == PlayerControlMethod::SET_MUTE) {
             if (!(*params)[key].IsBool()) {
                 request->Release();
                 return MakeError(-32602, "Muted must be boolean", hasId, id);
             }
-            request->integerValue = (*params)[key].GetBool() ? 1 : 0;
+            request->control.integerValue = (*params)[key].GetBool() ? 1 : 0;
         } else {
             if (!(*params)[key].IsInt()) {
                 request->Release();
                 return MakeError(-32602, "Parameter must be an integer", hasId, id);
             }
-            request->integerValue = (*params)[key].GetInt();
+            request->control.integerValue = (*params)[key].GetInt();
         }
-    } else if (parsedMethod == JsonIpcMethod::OPEN_MEDIA) {
+    } else if (parsedMethod == PlayerControlMethod::OPEN_MEDIA) {
         if (!params || !params->HasMember("path") || !(*params)["path"].IsString()) {
             request->Release();
             return MakeError(-32602, "Missing string path", hasId, id);
@@ -414,8 +414,8 @@ CStringA CJsonIpcServer::ProcessRequest(const CStringA& line)
             request->Release();
             return MakeError(-32602, "Path contains an embedded NUL", hasId, id);
         }
-        request->textValue = UTF8To16(pathValue.GetString());
-        if (request->textValue.IsEmpty() || request->textValue.GetLength() > 32767) {
+        request->control.textValue = UTF8To16(pathValue.GetString());
+        if (request->control.textValue.IsEmpty() || request->control.textValue.GetLength() > 32767) {
             request->Release();
             return MakeError(-32602, "Path is empty or too long", hasId, id);
         }

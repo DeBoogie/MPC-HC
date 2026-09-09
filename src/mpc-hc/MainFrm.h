@@ -28,6 +28,7 @@
 #include "EditListEditor.h"
 #include "IBufferInfo.h"
 #include "IKeyFrameInfo.h"
+#include "PlayerControlService.h"
 #include "JsonIpcServer.h"
 #include "MainFrmControls.h"
 #include "MouseTouch.h"
@@ -540,6 +541,7 @@ private:
     //
 
     friend class CWebClientSocket;
+    friend class CPlayerControlService;
     friend class CWebServer;
     CAutoPtr<CWebServer> m_pWebServer;
     int m_iPlaybackMode;
@@ -915,6 +917,7 @@ protected:  // control bar embedded members
     std::unique_ptr<CHistoryDlg> m_pHistoryDlg;
 
     LPCTSTR GetRecentFile() const;
+    bool ExecutePlayerControlSync(const PlayerControlRequest& request, PlayerControlResult& result, DWORD timeoutMs = 5000);
 
     friend class CPPagePlayback; // TODO
     friend class CPPageAudioSwitcher; // TODO
@@ -1519,6 +1522,7 @@ public:
     */
     CString getBestTitle(bool fTitleBarTextTitle = true);
     MediaTransControls m_media_trans_control;
+    CPlayerControlService m_playerControlService;
     CJsonIpcServer m_jsonIpcServer;
 
     void MediaTransportControlSetMedia();
@@ -1533,6 +1537,7 @@ public:
     afx_msg LRESULT OnSmtcShuffle(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnSmtcRate(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnJsonIpcRequest(WPARAM wParam, LPARAM lParam);
+    afx_msg LRESULT OnPlayerControlRequest(WPARAM wParam, LPARAM lParam);
     ULONGLONG m_lastSMTCTimelineUpdate = 0;
 #if MPC_SMTC_VIDEO_THUMBNAIL
     ULONGLONG m_nextSMTCThumbnailUpdate = 0;
