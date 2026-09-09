@@ -42,3 +42,5 @@ ipch
 /distrib/MPCVR/
 /distrib/x64/MediaInfo.dll
 /distrib/x86/MediaInfo.dll
+/build/dependency-cache/
+/release-output/

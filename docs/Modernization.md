@@ -79,3 +79,9 @@ powershell -ExecutionPolicy Bypass -File tools\verify-local.ps1 -Analyze
 ```
 
 Use `-Full` when the local MSYS2/LAV build dependencies are installed and a full internal-codec build is required.
+
+### Deterministic build inputs
+
+External runtime binaries used by packages must be declared in `dependencies\manifest.json` with a source URL, SHA-256 digest, archive entry, destination, and expected file version. Use `tools\bootstrap-dependencies.ps1` rather than manually copying renderer binaries into `distrib`.
+
+`tools\check-build-env.ps1` is the canonical prerequisite diagnostic and `tools\release.ps1` is the canonical local release entry point. Release output includes SHA-256 artifact metadata so a build can be tied back to its exact source commit and dependency manifest without requiring hosted CI.
