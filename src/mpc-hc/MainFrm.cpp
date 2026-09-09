@@ -23,6 +23,7 @@
 #include "MainFrm.h"
 #include "mplayerc.h"
 #include "version.h"
+#include "VersionInfo.h"
 
 #include "GraphThread.h"
 #include "FGFilterLAV.h"
@@ -390,6 +391,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
     ON_UPDATE_COMMAND_UI(ID_VIEW_CAPTIONMENU, OnUpdateViewCaptionmenu)
     ON_COMMAND_RANGE(ID_VIEW_SEEKER, ID_VIEW_STATUS, OnViewControlBar)
     ON_UPDATE_COMMAND_UI_RANGE(ID_VIEW_SEEKER, ID_VIEW_STATUS, OnUpdateViewControlBar)
+    ON_COMMAND(ID_VIEW_COPY_DIAGNOSTICS, OnViewCopyDiagnostics)
+    ON_UPDATE_COMMAND_UI(ID_VIEW_COPY_DIAGNOSTICS, OnUpdateViewCopyDiagnostics)
     ON_COMMAND(ID_VIEW_SUBRESYNC, OnViewSubresync)
     ON_UPDATE_COMMAND_UI(ID_VIEW_SUBRESYNC, OnUpdateViewSubresync)
     ON_COMMAND(ID_VIEW_PLAYLIST, OnViewPlaylist)
@@ -566,6 +569,12 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
     ON_COMMAND_RANGE(ID_PLAY_SEEKKEYBACKWARD, ID_PLAY_SEEKKEYFORWARD, OnPlaySeekKey)
     ON_UPDATE_COMMAND_UI_RANGE(ID_PLAY_SEEKBACKWARDSMALL, ID_PLAY_SEEKFORWARDLARGE, OnUpdatePlaySeek)
     ON_UPDATE_COMMAND_UI(ID_PLAY_SEEKSET, OnUpdatePlaySeek)
+    ON_COMMAND(ID_PLAY_SEEK_UNDO, OnPlaySeekUndo)
+    ON_COMMAND(ID_PLAY_POSITION_MARK, OnPlayPositionMark)
+    ON_COMMAND(ID_PLAY_POSITION_RETURN, OnPlayPositionReturn)
+    ON_UPDATE_COMMAND_UI(ID_PLAY_SEEK_UNDO, OnUpdatePlaySeekHistory)
+    ON_UPDATE_COMMAND_UI(ID_PLAY_POSITION_MARK, OnUpdatePlaySeekHistory)
+    ON_UPDATE_COMMAND_UI(ID_PLAY_POSITION_RETURN, OnUpdatePlaySeekHistory)
     ON_UPDATE_COMMAND_UI_RANGE(ID_PLAY_SEEKKEYBACKWARD, ID_PLAY_SEEKKEYFORWARD, OnUpdatePlaySeek)
     ON_COMMAND_RANGE(ID_PLAY_DECRATE, ID_PLAY_INCRATE, OnPlayChangeRate)
     ON_UPDATE_COMMAND_UI_RANGE(ID_PLAY_DECRATE, ID_PLAY_INCRATE, OnUpdatePlayChangeRate)
@@ -10224,6 +10233,54 @@ void CMainFrame::OnPlaySeekSet()
     }
 }
 
+void CMainFrame::OnPlaySeekUndo()
+{
+    if (GetLoadState() != MLS::LOADED || m_rtSeekUndo < 0 || !m_wndSeekBar.HasDuration()) {
+        return;
+    }
+
+    const REFERENCE_TIME current = GetPos();
+    const REFERENCE_TIME target = m_rtSeekUndo;
+    KillTimerDelayedSeek();
+    m_rtSeekUndo = current; // make repeated undo toggle between the two positions
+    lastSeekStart = GetTickCount64();
+    DoSeekTo(target, false);
+    lastSeekFinish = GetTickCount64();
+    m_OSD.DisplayMessage(OSD_TOPLEFT, ResStr(IDS_OSD_SEEK_UNDO), 1500);
+}
+
+void CMainFrame::OnPlayPositionMark()
+{
+    if (GetLoadState() != MLS::LOADED || !m_wndSeekBar.HasDuration()) {
+        return;
+    }
+    m_rtPositionMarker = GetPos();
+    m_OSD.DisplayMessage(OSD_TOPLEFT, ResStr(IDS_OSD_POSITION_MARKED), 1500);
+}
+
+void CMainFrame::OnPlayPositionReturn()
+{
+    if (GetLoadState() != MLS::LOADED || m_rtPositionMarker < 0 || !m_wndSeekBar.HasDuration()) {
+        return;
+    }
+    SeekTo(m_rtPositionMarker, false);
+    m_OSD.DisplayMessage(OSD_TOPLEFT, ResStr(IDS_OSD_POSITION_RETURNED), 1500);
+}
+
+void CMainFrame::OnUpdatePlaySeekHistory(CCmdUI* pCmdUI)
+{
+    bool enable = GetLoadState() == MLS::LOADED && m_wndSeekBar.HasDuration() && !IsPlaybackCaptureMode();
+    if (enable && GetPlaybackMode() == PM_DVD && m_iDVDDomain != DVD_DOMAIN_Title) {
+        enable = false;
+    }
+    if (pCmdUI->m_nID == ID_PLAY_SEEK_UNDO) {
+        enable = enable && m_rtSeekUndo >= 0;
+    } else if (pCmdUI->m_nID == ID_PLAY_POSITION_RETURN) {
+        enable = enable && m_rtPositionMarker >= 0;
+    }
+    pCmdUI->Enable(enable);
+}
+
 void CMainFrame::AdjustStreamPosPoller(bool restart)
 {
     int current_value = m_iStreamPosPollerInterval;
@@ -10318,6 +10375,57 @@ void CMainFrame::OnUpdatePlaySeek(CCmdUI* pCmdUI)
     }
 
     pCmdUI->Enable(fEnable);
+}
+
+void CMainFrame::OnViewCopyDiagnostics()
+{
+    PlayerControlRequest request(PlayerControlMethod::GET_DIAGNOSTICS);
+    PlayerControlResult result;
+    m_playerControlService.Execute(request, result);
+    if (!result.success) {
+        return;
+    }
+
+    const PlayerStateSnapshot& d = result.snapshot;
+    CString text;
+    text.AppendFormat(_T("MPC-HC %s\r\n"), VersionInfo::GetVersionString().GetString());
+    text.AppendFormat(_T("State: %s\r\n"), d.state.GetString());
+    text.AppendFormat(_T("File: %s\r\n"), d.file.GetString());
+    text.AppendFormat(_T("Position: %.3f / %.3f s\r\n"), d.positionSeconds, d.durationSeconds);
+    text.AppendFormat(_T("Rate: %.3fx\r\nVolume: %d%s\r\n"), d.playbackRate, d.volume, d.muted ? _T(" (muted)") : _T(""));
+    text.AppendFormat(_T("Renderer: %s\r\n"), d.renderer.GetString());
+    if (!d.decoder.IsEmpty()) {
+        text.AppendFormat(_T("Decoder: %s\r\n"), d.decoder.GetString());
+    }
+    if (!d.hardwareDevice.IsEmpty()) {
+        text.AppendFormat(_T("Hardware device: %s\r\n"), d.hardwareDevice.GetString());
+    }
+    if (d.framesDrawn >= 0) {
+        text.AppendFormat(_T("Frames drawn: %d\r\n"), d.framesDrawn);
+    }
+    if (d.framesDropped >= 0) {
+        text.AppendFormat(_T("Frames dropped: %d\r\n"), d.framesDropped);
+    }
+    if (d.jitterMs != INT_MIN) {
+        text.AppendFormat(_T("Presentation jitter: %d ms\r\n"), d.jitterMs);
+    }
+    if (d.averageSyncOffsetMs != INT_MIN) {
+        text.AppendFormat(_T("Average A/V sync offset: %d ms\r\n"), d.averageSyncOffsetMs);
+    }
+    text.AppendFormat(_T("Audio track: %d\r\nSubtitle track: %d\r\n"), d.audioTrack, d.subtitleTrack);
+    if (!d.networkState.IsEmpty() && d.networkState != L"none") {
+        text.AppendFormat(_T("Network: %s (retries: %d, error: 0x%08lX)\r\n"), d.networkState.GetString(), d.networkRetryCount, static_cast<unsigned long>(d.networkError));
+    }
+
+    CClipboard clipboard(this);
+    if (clipboard.SetText(text)) {
+        m_OSD.DisplayMessage(OSD_TOPLEFT, ResStr(IDS_OSD_DIAGNOSTICS_COPIED), 1500);
+    }
+}
+
+void CMainFrame::OnUpdateViewCopyDiagnostics(CCmdUI* pCmdUI)
+{
+    pCmdUI->Enable(GetLoadState() == MLS::LOADED);
 }
 
 void CMainFrame::SetPlayingRate(double rate)
@@ -16756,6 +16864,8 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
     m_fValidDVDOpen = false;
     m_iDefRotation = 0;
     m_replayGain = ReplayGainInfo();
+    m_rtSeekUndo = -1;
+    m_rtPositionMarker = -1;
 
     OpenFileData* pFileData = dynamic_cast<OpenFileData*>(pOMD.m_p);
     OpenDVDData* pDVDData = dynamic_cast<OpenDVDData*>(pOMD.m_p);
@@ -19893,6 +20003,11 @@ void CMainFrame::SeekTo(REFERENCE_TIME rtPos, bool bShowOSD /*= true*/)
         SetTimer(TIMER_DELAYEDSEEK, (UINT) (mindelay * 1.25 - ticksSinceLastSeek), nullptr);
     } else {
         KillTimerDelayedSeek();
+        const REFERENCE_TIME seekOrigin = GetPos();
+        const REFERENCE_TIME seekDelta = rtPos >= seekOrigin ? rtPos - seekOrigin : seekOrigin - rtPos;
+        if (m_wndSeekBar.HasDuration() && seekDelta >= 5000000LL) {
+            m_rtSeekUndo = seekOrigin;
+        }
         lastSeekStart = curTime;
         DoSeekTo(rtPos, bShowOSD);
         lastSeekFinish = GetTickCount64();

@@ -782,6 +782,8 @@ public:
     SeekToCommand queuedSeek;
     ULONGLONG lastSeekStart;
     ULONGLONG lastSeekFinish;
+    REFERENCE_TIME m_rtSeekUndo = -1;
+    REFERENCE_TIME m_rtPositionMarker = -1;
     void SetPlayingRate(double rate);
 
     int SetupAudioStreams();
@@ -1234,8 +1236,14 @@ public:
     afx_msg void OnUpdatePlayFramestep(CCmdUI* pCmdUI);
     afx_msg void OnPlaySeek(UINT nID);
     afx_msg void OnPlaySeekSet();
+    afx_msg void OnPlaySeekUndo();
+    afx_msg void OnPlayPositionMark();
+    afx_msg void OnPlayPositionReturn();
+    afx_msg void OnUpdatePlaySeekHistory(CCmdUI* pCmdUI);
     afx_msg void OnPlaySeekKey(UINT nID); // no menu item
     afx_msg void OnUpdatePlaySeek(CCmdUI* pCmdUI);
+    afx_msg void OnViewCopyDiagnostics();
+    afx_msg void OnUpdateViewCopyDiagnostics(CCmdUI* pCmdUI);
     afx_msg void OnPlayChangeRate(UINT nID);
     afx_msg void OnUpdatePlayChangeRate(CCmdUI* pCmdUI);
     afx_msg void OnPlayResetRate();
