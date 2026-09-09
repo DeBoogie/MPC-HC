@@ -77,6 +77,12 @@ try {
         throw 'Shared player control service is not wired into IPC/web control paths.'
     }
 
+    $webServer = Get-Content 'src\mpc-hc\WebServer.cpp' -Raw
+    $settingsSource = Get-Content 'src\mpc-hc\AppSettings.cpp' -Raw
+    if ($webServer -notmatch '403 Forbidden' -or $webServer -notmatch 'bWebServerAllowCGIOverNetwork' -or $settingsSource -notmatch 'bWebServerAllowCGIOverNetwork\(false\)') {
+        throw 'Remote CGI must remain an explicit opt-in with a 403 default deny path.'
+    }
+
     $installer = Get-Content 'distrib\mpc-hc_setup.iss' -Raw
     if ($installer -notmatch 'MinVersion\s*=\s*10\.0') {
         throw 'The installer still permits pre-Windows-10 systems.'

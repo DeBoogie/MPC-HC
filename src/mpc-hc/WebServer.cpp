@@ -427,9 +427,27 @@ void CWebServer::OnRequest(CWebClientSocket* pClient, CStringA& hdr, CStringA& b
 
     if (m_webroot.IsDirectory()) {
         CStringA tmphdr;
-        fHandled = fCGI = CallCGI(pClient, tmphdr, body, mime);
+        CString mappedInterpreter;
+        const CString requestExt = CPath(AToT(pClient->m_path)).GetExtension().MakeLower();
+        const bool isMappedCGI = !requestExt.IsEmpty() && m_cgi.Lookup(requestExt, mappedInterpreter);
+        bool allowCGI = true;
+        if (isMappedCGI && !s.bWebServerAllowCGIOverNetwork) {
+            CString peerAddress;
+            UINT peerPort = 0;
+            allowCGI = pClient->GetPeerName(peerAddress, peerPort)
+                       && (peerAddress == _T("127.0.0.1") || peerAddress == _T("::1"));
+        }
 
-        if (fHandled) {
+        if (isMappedCGI && !allowCGI) {
+            hdr = "HTTP/1.0 403 Forbidden\r\n";
+            mime = "text/plain";
+            body = "CGI execution is restricted to localhost. Enable WebServerAllowCGIOverNetwork explicitly to override this restriction.";
+            fHandled = true;
+        } else {
+            fHandled = fCGI = CallCGI(pClient, tmphdr, body, mime);
+        }
+
+        if (fCGI) {
             tmphdr.Replace("\r\n", "\n");
             CAtlList<CStringA> hdrlines;
             ExplodeMin(tmphdr, hdrlines, '\n');

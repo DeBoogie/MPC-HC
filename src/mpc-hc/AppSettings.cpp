@@ -103,6 +103,7 @@ CAppSettings::CAppSettings()
     , fWebServerLocalhostOnly(true)
     , bWebUIEnablePreview(false)
     , fWebServerPrintDebugInfo(false)
+    , bWebServerAllowCGIOverNetwork(false)
     , nVolume(100)
     , fMute(false)
     , nBalance(0)
@@ -1274,6 +1275,7 @@ void CAppSettings::SaveSettings(bool write_full_history /* = false */)
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_WEBSERVERLOCALHOSTONLY, fWebServerLocalhostOnly);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_WEBUI_ENABLE_PREVIEW, bWebUIEnablePreview);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_WEBSERVERPRINTDEBUGINFO, fWebServerPrintDebugInfo);
+    pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_WEBSERVERALLOWCGIOVERNETWORK, bWebServerAllowCGIOverNetwork);
     pApp->WriteProfileString(IDS_R_SETTINGS, IDS_RS_WEBROOT, strWebRoot);
     pApp->WriteProfileString(IDS_R_SETTINGS, IDS_RS_WEBDEFINDEX, strWebDefIndex);
     pApp->WriteProfileString(IDS_R_SETTINGS, IDS_RS_WEBSERVERCGI, strWebServerCGI);
@@ -2152,6 +2154,7 @@ void CAppSettings::LoadSettings()
     fWebServerLocalhostOnly = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_WEBSERVERLOCALHOSTONLY, TRUE);
     bWebUIEnablePreview = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_WEBUI_ENABLE_PREVIEW, FALSE);
     fWebServerPrintDebugInfo = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_WEBSERVERPRINTDEBUGINFO, FALSE);
+    bWebServerAllowCGIOverNetwork = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_WEBSERVERALLOWCGIOVERNETWORK, FALSE);
     strWebRoot = pApp->GetProfileString(IDS_R_SETTINGS, IDS_RS_WEBROOT, _T("*./webroot"));
     strWebDefIndex = pApp->GetProfileString(IDS_R_SETTINGS, IDS_RS_WEBDEFINDEX, _T("index.html;index.php"));
     strWebServerCGI = pApp->GetProfileString(IDS_R_SETTINGS, IDS_RS_WEBSERVERCGI);

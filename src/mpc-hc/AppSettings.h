@@ -696,6 +696,7 @@ public:
     bool            fWebServerLocalhostOnly;
     bool            bWebUIEnablePreview;
     bool            fWebServerPrintDebugInfo;
+    bool            bWebServerAllowCGIOverNetwork;
     CString         strWebRoot, strWebDefIndex;
     CString         strWebServerCGI;
 
