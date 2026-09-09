@@ -49,6 +49,7 @@ FOR %%A IN (%ARG%) DO (
 	IF /I "%%A" == "clean" SET "BUILDTYPE=clean"
 	IF /I "%%A" == "rebuild" SET "BUILDTYPE=rebuild"
 	IF /I "%%A" == "64" SET "BIT=64BIT=yes"
+	IF /I "%%A" == "arm64" SET "ARM64=ARM64=yes"
 	IF /I "%%A" == "Debug" SET "DEBUG=DEBUG=yes"
 )
 
@@ -80,7 +81,7 @@ rem SET JOBS=1
 
 set MAK="%~dp0\ffmpeg-msvc.mak"
 pushd ..\LAVFilters\src\ffmpeg\
-call make.exe -f %MAK% %BUILDTYPE% -j%JOBS% %BIT% %DEBUG%
+call make.exe -f %MAK% %BUILDTYPE% -j%JOBS% %BIT% %ARM64% %DEBUG%
 ENDLOCAL
 IF %ERRORLEVEL% NEQ 0 (
   SET MAKE_RETURN=%ERRORLEVEL%
@@ -91,7 +92,7 @@ EXIT /B
 :SHOWHELP
 TITLE "%~nx0 %1"
 ECHO. & ECHO.
-ECHO Usage:   %~nx0 [32^|64] [Clean^|Build^|Rebuild] [Debug]
+ECHO Usage:   %~nx0 [32^|64^|ARM64] [Clean^|Build^|Rebuild] [Debug]
 ECHO.
 ECHO Notes:   The arguments are not case sensitive.
 ECHO. & ECHO.

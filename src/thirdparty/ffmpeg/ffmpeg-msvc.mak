@@ -2,7 +2,9 @@ SOXR_DIR     = ../../../soxr/libsoxr/src
 MAK_DIR      = ../../../ffmpeg/
 BIN_DIR      = $(MAK_DIR)../../../bin
 
-ifeq ($(64BIT),yes)
+ifeq ($(ARM64),yes)
+	PLATFORM = ARM64
+else ifeq ($(64BIT),yes)
 	PLATFORM = x64
 else
 	PLATFORM = Win32
@@ -37,7 +39,9 @@ LIBFLAGS = -nologo -NODEFAULTLIB:libcmt
 LIB=lib.exe
 
 
-ifeq ($(64BIT),yes)
+ifeq ($(ARM64),yes)
+	CFLAGS     += -DMPC_FFMPEG_GENERIC_ARM64=1 -DWIN64=1
+else ifeq ($(64BIT),yes)
 	CFLAGS     += -I ../thirdparty/64/include -DWIN64=1 
 	NASMFLAGS  += -f win64 -DWIN64=1 -DPIC 
 else
@@ -260,6 +264,18 @@ SRCS_NASM_LR = \
 	libswresample/x86/audio_convert.asm \
 	libswresample/x86/rematrix.asm \
 	libswresample/x86/resample.asm
+
+ifeq ($(ARM64),yes)
+	filter_x86 = $(foreach src,$(1),$(if $(findstring /x86/,$(src)),,$(src)))
+	SRCS_LC := $(call filter_x86,$(SRCS_LC))
+	SRCS_LF := $(call filter_x86,$(SRCS_LF))
+	SRCS_LU := $(call filter_x86,$(SRCS_LU))
+	SRCS_LR := $(call filter_x86,$(SRCS_LR))
+	SRCS_NASM_LC :=
+	SRCS_NASM_LF :=
+	SRCS_NASM_LU :=
+	SRCS_NASM_LR :=
+endif
 
 OBJS_LC = \
 	$(SRCS_LC:%.c=$(OBJ_DIR)%.o) \

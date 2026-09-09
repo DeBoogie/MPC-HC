@@ -86,7 +86,9 @@ unsigned VersionInfo::GetRevisionNumber()
 
 CString VersionInfo::GetGCCVersion()
 {
-#ifdef _WIN64
+#if defined(_M_ARM64)
+    return _T(""); // ARM64 FFmpeg uses the MSVC generic-C path, not MinGW/GCC.
+#elif defined(_WIN64)
     return GCC64_VERSION;
 #else
     return GCC32_VERSION;

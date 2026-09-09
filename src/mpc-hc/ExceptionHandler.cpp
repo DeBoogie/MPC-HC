@@ -112,6 +112,14 @@ CString GetStackTrace(LPEXCEPTION_POINTERS exp)
 	frame.AddrFrame.Mode = AddrModeFlat;
 	frame.AddrStack.Offset = ctx->Rsp;
 	frame.AddrStack.Mode = AddrModeFlat;
+#elif defined(_M_ARM64)
+	imageType = IMAGE_FILE_MACHINE_ARM64;
+	frame.AddrPC.Offset = ctx->Pc;
+	frame.AddrPC.Mode = AddrModeFlat;
+	frame.AddrFrame.Offset = ctx->Fp;
+	frame.AddrFrame.Mode = AddrModeFlat;
+	frame.AddrStack.Offset = ctx->Sp;
+	frame.AddrStack.Mode = AddrModeFlat;
 #else
 	imageType = IMAGE_FILE_MACHINE_I386;
 	frame.AddrPC.Offset = ctx->Eip;

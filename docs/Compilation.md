@@ -162,6 +162,30 @@ For a quick compile that skips the internal LAV Filters build, use:
 build.bat Build x64 MPCHC Release Lite
 ```
 
+### Experimental Windows on ARM64 build
+
+The native ARM64 target is currently a **Lite development target**. It builds the player and portable in-tree dependencies for ARM64, uses portable C fallbacks where the x86/x64 tree relies on NASM/SSE or MinHook, and intentionally excludes the Logitech LCD and unregistered-filter hook paths. The bundled LAV Filters and MPC Video Renderer do not yet have native ARM64 packages in this fork, so ARM64 installer/package release targets remain disabled.
+
+Install the Visual Studio 2022 ARM64 C++ build tools and the ARM64 ATL/MFC libraries, then use:
+
+```bat
+build.bat Build ARM64 MPCHC Release Lite
+```
+
+Check that toolchain without compiling with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\check-build-env.ps1 -Platform ARM64
+```
+
+The corresponding repository/build verification command is:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\verify-local.ps1 -Platform ARM64 -Build
+```
+
+The ARM64 project graph can also be checked without a compiler using `tools\validate-arm64.ps1`. AddressSanitizer is currently enabled only for the x86/x64 MSVC targets and is intentionally rejected for ARM64.
+
 The Lite configuration is for development checks only; release packages should include the internal filters. Run `build.bat help` for the complete set of switches.
 
 You can also open **mpc-hc.sln** in Visual Studio 2022, select **x64** and **Release**, and build the solution normally.

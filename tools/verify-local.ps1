@@ -1,5 +1,7 @@
 [CmdletBinding()]
 param(
+    [ValidateSet('x64', 'ARM64')]
+    [string]$Platform = 'x64',
     [switch]$Build,
     [switch]$Analyze,
     [switch]$Sanitize,
@@ -35,7 +37,8 @@ try {
         'tests\fuzz\corpus\seed.vtt',
         'tests\fuzz\corpus\seed.m3u',
         'src\mpc-hc\PlayerControlService.cpp',
-        'src\mpc-hc\PlayerControlService.h'
+        'src\mpc-hc\PlayerControlService.h',
+        'tools\validate-arm64.ps1'
     )
 
     foreach ($file in $requiredFiles) {
@@ -47,11 +50,11 @@ try {
     [xml](Get-Content 'src\platform.props' -Raw) | Out-Null
     [xml](Get-Content 'src\common.props' -Raw) | Out-Null
 
-    $platform = Get-Content 'src\platform.props' -Raw
-    if ($platform -notmatch '>10\.0</WindowsTargetPlatformVersion>') {
+    $platformProps = Get-Content 'src\platform.props' -Raw
+    if ($platformProps -notmatch '>10\.0</WindowsTargetPlatformVersion>') {
         throw 'The default Windows SDK baseline is not Windows 10.'
     }
-    if ($platform -notmatch '<PlatformToolset>v143</PlatformToolset>') {
+    if ($platformProps -notmatch '<PlatformToolset>v143</PlatformToolset>') {
         throw 'The project is not pinned to the VS2022 v143 toolset.'
     }
 
@@ -64,6 +67,24 @@ try {
     }
     if ($common -notmatch '/fsanitize=address') {
         throw 'AddressSanitizer build hook is missing.'
+    }
+
+    $solution = Get-Content 'mpc-hc.sln' -Raw
+    $mainProject = Get-Content 'src\mpc-hc\mpc-hc.vcxproj' -Raw
+    $ffmpegProject = Get-Content 'src\thirdparty\ffmpeg\ffmpeg.vcxproj' -Raw
+    $ffmpegMake = Get-Content 'src\thirdparty\ffmpeg\ffmpeg-msvc.mak' -Raw
+    if ($solution -notmatch 'Debug Lite\|ARM64' -or $solution -notmatch 'Release Lite\|ARM64' -or
+        $mainProject -notmatch 'mpc-hc_ARM64' -or $mainProject -notmatch 'MPC_ARM64_LITE' -or
+        $ffmpegProject -notmatch 'ffmpeg\.bat arm64' -or $ffmpegMake -notmatch 'MPC_FFMPEG_GENERIC_ARM64') {
+        throw 'Experimental ARM64 Lite build configuration is incomplete.'
+    }
+    if ($solution -match 'Debug\|ARM64 = Debug\|ARM64' -or $solution -match 'Release\|ARM64 = Release\|ARM64') {
+        throw 'ARM64 must remain Lite-only until native bundled LAV/MPCVR dependencies are available.'
+    }
+
+    & powershell -ExecutionPolicy Bypass -File tools\validate-arm64.ps1
+    if ($LASTEXITCODE -ne 0) {
+        throw 'ARM64 structural validation failed.'
     }
 
     $dependencyManifest = Get-Content 'dependencies\manifest.json' -Raw | ConvertFrom-Json
@@ -101,8 +122,12 @@ try {
     }
 
     if ($Build -or $Analyze -or $Sanitize) {
-        $buildArgs = @('Build', 'x64', 'MPCHC', 'Release')
-        if (-not $Full) {
+        if ($Platform -eq 'ARM64' -and $Sanitize) { throw 'AddressSanitizer is not enabled for the ARM64 target.' }
+        $buildArgs = @('Build', $Platform, 'MPCHC', 'Release')
+        if ($Platform -eq 'ARM64') {
+            if ($Full) { throw 'ARM64 currently supports Lite builds only.' }
+            $buildArgs += 'Lite'
+        } elseif (-not $Full) {
             $buildArgs += 'Lite'
         }
         if ($Analyze) {

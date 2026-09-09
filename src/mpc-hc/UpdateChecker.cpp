@@ -76,20 +76,26 @@ Update_Status UpdateChecker::IsUpdateAvailable(const Version& currentVersion, bo
         CString osVersionStr;
         osVersionStr.Format(_T("Windows %1u.%1u"), osVersion.dwMajorVersion, osVersion.dwMinorVersion);
 
-#if !defined(_WIN64)
-        // 32-bit programs run on both 32-bit and 64-bit Windows
-        // so must sniff
+#if defined(_M_ARM64)
+        osVersionStr += _T(" ARM64");
+#elif defined(_WIN64)
+        osVersionStr += _T(" x64");
+#else
+        // 32-bit programs run on both 32-bit and 64-bit Windows, so sniff the OS.
         BOOL f64 = FALSE;
-        if (IsWow64Process(GetCurrentProcess(), &f64) && f64)
-#endif
-        {
+        if (IsWow64Process(GetCurrentProcess(), &f64) && f64) {
             osVersionStr += _T(" x64");
         }
+#endif
 
         CString headersFmt = _T("User-Agent: MPC-HC");
+#if defined(_M_ARM64)
+        headersFmt += _T(" (ARM64)");
+#else
         if (VersionInfo::Is64Bit()) {
             headersFmt += _T(" (64-bit)");
         }
+#endif
 #ifdef MPCHC_LITE
         headersFmt += _T(" Lite");
 #endif

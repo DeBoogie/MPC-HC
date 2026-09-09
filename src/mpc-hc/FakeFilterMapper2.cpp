@@ -532,6 +532,11 @@ bool CFilterMapper2::s_bInitialized = false;
 
 void CFilterMapper2::Init()
 {
+#if defined(MPC_ARM64_NO_MINHOOK)
+    // ARM64 has no MinHook backend. Registered DirectShow filters continue to work, but
+    // probing an unregistered DLL through DllRegisterServer is disabled.
+    s_bInitialized = true;
+#else
     if (!s_bInitialized) {
         // In case of error, we don't report the failure immediately since the hooks might not be needed
         s_bInitialized = Mhook_SetHookEx(&Real_CoCreateInstance, Mine_CoCreateInstance)
@@ -565,6 +570,7 @@ void CFilterMapper2::Init()
                          && Mhook_SetHookEx(&Real_RegSetValueExW, Mine_RegSetValueExW);
         s_bInitialized &= MH_EnableHook(MH_ALL_HOOKS) == MH_OK;
     }
+#endif
 }
 
 CFilterMapper2::CFilterMapper2(bool bRefCounted, bool bAllowUnreg /*= false*/, LPUNKNOWN pUnkOuter /*= nullptr*/)
@@ -606,6 +612,10 @@ STDMETHODIMP CFilterMapper2::NonDelegatingQueryInterface(REFIID riid, void** ppv
 
 void CFilterMapper2::Register(CString path)
 {
+#if defined(MPC_ARM64_NO_MINHOOK)
+    UNREFERENCED_PARAMETER(path);
+    return;
+#else
     // Load filter
     if (HMODULE h = LoadLibraryEx(path, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH)) {
         typedef HRESULT(__stdcall * PDllRegisterServer)();
@@ -621,6 +631,7 @@ void CFilterMapper2::Register(CString path)
 
         FreeLibrary(h);
     }
+#endif
 }
 
 // IFilterMapper2

@@ -243,8 +243,12 @@ bool CMPCVRAllocatorPresenter::CheckVersion(CString filterPath) {
 }
 
 bool CMPCVRAllocatorPresenter::HasInternalMPCVRFilter() {
+#ifdef _M_ARM64
+    return false;
+#else
     CStringW lPath = GetInternalLibraryPath();
     return CheckVersion(lPath);
+#endif
 }
 
 HRESULT CMPCVRAllocatorPresenter::InstantiateInternalMPCVR(CComPtr<IUnknown>& m_pMPCVR, LPUNKNOWN pUnkOuter)

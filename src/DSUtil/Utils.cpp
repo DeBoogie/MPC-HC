@@ -43,7 +43,12 @@ uint32_t BitNum(uint32_t v, uint32_t b)
 }
 
 void fill_u32(void* dst, uint32_t c, size_t count) {
-#ifndef _WIN64
+#if defined(_M_ARM64)
+    auto out = static_cast<uint32_t*>(dst);
+    for (size_t i = 0; i < count; i++) {
+        out[i] = c;
+    }
+#elif !defined(_WIN64)
     __asm {
         mov eax, c
         mov ecx, count

@@ -3,11 +3,17 @@
 #include "../../DSUtil/SharedInclude.h"
 
 #define CONFIG_SOURCEVERSION "0.17.1"
+#if defined(_M_ARM64)
+/* Native ARM64 currently uses libass portable C paths. */
+#define CONFIG_ASM 0
+#define ARCH_X86 0
+#else
 /* ASM enabled */
 #define CONFIG_ASM 1
 
 /* targeting a 32 - or 64 - bit x86 host architecture */
 #define ARCH_X86 1
+#endif
 
 /* found CoreText in System library */
 /* #undef CONFIG_CORETEXT */

@@ -20,11 +20,26 @@
 
 #pragma once
 
+#if defined(_M_ARM64)
+#define MPC_ARM64_NO_MINHOOK 1
+using MH_STATUS = int;
+constexpr MH_STATUS MH_OK = 0;
+#define MH_ALL_HOOKS nullptr
+inline MH_STATUS MH_Initialize() { return MH_OK; }
+inline MH_STATUS MH_EnableHook(LPVOID) { return MH_OK; }
+inline MH_STATUS MH_Uninitialize() { return MH_OK; }
+#else
 #include "minhook/minhook/include/MinHook.h"
+#endif
 
 template <typename T>
 inline BOOL Mhook_SetHookEx(T** ppSystemFunction, PVOID pHookFunction)
 {
+#if defined(MPC_ARM64_NO_MINHOOK)
+    UNREFERENCED_PARAMETER(ppSystemFunction);
+    UNREFERENCED_PARAMETER(pHookFunction);
+    return FALSE;
+#else
     return MH_CreateHook(*ppSystemFunction, pHookFunction, reinterpret_cast<LPVOID*>(ppSystemFunction)) == MH_OK;
-
+#endif
 }

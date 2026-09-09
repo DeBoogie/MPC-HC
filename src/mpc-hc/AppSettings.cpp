@@ -911,7 +911,11 @@ bool CAppSettings::IsVideoRendererAvailable(int iVideoRendererType)
         case VIDRNDT_DS_MADVR:
             return IsCLSIDRegistered(CLSID_madVR);
         case VIDRNDT_DS_MPCVR:
+#ifdef _M_ARM64
+            return false; // no native ARM64 MPCVR binary is packaged by this fork yet
+#else
             return IsCLSIDRegistered(CLSID_MPCVR) || DSObjects::CMPCVRAllocatorPresenter::HasInternalMPCVRFilter();
+#endif
 #ifdef _WIN64
         case VIDRNDT_DS_OVERLAYMIXER:
             return false;
