@@ -628,6 +628,9 @@ static constexpr wmcmd_base default_wmcmds[] = {
     { ID_PLAY_SEEKKEYFORWARD,        VK_RIGHT, FSHIFT,            IDS_MPLAYERC_29 },
     { ID_PLAY_SEEKKEYBACKWARD,        VK_LEFT, FSHIFT,            IDS_MPLAYERC_30 },
     { ID_PLAY_SEEKSET,                VK_HOME, 0,                 IDS_AG_SEEKSET },
+    { ID_PLAY_SEEK_UNDO,           VK_BACK, FSHIFT,                 IDS_AG_SEEK_UNDO },
+    { ID_PLAY_POSITION_MARK,       VK_BACK, FSHIFT | FCONTROL,      IDS_AG_POSITION_MARK },
+    { ID_PLAY_POSITION_RETURN,           0, 0,                      IDS_AG_POSITION_RETURN },
     { ID_PLAY_REPEAT_FOREVER,               0, 0,                 IDS_PLAYLOOP_FOREVER },
     { ID_PLAY_REPEAT_ONEFILE,               0, 0,                 IDS_PLAYLOOPMODE_FILE },
     { ID_PLAY_REPEAT_WHOLEPLAYLIST,         0, 0,                 IDS_PLAYLOOPMODE_PLAYLIST },
@@ -1428,7 +1431,7 @@ void CAppSettings::SaveSettings(bool write_full_history /* = false */)
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_ALWAYS_USE_SHORT_MENU, bAlwaysUseShortMenu);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_STILL_VIDEO_DURATION, iStillVideoDuration);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_MOUSE_LEFTUP_DELAY, iMouseLeftUpDelay);
-    pApp->WriteProfileInt(IDS_R_SETTINGS, L"MouseHoldSpeedBoost", bMouseHoldSpeedBoost);
+    pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_MOUSE_HOLD_SPEED_BOOST, bMouseHoldSpeedBoost);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_CAPTURE_DEINTERLACE, bCaptureDeinterlace);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_PAUSE_WHILE_DRAGGING_SEEKBAR, bPauseWhileDraggingSeekbar);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_CONFIRM_FILE_DELETE, bConfirmFileDelete);
@@ -2415,7 +2418,7 @@ void CAppSettings::LoadSettings()
     bAlwaysUseShortMenu = pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_ALWAYS_USE_SHORT_MENU, FALSE);
     iStillVideoDuration = pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_STILL_VIDEO_DURATION, 10);
     iMouseLeftUpDelay = pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_MOUSE_LEFTUP_DELAY, 0);
-    bMouseHoldSpeedBoost = !!pApp->GetProfileInt(IDS_R_SETTINGS, L"MouseHoldSpeedBoost", TRUE);
+    bMouseHoldSpeedBoost = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_MOUSE_HOLD_SPEED_BOOST, TRUE);
 
     LastGPUCheck = pApp->GetProfileInt(IDS_R_SETTINGS, L"LastGPUCheck", 0);
     gpuid1 = pApp->GetProfileString(IDS_R_SETTINGS, L"GPUID1", L"");

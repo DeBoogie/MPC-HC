@@ -155,7 +155,7 @@ void CPPageAdvanced::InitSettings()
         StrRes(IDS_PPAGEADVANCED_STARTUP_PRESET));
     addBoolItem(ALWAYS_USE_SHORT_MENU, IDS_RS_ALWAYS_USE_SHORT_MENU, false, s.bAlwaysUseShortMenu, StrRes(IDS_PPAGEADVANCED_ALWAYS_USE_SHORT_MENU));
     addIntItem(MOUSE_LEFTUP_DELAY, IDS_RS_MOUSE_LEFTUP_DELAY, 0, s.iMouseLeftUpDelay, std::make_pair(0, 1000), StrRes(IDS_PPAGEADVANCED_MOUSE_LEFTUP_DELAY));
-    addBoolItem(MOUSE_HOLD_SPEED_BOOST, L"MouseHoldSpeedBoost", true, s.bMouseHoldSpeedBoost, L"Hold the left mouse button on video for 500 ms to temporarily play at 2x speed. Releasing the button restores the previous rate. Dragging and double-click actions are preserved.");
+    addBoolItem(MOUSE_HOLD_SPEED_BOOST, IDS_RS_MOUSE_HOLD_SPEED_BOOST, true, s.bMouseHoldSpeedBoost, StrRes(IDS_PPAGEADVANCED_MOUSE_HOLD_SPEED_BOOST));
     addIntItem(COVER_SIZE_LIMIT, IDS_RS_COVER_ART_SIZE_LIMIT, 600, s.nCoverArtSizeLimit, std::make_pair(0, INT_MAX), StrRes(IDS_PPAGEADVANCED_COVER_SIZE_LIMIT));
     addBoolItem(OPEN_REC_PANEL_WHEN_OPENING_DEVICE, IDS_RS_OPEN_REC_PANEL_WHEN_OPENING_DEVICE, true, s.bOpenRecPanelWhenOpeningDevice, StrRes(IDS_PPAGEADVANCED_OPEN_REC_PANEL_WHEN_OPENING_DEVICE));
     addBoolItem(CONFIRM_FILE_DELETE, IDS_RS_CONFIRM_FILE_DELETE, true, s.bConfirmFileDelete, StrRes(IDS_PPAGEADVANCED_CONFIRM_FILE_DELETE));

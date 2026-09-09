@@ -44,6 +44,15 @@ Before a release, exercise representative samples rather than only checking that
 - Variable-frame-rate material and files with discontinuous timestamps.
 - A damaged/truncated file to check graceful failure.
 
+### Playback interaction parity
+
+- With the default left-click play/pause binding, hold the left mouse button on video for at least 500 ms: playback should temporarily switch to 2x and releasing the button must restore the exact prior rate.
+- Starting a window drag or a double-click must cancel the hold-to-speed gesture, and custom left-button bindings must not be overridden by it.
+- After a normal seek, `Shift+Backspace` should return to the position before that seek; pressing it again should toggle back.
+- `Ctrl+Shift+Backspace` should mark the current position. The configurable "Return to marked position" command must seek back to it and make that jump undoable.
+- Opening a new media item must clear both the seek-undo position and the explicit position marker.
+- View > Copy playback diagnostics should place current file/state, renderer/decoder, frame/sync metrics when available, track indices and network state on the clipboard.
+
 ### Hardware paths
 
 On at least Intel, AMD and NVIDIA hardware where available:

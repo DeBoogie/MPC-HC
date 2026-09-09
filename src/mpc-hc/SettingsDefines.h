@@ -126,6 +126,7 @@
 #define IDS_RS_ALWAYS_USE_SHORT_MENU        _T("AlwaysUseShortMenu")
 #define IDS_RS_STILL_VIDEO_DURATION         _T("StillVideoDuration")
 #define IDS_RS_MOUSE_LEFTUP_DELAY           _T("MouseLeftUpDelay")
+#define IDS_RS_MOUSE_HOLD_SPEED_BOOST       _T("MouseHoldSpeedBoost")
 #define IDS_RS_USE_FREETYPE                 _T("UseFreetype")
 #define IDS_RS_USE_MEDIAINFO_LOAD_FILE_DURATION _T("UseMediainfoLoadFileDuration")
 #define IDS_RS_CAPTURE_DEINTERLACE          _T("CaptureDeinterlace")

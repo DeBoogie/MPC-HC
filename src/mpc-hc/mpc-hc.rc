@@ -1607,6 +1607,7 @@ BEGIN
         MENUITEM "&Controls",                   ID_VIEW_CONTROLS
         MENUITEM "&Information",                ID_VIEW_INFORMATION
         MENUITEM "&Statistics",                 ID_VIEW_STATISTICS
+        MENUITEM "Copy playback &diagnostics",     ID_VIEW_COPY_DIAGNOSTICS
         MENUITEM "St&atus",                     ID_VIEW_STATUS
         MENUITEM "Su&bresync",                  ID_VIEW_SUBRESYNC
         MENUITEM "Pla&ylist",                   ID_VIEW_PLAYLIST
@@ -1753,6 +1754,9 @@ BEGIN
     BEGIN
         MENUITEM "&Play/Pause",                 ID_PLAY_PLAYPAUSE
         MENUITEM "&Stop",                       ID_PLAY_STOP
+        MENUITEM "Undo last see&k",              ID_PLAY_SEEK_UNDO
+        MENUITEM "&Mark current position",       ID_PLAY_POSITION_MARK
+        MENUITEM "Return to marked &position",    ID_PLAY_POSITION_RETURN
         MENUITEM "Fra&me Step",                 ID_PLAY_FRAMESTEP
         POPUP "&Repeat"
         BEGIN
@@ -1881,6 +1885,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Play/Pause",                 ID_PLAY_PLAYPAUSE
         MENUITEM "&Stop",                       ID_PLAY_STOP
+        MENUITEM "Undo last see&k",              ID_PLAY_SEEK_UNDO
+        MENUITEM "&Mark current position",       ID_PLAY_POSITION_MARK
+        MENUITEM "Return to marked &position",    ID_PLAY_POSITION_RETURN
         POPUP "&Repeat"
         BEGIN
             MENUITEM "F&orever",                    ID_PLAY_REPEAT_FOREVER
@@ -2028,6 +2035,7 @@ BEGIN
             MENUITEM "&Controls",                   ID_VIEW_CONTROLS
             MENUITEM "&Information",                ID_VIEW_INFORMATION
             MENUITEM "&Statistics",                 ID_VIEW_STATISTICS
+            MENUITEM "Copy playback &diagnostics",     ID_VIEW_COPY_DIAGNOSTICS
             MENUITEM "St&atus",                     ID_VIEW_STATUS
             MENUITEM "Su&bresync",                  ID_VIEW_SUBRESYNC
             MENUITEM "Pla&ylist",                   ID_VIEW_PLAYLIST
@@ -2150,6 +2158,7 @@ BEGIN
             MENUITEM "&Controls",                   ID_VIEW_CONTROLS
             MENUITEM "&Information",                ID_VIEW_INFORMATION
             MENUITEM "&Statistics",                 ID_VIEW_STATISTICS
+            MENUITEM "Copy playback &diagnostics",     ID_VIEW_COPY_DIAGNOSTICS
             MENUITEM "St&atus",                     ID_VIEW_STATUS
             MENUITEM "Su&bresync",                  ID_VIEW_SUBRESYNC
             MENUITEM "Pla&ylist",                   ID_VIEW_PLAYLIST
@@ -2296,6 +2305,9 @@ BEGIN
         BEGIN
             MENUITEM "&Play/Pause",                 ID_PLAY_PLAYPAUSE
             MENUITEM "&Stop",                       ID_PLAY_STOP
+            MENUITEM "Undo last see&k",              ID_PLAY_SEEK_UNDO
+            MENUITEM "&Mark current position",       ID_PLAY_POSITION_MARK
+            MENUITEM "Return to marked &position",    ID_PLAY_POSITION_RETURN
             MENUITEM "Fra&me Step",                 ID_PLAY_FRAMESTEP
             POPUP "&Repeat"
             BEGIN
@@ -4336,6 +4348,15 @@ BEGIN
     IDS_AG_COLOR_CONTROLS   "Color Controls"
     IDC_COLOR_CONTROLS      "You can also open Color controls from the Play menu"
     IDS_REDIRECT_HUNG_INSTANCE "The first MPC-HC instance is not responding.\n\nClick Yes to close it and continue in this window. Any settings and history it has not yet saved will be lost.\n\nClick No to open a new window and leave it running."
+    IDS_AG_SEEK_UNDO        "Undo last seek"
+    IDS_AG_POSITION_MARK    "Mark current position"
+    IDS_AG_POSITION_RETURN  "Return to marked position"
+    IDS_AG_COPY_DIAGNOSTICS "Copy playback diagnostics to clipboard"
+    IDS_OSD_POSITION_MARKED "Playback position marked"
+    IDS_OSD_POSITION_RETURNED "Returned to marked position"
+    IDS_OSD_SEEK_UNDO       "Returned to position before last seek"
+    IDS_OSD_DIAGNOSTICS_COPIED "Playback diagnostics copied to clipboard"
+    IDS_PPAGEADVANCED_MOUSE_HOLD_SPEED_BOOST "Hold the left mouse button on video for 500 ms to temporarily play at 2x speed. Releasing the button restores the previous rate. Dragging and double-click actions are preserved."
 END
 
 #endif    // English (United States) resources

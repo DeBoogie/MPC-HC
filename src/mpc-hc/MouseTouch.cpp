@@ -461,10 +461,13 @@ void CALLBACK CMouse::OnTimerLeftLongPress(HWND hWnd, UINT nMsg, UINT_PTR nIDEve
     }
 
     pCMouse->m_leftLongPressRestoreRate = pCMouse->m_pMainFrame->GetPlayingRate();
-    pCMouse->m_bLeftLongPressActive = true;
     if (pCMouse->m_leftLongPressRestoreRate != LEFT_LONG_PRESS_RATE) {
         pCMouse->m_pMainFrame->SetPlayingRate(LEFT_LONG_PRESS_RATE);
+        if (pCMouse->m_pMainFrame->GetPlayingRate() != LEFT_LONG_PRESS_RATE) {
+            return; // renderer rejected the temporary rate; preserve the normal click action
+        }
     }
+    pCMouse->m_bLeftLongPressActive = true;
 }
 
 void CMouse::PerformDelayedLeftUp()
