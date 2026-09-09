@@ -92,7 +92,9 @@ On at least Intel, AMD and NVIDIA hardware where available:
 - HLS/DASH material supported by the current splitter stack.
 - A current yt-dlp-supported URL.
 - An invalid URL and an unsupported site.
-- Network interruption/retry behavior.
+- Network interruption/retry behavior. Loaded URL streams use a bounded reconnect policy (2 attempts by default, configurable 0..10) that reuses the normal reopen path so playback position and selected tracks are preserved.
+- During URL open/buffering/retry, JSON diagnostics must transition through the explicit network states (`connecting`, `buffering`, `retry-wait`, `reconnecting`, `ready`, `failed`) without affecting local-file state.
+- Changing the playlist item while a retry is pending must cancel that retry rather than reopening the old URL.
 - Subtitle-provider HTTP transfers: follow redirects only when requested, honor HTTPS/custom ports on uploads, trust actual read counts rather than advertised lengths, and reject responses larger than 64 MiB.
 - yt-dlp missing from disk, returning malformed JSON, or exiting with an error.
 - Built-in controls-page status polling through `/status.json`.

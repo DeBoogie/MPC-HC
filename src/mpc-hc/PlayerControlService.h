@@ -9,6 +9,16 @@
 
 #define WM_PLAYER_CONTROL_REQUEST (WM_APP + 905)
 
+enum class PlayerNetworkState {
+    NONE,
+    CONNECTING,
+    READY,
+    BUFFERING,
+    RETRY_WAIT,
+    RECONNECTING,
+    FAILED,
+};
+
 enum class PlayerControlMethod {
     GET_STATE,
     GET_DIAGNOSTICS,
@@ -31,6 +41,7 @@ struct PlayerStateSnapshot {
     CStringW renderer;
     CStringW decoder;
     CStringW hardwareDevice;
+    CStringW networkState;
     double positionSeconds = 0.0;
     double durationSeconds = 0.0;
     double playbackRate = 1.0;
@@ -41,6 +52,8 @@ struct PlayerStateSnapshot {
     int audioTrack = -1;
     int subtitleTrack = -1;
     int rendererId = -1;
+    int networkRetryCount = 0;
+    long networkError = 0;
     int framesDrawn = -1;
     int framesDropped = -1;
     int jitterMs = INT_MIN;

@@ -208,7 +208,9 @@ public:
         DVBINFO_UPDATE,
         STATUS_ERASE,
         PLACE_FULLSCREEN_UNDER_ACTIVE_WINDOW,
-        AUTOFIT_TIMEOUT
+        AUTOFIT_TIMEOUT,
+        NETWORK_RETRY,
+        NETWORK_RETRY_RESET
     };
     OneTimeTimerPool<TimerOneTimeSubscriber> m_timerOneTime;
 
@@ -499,6 +501,11 @@ private:
     bool m_bProcessingCommandLine = false;
 
     bool m_bBuffering;
+    std::atomic<int> m_networkConnectionState { static_cast<int>(PlayerNetworkState::NONE) };
+    std::atomic<long> m_lastNetworkError { S_OK };
+    std::atomic<int> m_networkRetryCount { 0 };
+    std::atomic<unsigned> m_networkRetryGeneration { 0 };
+    std::atomic<bool> m_networkReconnectInProgress { false };
 
     bool m_fLiveWM;
 
@@ -653,6 +660,8 @@ protected:
     // Operations
     bool OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD);
     void CloseMediaPrivate();
+    void ScheduleNetworkRetry(HRESULT error);
+    bool IsCurrentNetworkSource();
     void DoTunerScan(TunerScanData* pTSD);
 
     CWnd* GetModalParent();

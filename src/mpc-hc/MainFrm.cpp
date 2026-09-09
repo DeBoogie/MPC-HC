@@ -3149,6 +3149,62 @@ void CMainFrame::GraphEventComplete()
     }
 }
 
+bool CMainFrame::IsCurrentNetworkSource()
+{
+    const CString current = m_wndPlaylistBar.GetCurFileName();
+    return !current.IsEmpty() && PathUtils::IsURL(current);
+}
+
+void CMainFrame::ScheduleNetworkRetry(HRESULT error)
+{
+    const CString current = m_wndPlaylistBar.GetCurFileName();
+    if (current.IsEmpty() || !PathUtils::IsURL(current)) {
+        m_networkConnectionState.store(static_cast<int>(PlayerNetworkState::NONE), std::memory_order_release);
+        m_lastNetworkError.store(S_OK, std::memory_order_release);
+        m_networkRetryCount.store(0, std::memory_order_release);
+        m_networkReconnectInProgress.store(false, std::memory_order_release);
+        return;
+    }
+
+    const CAppSettings& settings = AfxGetAppSettings();
+    m_lastNetworkError.store(error, std::memory_order_release);
+    const int previousAttempts = m_networkRetryCount.load(std::memory_order_acquire);
+    if (!settings.bNetworkAutoRetry || settings.iNetworkRetryCount <= 0
+            || previousAttempts >= settings.iNetworkRetryCount) {
+        m_networkConnectionState.store(static_cast<int>(PlayerNetworkState::FAILED), std::memory_order_release);
+        m_networkReconnectInProgress.store(false, std::memory_order_release);
+        return;
+    }
+
+    const int attempt = previousAttempts + 1;
+    m_networkRetryCount.store(attempt, std::memory_order_release);
+    m_networkConnectionState.store(static_cast<int>(PlayerNetworkState::RETRY_WAIT), std::memory_order_release);
+    const UINT delayMs = static_cast<UINT>(std::min<int64_t>(30000,
+        static_cast<int64_t>(settings.iNetworkRetryDelayMs) * attempt));
+    const unsigned generation = m_networkRetryGeneration.fetch_add(1, std::memory_order_acq_rel) + 1;
+
+    m_timerOneTime.Subscribe(TimerOneTimeSubscriber::NETWORK_RETRY,
+        [this, current, generation] {
+            if (generation != m_networkRetryGeneration.load(std::memory_order_acquire)) {
+                return;
+            }
+            if (AfxGetMyApp()->m_fClosingState || m_wndPlaylistBar.GetCurFileName() != current) {
+                m_networkConnectionState.store(static_cast<int>(PlayerNetworkState::NONE), std::memory_order_release);
+                m_networkRetryCount.store(0, std::memory_order_release);
+                m_networkReconnectInProgress.store(false, std::memory_order_release);
+                return;
+            }
+
+            m_networkReconnectInProgress.store(true, std::memory_order_release);
+            m_networkConnectionState.store(static_cast<int>(PlayerNetworkState::RECONNECTING), std::memory_order_release);
+            if (GetLoadState() == MLS::LOADED) {
+                OnFileReopen();
+            } else {
+                PostMessage(WM_MPC_OPENCURPLAYLIST, 1, 0);
+            }
+        }, delayMs);
+}
+
 //
 // our WM_GRAPHNOTIFY handler
 //
@@ -3218,10 +3274,22 @@ LRESULT CMainFrame::OnGraphNotify(WPARAM wParam, LPARAM lParam)
             case EC_ERRORABORT:
                 UpdateCachedMediaState();
                 TRACE(_T("\thr = %08x\n"), (HRESULT)evParam1);
+                if (IsCurrentNetworkSource()) {
+                    ScheduleNetworkRetry(static_cast<HRESULT>(evParam1));
+                }
                 break;
             case EC_BUFFERING_DATA:
                 TRACE(_T("\tBuffering data = %s\n"), evParam1 ? _T("true") : _T("false"));
                 m_bBuffering = !!evParam1;
+                if (IsCurrentNetworkSource()) {
+                    const PlayerNetworkState currentState = static_cast<PlayerNetworkState>(
+                        m_networkConnectionState.load(std::memory_order_acquire));
+                    if (m_bBuffering) {
+                        m_networkConnectionState.store(static_cast<int>(PlayerNetworkState::BUFFERING), std::memory_order_release);
+                    } else if (currentState != PlayerNetworkState::RETRY_WAIT && currentState != PlayerNetworkState::RECONNECTING) {
+                        m_networkConnectionState.store(static_cast<int>(PlayerNetworkState::READY), std::memory_order_release);
+                    }
+                }
                 break;
             case EC_STEP_COMPLETE:
                 if (m_fFrameSteppingActive) {
@@ -3244,8 +3312,16 @@ LRESULT CMainFrame::OnGraphNotify(WPARAM wParam, LPARAM lParam)
                 }
                 break;
             case EC_STREAM_ERROR_STILLPLAYING:
+                TRACE(L"Failure code %x %x\n", evParam1, evParam2);
+                if (IsCurrentNetworkSource()) {
+                    m_lastNetworkError.store(static_cast<HRESULT>(evParam1), std::memory_order_release);
+                }
+                break;
             case EC_STREAM_ERROR_STOPPED:
                 TRACE(L"Failure code %x %x\n", evParam1, evParam2);
+                if (IsCurrentNetworkSource()) {
+                    ScheduleNetworkRetry(static_cast<HRESULT>(evParam1));
+                }
                 break;
             case EC_DVD_TITLE_CHANGE: {
                 if (GetPlaybackMode() == PM_FILE) {
@@ -4363,6 +4439,24 @@ LRESULT CMainFrame::OnFilePostOpenmedia(WPARAM wParam, LPARAM lParam)
     // current playlist item was loaded successfully
     m_wndPlaylistBar.SetCurValid(true);
 
+    if (IsCurrentNetworkSource()) {
+        const bool wasReconnect = m_networkReconnectInProgress.exchange(false, std::memory_order_acq_rel);
+        m_networkConnectionState.store(static_cast<int>(PlayerNetworkState::READY), std::memory_order_release);
+        m_lastNetworkError.store(S_OK, std::memory_order_release);
+        if (!wasReconnect) {
+            m_networkRetryCount.store(0, std::memory_order_release);
+        }
+        const CString openedNetworkFile = m_wndPlaylistBar.GetCurFileName();
+        m_timerOneTime.Subscribe(TimerOneTimeSubscriber::NETWORK_RETRY_RESET,
+            [this, openedNetworkFile] {
+                if (m_wndPlaylistBar.GetCurFileName() == openedNetworkFile
+                        && static_cast<PlayerNetworkState>(m_networkConnectionState.load(std::memory_order_acquire)) == PlayerNetworkState::READY) {
+                    m_networkRetryCount.store(0, std::memory_order_release);
+                    m_lastNetworkError.store(S_OK, std::memory_order_release);
+                }
+            }, 30000);
+    }
+
     // set item duration in the playlist
     // TODO: GetDuration() should be refactored out of this place, to some aggregating class
     REFERENCE_TIME rtDur = 0;
@@ -4554,6 +4648,10 @@ LRESULT CMainFrame::OnOpenMediaFailed(WPARAM wParam, LPARAM lParam)
         if (m_wndPlaylistBar.GetCur(pli) && pli.m_bYoutubeDL && m_sydlLastProcessURL != pli.m_ydlSourceURL) {
             OpenCurPlaylistItem(0, true);  // Try to reprocess if failed first time.
             return 0;
+        }
+        if (IsCurrentNetworkSource()) {
+            m_networkReconnectInProgress.store(false, std::memory_order_release);
+            ScheduleNetworkRetry(E_FAIL);
         }
         if (m_wndPlaylistBar.GetCount() == 1) {
             if (m_nLastSkipDirection == ID_NAVIGATE_SKIPBACK) {
@@ -16663,6 +16761,24 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
     OpenDVDData* pDVDData = dynamic_cast<OpenDVDData*>(pOMD.m_p);
     OpenDeviceData* pDeviceData = dynamic_cast<OpenDeviceData*>(pOMD.m_p);
     ASSERT(pFileData || pDVDData || pDeviceData);
+
+    const bool networkOpen = pFileData && !pFileData->fns.IsEmpty() && PathUtils::IsURL(pFileData->fns.GetHead());
+    if (networkOpen) {
+        const bool reconnecting = m_networkReconnectInProgress.load(std::memory_order_acquire);
+        if (!reconnecting) {
+            m_networkRetryGeneration.fetch_add(1, std::memory_order_acq_rel);
+            m_networkRetryCount.store(0, std::memory_order_release);
+            m_lastNetworkError.store(S_OK, std::memory_order_release);
+        }
+        m_networkConnectionState.store(static_cast<int>(reconnecting
+            ? PlayerNetworkState::RECONNECTING : PlayerNetworkState::CONNECTING), std::memory_order_release);
+    } else {
+        m_networkRetryGeneration.fetch_add(1, std::memory_order_acq_rel);
+        m_networkConnectionState.store(static_cast<int>(PlayerNetworkState::NONE), std::memory_order_release);
+        m_lastNetworkError.store(S_OK, std::memory_order_release);
+        m_networkRetryCount.store(0, std::memory_order_release);
+        m_networkReconnectInProgress.store(false, std::memory_order_release);
+    }
 
     m_pCAP3 = nullptr;
     m_pCAP2 = nullptr;

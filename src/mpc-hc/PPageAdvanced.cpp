@@ -172,6 +172,9 @@ void CPPageAdvanced::InitSettings()
     addBoolItem(PAUSE_WHILE_DRAGGING_SEEKBAR, IDS_RS_PAUSE_WHILE_DRAGGING_SEEKBAR, true, s.bPauseWhileDraggingSeekbar, StrRes(IDS_PPAGEADVANCED_PAUSE_WHILE_DRAGGING_SEEKBAR));
     addBoolItem(BLOCK_VSFILTER, IDS_RS_BLOCKVSFILTER, true, s.fBlockVSFilter, StrRes(IDS_PPAGEADVANCED_BLOCK_VSFILTER));
     addBoolItem(BLOCK_RDP, IDS_RS_BLOCKRDP, true, s.bBlockRDP, StrRes(IDS_PPAGEADVANCED_BLOCKRDP));
+    addBoolItem(NETWORK_AUTO_RETRY, L"NetworkAutoRetry", true, s.bNetworkAutoRetry, L"Retry an interrupted HTTP/HLS/DASH-style URL playback by reopening the current item while preserving position and selected tracks.");
+    addIntItem(NETWORK_RETRY_COUNT, L"NetworkRetryCount", 2, s.iNetworkRetryCount, std::make_pair(0, 10), L"Maximum automatic reconnect attempts after a loaded network stream aborts. Set to 0 to disable retries while keeping network state reporting.");
+    addIntItem(NETWORK_RETRY_DELAY, L"NetworkRetryDelayMs", 1500, s.iNetworkRetryDelayMs, std::make_pair(250, 30000), L"Base delay before reconnecting a network stream. Later attempts use a linear multiple of this delay.");
     addBoolItem(CAPTURE_DEINTERLACE, IDS_RS_CAPTURE_DEINTERLACE, false, s.bCaptureDeinterlace, StrRes(IDS_PPAGEADVANCED_CAPTURE_DEINTERLACE));
     addBoolItem(USE_MEDIAINFO_LOAD_FILE_DURATION, IDS_RS_USE_MEDIAINFO_LOAD_FILE_DURATION, false, s.bUseMediainfoLoadFileDuration, StrRes(IDS_PPAGEADVANCED_USE_MEDIAINFO_LOAD_FILE_DURATION));
 

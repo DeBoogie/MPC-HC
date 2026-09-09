@@ -83,6 +83,13 @@ try {
         throw 'Remote CGI must remain an explicit opt-in with a 403 default deny path.'
     }
 
+    $networkMain = Get-Content 'src\mpc-hc\MainFrm.cpp' -Raw
+    $playerControl = Get-Content 'src\mpc-hc\PlayerControlService.cpp' -Raw
+    $networkSettings = Get-Content 'src\mpc-hc\AppSettings.cpp' -Raw
+    if ($networkMain -notmatch 'ScheduleNetworkRetry' -or $networkMain -notmatch 'NETWORK_RETRY_RESET' -or $playerControl -notmatch 'retry-wait' -or $networkSettings -notmatch 'bNetworkAutoRetry\(true\)') {
+        throw 'Network reconnect/state model is incomplete.'
+    }
+
     $installer = Get-Content 'distrib\mpc-hc_setup.iss' -Raw
     if ($installer -notmatch 'MinVersion\s*=\s*10\.0') {
         throw 'The installer still permits pre-Windows-10 systems.'

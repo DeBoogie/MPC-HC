@@ -203,6 +203,9 @@ CAppSettings::CAppSettings()
     , nJumpDistM(DEFAULT_JUMPDISTANCE_2)
     , nJumpDistL(DEFAULT_JUMPDISTANCE_3)
     , bFastSeek(true)
+    , bNetworkAutoRetry(true)
+    , iNetworkRetryCount(2)
+    , iNetworkRetryDelayMs(1500)
     , eFastSeekMethod(FASTSEEK_NEAREST_KEYFRAME)
     , fShowChapters(true)
     , fPreventMinimize(false)
@@ -1354,6 +1357,9 @@ void CAppSettings::SaveSettings(bool write_full_history /* = false */)
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_SAVEIMAGE_CURRENTTIME, bSaveImageCurrentTime);
 
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_ALLOW_INACCURATE_FASTSEEK, bAllowInaccurateFastseek);
+    pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_NETWORKAUTORETRY, bNetworkAutoRetry);
+    pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_NETWORKRETRYCOUNT, iNetworkRetryCount);
+    pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_NETWORKRETRYDELAY, iNetworkRetryDelayMs);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_LOOP_FOLDER_NEXT_FILE, bLoopFolderOnPlayNextFile);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_NEXT_FILE_SORT_BY_DATE, bNextFileInFolderSortByDate);
 
@@ -2345,6 +2351,9 @@ void CAppSettings::LoadSettings()
     bSaveImageCurrentTime = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_SAVEIMAGE_CURRENTTIME, FALSE);
 
     bAllowInaccurateFastseek = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_ALLOW_INACCURATE_FASTSEEK, FALSE);
+    bNetworkAutoRetry = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_NETWORKAUTORETRY, TRUE);
+    iNetworkRetryCount = std::clamp((int)pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_NETWORKRETRYCOUNT, 2), 0, 10);
+    iNetworkRetryDelayMs = std::clamp((int)pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_NETWORKRETRYDELAY, 1500), 250, 30000);
     bLoopFolderOnPlayNextFile = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_LOOP_FOLDER_NEXT_FILE, FALSE);
     bNextFileInFolderSortByDate = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_NEXT_FILE_SORT_BY_DATE, FALSE);
 

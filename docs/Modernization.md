@@ -103,3 +103,7 @@ Cross-thread synchronous callers use the refcounted `WM_PLAYER_CONTROL_REQUEST` 
 ### Web process execution boundary
 
 The built-in web remote may be exposed to a LAN, but configured CGI handlers are a separate process-execution capability. CGI is restricted to loopback clients by default even when the HTTP listener accepts LAN connections. `WebServerAllowCGIOverNetwork` is an explicit advanced opt-in for legacy deployments that require remote CGI. A denied mapped-script request is handled as HTTP 403 rather than being served as a static file.
+
+### Network state and reconnect
+
+LAV remains responsible for HTTP/HLS/DASH transport. MPC-HC adds a small player-level state machine around that transport so UI/automation can distinguish `connecting`, `buffering`, `retry-wait`, `reconnecting`, `ready`, and `failed`. A loaded network source that aborts uses the existing reopen path for bounded retries, preserving playback position and selected tracks instead of implementing a second network stack. The default policy is two retries with a 1500 ms base delay; both count and delay are advanced settings. Pending retries are tied to the current playlist URL and cancel themselves if the user changes media.
