@@ -187,6 +187,91 @@
 #define HAVE_X86ASM 1
 #define HAVE_BIGENDIAN 0
 #define HAVE_FAST_UNALIGNED 1
+
+#if defined(MPC_FFMPEG_GENERIC_ARM64)
+// This in-tree FFmpeg shim is intentionally portable C on ARM64. Optimized AArch64
+// sources can be enabled later from a native FFmpeg configure output.
+#undef ARCH_X86
+#define ARCH_X86 0
+#undef ARCH_AARCH64
+#define ARCH_AARCH64 0
+#undef HAVE_AESNI
+#undef HAVE_AMD3DNOW
+#undef HAVE_AMD3DNOWEXT
+#undef HAVE_AVX
+#undef HAVE_AVX2
+#undef HAVE_AVX512
+#undef HAVE_FMA3
+#undef HAVE_FMA4
+#undef HAVE_MMX
+#undef HAVE_MMXEXT
+#undef HAVE_SSE
+#undef HAVE_SSE2
+#undef HAVE_SSE3
+#undef HAVE_SSE4
+#undef HAVE_SSE42
+#undef HAVE_SSSE3
+#undef HAVE_XOP
+#undef HAVE_I686
+#undef HAVE_AESNI_EXTERNAL
+#undef HAVE_AMD3DNOW_EXTERNAL
+#undef HAVE_AMD3DNOWEXT_EXTERNAL
+#undef HAVE_AVX_EXTERNAL
+#undef HAVE_AVX2_EXTERNAL
+#undef HAVE_AVX512_EXTERNAL
+#undef HAVE_FMA3_EXTERNAL
+#undef HAVE_FMA4_EXTERNAL
+#undef HAVE_MMX_EXTERNAL
+#undef HAVE_MMXEXT_EXTERNAL
+#undef HAVE_SSE_EXTERNAL
+#undef HAVE_SSE2_EXTERNAL
+#undef HAVE_SSE3_EXTERNAL
+#undef HAVE_SSE4_EXTERNAL
+#undef HAVE_SSE42_EXTERNAL
+#undef HAVE_SSSE3_EXTERNAL
+#undef HAVE_XOP_EXTERNAL
+#undef HAVE_X86ASM
+#undef HAVE_RDTSC
+#undef HAVE_FAST_UNALIGNED
+#define HAVE_AESNI 0
+#define HAVE_AMD3DNOW 0
+#define HAVE_AMD3DNOWEXT 0
+#define HAVE_AVX 0
+#define HAVE_AVX2 0
+#define HAVE_AVX512 0
+#define HAVE_FMA3 0
+#define HAVE_FMA4 0
+#define HAVE_MMX 0
+#define HAVE_MMXEXT 0
+#define HAVE_SSE 0
+#define HAVE_SSE2 0
+#define HAVE_SSE3 0
+#define HAVE_SSE4 0
+#define HAVE_SSE42 0
+#define HAVE_SSSE3 0
+#define HAVE_XOP 0
+#define HAVE_I686 0
+#define HAVE_AESNI_EXTERNAL 0
+#define HAVE_AMD3DNOW_EXTERNAL 0
+#define HAVE_AMD3DNOWEXT_EXTERNAL 0
+#define HAVE_AVX_EXTERNAL 0
+#define HAVE_AVX2_EXTERNAL 0
+#define HAVE_AVX512_EXTERNAL 0
+#define HAVE_FMA3_EXTERNAL 0
+#define HAVE_FMA4_EXTERNAL 0
+#define HAVE_MMX_EXTERNAL 0
+#define HAVE_MMXEXT_EXTERNAL 0
+#define HAVE_SSE_EXTERNAL 0
+#define HAVE_SSE2_EXTERNAL 0
+#define HAVE_SSE3_EXTERNAL 0
+#define HAVE_SSE4_EXTERNAL 0
+#define HAVE_SSE42_EXTERNAL 0
+#define HAVE_SSSE3_EXTERNAL 0
+#define HAVE_XOP_EXTERNAL 0
+#define HAVE_X86ASM 0
+#define HAVE_RDTSC 0
+#define HAVE_FAST_UNALIGNED 0
+#endif
 #define HAVE_ARPA_INET_H 0
 #define HAVE_ASM_TYPES_H 0
 #define HAVE_CDIO_PARANOIA_H 0
@@ -697,7 +782,18 @@
 #define CONFIG_VP8DSP 0
 #define CONFIG_WMA_FREQS 0
 #define CONFIG_WMV2DSP 0
-#ifdef WIN64
+#if defined(MPC_FFMPEG_GENERIC_ARM64)
+#define ARCH_X86_32 0
+#define ARCH_X86_64 0
+#define CC_IDENT "Microsoft (R) C/C++ ARM64"
+#define EXTERN_ASM
+#define EXTERN_PREFIX ""
+#define FFMPEG_CONFIGURATION "--toolchain=msvc --arch=arm64 --disable-x86asm --disable-programs --disable-doc"
+#define HAVE_ALIGNED_STACK 1
+#define HAVE_FAST_64BIT 1
+#define HAVE_FAST_CMOV 0
+#define HAVE_MM_EMPTY 0
+#elif defined(WIN64)
 #define ARCH_X86_32 0
 #define ARCH_X86_64 1
 #define CC_IDENT "Microsoft (R) C/C++ Optimizing Compiler Version 19.29.30038.1 for x64"

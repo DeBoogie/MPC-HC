@@ -9,6 +9,7 @@ This fork keeps the MPC-HC model: a fast Windows media player with strong playba
 - Windows 10 is the minimum supported operating system for new builds.
 - Visual Studio 2022 with the v143 toolset and a current Windows 10/11 SDK is the supported compiler setup.
 - x64 is the primary build. Win32 remains in the solution only as a compatibility build until there is a reason to remove it.
+- ARM64 has an experimental native Lite target. Full ARM64 releases remain blocked on native bundled LAV Filters/MPC Video Renderer packaging. The ARM64 Lite target uses portable C fallbacks for x86-specific FFmpeg/libass/subpicture paths and disables the legacy Logitech LCD and unregistered-filter interception integrations.
 
 ## Playback architecture
 

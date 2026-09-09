@@ -27,6 +27,8 @@
 #include <locale.h>
 
 #include "LcdSupport.h"
+
+#if !defined(_M_ARM64)
 #include "LCDUI/LCDUI.h"
 
 #include "mplayerc.h"
@@ -759,3 +761,5 @@ HRESULT CMPC_Lcd::SetAsForeground(BOOL setAsForeground)
 
     return S_OK;
 }
+
+#endif // !_M_ARM64

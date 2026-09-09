@@ -41,6 +41,7 @@ FOR %%G IN (%ARG%) DO (
   IF /I "%%G" == "Win32"        SET "PPLATFORM=Win32"    & SET /A ARGPL+=1
   IF /I "%%G" == "x86"          SET "PPLATFORM=Win32"    & SET /A ARGPL+=1
   IF /I "%%G" == "x64"          SET "PPLATFORM=x64"      & SET /A ARGPL+=1
+  IF /I "%%G" == "ARM64"        SET "PPLATFORM=ARM64"    & SET /A ARGPL+=1
   IF /I "%%G" == "All"          SET "CONFIG=All"         & SET /A ARGC+=1  & SET "NO_LITE=True"
   IF /I "%%G" == "Main"         SET "CONFIG=Main"        & SET /A ARGC+=1  & SET "NO_INST=True" & SET "NO_ZIP=True"
   IF /I "%%G" == "Filters"      SET "CONFIG=Filters"     & SET /A ARGC+=1  & SET "NO_INST=True" & SET "NO_LITE=True"
@@ -89,6 +90,14 @@ IF /I "%INSTALLER%" == "True"   IF "%NO_INST%" == "True" GOTO UnsupportedSwitch
 IF /I "%ZIP%" == "True"         IF "%NO_ZIP%" == "True"  GOTO UnsupportedSwitch
 IF /I "%MPCHC_LITE%" == "True"  IF "%NO_LITE%" == "True" GOTO UnsupportedSwitch
 IF /I "%CLEAN%" == "LAVFilters" IF "%NO_LAV%" == "True"  GOTO UnsupportedSwitch
+
+REM Native ARM64 support currently targets the Lite player. The bundled LAV build and release packaging
+REM still depend on x86/x64-only external binaries.
+IF /I "%PPLATFORM%" == "ARM64" IF NOT DEFINED MPCHC_LITE GOTO ARM64RequiresLite
+IF /I "%PPLATFORM%" == "ARM64" IF /I "%INSTALLER%" == "True" GOTO UnsupportedSwitch
+IF /I "%PPLATFORM%" == "ARM64" IF /I "%ZIP%" == "True" GOTO UnsupportedSwitch
+IF /I "%PPLATFORM%" == "ARM64" IF /I "%CLEAN%" == "LAVFilters" GOTO UnsupportedSwitch
+IF /I "%PPLATFORM%" == "ARM64" IF DEFINED ASAN GOTO UnsupportedSwitch
 
 IF NOT EXIST "%MPCHC_VS_PATH%" CALL "%COMMON%" :SubVSPath
 IF NOT EXIST "!MPCHC_VS_PATH!" GOTO MissingVar
@@ -142,7 +151,7 @@ IF /I "%PPLATFORM%" == "x64" (
 IF /I "%CLEAN%" == "LAVFilters" CALL "src\thirdparty\LAVFilters\build_lavfilters.bat" Clean %PPLATFORM% %BUILDCFG% %COMPILER%
 IF %ERRORLEVEL% NEQ 0 ENDLOCAL & EXIT /B
 
-IF /I "%PPLATFORM%" == "Win32" (SET ARCH=x86) ELSE (SET ARCH=amd64)
+IF /I "%PPLATFORM%" == "Win32" (SET ARCH=x86) ELSE IF /I "%PPLATFORM%" == "ARM64" (SET ARCH=arm64) ELSE (SET ARCH=amd64)
 CALL "%TOOLSET%" -no_logo -arch=%ARCH% -winsdk=%MPCHC_WINSDK_VER%
 IF %ERRORLEVEL% NEQ 0 GOTO MissingVar
 
@@ -240,6 +249,11 @@ EXIT /B
 
 :SubResources
 IF %ERRORLEVEL% NEQ 0 EXIT /B
+
+IF /I "%PPLATFORM%" == "ARM64" (
+  CALL "%COMMON%" :SubMsg "INFO" "ARM64 Lite: skipping architecture-specific auxiliary resource DLLs"
+  EXIT /B
+)
 
 IF /I "%BUILDCFG%" == "Debug" (
   CALL "%COMMON%" :SubMsg "WARNING" "/debug was used, resources will not be built"
@@ -490,7 +504,7 @@ EXIT /B
 TITLE %~nx0 Help
 ECHO.
 ECHO Usage:
-ECHO %~nx0 [Clean^|Build^|Rebuild] [x86^|x64^|Both] [Main^|Resources^|MPCHC^|IconLib^|Translations^|Filters^|API^|All] [Debug^|Release] [Lite] [Packages^|Installer^|7z] [LAVFilters] [Analyze] [ASAN]
+ECHO %~nx0 [Clean^|Build^|Rebuild] [x86^|x64^|ARM64^|Both] [Main^|Resources^|MPCHC^|IconLib^|Translations^|Filters^|API^|All] [Debug^|Release] [Lite] [Packages^|Installer^|7z] [LAVFilters] [Analyze] [ASAN]
 ECHO.
 ECHO Notes: You can also prefix the commands with "-", "--" or "/".
 ECHO        Debug only applies to mpc-hc.sln.
@@ -517,14 +531,23 @@ EXIT /B
 TITLE Compiling MPC-HC %COMPILER% [ERROR]
 ECHO Not all build dependencies were found.
 ECHO.
+SET "ENV_PLATFORM=x64"
+IF /I "%PPLATFORM%" == "ARM64" SET "ENV_PLATFORM=ARM64"
 IF DEFINED MPCHC_LITE (
-  powershell -NoProfile -ExecutionPolicy Bypass -File "%FILE_DIR%tools\check-build-env.ps1"
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%FILE_DIR%tools\check-build-env.ps1" -Platform "%ENV_PLATFORM%"
 ) ELSE (
-  powershell -NoProfile -ExecutionPolicy Bypass -File "%FILE_DIR%tools\check-build-env.ps1" -Full
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%FILE_DIR%tools\check-build-env.ps1" -Platform "%ENV_PLATFORM%" -Full
 )
 ECHO.
 ECHO See "docs\Compilation.md" for more information.
 CALL "%COMMON%" :SubMsg "ERROR" "Compilation failed!" & EXIT /B 1
+
+
+:ARM64RequiresLite
+ECHO.
+ECHO ARM64 currently supports the Debug Lite and Release Lite player targets.
+ECHO Example: %~nx0 Build ARM64 MPCHC Release Lite
+CALL "%COMMON%" :SubMsg "ERROR" "ARM64 requires the Lite configuration" & EXIT /B 1
 
 
 :UnsupportedSwitch

@@ -21,6 +21,29 @@
 
 #pragma once
 
+#if defined(_M_ARM64)
+
+class CMPC_Lcd
+{
+public:
+    enum PlayState {
+        PS_PLAY   = 0,
+        PS_PAUSE  = 1,
+        PS_STOP   = 2,
+        PS_UNUSED = 3
+    };
+
+    void SetMediaTitle(const TCHAR*) {}
+    void SetMediaRange(__int64, __int64) {}
+    void SetMediaPos(__int64) {}
+    void SetVolumeRange(__int64, __int64) {}
+    void SetVolume(__int64) {}
+    void SetStatusMessage(const TCHAR*, int) {}
+    void SetPlayState(PlayState) {}
+};
+
+#else
+
 #include "lglcd/lglcd.h"
 #include "LCDUI/LCDUI.h"
 
@@ -134,3 +157,5 @@ public:
     void SetStatusMessage(const TCHAR* text, int nTimeOut);
     void SetPlayState(PlayState ps);
 };
+
+#endif // _M_ARM64

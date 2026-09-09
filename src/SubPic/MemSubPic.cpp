@@ -22,7 +22,9 @@
 #include "stdafx.h"
 #include "MemSubPic.h"
 
+#if defined(_M_IX86) || defined(_M_X64)
 #include <emmintrin.h>
+#endif
 #include "stb/stb_image.h"
 #include "stb/stb_image_resize2.h"
 
@@ -361,7 +363,7 @@ STDMETHODIMP CMemSubPic::Unlock(RECT* pDirtyRect)
     return S_OK;
 }
 
-#ifdef _WIN64
+#if defined(_M_X64)
 void AlphaBlt_YUY2_SSE2(int w, int h, BYTE* d, int dstpitch, BYTE* s, int srcpitch)
 {
     unsigned int ia;
@@ -598,7 +600,9 @@ STDMETHODIMP CMemSubPic::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
             }
             break;
         case MSP_YUY2: {
-#ifdef _WIN64
+#if defined(_M_ARM64)
+            auto alphablt_func = AlphaBlt_YUY2_C;
+#elif defined(_M_X64)
             auto alphablt_func = AlphaBlt_YUY2_SSE2;
 #else
             auto alphablt_func = AlphaBlt_YUY2_MMX;

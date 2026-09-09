@@ -2018,6 +2018,7 @@ BOOL CMPlayerCApp::InitInstance()
         ASSERT(FALSE);
     }
 
+#if !defined(MPC_ARM64_NO_MINHOOK)
     bool bHookingSuccessful = MH_Initialize() == MH_OK;
 
 #ifndef _DEBUG
@@ -2057,6 +2058,8 @@ BOOL CMPlayerCApp::InitInstance()
     VERIFY(Mhook_SetHookEx(&Real_LockWindowUpdate, Mine_LockWindowUpdate));
     VERIFY(Mhook_SetHookEx(&Real_mixerSetControlDetails, Mine_mixerSetControlDetails));
     MH_EnableHook(MH_ALL_HOOKS);
+
+#endif
 
     CFilterMapper2::Init();
 
