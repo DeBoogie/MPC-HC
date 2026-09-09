@@ -2,6 +2,7 @@
 param(
     [switch]$Lite,
     [switch]$SkipBootstrap,
+    [string]$PlaybackManifest = '',
     [string]$OutputDirectory = 'release-output'
 )
 
@@ -26,6 +27,12 @@ try {
     Write-Host "Running: build.bat $($args -join ' ')"
     & .\build.bat @args
     if ($LASTEXITCODE -ne 0) { throw "Release build failed with exit code $LASTEXITCODE." }
+
+    if (-not [string]::IsNullOrWhiteSpace($PlaybackManifest)) {
+        $playerRelative = if ($Lite) { 'bin\mpc-hc_x64 Lite\mpc-hc64.exe' } else { 'bin\mpc-hc_x64\mpc-hc64.exe' }
+        & "$PSScriptRoot\run-playback-tests.ps1" -PlayerPath $playerRelative -ManifestPath $PlaybackManifest
+        if ($LASTEXITCODE -ne 0) { throw 'Playback regression suite failed.' }
+    }
 
     $out = Join-Path $repoRoot $OutputDirectory
     if (Test-Path $out) { Remove-Item $out -Recurse -Force }

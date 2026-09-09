@@ -25109,6 +25109,11 @@ LRESULT CMainFrame::OnJsonIpcRequest(WPARAM, LPARAM lParam)
             request->success = true;
             break;
 
+        case JsonIpcMethod::QUIT:
+            request->success = true;
+            PostMessage(WM_CLOSE);
+            break;
+
         case JsonIpcMethod::SEEK:
             if (GetLoadState() != MLS::LOADED) {
                 fail(-32010, "No media is loaded");

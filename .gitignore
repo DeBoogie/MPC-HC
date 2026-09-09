@@ -44,3 +44,5 @@ ipch
 /distrib/x86/MediaInfo.dll
 /build/dependency-cache/
 /release-output/
+/build/test-results/
+/build/fuzz-results/

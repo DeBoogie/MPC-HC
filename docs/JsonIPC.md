@@ -46,6 +46,7 @@ Returns the state fields plus the configured video renderer and any `IQualProp` 
 {"id":1,"method":"player.play","params":{}}
 {"id":1,"method":"player.pause","params":{}}
 {"id":1,"method":"player.stop","params":{}}
+{"id":1,"method":"player.quit","params":{}}
 {"id":1,"method":"player.seek","params":{"position":120.5}}
 {"id":1,"method":"player.setRate","params":{"rate":1.25}}
 {"id":1,"method":"player.setVolume","params":{"volume":75}}

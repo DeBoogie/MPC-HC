@@ -352,6 +352,7 @@ CStringA CJsonIpcServer::ProcessRequest(const CStringA& line)
     else if (method == "player.play") parsedMethod = JsonIpcMethod::PLAY;
     else if (method == "player.pause") parsedMethod = JsonIpcMethod::PAUSE;
     else if (method == "player.stop") parsedMethod = JsonIpcMethod::STOP;
+    else if (method == "player.quit") parsedMethod = JsonIpcMethod::QUIT;
     else if (method == "player.seek") parsedMethod = JsonIpcMethod::SEEK;
     else if (method == "player.setRate") parsedMethod = JsonIpcMethod::SET_RATE;
     else if (method == "player.setVolume") parsedMethod = JsonIpcMethod::SET_VOLUME;
