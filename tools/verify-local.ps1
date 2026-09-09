@@ -19,7 +19,11 @@ try {
         'src\common.props',
         'src\thirdparty\LAVFilters\build_ffmpeg.sh',
         'src\thirdparty\LAVFilters\build_lavfilters.bat',
-        'distrib\mpc-hc_setup.iss'
+        'distrib\mpc-hc_setup.iss',
+        'dependencies\manifest.json',
+        'tools\check-build-env.ps1',
+        'tools\bootstrap-dependencies.ps1',
+        'tools\release.ps1'
     )
 
     foreach ($file in $requiredFiles) {
@@ -45,6 +49,11 @@ try {
     }
     if ($common -notmatch '<ControlFlowGuard>Guard</ControlFlowGuard>') {
         throw 'Control Flow Guard is not enabled.'
+    }
+
+    $dependencyManifest = Get-Content 'dependencies\manifest.json' -Raw | ConvertFrom-Json
+    if ($dependencyManifest.schemaVersion -ne 1 -or -not $dependencyManifest.components.mpcVideoRenderer.version) {
+        throw 'Dependency manifest is invalid.'
     }
 
     $installer = Get-Content 'distrib\mpc-hc_setup.iss' -Raw

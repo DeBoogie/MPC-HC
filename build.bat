@@ -516,6 +516,12 @@ EXIT /B
 TITLE Compiling MPC-HC %COMPILER% [ERROR]
 ECHO Not all build dependencies were found.
 ECHO.
+IF DEFINED MPCHC_LITE (
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%FILE_DIR%tools\check-build-env.ps1"
+) ELSE (
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%FILE_DIR%tools\check-build-env.ps1" -Full
+)
+ECHO.
 ECHO See "docs\Compilation.md" for more information.
 CALL "%COMMON%" :SubMsg "ERROR" "Compilation failed!" & EXIT /B 1
 

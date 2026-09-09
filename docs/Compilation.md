@@ -127,6 +127,27 @@ Use Git to clone MPC-HC's repository to **C:\mpc-hc** (or anywhere else you like
     git submodule update --init --recursive
     ```
 
+
+## Build environment diagnostics
+
+Before compiling, run the prerequisite checker:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\check-build-env.ps1
+```
+
+Use `-Full` to also validate the MSYS2/MinGW requirements for the internal LAV Filters build, and `-Packaging` to validate Inno Setup and 7-Zip. `build.bat` invokes the same checker automatically when prerequisite discovery fails, so missing Visual Studio components are reported individually instead of as a generic dependency error.
+
+## External runtime bootstrap
+
+MPC Video Renderer is an external runtime dependency rather than source code compiled by this repository. Its exact shipped binaries are declared in `dependencies\manifest.json`. Populate `distrib\mpcvr` with checksum-verified copies by running:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\bootstrap-dependencies.ps1
+```
+
+The manifest pins the official MPC-HC release archives, their SHA-256 digests, the archive entries to extract, and the expected MPC Video Renderer file version. A hash or file-version mismatch is a hard failure. The downloaded archives are cached under `build\dependency-cache` and are not committed.
+
 ## Part G: Compiling the MPC-HC source
 
 The recommended local build is the x64 Release target:
@@ -144,6 +165,17 @@ build.bat Build x64 MPCHC Release Lite
 The Lite configuration is for development checks only; release packages should include the internal filters. Run `build.bat help` for the complete set of switches.
 
 You can also open **mpc-hc.sln** in Visual Studio 2022, select **x64** and **Release**, and build the solution normally.
+
+
+## Reproducible local release
+
+The supported release entry point is:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\release.ps1
+```
+
+It validates the full build and packaging environment, bootstraps pinned runtime dependencies, runs the modernization checks, builds the x64 Release packages, and copies the resulting installer/archive artifacts into `release-output` with a JSON manifest containing the source commit and SHA-256 digest for each artifact. `-Lite` is available for development-only packaging and intentionally does not represent a normal release.
 
 ## Part H: Building the installer
 
