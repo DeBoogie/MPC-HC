@@ -23,7 +23,9 @@ try {
         'dependencies\manifest.json',
         'tools\check-build-env.ps1',
         'tools\bootstrap-dependencies.ps1',
-        'tools\release.ps1'
+        'tools\release.ps1',
+        'tools\mpc-hc-ipc.ps1',
+        'docs\JsonIPC.md'
     )
 
     foreach ($file in $requiredFiles) {
