@@ -99,3 +99,7 @@ Built-in Web UI ─┘
 The service owns validation and canonical state/diagnostic collection. Transport adapters parse their wire format and marshal requests to the player UI thread; they do not call DirectShow graph objects or mutate toolbar/player state directly from worker threads. The legacy WM_COPYDATA API remains supported separately for compatibility and can be migrated incrementally without changing its wire contract.
 
 Cross-thread synchronous callers use the refcounted `WM_PLAYER_CONTROL_REQUEST` dispatch. The request object is heap-owned by caller and UI references independently, so a timeout cannot leave a queued UI message pointing at stack memory.
+
+### Web process execution boundary
+
+The built-in web remote may be exposed to a LAN, but configured CGI handlers are a separate process-execution capability. CGI is restricted to loopback clients by default even when the HTTP listener accepts LAN connections. `WebServerAllowCGIOverNetwork` is an explicit advanced opt-in for legacy deployments that require remote CGI. A denied mapped-script request is handled as HTTP 403 rather than being served as a static file.

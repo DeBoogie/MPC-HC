@@ -108,6 +108,11 @@ On at least Intel, AMD and NVIDIA hardware where available:
 
 ### Web server CGI
 
+- CGI mappings remain usable from localhost by default.
+- When the web server is exposed to the LAN, a non-loopback request for an extension configured as CGI must return HTTP 403 and must not fall through to static-file serving.
+- `WebServerAllowCGIOverNetwork` is an explicit advanced opt-in; enabling it restores configured CGI execution for non-loopback clients.
+- The ordinary LAN web remote and built-in static pages must continue working while remote CGI is disabled.
+
 - CGI interpreter and script paths containing spaces and Unicode.
 - Non-ASCII query strings and HTTP header values reaching the CGI environment intact.
 - Request bodies larger than a single pipe write/read chunk.

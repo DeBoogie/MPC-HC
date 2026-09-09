@@ -214,6 +214,7 @@ void CPPageAdvanced::InitSettings()
     addBoolItem(USE_AUTOMATIC_CAPTIONS, IDS_RS_USE_AUTOMATIC_CAPTIONS, false, s.bUseAutomaticCaptions, StrRes(IDS_PPAGEADVANCED_USE_AUTOMATIC_CAPTIONS));
 
     addHeaderItem(ResStr(IDS_PPAGEADVANCED_GRP_MISC));
+    addBoolItem(WEBSERVER_ALLOW_CGI_OVER_NETWORK, L"WebServerAllowCGIOverNetwork", false, s.bWebServerAllowCGIOverNetwork, L"Allow configured CGI interpreters to execute for non-loopback web clients. Disabled by default because CGI starts local processes. The normal LAN web remote does not require this option.");
 #if !defined(_DEBUG) && USE_DRDUMP_CRASH_REPORTER
     addBoolItem(CRASHREPORTER, IDS_RS_ENABLE_CRASH_REPORTER, true, s.bEnableCrashReporter, StrRes(IDS_PPAGEADVANCED_CRASHREPORTER));
 #endif

@@ -269,6 +269,7 @@
 #define IDS_RS_ASPECTRATIO_Y                _T("AspectRatioY")
 #define IDS_RS_DX9_RESIZER                  _T("DX9Resizer")
 #define IDS_RS_WEBSERVERCGI                 _T("WebServerCGI")
+#define IDS_RS_WEBSERVERALLOWCGIOVERNETWORK _T("WebServerAllowCGIOverNetwork")
 #define IDS_RS_WEBDEFINDEX                  _T("WebDefIndex")
 #define IDS_RS_LIMITWINDOWPROPORTIONS       _T("LimitWindowProportions")
 #define IDS_RS_LASTUSEDPAGE                 _T("LastUsedPage")

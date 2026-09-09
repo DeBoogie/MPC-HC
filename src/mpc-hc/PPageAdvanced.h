@@ -253,6 +253,7 @@ private:
         HISTORY_IN_APPDATA,
         HISTORY_EXCLUDE_FILTER,
         HISTORY_MAX_AGE_DAYS,
+        WEBSERVER_ALLOW_CGI_OVER_NETWORK,
     };
 
     static constexpr DWORD_PTR HEADER_ITEM_DATA = (DWORD_PTR)-1;
