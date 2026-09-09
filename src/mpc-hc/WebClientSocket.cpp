@@ -572,25 +572,25 @@ bool CWebClientSocket::OnCommand(CStringA& hdr, CStringA& body, CStringA& mime)
                                      SMTO_NORMAL, 5000, &dwResult);
             }
         } else if (arg == _T(CMD_SETPOS)) {
-            const REFERENCE_TIME rtDur = m_pMainFrame->GetDur();
+            PlayerControlRequest stateRequest(PlayerControlMethod::GET_STATE);
+            PlayerControlResult stateResult;
+            if (!m_pMainFrame->ExecutePlayerControlSync(stateRequest, stateResult) || !stateResult.success) {
+                hdr = "HTTP/1.0 503 Service Unavailable\r\n";
+                return true;
+            }
+            const REFERENCE_TIME rtDur = static_cast<REFERENCE_TIME>(
+                std::llround(stateResult.snapshot.durationSeconds * 10000000.0));
             if (rtDur == 0) {
                 return false;
             }
 
             CString position;
             CString percentText;
+            REFERENCE_TIME rtPos = 0;
             if (m_request.Lookup("position", position)) {
-                REFERENCE_TIME rtPos = 0;
                 if (!ParseSeekTimeStrict(position, rtPos)) {
                     hdr = "HTTP/1.0 400 Bad Request\r\n";
                     return true;
-                }
-                m_pMainFrame->SeekTo(rtPos);
-                for (int retries = 20; retries-- > 0; Sleep(50)) {
-                    const LONGLONG deltaMs = (rtPos - m_pMainFrame->GetPos()) / 10000;
-                    if (deltaMs > -100 && deltaMs < 100) {
-                        break;
-                    }
                 }
             } else if (m_request.Lookup("percent", percentText)) {
                 double percent = 0.0;
@@ -598,10 +598,35 @@ bool CWebClientSocket::OnCommand(CStringA& hdr, CStringA& body, CStringA& mime)
                     hdr = "HTTP/1.0 400 Bad Request\r\n";
                     return true;
                 }
-                m_pMainFrame->SeekTo(static_cast<REFERENCE_TIME>(percent / 100.0 * rtDur));
+                rtPos = static_cast<REFERENCE_TIME>(percent / 100.0 * rtDur);
             } else {
                 hdr = "HTTP/1.0 400 Bad Request\r\n";
                 return true;
+            }
+
+            PlayerControlRequest seekRequest(PlayerControlMethod::SEEK);
+            seekRequest.numberValue = rtPos / 10000000.0;
+            PlayerControlResult seekResult;
+            if (!m_pMainFrame->ExecutePlayerControlSync(seekRequest, seekResult)) {
+                hdr = "HTTP/1.0 503 Service Unavailable\r\n";
+                return true;
+            }
+            if (!seekResult.success) {
+                hdr = "HTTP/1.0 400 Bad Request\r\n";
+                return true;
+            }
+            for (int retries = 20; retries-- > 0; Sleep(50)) {
+                PlayerControlResult current;
+                if (!m_pMainFrame->ExecutePlayerControlSync(stateRequest, current) || !current.success) {
+                    break;
+                }
+                const LONGLONG currentPos = static_cast<LONGLONG>(
+                    std::llround(current.snapshot.positionSeconds * 1000.0));
+                const LONGLONG targetPos = rtPos / 10000;
+                const LONGLONG deltaMs = targetPos - currentPos;
+                if (deltaMs > -100 && deltaMs < 100) {
+                    break;
+                }
             }
         } else if (arg == _T(WEB_CMD_SETVOLUME)) {
             CString volumeText;
@@ -610,8 +635,18 @@ bool CWebClientSocket::OnCommand(CStringA& hdr, CStringA& body, CStringA& mime)
                 hdr = "HTTP/1.0 400 Bad Request\r\n";
                 return true;
             }
+            PlayerControlRequest volumeRequest(PlayerControlMethod::SET_VOLUME);
             // Preserve the previous integer/truncation behavior used by the built-in slider.
-            m_pMainFrame->m_wndToolBar.Volume = static_cast<int>(volumePercent);
+            volumeRequest.integerValue = static_cast<int>(volumePercent);
+            PlayerControlResult volumeResult;
+            if (!m_pMainFrame->ExecutePlayerControlSync(volumeRequest, volumeResult)) {
+                hdr = "HTTP/1.0 503 Service Unavailable\r\n";
+                return true;
+            }
+            if (!volumeResult.success) {
+                hdr = "HTTP/1.0 400 Bad Request\r\n";
+                return true;
+            }
         } else if (arg == _T(CMD_SETPLAYLISTINDEX)) {
             CString indexText;
             int index = -1;
@@ -667,13 +702,52 @@ bool CWebClientSocket::OnIndex(CStringA& hdr, CStringA& body, CStringA& mime)
     return true;
 }
 
+static bool GetPlayerStateForWeb(CMainFrame* frame, PlayerStateSnapshot& snapshot)
+{
+    PlayerControlRequest request(PlayerControlMethod::GET_STATE);
+    PlayerControlResult result;
+    if (!frame->ExecutePlayerControlSync(request, result) || !result.success) {
+        return false;
+    }
+    snapshot = result.snapshot;
+    return true;
+}
+
+static CString GetPlayerStateStringForWeb(int mediaState)
+{
+    CString text;
+    switch (static_cast<OAFilterState>(mediaState)) {
+        case State_Stopped:
+            text.LoadString(IDS_CONTROLS_STOPPED);
+            break;
+        case State_Paused:
+            text.LoadString(IDS_CONTROLS_PAUSED);
+            break;
+        case State_Running:
+            text.LoadString(IDS_CONTROLS_PLAYING);
+            break;
+        default:
+            text = _T("N/A");
+            break;
+    }
+    return text;
+}
+
 bool CWebClientSocket::OnInfo(CStringA& hdr, CStringA& body, CStringA& mime)
 {
+    PlayerStateSnapshot snapshot;
+    if (!GetPlayerStateForWeb(m_pMainFrame, snapshot)) {
+        hdr = "HTTP/1.0 503 Service Unavailable\r\n";
+        return true;
+    }
+    const REFERENCE_TIME position = static_cast<REFERENCE_TIME>(std::llround(snapshot.positionSeconds * 10000000.0));
+    const REFERENCE_TIME duration = static_cast<REFERENCE_TIME>(std::llround(snapshot.durationSeconds * 10000000.0));
+
     m_pWebServer->LoadPage(IDR_HTML_INFO, body, AToT(m_path));
     body.Replace("[version]", UTF8(AfxGetMyApp()->m_strVersion));
-    body.Replace("[file]", UTF8(m_pMainFrame->GetFileName()));
-    body.Replace("[position]", UTF8(ReftimeToString2(m_pMainFrame->GetPos())));
-    body.Replace("[duration]", UTF8(ReftimeToString2(m_pMainFrame->GetDur())));
+    body.Replace("[file]", UTF8(snapshot.file));
+    body.Replace("[position]", UTF8(ReftimeToString2(position)));
+    body.Replace("[duration]", UTF8(ReftimeToString2(duration)));
     body.Replace("[size]", UTF8(GetSize()));
     return true;
 }
@@ -863,38 +937,28 @@ bool CWebClientSocket::OnBrowser(CStringA& hdr, CStringA& body, CStringA& mime)
 
 bool CWebClientSocket::OnControls(CStringA& hdr, CStringA& body, CStringA& mime)
 {
+    PlayerStateSnapshot snapshot;
+    if (!GetPlayerStateForWeb(m_pMainFrame, snapshot)) {
+        hdr = "HTTP/1.0 503 Service Unavailable\r\n";
+        return true;
+    }
+
     CString path = m_pMainFrame->m_wndPlaylistBar.GetCurFileName();
     CString dir;
-
     if (!path.IsEmpty() && !PathUtils::IsURL(path)) {
         CPath p(path);
         p.RemoveFileSpec();
         dir = (LPCTSTR)p;
     }
 
-    OAFilterState fs = m_pMainFrame->GetMediaState();
     CString state;
-    state.Format(_T("%d"), fs);
-    CString statestring;
-    switch (fs) {
-        case State_Stopped:
-            statestring.LoadString(IDS_CONTROLS_STOPPED);
-            break;
-        case State_Paused:
-            statestring.LoadString(IDS_CONTROLS_PAUSED);
-            break;
-        case State_Running:
-            statestring.LoadString(IDS_CONTROLS_PLAYING);
-            break;
-        default:
-            statestring = _T("N/A");
-            break;
-    }
-
+    state.Format(_T("%d"), snapshot.mediaState);
+    const CString statestring = GetPlayerStateStringForWeb(snapshot.mediaState);
     CString volumelevel, muted;
-    volumelevel.Format(_T("%d"), m_pMainFrame->GetVolume());
-    muted.Format(_T("%d"), m_pMainFrame->IsMuted() ? 1 : 0);
-
+    volumelevel.Format(_T("%d"), snapshot.volume);
+    muted.Format(_T("%d"), snapshot.muted ? 1 : 0);
+    const REFERENCE_TIME position = static_cast<REFERENCE_TIME>(std::llround(snapshot.positionSeconds * 10000000.0));
+    const REFERENCE_TIME duration = static_cast<REFERENCE_TIME>(std::llround(snapshot.durationSeconds * 10000000.0));
     CString reloadtime(_T("0")); // TODO
 
     m_pWebServer->LoadPage(IDR_HTML_CONTROLS, body, AToT(m_path));
@@ -904,70 +968,59 @@ bool CWebClientSocket::OnControls(CStringA& hdr, CStringA& body, CStringA& mime)
     body.Replace("[filedir]", HtmlSpecialChars(UTF8(dir)));
     body.Replace("[state]", UTF8(state));
     body.Replace("[statestring]", UTF8(statestring));
-    body.Replace("[position]", UTF8(NumToCString(std::lround(m_pMainFrame->GetPos() / 10000i64))));
-    body.Replace("[positionstring]", UTF8(ReftimeToString2(m_pMainFrame->GetPos())));
-    body.Replace("[duration]", UTF8(NumToCString(std::lround(m_pMainFrame->GetDur() / 10000i64))));
-    body.Replace("[durationstring]", UTF8(ReftimeToString2(m_pMainFrame->GetDur())));
+    body.Replace("[position]", UTF8(NumToCString(std::lround(position / 10000i64))));
+    body.Replace("[positionstring]", UTF8(ReftimeToString2(position)));
+    body.Replace("[duration]", UTF8(NumToCString(std::lround(duration / 10000i64))));
+    body.Replace("[durationstring]", UTF8(ReftimeToString2(duration)));
     body.Replace("[volumelevel]", UTF8(volumelevel));
     body.Replace("[muted]", UTF8(muted));
-    body.Replace("[playbackrate]", UTF8(NumToCString(m_pMainFrame->GetPlayingRate())));
+    body.Replace("[playbackrate]", UTF8(NumToCString(snapshot.playbackRate)));
     body.Replace("[reloadtime]", UTF8(reloadtime));
-
     return true;
 }
 
 bool CWebClientSocket::OnVariables(CStringA& hdr, CStringA& body, CStringA& mime)
 {
+    PlayerStateSnapshot snapshot;
+    if (!GetPlayerStateForWeb(m_pMainFrame, snapshot)) {
+        hdr = "HTTP/1.0 503 Service Unavailable\r\n";
+        return true;
+    }
+
     CString path = m_pMainFrame->m_wndPlaylistBar.GetCurFileName();
     CString dir;
     CString strName;
-
     if (!path.IsEmpty() && !PathUtils::IsURL(path)) {
         CPath p(path);
         p.RemoveFileSpec();
         dir = (LPCTSTR)p;
     }
 
-    OAFilterState fs = m_pMainFrame->GetMediaState();
     CString state;
-    state.Format(_T("%d"), fs);
-    CString statestring;
-    switch (fs) {
-        case State_Stopped:
-            statestring.LoadString(IDS_CONTROLS_STOPPED);
-            break;
-        case State_Paused:
-            statestring.LoadString(IDS_CONTROLS_PAUSED);
-            break;
-        case State_Running:
-            statestring.LoadString(IDS_CONTROLS_PLAYING);
-            break;
-        default:
-            statestring = _T("N/A");
-            break;
-    }
-
+    state.Format(_T("%d"), snapshot.mediaState);
+    const CString statestring = GetPlayerStateStringForWeb(snapshot.mediaState);
     CString volumelevel, muted;
-    volumelevel.Format(_T("%d"), m_pMainFrame->GetVolume());
-    muted.Format(_T("%d"), m_pMainFrame->IsMuted() ? 1 : 0);
-
+    volumelevel.Format(_T("%d"), snapshot.volume);
+    muted.Format(_T("%d"), snapshot.muted ? 1 : 0);
+    const REFERENCE_TIME position = static_cast<REFERENCE_TIME>(std::llround(snapshot.positionSeconds * 10000000.0));
+    const REFERENCE_TIME duration = static_cast<REFERENCE_TIME>(std::llround(snapshot.durationSeconds * 10000000.0));
     CString reloadtime(_T("0")); // TODO
 
     m_pWebServer->LoadPage(IDR_HTML_VARIABLES, body, AToT(m_path));
-    body.Replace("[file]", UTF8(m_pMainFrame->GetFileName()));
+    body.Replace("[file]", UTF8(snapshot.file));
     body.Replace("[filepatharg]", UTF8Arg(path));
     body.Replace("[filepath]", UTF8(path));
     body.Replace("[filedirarg]", UTF8Arg(dir));
     body.Replace("[filedir]", UTF8(dir));
     body.Replace("[state]", UTF8(state));
     body.Replace("[statestring]", UTF8(statestring));
-    body.Replace("[position]", UTF8(NumToCString(std::lround(m_pMainFrame->GetPos() / 10000i64))));
-    body.Replace("[positionstring]", UTF8(ReftimeToString2(m_pMainFrame->GetPos())));
-    body.Replace("[duration]", UTF8(NumToCString(std::lround(m_pMainFrame->GetDur() / 10000i64))));
-    body.Replace("[durationstring]", UTF8(ReftimeToString2(m_pMainFrame->GetDur())));
+    body.Replace("[position]", UTF8(NumToCString(std::lround(position / 10000i64))));
+    body.Replace("[positionstring]", UTF8(ReftimeToString2(position)));
+    body.Replace("[duration]", UTF8(NumToCString(std::lround(duration / 10000i64))));
+    body.Replace("[durationstring]", UTF8(ReftimeToString2(duration)));
     body.Replace("[volumelevel]", UTF8(volumelevel));
     body.Replace("[muted]", UTF8(muted));
-    body.Replace("[playbackrate]", UTF8(NumToCString(m_pMainFrame->GetPlayingRate())));
+    body.Replace("[playbackrate]", UTF8(NumToCString(snapshot.playbackRate)));
     body.Replace("[size]", UTF8(GetSize()));
     body.Replace("[reloadtime]", UTF8(reloadtime));
     body.Replace("[version]", UTF8(AfxGetMyApp()->m_strVersion));
@@ -975,44 +1028,30 @@ bool CWebClientSocket::OnVariables(CStringA& hdr, CStringA& body, CStringA& mime
     body.Replace("[audiotrack]", UTF8(strName));
     m_pMainFrame->GetCurrentSubtitleTrackIdx(&strName);
     body.Replace("[subtitletrack]", UTF8(strName));
-
     return true;
 }
 
 bool CWebClientSocket::OnStatus(CStringA& hdr, CStringA& body, CStringA& mime)
 {
-    CString title;
-    m_pMainFrame->GetWindowText(title);
-
-    CPath file(m_pMainFrame->m_wndPlaylistBar.GetCurFileName());
-
-    CString status;
-    OAFilterState fs = m_pMainFrame->GetMediaState();
-    switch (fs) {
-        case State_Stopped:
-            status.LoadString(IDS_CONTROLS_STOPPED);
-            break;
-        case State_Paused:
-            status.LoadString(IDS_CONTROLS_PAUSED);
-            break;
-        case State_Running:
-            status.LoadString(IDS_CONTROLS_PLAYING);
-            break;
-        default:
-            status = _T("N/A");
-            break;
+    PlayerStateSnapshot snapshot;
+    if (!GetPlayerStateForWeb(m_pMainFrame, snapshot)) {
+        hdr = "HTTP/1.0 503 Service Unavailable\r\n";
+        return true;
     }
 
-    REFERENCE_TIME pos = m_pMainFrame->GetPos();
-    REFERENCE_TIME dur = m_pMainFrame->GetDur();
+    CString title;
+    m_pMainFrame->GetWindowText(title);
+    CPath file(m_pMainFrame->m_wndPlaylistBar.GetCurFileName());
+    const CString status = GetPlayerStateStringForWeb(snapshot.mediaState);
+    const REFERENCE_TIME pos = static_cast<REFERENCE_TIME>(std::llround(snapshot.positionSeconds * 10000000.0));
+    const REFERENCE_TIME dur = static_cast<REFERENCE_TIME>(std::llround(snapshot.durationSeconds * 10000000.0));
 
-    body.Format("OnStatus(\"%s\", \"%s\", %ld, \"%s\", %ld, \"%s\", %d, %d, \"%s\")", // , \"%s\"
+    body.Format("OnStatus(\"%s\", \"%s\", %ld, \"%s\", %ld, \"%s\", %d, %d, \"%s\")",
                 JSONEscape(UTF8(title)).GetString(), JSONEscape(UTF8(status)).GetString(),
                 std::lround(pos / 10000i64), JSONEscape(UTF8(ReftimeToString2(pos))).GetString(),
                 std::lround(dur / 10000i64), JSONEscape(UTF8(ReftimeToString2(dur))).GetString(),
-                m_pMainFrame->IsMuted(), m_pMainFrame->GetVolume(),
-                JSONEscape(UTF8(file)).GetString()/*, UTF8(dir)*/);
-
+                snapshot.muted ? 1 : 0, snapshot.volume,
+                JSONEscape(UTF8(file)).GetString());
     return true;
 }
 
@@ -1502,7 +1541,16 @@ bool CWebClientSocket::OnStatusJSON(CStringA& hdr, CStringA& body, CStringA& mim
     CString title;
     m_pMainFrame->GetWindowText(title);
 
-    OAFilterState fs = m_pMainFrame->GetMediaState();
+    PlayerControlRequest stateRequest(PlayerControlMethod::GET_STATE);
+    PlayerControlResult stateResult;
+    if (!m_pMainFrame->ExecutePlayerControlSync(stateRequest, stateResult) || !stateResult.success) {
+        hdr = "HTTP/1.0 503 Service Unavailable\r\n";
+        return true;
+    }
+    const PlayerStateSnapshot& snapshot = stateResult.snapshot;
+    const OAFilterState fs = snapshot.mediaState >= 0
+        ? static_cast<OAFilterState>(snapshot.mediaState)
+        : State_Stopped;
     CString statestring;
     switch (fs) {
         case State_Stopped:
@@ -1519,12 +1567,14 @@ bool CWebClientSocket::OnStatusJSON(CStringA& hdr, CStringA& body, CStringA& mim
             break;
     }
 
-    const REFERENCE_TIME position = m_pMainFrame->GetPos();
-    const REFERENCE_TIME duration = m_pMainFrame->GetDur();
+    const REFERENCE_TIME position = static_cast<REFERENCE_TIME>(
+        std::llround(snapshot.positionSeconds * 10000000.0));
+    const REFERENCE_TIME duration = static_cast<REFERENCE_TIME>(
+        std::llround(snapshot.durationSeconds * 10000000.0));
 
     body = "{";
     body += "\"title\":" + JSONString(title);
-    body += ",\"file\":" + JSONString(m_pMainFrame->GetFileName());
+    body += ",\"file\":" + JSONString(snapshot.file);
     body += ",\"path\":" + JSONString(m_pMainFrame->m_wndPlaylistBar.GetCurFileName());
     body.AppendFormat(",\"state\":%ld", fs);
     body += ",\"stateString\":" + JSONString(statestring);
@@ -1534,8 +1584,8 @@ bool CWebClientSocket::OnStatusJSON(CStringA& hdr, CStringA& body, CStringA& mim
     body += ",\"positionString\":" + JSONString(ReftimeToString2(position));
     body += ",\"durationString\":" + JSONString(ReftimeToString2(duration));
     body.AppendFormat(",\"volume\":%d,\"muted\":%s,\"rate\":%g",
-                      m_pMainFrame->GetVolume(), m_pMainFrame->IsMuted() ? "true" : "false",
-                      m_pMainFrame->GetPlayingRate());
+                      snapshot.volume, snapshot.muted ? "true" : "false",
+                      snapshot.playbackRate);
     body += ",\"size\":" + JSONString(GetSize());
     body += ",\"version\":" + JSONString(AfxGetMyApp()->m_strVersion);
     body.AppendFormat(",\"preview\":%s", AfxGetAppSettings().bWebUIEnablePreview ? "true" : "false");

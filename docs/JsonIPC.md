@@ -73,3 +73,7 @@ Errors are structured and use JSON-RPC-style numeric codes:
 ```
 
 The API is intentionally marshalled onto the main window thread. The pipe worker performs transport and parsing only; it does not call DirectShow, renderer, playlist, or MFC UI objects directly.
+
+## Internal layering
+
+`JsonIpcServer` is only a transport/parser/serializer. Parsed requests are executed by the shared `CPlayerControlService` on the main UI thread. The same service also backs built-in web status, position and volume paths, which keeps validation/state semantics consistent across automation surfaces.

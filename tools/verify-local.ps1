@@ -33,7 +33,9 @@ try {
         'tests\playback\manifest.example.json',
         'tests\fuzz\corpus\seed.srt',
         'tests\fuzz\corpus\seed.vtt',
-        'tests\fuzz\corpus\seed.m3u'
+        'tests\fuzz\corpus\seed.m3u',
+        'src\mpc-hc\PlayerControlService.cpp',
+        'src\mpc-hc\PlayerControlService.h'
     )
 
     foreach ($file in $requiredFiles) {
@@ -67,6 +69,12 @@ try {
     $dependencyManifest = Get-Content 'dependencies\manifest.json' -Raw | ConvertFrom-Json
     if ($dependencyManifest.schemaVersion -ne 1 -or -not $dependencyManifest.components.mpcVideoRenderer.version) {
         throw 'Dependency manifest is invalid.'
+    }
+
+    $mainFrame = Get-Content 'src\mpc-hc\MainFrm.cpp' -Raw
+    $webClient = Get-Content 'src\mpc-hc\WebClientSocket.cpp' -Raw
+    if ($mainFrame -notmatch 'm_playerControlService\.Execute' -or $webClient -notmatch 'ExecutePlayerControlSync') {
+        throw 'Shared player control service is not wired into IPC/web control paths.'
     }
 
     $installer = Get-Content 'distrib\mpc-hc_setup.iss' -Raw

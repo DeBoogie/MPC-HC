@@ -594,6 +594,9 @@
     <ClCompile Include="JsonIpcServer.cpp">
       <Filter>Integration</Filter>
     </ClCompile>
+    <ClCompile Include="PlayerControlService.cpp">
+      <Filter>Integration</Filter>
+    </ClCompile>
     <ClCompile Include="ModelessResizableDialog.cpp">
       <Filter>Modal Dialogs</Filter>
     </ClCompile>
@@ -758,6 +761,9 @@
       <Filter>Integration</Filter>
     </ClInclude>
     <ClInclude Include="JsonIpcServer.h">
+      <Filter>Integration</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerControlService.h">
       <Filter>Integration</Filter>
     </ClInclude>
     <ClInclude Include="MPCPngImage.h">
