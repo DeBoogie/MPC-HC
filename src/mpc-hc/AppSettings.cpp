@@ -304,6 +304,7 @@ CAppSettings::CAppSettings()
     , bAlwaysUseShortMenu(false)
     , iStillVideoDuration(10)
     , iMouseLeftUpDelay(0)
+    , bMouseHoldSpeedBoost(true)
     , bUseFreeType(false)
     , bUseMediainfoLoadFileDuration(false)
     , bCaptureDeinterlace(false)
@@ -1427,6 +1428,7 @@ void CAppSettings::SaveSettings(bool write_full_history /* = false */)
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_ALWAYS_USE_SHORT_MENU, bAlwaysUseShortMenu);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_STILL_VIDEO_DURATION, iStillVideoDuration);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_MOUSE_LEFTUP_DELAY, iMouseLeftUpDelay);
+    pApp->WriteProfileInt(IDS_R_SETTINGS, L"MouseHoldSpeedBoost", bMouseHoldSpeedBoost);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_CAPTURE_DEINTERLACE, bCaptureDeinterlace);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_PAUSE_WHILE_DRAGGING_SEEKBAR, bPauseWhileDraggingSeekbar);
     pApp->WriteProfileInt(IDS_R_SETTINGS, IDS_RS_CONFIRM_FILE_DELETE, bConfirmFileDelete);
@@ -2413,6 +2415,7 @@ void CAppSettings::LoadSettings()
     bAlwaysUseShortMenu = pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_ALWAYS_USE_SHORT_MENU, FALSE);
     iStillVideoDuration = pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_STILL_VIDEO_DURATION, 10);
     iMouseLeftUpDelay = pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_MOUSE_LEFTUP_DELAY, 0);
+    bMouseHoldSpeedBoost = !!pApp->GetProfileInt(IDS_R_SETTINGS, L"MouseHoldSpeedBoost", TRUE);
 
     LastGPUCheck = pApp->GetProfileInt(IDS_R_SETTINGS, L"LastGPUCheck", 0);
     gpuid1 = pApp->GetProfileString(IDS_R_SETTINGS, L"GPUID1", L"");

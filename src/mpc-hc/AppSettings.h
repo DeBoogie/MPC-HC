@@ -1054,6 +1054,7 @@ public:
     bool bAlwaysUseShortMenu;
     int iStillVideoDuration;
     int iMouseLeftUpDelay;
+    bool bMouseHoldSpeedBoost;
 
     bool bCaptureDeinterlace;
     bool bConfirmFileDelete;
