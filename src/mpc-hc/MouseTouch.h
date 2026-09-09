@@ -72,6 +72,9 @@ private:
     bool m_bLeftDown;
     bool m_bLeftUpDelayed;
     CPoint m_LeftUpPoint;
+    bool m_bLeftLongPressPending;
+    bool m_bLeftLongPressActive;
+    double m_leftLongPressRestoreRate;
     bool m_bLeftDoubleStarted;
     CPoint m_leftDoubleStartPoint;
     LONG m_leftDoubleStartTime;
@@ -110,6 +113,9 @@ private:
 
     void PerformDelayedLeftUp();
     static void CALLBACK OnTimerLeftUp(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime);
+    void StartLeftLongPress(UINT nFlags);
+    void StopLeftLongPress(bool restoreRate);
+    static void CALLBACK OnTimerLeftLongPress(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime);
 
 protected:
     void InternalOnLButtonDown(UINT nFlags, const CPoint& point);

@@ -28,6 +28,8 @@
 #define TRACE_LEFTCLICKS 0
 
 #define CURSOR_HIDE_TIMEOUT 2000
+#define LEFT_LONG_PRESS_DELAY 500
+#define LEFT_LONG_PRESS_RATE  2.0
 
 CMouse::CMouse(CMainFrame* pMainFrm, bool bD3DFS/* = false*/)
     : m_bD3DFS(bD3DFS)
@@ -35,6 +37,9 @@ CMouse::CMouse(CMainFrame* pMainFrm, bool bD3DFS/* = false*/)
     , m_dwMouseHiderStartTick(0)
     , m_bLeftDown(false)
     , m_bLeftUpDelayed(false)
+    , m_bLeftLongPressPending(false)
+    , m_bLeftLongPressActive(false)
+    , m_leftLongPressRestoreRate(1.0)
     , m_bLeftDoubleStarted(false)
     , m_leftDoubleStartTime(0)
     , m_popupMenuUninitTime(0)
@@ -129,6 +134,7 @@ void CMouse::ResetToBlankState()
         m_bLeftUpDelayed = false;
         KillTimer(GetWnd(), (UINT_PTR)this);
     }
+    StopLeftLongPress(true);
 }
 
 void CMouse::StartMouseHider(const CPoint& screenPoint)
@@ -402,6 +408,63 @@ void CMouse::InternalOnLButtonDown(UINT nFlags, const CPoint& point)
         m_beginDragPoint = point;
         GetWnd().ClientToScreen(&m_beginDragPoint);
     }
+    if (!bDouble) {
+        StartLeftLongPress(nFlags);
+    }
+}
+
+void CMouse::StartLeftLongPress(UINT nFlags)
+{
+    const CAppSettings& s = AfxGetAppSettings();
+    const UINT otherButtons = nFlags & ~MK_LBUTTON;
+    if (!s.bMouseHoldSpeedBoost || otherButtons != 0
+            || AssignedMouseToCmd(wmcmd::LUP, 0) != ID_PLAY_PLAYPAUSE
+            || m_pMainFrame->GetLoadState() != MLS::LOADED
+            || m_pMainFrame->GetPlaybackMode() != PM_FILE
+            || m_pMainFrame->GetMediaState() != State_Running
+            || m_pMainFrame->GetPlayingRate() <= 0.0) {
+        return;
+    }
+
+    m_bLeftLongPressPending = true;
+    SetTimer(GetWnd(), (UINT_PTR)this, LEFT_LONG_PRESS_DELAY, OnTimerLeftLongPress);
+}
+
+void CMouse::StopLeftLongPress(bool restoreRate)
+{
+    if (m_bLeftLongPressPending) {
+        KillTimer(GetWnd(), (UINT_PTR)this);
+        m_bLeftLongPressPending = false;
+    }
+    if (m_bLeftLongPressActive) {
+        m_bLeftLongPressActive = false;
+        if (restoreRate && m_pMainFrame->GetLoadState() == MLS::LOADED) {
+            m_pMainFrame->SetPlayingRate(m_leftLongPressRestoreRate);
+        }
+    }
+}
+
+void CALLBACK CMouse::OnTimerLeftLongPress(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime)
+{
+    CMouse* pCMouse = reinterpret_cast<CMouse*>(nIDEvent);
+    if (!pCMouse || !pCMouse->m_bLeftLongPressPending) {
+        return;
+    }
+
+    KillTimer(hWnd, nIDEvent);
+    pCMouse->m_bLeftLongPressPending = false;
+    if (!pCMouse->m_bLeftDown || GetKeyState(VK_LBUTTON) >= 0
+            || pCMouse->m_pMainFrame->GetLoadState() != MLS::LOADED
+            || pCMouse->m_pMainFrame->GetPlaybackMode() != PM_FILE
+            || pCMouse->m_pMainFrame->GetMediaState() != State_Running) {
+        return;
+    }
+
+    pCMouse->m_leftLongPressRestoreRate = pCMouse->m_pMainFrame->GetPlayingRate();
+    pCMouse->m_bLeftLongPressActive = true;
+    if (pCMouse->m_leftLongPressRestoreRate != LEFT_LONG_PRESS_RATE) {
+        pCMouse->m_pMainFrame->SetPlayingRate(LEFT_LONG_PRESS_RATE);
+    }
 }
 
 void CMouse::PerformDelayedLeftUp()
@@ -422,6 +485,16 @@ void CMouse::OnTimerLeftUp(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime
 
 void CMouse::InternalOnLButtonUp(UINT nFlags, const CPoint& point)
 {
+    const bool wasLongPress = m_bLeftLongPressActive;
+    StopLeftLongPress(true);
+    if (wasLongPress) {
+        ReleaseCapture();
+        m_drag = Drag::NO_DRAG;
+        m_bLeftDown = false;
+        SetCursor(nFlags, point);
+        return;
+    }
+
 #if TRACE_LEFTCLICKS
     TRACE(L"InternalOnLButtonUp\n");
 #endif
@@ -627,6 +700,7 @@ bool CMouse::TestDrag(const CPoint& screenPoint)
             if ((!bUpAssigned && screenPoint != m_beginDragPoint) ||
                 (bUpAssigned && !PointEqualsImprecise(screenPoint, m_beginDragPoint,
                     GetSystemMetrics(SM_CXDRAG), GetSystemMetrics(SM_CYDRAG)))) {
+                StopLeftLongPress(true);
                 VERIFY(ReleaseCapture());
                 m_pMainFrame->PostMessage(WM_NCLBUTTONDOWN, HTCAPTION, MAKELPARAM(m_beginDragPoint.x, m_beginDragPoint.y));
                 m_drag = Drag::DRAGGED;
