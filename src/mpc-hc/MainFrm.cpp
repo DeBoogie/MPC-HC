@@ -305,6 +305,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
     ON_MESSAGE(WM_SMTC_AUTOREPEAT, OnSmtcAutoRepeat)
     ON_MESSAGE(WM_SMTC_SHUFFLE, OnSmtcShuffle)
     ON_MESSAGE(WM_SMTC_RATE, OnSmtcRate)
+    ON_MESSAGE(WM_JSON_IPC_REQUEST, OnJsonIpcRequest)
 
     ON_MESSAGE_VOID(WM_SAVESETTINGS, SaveAppSettings)
 
@@ -1183,6 +1184,12 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
         m_media_trans_control.Init(this);
     }
 
+    if (!m_jsonIpcServer.Start(m_hWnd)) {
+        TRACE(_T("Unable to start JSON IPC server\n"));
+    } else {
+        TRACE(_T("JSON IPC listening on %s\n"), m_jsonIpcServer.GetPipeName().GetString());
+    }
+
     return 0;
 }
 
@@ -1255,6 +1262,7 @@ LRESULT CMainFrame::OnLAVPropPageCallback(WPARAM, LPARAM lParam)
 
 void CMainFrame::OnDestroy()
 {
+    m_jsonIpcServer.Stop();
     WTSUnRegisterSessionNotification();
     ShowTrayIcon(false);
     m_dropTarget.Revoke();
@@ -24978,5 +24986,224 @@ LRESULT CMainFrame::OnSmtcRate(WPARAM wParam, LPARAM lParam) {
     if (GetLoadState() == MLS::LOADED && rate > 0.0) {
         SetPlayingRate(rate);
     }
+    return 0;
+}
+
+
+static LPCWSTR JsonIpcRendererName(int renderer)
+{
+    switch (renderer) {
+        case VIDRNDT_DS_VMR7:           return L"VMR-7";
+        case VIDRNDT_DS_OVERLAYMIXER:   return L"Overlay Mixer";
+        case VIDRNDT_DS_VMR9WINDOWED:   return L"VMR-9 Windowed";
+        case VIDRNDT_DS_VMR9RENDERLESS: return L"VMR-9 Renderless";
+        case VIDRNDT_DS_DXR:            return L"Haali Video Renderer";
+        case VIDRNDT_DS_NULL_COMP:      return L"Null Renderer";
+        case VIDRNDT_DS_NULL_UNCOMP:    return L"Null Renderer (uncompressed)";
+        case VIDRNDT_DS_EVR:            return L"EVR";
+        case VIDRNDT_DS_EVR_CUSTOM:     return L"EVR Custom Presenter";
+        case VIDRNDT_DS_MADVR:          return L"madVR";
+        case VIDRNDT_DS_SYNC:           return L"Sync Renderer";
+        case VIDRNDT_DS_MPCVR:          return L"MPC Video Renderer";
+        default:                        return L"Unknown";
+    }
+}
+
+LRESULT CMainFrame::OnJsonIpcRequest(WPARAM, LPARAM lParam)
+{
+    JsonIpcRequest* request = reinterpret_cast<JsonIpcRequest*>(lParam);
+    if (!request) {
+        return 0;
+    }
+
+    auto complete = [&]() {
+        SetEvent(request->doneEvent);
+        request->Release();
+    };
+    auto fail = [&](int code, LPCSTR message) {
+        request->success = false;
+        request->errorCode = code;
+        request->errorMessage = message;
+    };
+    auto fillState = [&]() {
+        if (GetLoadState() != MLS::LOADED) {
+            request->snapshot.state = L"closed";
+        } else if (m_bBuffering) {
+            request->snapshot.state = L"buffering";
+        } else {
+            switch (GetMediaState()) {
+                case State_Running: request->snapshot.state = L"playing"; break;
+                case State_Paused:  request->snapshot.state = L"paused"; break;
+                case State_Stopped: request->snapshot.state = L"stopped"; break;
+                default:            request->snapshot.state = L"changing"; break;
+            }
+        }
+        request->snapshot.positionSeconds = GetPos() / 10000000.0;
+        request->snapshot.durationSeconds = GetDur() / 10000000.0;
+        request->snapshot.playbackRate = m_dSpeedRate;
+        request->snapshot.volume = GetVolume();
+        request->snapshot.muted = IsMuted();
+        request->snapshot.audioTrack = GetCurrentAudioTrackIdx();
+        request->snapshot.subtitleTrack = GetCurrentSubtitleTrackIdx();
+        request->snapshot.file = GetFileName();
+    };
+
+    switch (request->method) {
+        case JsonIpcMethod::GET_STATE:
+            fillState();
+            request->success = true;
+            break;
+
+        case JsonIpcMethod::GET_DIAGNOSTICS: {
+            fillState();
+            const CAppSettings& s = AfxGetAppSettings();
+            request->snapshot.rendererId = s.iDSVideoRendererType;
+            request->snapshot.renderer = JsonIpcRendererName(s.iDSVideoRendererType);
+            if (m_pGB) {
+                BeginEnumFilters(m_pGB, pEF, pBF) {
+                    CComQIPtr<ILAVVideoStatus> lavStatus = pBF;
+                    if (lavStatus) {
+                        if (LPCWSTR decoder = lavStatus->GetActiveDecoderName()) {
+                            request->snapshot.decoder = decoder;
+                        }
+                        CComBSTR device;
+                        if (SUCCEEDED(lavStatus->GetHWAccelActiveDevice(&device)) && device.Length() > 0) {
+                            request->snapshot.hardwareDevice.SetString(device, device.Length());
+                        }
+                        break;
+                    }
+                }
+                EndEnumFilters;
+            }
+            if (m_pQP) {
+                int value = 0;
+                if (SUCCEEDED(m_pQP->get_FramesDrawn(&value))) {
+                    request->snapshot.framesDrawn = value;
+                }
+                if (SUCCEEDED(m_pQP->get_FramesDroppedInRenderer(&value))) {
+                    request->snapshot.framesDropped = value;
+                }
+                if (SUCCEEDED(m_pQP->get_Jitter(&value))) {
+                    request->snapshot.jitterMs = value;
+                }
+                if (SUCCEEDED(m_pQP->get_AvgSyncOffset(&value))) {
+                    request->snapshot.averageSyncOffsetMs = value;
+                }
+            }
+            request->success = true;
+            break;
+        }
+
+        case JsonIpcMethod::PLAY:
+            OnApiPlay();
+            request->success = true;
+            break;
+
+        case JsonIpcMethod::PAUSE:
+            OnApiPause();
+            request->success = true;
+            break;
+
+        case JsonIpcMethod::STOP:
+            OnPlayStop();
+            request->success = true;
+            break;
+
+        case JsonIpcMethod::SEEK:
+            if (GetLoadState() != MLS::LOADED) {
+                fail(-32010, "No media is loaded");
+            } else if (request->numberValue < 0.0 || request->numberValue > 3155760000.0) {
+                fail(-32602, "Position must be between 0 and 100 years");
+            } else {
+                REFERENCE_TIME target = static_cast<REFERENCE_TIME>(request->numberValue * 10000000.0);
+                const REFERENCE_TIME duration = GetDur();
+                if (duration > 0 && target > duration) {
+                    target = duration;
+                }
+                SeekTo(target, false);
+                request->success = true;
+            }
+            break;
+
+        case JsonIpcMethod::SET_RATE:
+            if (GetLoadState() != MLS::LOADED) {
+                fail(-32010, "No media is loaded");
+            } else if (request->numberValue < 0.05 || request->numberValue > 16.0) {
+                fail(-32602, "Rate must be between 0.05 and 16.0");
+            } else {
+                SetPlayingRate(request->numberValue);
+                request->success = true;
+            }
+            break;
+
+        case JsonIpcMethod::SET_VOLUME:
+            if (request->integerValue < 0 || request->integerValue > 100) {
+                fail(-32602, "Volume must be between 0 and 100");
+            } else {
+                m_wndToolBar.SetVolume(request->integerValue);
+                request->success = true;
+            }
+            break;
+
+        case JsonIpcMethod::SET_MUTE:
+            if (IsMuted() != (request->integerValue != 0)) {
+                m_wndToolBar.SetMute(request->integerValue != 0);
+                OnPlayVolume(ID_VOLUME_MUTE);
+            }
+            request->success = true;
+            break;
+
+        case JsonIpcMethod::SET_AUDIO_TRACK:
+            if (GetLoadState() != MLS::LOADED || request->integerValue < 0) {
+                fail(-32602, "A loaded media item and a non-negative audio track index are required");
+            } else {
+                SetAudioTrackIdx(request->integerValue);
+                if (GetCurrentAudioTrackIdx() == request->integerValue) {
+                    request->success = true;
+                } else {
+                    fail(-32602, "Audio track index is not available");
+                }
+            }
+            break;
+
+        case JsonIpcMethod::SET_SUBTITLE_TRACK:
+            if (GetLoadState() != MLS::LOADED || request->integerValue < -1) {
+                fail(-32602, "A loaded media item and subtitle index -1 or greater are required");
+            } else {
+                SetSubtitleTrackIdx(request->integerValue);
+                if (GetCurrentSubtitleTrackIdx() == request->integerValue) {
+                    request->success = true;
+                } else {
+                    fail(-32602, "Subtitle track index is not available");
+                }
+            }
+            break;
+
+        case JsonIpcMethod::OPEN_MEDIA: {
+            CString path(request->textValue);
+            if (GetMediaState() == State_Running) {
+                MediaControlPause(true);
+            }
+            if (CanSendToYoutubeDL(path)) {
+                if (ProcessYoutubeDLURL(path, false)) {
+                    PostMessage(WM_MPC_OPENCURPLAYLIST, 0, 0);
+                    request->success = true;
+                    break;
+                }
+                if (IsOnYDLWhitelist(path)) {
+                    fail(-32020, "yt-dlp could not resolve the URL");
+                    break;
+                }
+            }
+            CAtlList<CString> files;
+            files.AddHead(path);
+            m_wndPlaylistBar.Open(files, false);
+            PostMessage(WM_MPC_OPENCURPLAYLIST, 0, 0);
+            request->success = true;
+            break;
+        }
+    }
+
+    complete();
     return 0;
 }

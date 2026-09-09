@@ -591,6 +591,9 @@
     <ClCompile Include="MediaTransControls.cpp">
       <Filter>Main View</Filter>
     </ClCompile>
+    <ClCompile Include="JsonIpcServer.cpp">
+      <Filter>Integration</Filter>
+    </ClCompile>
     <ClCompile Include="ModelessResizableDialog.cpp">
       <Filter>Modal Dialogs</Filter>
     </ClCompile>
@@ -752,6 +755,9 @@
       <Filter>Helpers</Filter>
     </ClInclude>
     <ClInclude Include="MpcApi.h">
+      <Filter>Integration</Filter>
+    </ClInclude>
+    <ClInclude Include="JsonIpcServer.h">
       <Filter>Integration</Filter>
     </ClInclude>
     <ClInclude Include="MPCPngImage.h">

@@ -28,6 +28,7 @@
 #include "EditListEditor.h"
 #include "IBufferInfo.h"
 #include "IKeyFrameInfo.h"
+#include "JsonIpcServer.h"
 #include "MainFrmControls.h"
 #include "MouseTouch.h"
 #include "MpcApi.h"
@@ -1518,6 +1519,7 @@ public:
     */
     CString getBestTitle(bool fTitleBarTextTitle = true);
     MediaTransControls m_media_trans_control;
+    CJsonIpcServer m_jsonIpcServer;
 
     void MediaTransportControlSetMedia();
     void MediaTransportControlUpdateState(OAFilterState state);
@@ -1530,6 +1532,7 @@ public:
     afx_msg LRESULT OnSmtcAutoRepeat(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnSmtcShuffle(WPARAM wParam, LPARAM lParam);
     afx_msg LRESULT OnSmtcRate(WPARAM wParam, LPARAM lParam);
+    afx_msg LRESULT OnJsonIpcRequest(WPARAM wParam, LPARAM lParam);
     ULONGLONG m_lastSMTCTimelineUpdate = 0;
 #if MPC_SMTC_VIDEO_THUMBNAIL
     ULONGLONG m_nextSMTCThumbnailUpdate = 0;
