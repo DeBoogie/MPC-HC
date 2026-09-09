@@ -24,6 +24,11 @@ powershell -ExecutionPolicy Bypass -File tools\verify-local.ps1 -Analyze
 
 A full build that includes the internal LAV stack can be requested with `-Full` after the MSYS2/MinGW dependencies from `Compilation.md` are installed.
 
+
+## Automated runners
+
+Repeatable playback and malformed-input checks are available through `tools\run-playback-tests.ps1` and `tools\run-fuzz-smoke.ps1`. AddressSanitizer validation builds use the `ASAN` build switch or `tools\verify-local.ps1 -Sanitize`. See `AutomatedTesting.md` for the manifest format, metrics, fuzz bounds and reproducer handling.
+
 ## Playback regression matrix
 
 Before a release, exercise representative samples rather than only checking that the executable starts.

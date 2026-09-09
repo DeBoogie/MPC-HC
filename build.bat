@@ -62,6 +62,7 @@ FOR %%G IN (%ARG%) DO (
   IF /I "%%G" == "Silent"       SET "SILENT=True"        & SET /A VALID+=1
   IF /I "%%G" == "Nocolors"     SET "NOCOLORS=True"      & SET /A VALID+=1
   IF /I "%%G" == "Analyze"      SET "ANALYZE=True"       & SET /A VALID+=1
+  IF /I "%%G" == "ASAN"         SET "ASAN=True"          & SET /A VALID+=1
   IF /I "%%G" == "MINGWLIB"     ENDLOCAL & SET "FORCE_MINGW_UPDATE=True" & CALL "%~dp0common.bat" :SubMINGWLIB & EXIT /B
 )
 
@@ -489,7 +490,7 @@ EXIT /B
 TITLE %~nx0 Help
 ECHO.
 ECHO Usage:
-ECHO %~nx0 [Clean^|Build^|Rebuild] [x86^|x64^|Both] [Main^|Resources^|MPCHC^|IconLib^|Translations^|Filters^|API^|All] [Debug^|Release] [Lite] [Packages^|Installer^|7z] [LAVFilters] [Analyze]
+ECHO %~nx0 [Clean^|Build^|Rebuild] [x86^|x64^|Both] [Main^|Resources^|MPCHC^|IconLib^|Translations^|Filters^|API^|All] [Debug^|Release] [Lite] [Packages^|Installer^|7z] [LAVFilters] [Analyze] [ASAN]
 ECHO.
 ECHO Notes: You can also prefix the commands with "-", "--" or "/".
 ECHO        Debug only applies to mpc-hc.sln.

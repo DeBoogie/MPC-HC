@@ -167,6 +167,16 @@ The Lite configuration is for development checks only; release packages should i
 You can also open **mpc-hc.sln** in Visual Studio 2022, select **x64** and **Release**, and build the solution normally.
 
 
+### AddressSanitizer validation build
+
+For an instrumented x64 development build, use:
+
+```bat
+build.bat Build x64 MPCHC Release Lite ASAN
+```
+
+This adds MSVC `/fsanitize=address`; it is for validation and is not a release package configuration.
+
 ## Reproducible local release
 
 The supported release entry point is:
@@ -175,7 +185,7 @@ The supported release entry point is:
 powershell -ExecutionPolicy Bypass -File tools\release.ps1
 ```
 
-It validates the full build and packaging environment, bootstraps pinned runtime dependencies, runs the modernization checks, builds the x64 Release packages, and copies the resulting installer/archive artifacts into `release-output` with a JSON manifest containing the source commit and SHA-256 digest for each artifact. `-Lite` is available for development-only packaging and intentionally does not represent a normal release.
+It validates the full build and packaging environment, bootstraps pinned runtime dependencies, runs the modernization checks, builds the x64 Release packages, and copies the resulting installer/archive artifacts into `release-output` with a JSON manifest containing the source commit and SHA-256 digest for each artifact. Pass `-PlaybackManifest <path>` to require the automated playback regression suite before release artifacts are staged. `-Lite` is available for development-only packaging and intentionally does not represent a normal release.
 
 ## Part H: Building the installer
 

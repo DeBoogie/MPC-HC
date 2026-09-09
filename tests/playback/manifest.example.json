@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "h264-sdr",
+      "path": "samples/h264-sdr.mp4",
+      "seekPositions": [
+        5.0,
+        15.0
+      ],
+      "minDurationSeconds": 20.0,
+      "maxDroppedFrames": 0
+    },
+    {
+      "name": "hevc-main10-hdr10",
+      "path": "samples/hevc-main10-hdr10.mkv",
+      "seekPositions": [
+        10.0
+      ],
+      "minDurationSeconds": 20.0,
+      "expectedRenderer": "MPC Video Renderer",
+      "decoderContains": "hevc"
+    },
+    {
+      "name": "av1-10bit",
+      "path": "samples/av1-10bit.mkv",
+      "seekPositions": [
+        3.0,
+        12.0
+      ],
+      "minDurationSeconds": 15.0,
+      "decoderContains": "av1"
+    }
+  ]
+}

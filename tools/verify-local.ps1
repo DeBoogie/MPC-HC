@@ -2,6 +2,7 @@
 param(
     [switch]$Build,
     [switch]$Analyze,
+    [switch]$Sanitize,
     [switch]$Full
 )
 
@@ -25,7 +26,14 @@ try {
         'tools\bootstrap-dependencies.ps1',
         'tools\release.ps1',
         'tools\mpc-hc-ipc.ps1',
-        'docs\JsonIPC.md'
+        'docs\JsonIPC.md',
+        'docs\AutomatedTesting.md',
+        'tools\run-playback-tests.ps1',
+        'tools\run-fuzz-smoke.ps1',
+        'tests\playback\manifest.example.json',
+        'tests\fuzz\corpus\seed.srt',
+        'tests\fuzz\corpus\seed.vtt',
+        'tests\fuzz\corpus\seed.m3u'
     )
 
     foreach ($file in $requiredFiles) {
@@ -52,6 +60,9 @@ try {
     if ($common -notmatch '<ControlFlowGuard>Guard</ControlFlowGuard>') {
         throw 'Control Flow Guard is not enabled.'
     }
+    if ($common -notmatch '/fsanitize=address') {
+        throw 'AddressSanitizer build hook is missing.'
+    }
 
     $dependencyManifest = Get-Content 'dependencies\manifest.json' -Raw | ConvertFrom-Json
     if ($dependencyManifest.schemaVersion -ne 1 -or -not $dependencyManifest.components.mpcVideoRenderer.version) {
@@ -68,13 +79,16 @@ try {
         throw 'git diff --check failed.'
     }
 
-    if ($Build -or $Analyze) {
+    if ($Build -or $Analyze -or $Sanitize) {
         $buildArgs = @('Build', 'x64', 'MPCHC', 'Release')
         if (-not $Full) {
             $buildArgs += 'Lite'
         }
         if ($Analyze) {
             $buildArgs += 'Analyze'
+        }
+        if ($Sanitize) {
+            $buildArgs += 'ASAN'
         }
         $buildArgs += @('Silent', 'Nocolors')
 

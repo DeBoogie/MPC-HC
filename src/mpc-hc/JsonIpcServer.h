@@ -20,6 +20,7 @@ enum class JsonIpcMethod {
     PLAY,
     PAUSE,
     STOP,
+    QUIT,
     SEEK,
     SET_RATE,
     SET_VOLUME,
