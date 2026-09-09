@@ -9,6 +9,21 @@
 #include "MainFrm.h"
 #include <DSUtil.h>
 
+
+static LPCWSTR PlayerNetworkStateName(PlayerNetworkState state)
+{
+    switch (state) {
+        case PlayerNetworkState::NONE:         return L"none";
+        case PlayerNetworkState::CONNECTING:   return L"connecting";
+        case PlayerNetworkState::READY:        return L"ready";
+        case PlayerNetworkState::BUFFERING:    return L"buffering";
+        case PlayerNetworkState::RETRY_WAIT:   return L"retry-wait";
+        case PlayerNetworkState::RECONNECTING: return L"reconnecting";
+        case PlayerNetworkState::FAILED:       return L"failed";
+        default:                               return L"unknown";
+    }
+}
+
 void CPlayerControlService::Fail(PlayerControlResult& result, int code, LPCSTR message) const
 {
     result.success = false;
@@ -66,6 +81,11 @@ void CPlayerControlService::FillState(PlayerStateSnapshot& snapshot) const
     snapshot.audioTrack = m_frame->GetCurrentAudioTrackIdx();
     snapshot.subtitleTrack = m_frame->GetCurrentSubtitleTrackIdx();
     snapshot.file = m_frame->GetFileName();
+    const PlayerNetworkState networkState = static_cast<PlayerNetworkState>(
+        m_frame->m_networkConnectionState.load(std::memory_order_acquire));
+    snapshot.networkState = PlayerNetworkStateName(networkState);
+    snapshot.networkRetryCount = m_frame->m_networkRetryCount.load(std::memory_order_acquire);
+    snapshot.networkError = m_frame->m_lastNetworkError.load(std::memory_order_acquire);
 }
 
 void CPlayerControlService::FillDiagnostics(PlayerStateSnapshot& snapshot) const

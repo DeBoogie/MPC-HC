@@ -24,6 +24,7 @@ Manifest-level assertions currently include:
 - Expected renderer name.
 - Active decoder substring.
 - Maximum dropped frames.
+- Expected player-level network state through optional `expectedNetworkState`.
 - One or more absolute seek positions with a configurable settle tolerance.
 
 Use `-ValidateManifestOnly` when editing a manifest without a built player.

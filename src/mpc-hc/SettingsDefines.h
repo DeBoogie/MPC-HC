@@ -445,3 +445,7 @@
 #define IDS_RS_MOUSE_WHEEL_DOWN             L"WheelDown"
 #define IDS_RS_MOUSE_WHEEL_LEFT             L"WheelLeft"
 #define IDS_RS_MOUSE_WHEEL_RIGHT            L"WheelRight"
+
+#define IDS_RS_NETWORKAUTORETRY              _T("NetworkAutoRetry")
+#define IDS_RS_NETWORKRETRYCOUNT             _T("NetworkRetryCount")
+#define IDS_RS_NETWORKRETRYDELAY             _T("NetworkRetryDelayMs")

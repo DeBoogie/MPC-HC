@@ -203,6 +203,9 @@ foreach ($case in @($manifest.cases)) {
                 [int]$diag.renderer.framesDropped -gt [int]$case.maxDroppedFrames) {
             $caseErrors.Add("Dropped frames $($diag.renderer.framesDropped) exceed limit $($case.maxDroppedFrames).")
         }
+        if ($null -ne $case.expectedNetworkState -and [string]$diag.network.state -ne [string]$case.expectedNetworkState) {
+            $caseErrors.Add("Network state '$($diag.network.state)' does not match expected '$($case.expectedNetworkState)'.")
+        }
 
         $caseResult.passed = ($caseErrors.Count -eq 0)
     }

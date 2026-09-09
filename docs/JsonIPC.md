@@ -26,7 +26,7 @@ powershell -ExecutionPolicy Bypass -File tools\mpc-hc-ipc.ps1 `
 
 ### `player.getState`
 
-Returns playback state (including `buffering`), absolute position and duration in seconds, playback rate, volume, mute state, current audio/subtitle track indices, and current file.
+Returns playback state (including `buffering`), absolute position and duration in seconds, playback rate, volume, mute state, current audio/subtitle track indices, current file, and a `network` object. The network object reports `none`, `connecting`, `ready`, `buffering`, `retry-wait`, `reconnecting`, or `failed`, plus the current retry count and last HRESULT-style error value.
 
 ```json
 {"id":1,"method":"player.getState","params":{}}

@@ -82,6 +82,16 @@ namespace {
             writer.Int(s.subtitleTrack);
             writer.Key("file");
             writer.String(file.GetString(), file.GetLength());
+            writer.Key("network");
+            writer.StartObject();
+            const CStringA networkState = UTF16To8(s.networkState);
+            writer.Key("state");
+            writer.String(networkState.GetString(), networkState.GetLength());
+            writer.Key("retryCount");
+            writer.Int(s.networkRetryCount);
+            writer.Key("lastError");
+            writer.Int64(static_cast<int64_t>(s.networkError));
+            writer.EndObject();
 
             if (request.control.method == PlayerControlMethod::GET_DIAGNOSTICS) {
                 const CStringA renderer = UTF16To8(s.renderer);

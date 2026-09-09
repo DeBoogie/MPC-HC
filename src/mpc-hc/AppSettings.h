@@ -882,6 +882,9 @@ public:
     int             nJumpDistM;
     int             nJumpDistL;
     bool            bFastSeek;
+    bool            bNetworkAutoRetry;
+    int             iNetworkRetryCount;
+    int             iNetworkRetryDelayMs;
     enum { FASTSEEK_LATEST_KEYFRAME, FASTSEEK_NEAREST_KEYFRAME } eFastSeekMethod;
     bool            fShowChapters;
     bool            fPreventMinimize;
